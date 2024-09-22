@@ -1,0 +1,227 @@
+{
+    "appName": "Роснефть",
+    "login": "Кирүү",
+    "gallery": "Галерея",
+    "camera": "Камера",
+    "profile": "Профиль",
+    "settings": "Орнотуулар",
+    "logout": "Чыгуу",
+    "language": "Тил",
+    "aboutCompany": "Компания жөнүндө",
+    "aboutCompanyText": "«Россия Нефть», Кыргызстандагы чекене жана дүң нефтепродукттар рыногундагы ири операторлордун бири, өлкөнүн аймагында 40 АЗС жана эки ири нефть базасы бар, 2017-жылдан бери ишмердүүлүк жүргүзүп келет.\n\n«Россия Нефть», Кыргызстандагы чекене жана дүң нефтепродукттар рыногундагы ири операторлордун бири, өлкөнүн аймагында 40 АЗС жана эки ири нефть базасы бар, 2017-жылдан бери ишмердүүлүк жүргүзүп келет.\n\n«Россия Нефть», Кыргызстандагы чекене жана дүң нефтепродукттар рыногундагы ири операторлордун бири, өлкөнүн аймагында 40 АЗС жана эки ири нефть базасы бар, 2017-жылдан бери ишмердүүлүк жүргүзүп келет.\n\nБиздин сайтка шилтеме https://russia-neft.kg/",
+    "aboutApp": "Тиркеме жөнүндө",
+    "loginSuccess": "Кирүү ийгиликтүү аткарылды",
+    "loginError": "Кирүүдө ката кетти",
+    "fieldRequired": "Талааны толтуруу зарыл",
+    "phone": "Телефон",
+    "password": "Сырсөз",
+    "repeatPassword": "Сырсөздү кайталаңыз",
+    "welcomeBack": "Кош келиңиз!",
+    "enterPhone": "Телефон номерин киргизиңиз",
+    "enterPassword": "Сырсөздү киргизиңиз",
+    "enter": "Кирүү",
+    "forgotPassword": "Сырсөздү унуттуңузбу?",
+    "register": "Катталуу",
+    "registerSuccess": "Каттоо ийгиликтүү аткарылды",
+    "registerError": "Катталууда ката кетти",
+    "registerNow": "Катталуу",
+    "name": "Атыңыз",
+    "surname": "Фамилияңыз",
+    "lastName": "Отчествоңуз",
+    "confirmPassword": "Сырсөздү тастыктаңыз",
+    "passwordsNotMatch": "Сырсөздөр дал келбеди",
+    "registerAlready": "Катталгансызбы?",
+    "enterName": "Атыңызды киргизиңиз",
+    "enterSurname": "Фамилияңызды киргизиңиз",
+    "enterConfirmPassword": "Сырсөздү тастыктаңыз",
+    "passwordLength": "Сырсөз 6 символдон кем болбоосу керек",
+    "noAccount": "Аккаунт жокпу?",
+    "alreadyHaveAccount": "Аккаунт барбы?",
+    "loginToContinue": "Улантуу үчүн каттоодон өтүңүз",
+    "next": "Кийинки",
+    "back": "Артка",
+    "confirm": "Тастыктоо",
+    "cancel": "Жокко чыгаруу",
+    "editProfile": "Профилди өзгөртүү",
+    "save": "Сактоо",
+    "changePassword": "Сырсөздү өзгөртүү",
+    "oldPassword": "Эски сырсөз",
+    "newPassword": "Жаңы сырсөз",
+    "enterOldPassword": "Эски сырсөздү киргизиңиз",
+    "enterNewPassword": "Жаңы сырсөздү киргизиңиз",
+    "passwordChanged": "Сырсөз өзгөртүлдү",
+    "passwordNotChanged": "Сырсөз өзгөртүлгөн жок",
+    "logoutSuccess": "Чыгуу ийгиликтүү аткарылды",
+    "enterCode": "Кодду киргизиңиз",
+    "code": "Код",
+    "sendCode": "Кодду жөнөтүү",
+    "codeSent": "Код жөнөтүлдү",
+    "codeError": "Код жөнөтүүдө ката кетти",
+    "codeInvalid": "Туура эмес код",
+    "passwordRecoveredSuccess": "Сырсөз калыбына келтирилди",
+    "codeExpired": "Коддун мөөнөтү аяктады",
+    "didNotGetCode": "Код келген жок",
+    "promotions": "Акциялар",
+    "news": "Жаңылыктар",
+    "gifts": "Белектер",
+    "allPromotions": "Бардык акциялар",
+    "allNews": "Бардык жаңылыктар",
+    "open": "Ачуу",
+    "close": "Жабуу",
+    "noData": "Маалымат жок",
+    "noPromotions": "Акциялар жок",
+    "noNews": "Жаңылыктар жок",
+    "graphics": "График",
+    "period": "Период",
+    "faq": "FAQ",
+    "help": "Жардам",
+    "send": "Жөнөтүү",
+    "welcome": "Кош келдиңиз",
+    "chooseLanguage": "Тилди тандаңыз",
+    "choose": "Тандоо",
+    "map": "Карта",
+    "notifications": "Билдирүүлөр",
+    "operationHistory": "Операциялар тарыхы",
+    "noNotifications": "Билдирүүлөр жок",
+    "noOperations": "Операциялар жок",
+    "personalInformation": "Жеке маалымат",
+    "deleteAccount": "Аккаунтту өчүрүү",
+    "deleteAccountQuestion": "Аккаунтту чын эле өчүргүңүз келеби?",
+    "deleteAccountMessage": "Аккаунтту өчүргөндөн кийин маалыматты калыбына келтирүү мүмкүн эмес",
+    "accountDeleted": "Аккаунт өчүрүлдү",
+    "accountNotDeleted": "Аккаунт өчүрүлгөн жок",
+    "delete": "Өчүрүү",
+    "no": "Жок",
+    "yes": "Ооба",
+    "leaveAccount": "Чыгуу",
+    "leaveAccountQuestion": "Чыгуу керекпи?",
+    "leaveAccountMessage": "Чыккан соң кайра кире аласыз",
+    "leave": "Чыгуу",
+    "contactManager": "Менеджерге байланышуу",
+    "city": "Шаар",
+    "yourApplicationInProcess": "Сиздин арызыңыз каралууда",
+    "pleaseWait": "Күтө туруңуз",
+    "applicationAccepted": "Идентификация кабыл алынды!",
+    "applicationRejected": "Идентификация четке кагылды",
+    "applicationError": "Идентификацияда ката",
+    "passIdentification": "Идентификациядан өтүү",
+    "notIdentified": "Сиз идентификацияланбадыңыз",
+    "myQrCode": "Менин QR-кодум",
+    "myQr": "Менин QR",
+    "miutesLeft": "Калды {minutes} мин",
+    "@miutesLeft": {
+        "placeholders": {
+            "minutes": {
+                "type": "String"
+            }
+        }
+    },
+    "myScanner": "Менин сканерим",
+    "scanQr": "QR-кодду сканерлөө",
+    "qrScanned": "QR-код сканерленди",
+    "qrError": "QR-кодду сканерлөөдө ката кетти",
+    "qrInvalid": "Туура эмес QR-код",
+    "scanQrText": "QR-кодду тууралоону суранабыз,\nсканерлөө үчүн ал кадрдын ичинде болсун.",
+    "simple": "Жөнөкөй",
+    "silver": "Күмүш",
+    "gold": "Алтын",
+    "transactions": "Транзакциялар",
+    "seeMyExpenses": "Менин чыгымдарымды көрүү",
+    "weWillSendCode": "Биз сизге код жиберебиз",
+    "didNotReceiveCode": "Код келген жок",
+    "codeSendedExplanation_1": "Биз сизге телефон номериңизди тастыктоо үчүн код жөнөттүк {phone}",
+    "@codeSendedExplanation_1": {
+        "placeholders": {
+            "phone": {
+                "type": "String"
+            }
+        }
+    },
+    "codeSendedExplanation_2": "Бул код 10 мүнөттөн кийин мөөнөтү бүтөт. Эгерде сиз билдирүү албасаңыз, \"Келген жок\" баскычын басыңыз",
+    "version": "Версия",
+    "receiveNotifications": "Билдирмелерди алуу",
+    "phoneNumber": "Телефон номери",
+    "createAccountPrivacyPolicy": "Аккаунт түзүү менен сиз биздин <link href=\"{link}\">Купуялык саясатыман</link> макул болосуз",
+    "@createAccountPrivacyPolicy": {
+        "placeholders": {
+            "link": {
+                "type": "String"
+            }
+        }
+    },
+    "pleaseAcceptPrivacyPolicy": "Купуялык саясатына макул болуңуз",
+    "codeSendText1": "Сиздин телефон номериңизди ырастоо үчүн код жөнөттүк {phone}",
+    "@codeSendText1": {
+        "placeholders": {
+            "phone": {
+                "type": "String"
+            }
+        }
+    },
+    "codeSendText2": "Бул код 10 мүнөттөн кийин мөөнөтү бүтөт. Эгерде сиз билдирүү албасаңыз, \"Келген жок\" баскычын басыңыз",
+    "fromDateTo": "{fromDate} - {toDate}",
+    "@fromDateTo": {
+        "placeholders": {
+            "fromDate": {
+                "type": "String"
+            },
+            "toDate": {
+                "type": "String"
+            }
+        }
+    },
+    "promotionRules": "Акциянын эрежелери",
+    "forMonthName": "{monthName} үчүн",
+    "@forMonthName": {
+        "placeholders": {
+            "monthName": {
+                "type": "String"
+            }
+        }
+    },
+    "myGraphics": "Менин графигим",
+    "openSite": "Сайтты ачуу",
+    "aboutCompanyShort": "«Россия Нефть» Кыргызстандагы чекене жана дүң рыноктун ири операторлорунун бири..",
+    "inn": "ИНН",
+    "identification": "Идентификация",
+    "passportInfo": "Паспорт маалыматтары",
+    "frontSide": "Алдыңкы тарабы",
+    "backSide": "Арткы тарабы",
+    "photoWithPassport": "Паспорт менен сүрөт",
+    "applicationSentToProcess": "Арызыңыз  каралууда!",
+    "pleaseWaitForIdentification": "Сураныч күтө туруңуз, биздин кызматкерлер сиздин арызыңызды карап жатышат",
+    "privacyPolicy": "Купуялык саясаты",
+    "pleaseSelectInterfaceLanguage": "Интерфейс тилин тандаңыз",
+    "main": "Негизги бет",
+    "listOfStations": "АЗС тизмеси",
+    "address": "Дарек",
+    "workingHours": "Иш убактысы",
+    "savedSuccessfully": "Ийгиликтүү сакталды",
+    "areYouSure": "Сиз макулсузбу?",
+    "removeAccountConfirmation": "Аккаунту өчүрүүгө макулсузбу?",
+    "remove": "Өчүрүү",
+    "removeAccount": "Аккаунту өчүрүү",
+    "identificationNoneTitle": "Сиз идентификацияланбадыңыз",
+    "identificationWaitingTitle": "Сиздин арызыңыз каралууда!",
+    "identificationAcceptedTitle": "Сиз идентификацияландыңыз!",
+    "identificationRejectedTitle": "Идентификация четке кагылды",
+    "identificationNoneSubtitle": "Идентификациядан өтүү",
+    "identificationWaitingSubtitle": "Сураныч, күтө туруңуз",
+    "identificationAcceptedSubtitle": "Идентификациядан өттүңүз",
+    "identificationRejectedSubtitle": "Идентификациядан өтүү",
+    "confirmLogout": "Аккаунттан чыгууну чын эле каалайсызбы?",
+    "qrScannerDescription": "QR-кодду сканерлөө үчүн рамка ичинде тууралаңыз.",
+    "scanQrCode": "QR-кодду сканерлөө",
+    "successfullyCompleted": "Ийгиликтүү аяктады!",
+    "purchaseThankYou": "Сатып алганыңыз үчүн рахмат, сизге {checkAmount} сом түшүрүлдү!",
+    "@purchaseThankYou": {
+        "placeholders": {
+            "checkAmount": {
+                "type": "int",
+                "example": "1000"
+            }
+        }
+    },
+    "yourBalance": "Сиздин балансыңыз",
+    "seniorOperator": "Башкаруучу оператор"
+}

@@ -1,0 +1,39 @@
+{
+  "ky": [
+    "status",
+    "changePhoneNumber",
+    "enterNewPhoneNumber",
+    "verifyPhoneNumber",
+    "enterVerificationCode",
+    "verificationCode",
+    "verify",
+    "phoneNumberChanged",
+    "change",
+    "changePhoneConfirmation",
+    "ourSocialNetworks",
+    "followUsOnFacebook",
+    "followUsOnInstagram",
+    "askQuestionsWhatsApp",
+    "thinkOfPinCode",
+    "incorrect"
+  ],
+
+  "zh": [
+    "status",
+    "changePhoneNumber",
+    "enterNewPhoneNumber",
+    "verifyPhoneNumber",
+    "enterVerificationCode",
+    "verificationCode",
+    "verify",
+    "phoneNumberChanged",
+    "change",
+    "changePhoneConfirmation",
+    "ourSocialNetworks",
+    "followUsOnFacebook",
+    "followUsOnInstagram",
+    "askQuestionsWhatsApp",
+    "thinkOfPinCode",
+    "incorrect"
+  ]
+}

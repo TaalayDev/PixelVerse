@@ -1,0 +1,227 @@
+{
+    "appName": "Rosneft",
+    "login": "登录",
+    "gallery": "画廊",
+    "camera": "相机",
+    "profile": "个人资料",
+    "settings": "设置",
+    "logout": "退出",
+    "language": "语言",
+    "aboutCompany": "关于公司",
+    "aboutCompanyText": "“俄罗斯石油”，是吉尔吉斯斯坦最大的零售和批发石油产品运营商之一，在吉尔吉斯斯坦拥有40个加油站和两个大型油库，自2017年起开展业务。\n\n“俄罗斯石油”，是吉尔吉斯斯坦最大的零售和批发石油产品运营商之一，在吉尔吉斯斯坦拥有40个加油站和两个大型油库，自2017年起开展业务。\n\n“俄罗斯石油”，是吉尔吉斯斯坦最大的零售和批发石油产品运营商之一，在吉尔吉斯斯坦拥有40个加油站和两个大型油库，自2017年起开展业务。\n\n访问我们的网站 https://russia-neft.kg/",
+    "aboutApp": "关于应用程序",
+    "loginSuccess": "登录成功",
+    "loginError": "登录错误",
+    "fieldRequired": "该字段为必填项",
+    "phone": "电话",
+    "password": "密码",
+    "repeatPassword": "重复密码",
+    "welcomeBack": "欢迎回来！",
+    "enterPhone": "输入电话号码",
+    "enterPassword": "输入密码",
+    "enter": "进入",
+    "forgotPassword": "忘记密码？",
+    "register": "注册",
+    "registerSuccess": "注册成功",
+    "registerError": "注册错误",
+    "registerNow": "立即注册",
+    "name": "名字",
+    "surname": "姓氏",
+    "lastName": "父姓",
+    "confirmPassword": "确认密码",
+    "passwordsNotMatch": "密码不匹配",
+    "registerAlready": "已经注册了吗？",
+    "enterName": "输入名字",
+    "enterSurname": "输入姓氏",
+    "enterConfirmPassword": "确认密码",
+    "passwordLength": "密码长度不得少于6个字符",
+    "noAccount": "没有账号？",
+    "alreadyHaveAccount": "已经有账号了？",
+    "loginToContinue": "登录以继续",
+    "next": "下一个",
+    "back": "返回",
+    "confirm": "确认",
+    "cancel": "取消",
+    "editProfile": "编辑个人资料",
+    "save": "保存",
+    "changePassword": "更改密码",
+    "oldPassword": "旧密码",
+    "newPassword": "新密码",
+    "enterOldPassword": "输入旧密码",
+    "enterNewPassword": "输入新密码",
+    "passwordChanged": "密码已更改",
+    "passwordNotChanged": "密码未更改",
+    "logoutSuccess": "成功退出",
+    "enterCode": "输入代码",
+    "code": "代码",
+    "sendCode": "发送代码",
+    "codeSent": "代码已发送",
+    "codeError": "发送代码错误",
+    "codeInvalid": "无效的代码",
+    "passwordRecoveredSuccess": "密码已恢复",
+    "codeExpired": "代码已过期",
+    "didNotGetCode": "未收到",
+    "promotions": "促销",
+    "news": "新闻",
+    "gifts": "礼物",
+    "allPromotions": "所有促销",
+    "allNews": "所有新闻",
+    "open": "打开",
+    "close": "关闭",
+    "noData": "没有数据",
+    "noPromotions": "没有促销",
+    "noNews": "没有新闻",
+    "graphics": "图形",
+    "period": "时期",
+    "faq": "常见问题",
+    "help": "帮助",
+    "send": "发送",
+    "welcome": "欢迎",
+    "chooseLanguage": "选择语言",
+    "choose": "选择",
+    "map": "地图",
+    "notifications": "通知",
+    "operationHistory": "操作历史",
+    "noNotifications": "没有通知",
+    "noOperations": "没有操作",
+    "personalInformation": "个人信息",
+    "deleteAccount": "删除账户",
+    "deleteAccountQuestion": "您确定要删除账户吗？",
+    "deleteAccountMessage": "删除账户后，您将无法恢复数据",
+    "accountDeleted": "账户已删除",
+    "accountNotDeleted": "账户未删除",
+    "delete": "删除",
+    "no": "否",
+    "yes": "是",
+    "leaveAccount": "退出账户",
+    "leaveAccountQuestion": "您确定要退出吗？",
+    "leaveAccountMessage": "退出后，您可以再次登录账户",
+    "leave": "退出",
+    "contactManager": "联系经理",
+    "city": "城市",
+    "yourApplicationInProcess": "您的申请正在处理中",
+    "pleaseWait": "请稍候",
+    "applicationAccepted": "您已通过身份验证！",
+    "applicationRejected": "身份验证被拒绝",
+    "applicationError": "身份验证错误",
+    "passIdentification": "通过身份验证",
+    "notIdentified": "您未通过身份验证",
+    "myQrCode": "我的二维码",
+    "myQr": "我的二维码",
+    "miutesLeft": "剩余 {minutes} 分钟",
+    "@miutesLeft": {
+        "placeholders": {
+            "minutes": {
+                "type": "String"
+            }
+        }
+    },
+    "myScanner": "我的扫描仪",
+    "scanQr": "扫描二维码",
+    "qrScanned": "二维码已扫描",
+    "qrError": "扫描二维码错误",
+    "qrInvalid": "无效的二维码",
+    "scanQrText": "请将二维码对准框内，以便于扫描检测。",
+    "simple": "普通",
+    "silver": "银",
+    "gold": "金",
+    "transactions": "交易",
+    "seeMyExpenses": "查看我的支出",
+    "weWillSendCode": "我们将向您提供的电话号码发送确认代码",
+    "didNotReceiveCode": "未收到",
+    "codeSendedExplanation_1": "我们已向您发送代码以确认您的电话号码 {phone}",
+    "@codeSendedExplanation_1": {
+        "placeholders": {
+            "phone": {
+                "type": "String"
+            }
+        }
+    },
+    "codeSendedExplanation_2": "此代码将在10分钟后失效。如果您没有收到消息，请点击“未收到”按钮",
+    "version": "版本",
+    "receiveNotifications": "接收通知",
+    "phoneNumber": "电话号码",
+    "createAccountPrivacyPolicy": "创建账户即表示您同意我们的 <link href=\"{link}\">隐私政策</link>",
+    "@createAccountPrivacyPolicy": {
+        "placeholders": {
+            "link": {
+                "type": "String"
+            }
+        }
+    },
+    "pleaseAcceptPrivacyPolicy": "请接受隐私政策",
+    "codeSendText1": "我们已向您发送代码以确认您的电话号码 {phone}",
+    "@codeSendText1": {
+        "placeholders": {
+            "phone": {
+                "type": "String"
+            }
+        }
+    },
+    "codeSendText2": "此代码将在10分钟后失效。如果您没有收到消息，请点击“未收到”按钮",
+    "fromDateTo": "从 {fromDate} - 到 {toDate}",
+    "@fromDateTo": {
+        "placeholders": {
+            "fromDate": {
+                "type": "String"
+            },
+            "toDate": {
+                "type": "String"
+            }
+        }
+    },
+    "promotionRules": "促销规则",
+    "forMonthName": "{monthName} 月",
+    "@forMonthName": {
+        "placeholders": {
+            "monthName": {
+                "type": "String"
+            }
+        }
+    },
+    "myGraphics": "我的图表",
+    "openSite": "打开网站",
+    "aboutCompanyShort": "“俄罗斯石油”，是吉尔吉斯斯坦最大的零售和批发石油产品运营商之一..",
+    "inn": "税号",
+    "identification": "身份验证",
+    "passportInfo": "护照信息",
+    "frontSide": "正面",
+    "backSide": "背面",
+    "photoWithPassport": "持护照的照片",
+    "applicationSentToProcess": "申请处理中！",
+    "pleaseWaitForIdentification": "请等待，我们的工作人员正在审核您的申请",
+    "privacyPolicy": "隐私政策",
+    "pleaseSelectInterfaceLanguage": "请选择界面语言",
+    "main": "主页",
+    "listOfStations": "加油站列表",
+    "address": "地址",
+    "workingHours": "工作时间",
+    "savedSuccessfully": "保存成功",
+    "areYouSure": "你确定吗？",
+    "removeAccountConfirmation": "您确定要删除账户吗？",
+    "remove": "删除",
+    "removeAccount": "删除账户",
+    "identificationNoneTitle": "您未通过身份验证",
+    "identificationWaitingTitle": "您的申请正在处理中！",
+    "identificationAcceptedTitle": "您已通过身份验证！",
+    "identificationRejectedTitle": "身份验证被拒绝",
+    "identificationNoneSubtitle": "进行身份验证",
+    "identificationWaitingSubtitle": "请稍候",
+    "identificationAcceptedSubtitle": "身份验证已通过",
+    "identificationRejectedSubtitle": "重新进行身份验证",
+    "confirmLogout": "您确定要退出账户吗？",
+    "qrScannerDescription": "请将二维码对准框架内，\n以便扫描容易识别。",
+    "scanQrCode": "扫描二维码",
+    "successfullyCompleted": "成功完成！",
+    "purchaseThankYou": "感谢您的购买，您已获得 {checkAmount} 索姆！",
+    "@purchaseThankYou": {
+        "placeholders": {
+            "checkAmount": {
+                "type": "int",
+                "example": "1000"
+            }
+        }
+    },
+    "yourBalance": "您的余额",
+    "seniorOperator": "高级操作员"
+}

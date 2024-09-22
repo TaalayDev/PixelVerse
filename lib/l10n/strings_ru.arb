@@ -1,0 +1,243 @@
+{
+    "appName": "Rosneft",
+    "login": "Войти",
+    "gallery": "Галерея",
+    "camera": "Камера",
+    "profile": "Профиль",
+    "settings": "Настройки",
+    "logout": "Выйти",
+    "language": "Язык",
+    "aboutCompany": "О компании",
+    "aboutCompanyText": "«Росcия Нефть», один из крупнейших операторов на розничном и оптовом рынке нефтепродуктов Кыргызстана, имеющий розничную сеть в количестве 40 АЗС на территории Кыргызстана, и крупнейших двух нефтебаз, осуществляющий свою деятельность с 2017 года. \n\n«Росcия Нефть», один из крупнейших операторов на розничном и оптовом рынке нефтепродуктов Кыргызстана, имеющий розничную сеть в количестве 40 АЗС на территории Кыргызстана, и крупнейших двух нефтебаз, осуществляющий свою деятельность с 2017 года.\n\n«Росcия Нефть», один из крупнейших операторов на розничном и оптовом рынке нефтепродуктов Кыргызстана, имеющий розничную сеть в количестве 40 АЗС на территории Кыргызстана, и крупнейших двух нефтебаз, осуществляющий свою деятельность с 2017 года.\n\nСсылка на наш сайт https://russia-neft.kg/",
+    "aboutApp": "О приложении",
+    "loginSuccess": "Вход выполнен успешно",
+    "loginError": "Ошибка входа",
+    "fieldRequired": "Поле обязательно для заполнения",
+    "phone": "Телефон",
+    "password": "Пароль",
+    "repeatPassword": "Повторите пароль",
+    "welcomeBack": "C возвращением!",
+    "enterPhone": "Введите номер телефона",
+    "enterPassword": "Введите пароль",
+    "enter": "Войти",
+    "forgotPassword": "Забыли пароль?",
+    "register": "Регистрация",
+    "registerSuccess": "Регистрация выполнена успешно",
+    "registerError": "Ошибка регистрации",
+    "registerNow": "Зарегистрироваться",
+    "name": "Имя",
+    "surname": "Фамилия",
+    "lastName": "Отчество",
+    "confirmPassword": "Подтвердите пароль",
+    "passwordsNotMatch": "Пароли не совпадают",
+    "registerAlready": "Уже зарегистрированы?",
+    "enterName": "Введите имя",
+    "enterSurname": "Введите фамилию",
+    "enterConfirmPassword": "Подтвердите пароль",
+    "passwordLength": "Пароль должен содержать не менее 6 символов",
+    "noAccount": "Нет аккаунта?",
+    "alreadyHaveAccount": "Уже есть аккаунт?",
+    "loginToContinue": "Войдите, чтобы продолжить",
+    "next": "Дальше",
+    "back": "Назад",
+    "confirm": "Подтвердить",
+    "cancel": "Отмена",
+    "editProfile": "Редактировать профиль",
+    "save": "Сохранить",
+    "changePassword": "Изменить пароль",
+    "oldPassword": "Старый пароль",
+    "newPassword": "Новый пароль",
+    "enterOldPassword": "Введите старый пароль",
+    "enterNewPassword": "Введите новый пароль",
+    "passwordChanged": "Пароль изменен",
+    "passwordNotChanged": "Пароль не изменен",
+    "logoutSuccess": "Выход выполнен успешно",
+    "enterCode": "Введите код",
+    "code": "Код",
+    "sendCode": "Отправить код",
+    "codeSent": "Код отправлен",
+    "codeError": "Ошибка отправки кода",
+    "codeInvalid": "Неверный код",
+    "passwordRecoveredSuccess": "Пароль восстановлен",
+    "codeExpired": "Срок действия кода истек",
+    "didNotGetCode": "Не пришло",
+    "promotions": "Акции",
+    "news": "Новости",
+    "gifts": "Призы",
+    "allPromotions": "Все акции",
+    "allNews": "Все новости",
+    "open": "Открыть",
+    "close": "Закрыть",
+    "noData": "Нет данных",
+    "noPromotions": "Нет акций",
+    "noNews": "Нет новостей",
+    "graphics": "График",
+    "period": "Период",
+    "faq": "FAQ",
+    "help": "Помощь",
+    "send": "Отправить",
+    "welcome": "Добро пожаловать",
+    "chooseLanguage": "Выберите язык",
+    "choose": "Выбрать",
+    "map": "Карта",
+    "notifications": "Уведомления",
+    "operationHistory": "История операций",
+    "noNotifications": "Нет уведомлений",
+    "noOperations": "Нет операций",
+    "personalInformation": "Личные информация",
+    "deleteAccount": "Удалить аккаунт",
+    "deleteAccountQuestion": "Вы уверены, что хотите удалить аккаунт?",
+    "deleteAccountMessage": "После удаления аккаунта вы не сможете восстановить данные",
+    "accountDeleted": "Аккаунт удален",
+    "accountNotDeleted": "Аккаунт не удален",
+    "delete": "Удалить",
+    "no": "Нет",
+    "yes": "Да",
+    "leaveAccount": "Выйти",
+    "leaveAccountQuestion": "Вы уверены, что хотите выйти?",
+    "leaveAccountMessage": "После выхода вы сможете войти в аккаунт снова",
+    "leave": "Выйти",
+    "contactManager": "Связаться с менеджером",
+    "city": "Город",
+    "yourApplicationInProcess": "Ваша заявка находится на рассмотрении",
+    "pleaseWait": "Пожалуйста, подождите",
+    "applicationAccepted": "Вы иденфицированы!",
+    "applicationRejected": "Идентификация отклонена",
+    "applicationError": "Ошибка идентификации",
+    "passIdentification": "Пройти идентификацию",
+    "notIdentified": "Вы не иденфицированы",
+    "myQrCode": "Мой QR-код",
+    "myQr": "Мой QR",
+    "miutesLeft": "Осталось {minutes} мин",
+    "@miutesLeft": {
+        "placeholders": {
+            "minutes": {
+                "type": "String"
+            }
+        }
+    },
+    "myScanner": "Мой сканер",
+    "scanQr": "Сканировать QR-код",
+    "qrScanned": "QR-код отсканирован",
+    "qrError": "Ошибка сканирования QR-кода",
+    "qrInvalid": "Неверный QR-код",
+    "scanQrText": "Пожалуйста, выровняйте QR-код \nвнутри рамки, чтобы сканирование \nбыло легко обнаружимым.",
+    "simple": "Обычный",
+    "silver": "Серебряный",
+    "gold": "Золотой",
+    "transactions": "Транзакции",
+    "seeMyExpenses": "Посмотреть мои расходы",
+    "weWillSendCode": "Мы отправим вам код подтверждения на указанный номер телефона",
+    "didNotReceiveCode": "Не пришло",
+    "codeSendedExplanation_1": "Мы отправили вам код для подтверждения вашего номера телефона {phone}",
+    "@codeSendedExplanation_1": {
+        "placeholders": {
+            "phone": {
+                "type": "String"
+            }
+        }
+    },
+    "codeSendedExplanation_2": "Этот код истекает через 10 минут. Если вы не получили сообщение, нажмите на кнопку \"Не пришло\"",
+    "version": "Версия",
+    "receiveNotifications": "Получать уведомления",
+    "phoneNumber": "Номер телефона",
+    "createAccountPrivacyPolicy": "Создавая аккаунт, вы соглашаетесь с нашей <link href=\"{link}\">Политикой конфиденциальности</link>",
+    "@createAccountPrivacyPolicy": {
+        "placeholders": {
+            "link": {
+                "type": "String"
+            }
+        }
+    },
+    "pleaseAcceptPrivacyPolicy": "Пожалуйста, примите политику конфиденциальности",
+    "codeSendText1": "Мы отправили вам код для подтверждения вашего номера телефона {phone}",
+    "@codeSendText1": {
+        "placeholders": {
+            "phone": {
+                "type": "String"
+            }
+        }
+    },
+    "codeSendText2": "Этот код истекает через 10 минут. Если вы не получили сообщение, нажмите на кнопку “Не пришло”",
+    "fromDateTo": "с {fromDate} - До {toDate}",
+    "@fromDateTo": {
+        "placeholders": {
+            "fromDate": {
+                "type": "String"
+            },
+            "toDate": {
+                "type": "String"
+            }
+        }
+    },
+    "promotionRules": "Правила акции",
+    "forMonthName": "За {monthName}",
+    "@forMonthName": {
+        "placeholders": {
+            "monthName": {
+                "type": "String"
+            }
+        }
+    },
+    "myGraphics": "Мой график",
+    "openSite": "Открыть сайт",
+    "aboutCompanyShort": "«Россия Нефть», один из крупнейших операторов на розничном и оптовом рынке нефтепродуктов Кыргызстана..",
+    "inn": "ИНН",
+    "identification": "Идентификация",
+    "passportInfo": "Паспортные данные",
+    "frontSide": "Лицевая сторона",
+    "backSide": "Обратная сторона",
+    "photoWithPassport": "Фото лица c паспортом",
+    "applicationSentToProcess": "Заявка на рассмотрении!",
+    "pleaseWaitForIdentification": "Пожалуйста ожидайте, пока наши сотрудники рассматривают вашу заявку",
+    "privacyPolicy": "Политика конфиденциальности",
+    "pleaseSelectInterfaceLanguage": "Пожалуйста, выберите язык интерфейса",
+    "main": "Главная",
+    "listOfStations": "Список АЗС",
+    "address": "Адрес",
+    "workingHours": "Часы работы",
+    "savedSuccessfully": "Сохранено успешно",
+    "areYouSure": "Вы уверены?",
+    "removeAccountConfirmation": "Вы уверены, что хотите удалить аккаунт?",
+    "remove": "Удалить",
+    "removeAccount": "Удалить аккаунт",
+    "identificationNoneTitle": "Вы не иденфицированы",
+    "identificationWaitingTitle": "Ваша заявка на рассмотрении!",
+    "identificationAcceptedTitle": "Вы идентифицированы!",
+    "identificationRejectedTitle": "Идентификация отклонена",
+    "identificationNoneSubtitle": "Пройти идентификацию",
+    "identificationWaitingSubtitle": "Пожалуйста, ожидайте",
+    "identificationAcceptedSubtitle": "Идентификация пройдена",
+    "identificationRejectedSubtitle": "Пройти идентификацию",
+    "confirmLogout": "Вы действительно хотите выйти из аккаунта?",
+    "qrScannerDescription": "Пожалуйста, выровняйте QR-код \nвнутри рамки, чтобы сканирование \nбыло легко обнаружимым.",
+    "scanQrCode": "Сканируйте QR-код",
+    "successfullyCompleted": "Успешно завершено!",
+    "purchaseThankYou": "Вам зачислено {checkAmount} сомов, спасибо за покупку!",
+    "@purchaseThankYou": {
+        "placeholders": {
+            "checkAmount": {
+                "type": "int",
+                "example": "1000"
+            }
+        }
+    },
+    "status": "Статус",
+    "changePhoneNumber": "Смена номера",
+    "enterNewPhoneNumber": "Введите новый номер телефона",
+    "verifyPhoneNumber": "Подтвердить номер телефона",
+    "enterVerificationCode": "Введите код подтверждения",
+    "verificationCode": "Код подтверждения",
+    "verify": "Подтвердить",
+    "phoneNumberChanged": "Номер телефона успешно изменен",
+    "change": "Изменить",
+    "yourBalance": "Ваш баланс",
+    "changePhoneConfirmation": "Вы действительно хотите сменить ваш номер телефона?",
+    "ourSocialNetworks": "Наши социальные сети",
+    "followUsOnFacebook": "Следите за нами в Facebook",
+    "followUsOnInstagram": "Следите за нами в Instagram",
+    "askQuestionsWhatsApp": "Есть вопросы? Напишите нам",
+    "thinkOfPinCode": "Придумайте пин-код",
+    "incorrect": "Неверно",
+    "seniorOperator": "Старший оператор"
+}
