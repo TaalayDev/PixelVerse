@@ -6,7 +6,7 @@ part of 'pixel_controller_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$pixelDrawNotifierHash() => r'a8b6eb8f64d9a4906c1f20349202a45acf5fdd81';
+String _$pixelDrawNotifierHash() => r'1791fb0e3fd9cb2db9bd42375e9b74b227aad5e9';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -31,13 +31,11 @@ class _SystemHash {
 
 abstract class _$PixelDrawNotifier
     extends BuildlessAutoDisposeNotifier<PixelDrawState> {
-  late final int width;
-  late final int height;
+  late final Project project;
 
-  PixelDrawState build({
-    int width = 32,
-    int height = 32,
-  });
+  PixelDrawState build(
+    Project project,
+  );
 }
 
 /// See also [PixelDrawNotifier].
@@ -50,13 +48,11 @@ class PixelDrawNotifierFamily extends Family<PixelDrawState> {
   const PixelDrawNotifierFamily();
 
   /// See also [PixelDrawNotifier].
-  PixelDrawNotifierProvider call({
-    int width = 32,
-    int height = 32,
-  }) {
+  PixelDrawNotifierProvider call(
+    Project project,
+  ) {
     return PixelDrawNotifierProvider(
-      width: width,
-      height: height,
+      project,
     );
   }
 
@@ -65,8 +61,7 @@ class PixelDrawNotifierFamily extends Family<PixelDrawState> {
     covariant PixelDrawNotifierProvider provider,
   ) {
     return call(
-      width: provider.width,
-      height: provider.height,
+      provider.project,
     );
   }
 
@@ -89,13 +84,10 @@ class PixelDrawNotifierFamily extends Family<PixelDrawState> {
 class PixelDrawNotifierProvider
     extends AutoDisposeNotifierProviderImpl<PixelDrawNotifier, PixelDrawState> {
   /// See also [PixelDrawNotifier].
-  PixelDrawNotifierProvider({
-    int width = 32,
-    int height = 32,
-  }) : this._internal(
-          () => PixelDrawNotifier()
-            ..width = width
-            ..height = height,
+  PixelDrawNotifierProvider(
+    Project project,
+  ) : this._internal(
+          () => PixelDrawNotifier()..project = project,
           from: pixelDrawNotifierProvider,
           name: r'pixelDrawNotifierProvider',
           debugGetCreateSourceHash:
@@ -105,8 +97,7 @@ class PixelDrawNotifierProvider
           dependencies: PixelDrawNotifierFamily._dependencies,
           allTransitiveDependencies:
               PixelDrawNotifierFamily._allTransitiveDependencies,
-          width: width,
-          height: height,
+          project: project,
         );
 
   PixelDrawNotifierProvider._internal(
@@ -116,20 +107,17 @@ class PixelDrawNotifierProvider
     required super.allTransitiveDependencies,
     required super.debugGetCreateSourceHash,
     required super.from,
-    required this.width,
-    required this.height,
+    required this.project,
   }) : super.internal();
 
-  final int width;
-  final int height;
+  final Project project;
 
   @override
   PixelDrawState runNotifierBuild(
     covariant PixelDrawNotifier notifier,
   ) {
     return notifier.build(
-      width: width,
-      height: height,
+      project,
     );
   }
 
@@ -138,16 +126,13 @@ class PixelDrawNotifierProvider
     return ProviderOverride(
       origin: this,
       override: PixelDrawNotifierProvider._internal(
-        () => create()
-          ..width = width
-          ..height = height,
+        () => create()..project = project,
         from: from,
         name: null,
         dependencies: null,
         allTransitiveDependencies: null,
         debugGetCreateSourceHash: null,
-        width: width,
-        height: height,
+        project: project,
       ),
     );
   }
@@ -160,27 +145,21 @@ class PixelDrawNotifierProvider
 
   @override
   bool operator ==(Object other) {
-    return other is PixelDrawNotifierProvider &&
-        other.width == width &&
-        other.height == height;
+    return other is PixelDrawNotifierProvider && other.project == project;
   }
 
   @override
   int get hashCode {
     var hash = _SystemHash.combine(0, runtimeType.hashCode);
-    hash = _SystemHash.combine(hash, width.hashCode);
-    hash = _SystemHash.combine(hash, height.hashCode);
+    hash = _SystemHash.combine(hash, project.hashCode);
 
     return _SystemHash.finish(hash);
   }
 }
 
 mixin PixelDrawNotifierRef on AutoDisposeNotifierProviderRef<PixelDrawState> {
-  /// The parameter `width` of this provider.
-  int get width;
-
-  /// The parameter `height` of this provider.
-  int get height;
+  /// The parameter `project` of this provider.
+  Project get project;
 }
 
 class _PixelDrawNotifierProviderElement
@@ -189,9 +168,7 @@ class _PixelDrawNotifierProviderElement
   _PixelDrawNotifierProviderElement(super.provider);
 
   @override
-  int get width => (origin as PixelDrawNotifierProvider).width;
-  @override
-  int get height => (origin as PixelDrawNotifierProvider).height;
+  Project get project => (origin as PixelDrawNotifierProvider).project;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

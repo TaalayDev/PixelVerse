@@ -3,7 +3,6 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -104,19 +103,28 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   bool get canUndo => _undoStack.isNotEmpty;
   bool get canRedo => _redoStack.isNotEmpty;
 
+  int get width => state.width;
+  int get height => state.height;
+
   SelectionModel? _selectionRect;
   SelectionModel? _originalSelectionRect;
   List<MapEntry<Point<int>, int>> _selectedPixels = [];
   Uint32List _cachedPixels = Uint32List(0);
 
   @override
-  PixelDrawState build({int width = 32, int height = 32}) {
+  PixelDrawState build(Project project) {
     return PixelDrawState(
-      width: width,
-      height: height,
-      layers: [
-        Layer(1, 'Layer 1', Uint32List(width * height)),
-      ],
+      width: project.width,
+      height: project.height,
+      layers: project.layers.isNotEmpty
+          ? project.layers
+          : [
+              Layer(
+                1,
+                'Layer 1',
+                Uint32List(project.width * project.height),
+              ),
+            ],
       currentColor: Colors.black,
       currentTool: PixelTool.pencil,
       mirrorAxis: MirrorAxis.vertical,
@@ -134,6 +142,8 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
       layers: [...state.layers, newLayer],
       currentLayerIndex: state.layers.length,
     );
+
+    _updateProject();
   }
 
   void removeLayer(int index) {
@@ -147,6 +157,8 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
       layers: layers,
       currentLayerIndex: newIndex,
     );
+
+    _updateProject();
   }
 
   void selectLayer(int index) {
@@ -159,6 +171,8 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     final layer = layers[index];
     layers[index] = layer.copyWith(isVisible: !layer.isVisible);
     state = state.copyWith(layers: layers);
+
+    _updateProject();
   }
 
   void reorderLayers(int oldIndex, int newIndex) {
@@ -166,6 +180,8 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     final layer = layers.removeAt(oldIndex);
     layers.insert(newIndex, layer);
     state = state.copyWith(layers: layers);
+
+    _updateProject();
   }
 
   void undo() {
@@ -176,6 +192,12 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
       canUndo: _undoStack.isNotEmpty,
       canRedo: true,
     );
+
+    if (previousState.selectionRect != null) {
+      setSelection(previousState.selectionRect);
+    }
+
+    _updateProject();
   }
 
   void redo() {
@@ -186,6 +208,12 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
       canUndo: true,
       canRedo: _redoStack.isNotEmpty,
     );
+
+    if (nextState.selectionRect != null) {
+      setSelection(nextState.selectionRect);
+    }
+
+    _updateProject();
   }
 
   void saveState() {
@@ -297,6 +325,8 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     final layers = List<Layer>.from(state.layers);
     layers[state.currentLayerIndex] = currentLayer.copyWith(pixels: pixels);
     state = state.copyWith(layers: layers);
+
+    _updateProject();
   }
 
   void drawShape(List<Point<int>> points) {
@@ -431,5 +461,12 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
 
     final rect = _selectionRect!.rect;
     return x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom;
+  }
+
+  Future<void> _updateProject() async {
+    await DatabaseService.updateProject(project.copyWith(
+      layers: state.layers,
+      editedAt: DateTime.now(),
+    ));
   }
 }

@@ -1,14 +1,12 @@
 import 'dart:async';
-import 'dart:ui' as ui;
-import 'dart:typed_data';
-import 'package:image/image.dart' as img;
 
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../data.dart';
+import 'layers_preview.dart';
 
-class LayersPanel extends StatefulHookConsumerWidget {
+class LayersPanel extends HookConsumerWidget {
   final int width;
   final int height;
   final List<Layer> layers;
@@ -38,56 +36,8 @@ class LayersPanel extends StatefulHookConsumerWidget {
     required this.onLayerOpacityChanged,
   });
 
-  ConsumerState<LayersPanel> createState() => _LayersPanelState();
-}
-
-class _LayersPanelState extends ConsumerState<LayersPanel> {
-  late List<Layer> layers = widget.layers;
-  late int activeLayerIndex = widget.activeLayerIndex;
-  final Map<int, ui.Image> _cachedPreviews = {};
-  Timer? _debounceTimer;
-
   @override
-  void initState() {
-    super.initState();
-    _updateLayerPreviews();
-  }
-
-  @override
-  void didUpdateWidget(covariant LayersPanel oldWidget) {
-    if (oldWidget.layers != widget.layers) {
-      layers = widget.layers;
-      _scheduleUpdateLayerPreviews();
-    }
-    if (oldWidget.activeLayerIndex != widget.activeLayerIndex) {
-      activeLayerIndex = widget.activeLayerIndex;
-    }
-    super.didUpdateWidget(oldWidget);
-  }
-
-  Future<void> _scheduleUpdateLayerPreviews() async {
-    if (_debounceTimer != null && _debounceTimer!.isActive) {
-      _debounceTimer!.cancel();
-    }
-    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-      _updateLayerPreviews();
-    });
-  }
-
-  Future<void> _updateLayerPreviews() async {
-    for (final layer in layers) {
-      final image = await _createImageFromPixels(
-        Uint32List.fromList(layer.pixels),
-        widget.width,
-        widget.height,
-      );
-      _cachedPreviews[layer.id] = image;
-    }
-    setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return SizedBox(
       width: 250,
       child: Column(
@@ -98,7 +48,7 @@ class _LayersPanelState extends ConsumerState<LayersPanel> {
             child: ReorderableListView.builder(
               itemCount: layers.length,
               onReorder: (oldIndex, newIndex) {
-                widget.onLayerReordered(newIndex, oldIndex);
+                onLayerReordered(newIndex, oldIndex);
               },
               itemBuilder: (context, index) {
                 final layer = layers[index];
@@ -128,7 +78,7 @@ class _LayersPanelState extends ConsumerState<LayersPanel> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () async {
-              widget.onLayerAdded('Layer ${layers.length + 1}');
+              onLayerAdded('Layer ${layers.length + 1}');
             },
             tooltip: 'Add new layer',
           ),
@@ -146,7 +96,7 @@ class _LayersPanelState extends ConsumerState<LayersPanel> {
       child: ListTile(
         leading: ClipRRect(
           borderRadius: BorderRadius.circular(4),
-          child: _buildLayerPreview(layer, widget.width, widget.height),
+          child: _buildLayerPreview(layer, width, height),
         ),
         title: Text(
           layer.name,
@@ -168,7 +118,7 @@ class _LayersPanelState extends ConsumerState<LayersPanel> {
                 ),
               ),
               onTap: () {
-                widget.onLayerVisibilityChanged(index);
+                onLayerVisibilityChanged(index);
               },
             ),
             InkWell(
@@ -186,7 +136,7 @@ class _LayersPanelState extends ConsumerState<LayersPanel> {
           ],
         ),
         onTap: () {
-          widget.onLayerSelected(index);
+          onLayerSelected(index);
         },
         selected: index == activeLayerIndex,
       ),
@@ -194,7 +144,6 @@ class _LayersPanelState extends ConsumerState<LayersPanel> {
   }
 
   Widget _buildLayerPreview(Layer layer, int width, int height) {
-    final image = _cachedPreviews[layer.id];
     return Container(
       width: 40,
       height: 40,
@@ -202,48 +151,20 @@ class _LayersPanelState extends ConsumerState<LayersPanel> {
         border: Border.all(color: Colors.white),
         color: Colors.white.withOpacity(0.8),
       ),
-      child: image != null
-          ? RawImage(
-              image: image,
-              fit: BoxFit.cover,
-            )
-          : const ColoredBox(color: Colors.white),
+      child: LayersPreview(
+        width: width,
+        height: height,
+        layers: [layer],
+        builder: (context, image) {
+          return image != null
+              ? RawImage(
+                  image: image,
+                  fit: BoxFit.cover,
+                )
+              : const ColoredBox(color: Colors.white);
+        },
+      ),
     );
-  }
-
-  Future<ui.Image> _createImageFromPixels(
-    Uint32List pixels,
-    int width,
-    int height,
-  ) async {
-    final Completer<ui.Image> completer = Completer();
-    Uint32List fixedPixels = _fixColorChannels(pixels);
-    ui.decodeImageFromPixels(
-      Uint8List.view(fixedPixels.buffer),
-      width,
-      height,
-      ui.PixelFormat.rgba8888,
-      (ui.Image img) {
-        completer.complete(img);
-      },
-    );
-    return completer.future;
-  }
-
-  Uint32List _fixColorChannels(Uint32List pixels) {
-    for (int i = 0; i < pixels.length; i++) {
-      int pixel = pixels[i];
-
-      // Extract the color channels
-      int a = (pixel >> 24) & 0xFF;
-      int r = (pixel >> 16) & 0xFF;
-      int g = (pixel >> 8) & 0xFF;
-      int b = (pixel) & 0xFF;
-
-      // Reassemble with swapped channels (if needed)
-      pixels[i] = (a << 24) | (b << 16) | (g << 8) | r;
-    }
-    return pixels;
   }
 
   void _showDeleteConfirmation(BuildContext context, int index) {
@@ -264,7 +185,7 @@ class _LayersPanelState extends ConsumerState<LayersPanel> {
               child: const Text('Delete'),
               onPressed: () {
                 Navigator.of(context).pop();
-                widget.onLayerDeleted(index);
+                onLayerDeleted(index);
               },
             ),
           ],

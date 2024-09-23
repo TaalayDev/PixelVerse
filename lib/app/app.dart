@@ -48,6 +48,7 @@ class _AppState extends State<App> {
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: MaterialApp(
         theme: _appTheme.themeData,
+        themeMode: _appTheme.isDark ? ThemeMode.dark : ThemeMode.light,
         debugShowCheckedModeBanner: false,
         onGenerateTitle: (context) => Strings.of(context).appName,
         supportedLocales: Strings.supportedLocales,

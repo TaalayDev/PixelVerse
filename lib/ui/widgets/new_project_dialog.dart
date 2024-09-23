@@ -68,6 +68,7 @@ class _NewProjectDialogState extends State<NewProjectDialog> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Octicons.repo_template),
                 ),
+                style: Theme.of(context).textTheme.bodyMedium,
                 value: _selectedTemplateIndex,
                 items: List.generate(_templates.length, (index) {
                   final template = _templates[index];

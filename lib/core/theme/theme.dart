@@ -10,7 +10,7 @@ enum ThemeType {
 }
 
 class AppTheme {
-  static const defaultType = ThemeType.lightOrange;
+  static const defaultType = ThemeType.darkOrange;
   static final defaultTheme = AppTheme.fromType(defaultType);
 
   late ThemeType type;
@@ -25,12 +25,12 @@ class AppTheme {
       case ThemeType.lightOrange:
         return AppTheme(isDark: false)
           ..type = type
-          ..primaryColor = Colors.deepPurple;
+          ..primaryColor = const Color.fromARGB(255, 0, 142, 5);
 
       case ThemeType.darkOrange:
         return AppTheme(isDark: true)
           ..type = type
-          ..primaryColor = Colors.deepPurple;
+          ..primaryColor = const Color.fromARGB(255, 0, 142, 5);
     }
   }
 

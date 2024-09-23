@@ -1,424 +1,296 @@
-import 'dart:math';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:flutter_vector_icons/flutter_vector_icons.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:pixelverse/core.dart';
+import 'package:uuid/uuid.dart';
+
+import '../../data.dart';
+import '../../providers/projects_provider.dart';
 import '../widgets.dart';
 import 'about_screen.dart';
 import 'pixel_draw_screen.dart';
 
-class ProjectsScreen extends StatefulWidget {
+class ProjectsScreen extends HookConsumerWidget {
   const ProjectsScreen({super.key});
 
   @override
-  _ProjectsScreenState createState() => _ProjectsScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final projects = ref.watch(projectsProvider);
 
-class _ProjectsScreenState extends State<ProjectsScreen> {
-  final List<Project> _projects = [];
-  final ScrollController _scrollController = ScrollController();
-  bool _isScrolled = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _generateDummyProjects();
-    _scrollController.addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scrollController.offset > 0 && !_isScrolled) {
-      setState(() => _isScrolled = true);
-    } else if (_scrollController.offset <= 0 && _isScrolled) {
-      setState(() => _isScrolled = false);
-    }
-  }
-
-  void _generateDummyProjects() {
-    final random = Random();
-    for (int i = 0; i < 20; i++) {
-      _projects.add(Project(
-        id: 'project_$i',
-        name: 'Project ${i + 1}',
-        width: random.nextInt(32) + 16,
-        height: random.nextInt(32) + 16,
-        color: Color.fromRGBO(
-          random.nextInt(256),
-          random.nextInt(256),
-          random.nextInt(256),
-          1,
-        ),
-      ));
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[900],
-      drawer: _buildDrawer(),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxWidth < 600) {
-            return _buildMobileLayout();
-          } else {
-            return _buildTabletDesktopLayout();
-          }
-        },
+      appBar: AppBar(
+        leading: Row(
+          children: [
+            const SizedBox(width: 16),
+            TextButton.icon(
+              icon: const Icon(Feather.info),
+              label: const Text('About'),
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const AboutScreen(),
+                ));
+              },
+              style: TextButton.styleFrom(
+                backgroundColor:
+                    Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              ),
+            ),
+          ],
+        ),
+        leadingWidth: 290,
+        actions: [
+          IconButton(
+            icon: const Icon(Feather.plus),
+            onPressed: () => _navigateToNewProject(context, ref),
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _navigateToNewProject(context),
-        icon: const Icon(Icons.add),
-        label: const Text('New Project'),
+      body: AdaptiveProjectGrid(
+        projects: projects,
+        onCreateNew: () => _navigateToNewProject(context, ref),
+        onRefresh: () => ref.read(projectsProvider.notifier).refresh(),
       ),
     );
   }
 
-  Widget _buildMobileLayout() {
-    return CustomScrollView(
-      controller: _scrollController,
-      slivers: [
-        SliverAppBar(
-          expandedHeight: 200.0,
-          floating: false,
-          pinned: true,
-          elevation: _isScrolled ? 4 : 0,
-          flexibleSpace: FlexibleSpaceBar(
-            title: Text(
-              'PixelVerse Projects',
-              style: TextStyle(
-                color: _isScrolled ? Colors.white : Colors.white,
-                shadows: [
-                  Shadow(
-                    blurRadius: 10.0,
-                    color: Colors.black.withOpacity(0.5),
-                    offset: const Offset(2, 2),
-                  ),
-                ],
-              ),
-            ),
-            background: _buildAppBarBackground(),
-          ),
-        ),
-        SliverPadding(
-          padding: const EdgeInsets.all(16.0),
-          sliver: AdaptiveProjectGrid(projects: _projects, isFirstOpen: true),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTabletDesktopLayout() {
-    return Row(
-      children: [
-        SizedBox(
-          width: 250,
-          child: Drawer(
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(0.0),
-                bottomRight: Radius.circular(0.0),
-              ),
-            ),
-            child: _buildDrawer(),
-          ),
-        ),
-        Expanded(
-          child: CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              const SliverAppBar(
-                title: Text('PixelVerse Projects'),
-                pinned: true,
-                leading: SizedBox.shrink(),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.all(16.0),
-                sliver: AdaptiveProjectGrid(
-                  projects: _projects,
-                  isFirstOpen: true,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDrawer() {
-    return ListView(
-      padding: EdgeInsets.zero,
-      children: <Widget>[
-        const DrawerHeader(
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: NetworkImage('https://picsum.photos/id/237/1000/1000'),
-              fit: BoxFit.cover,
-            ),
-          ),
-          child: Text(
-            'PixelVerse',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-            ),
-          ),
-        ),
-        ListTile(
-          leading: const Icon(Icons.home),
-          title: const Text('Home'),
-          onTap: () {
-            Navigator.pop(context);
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.settings),
-          title: const Text('Settings'),
-          onTap: () {
-            Navigator.pop(context);
-            // Navigate to settings
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.info),
-          title: const Text('About'),
-          onTap: () {
-            Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => const AboutScreen(),
-            ));
-            // Navigate to about page
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAppBarBackground() {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Image.network(
-          'https://picsum.photos/id/237/1000/1000',
-          fit: BoxFit.cover,
-        ),
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                Colors.black.withOpacity(0.7),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _navigateToNewProject(BuildContext context) async {
+  void _navigateToNewProject(BuildContext context, WidgetRef ref) async {
     final result = await showDialog<({String name, int width, int height})>(
       context: context,
       builder: (BuildContext context) => const NewProjectDialog(),
     );
 
     if (result != null && context.mounted) {
-      final newProject = await Navigator.of(context).push(
+      final project = Project(
+        id: const Uuid().v4(),
+        name: result.name,
+        width: result.width,
+        height: result.height,
+        createdAt: DateTime.now(),
+        editedAt: DateTime.now(),
+        layers: [
+          Layer(1, 'Layer 1', Uint32List(result.width * result.height)),
+        ],
+      );
+
+      ref.read(projectsProvider.notifier).addProject(project);
+
+      await Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) => PixelDrawScreen(
-            id: 'new_project',
-            name: result.name,
-            width: result.width,
-            height: result.height,
-          ),
+          builder: (context) => PixelDrawScreen(project: project),
         ),
       );
+
+      if (context.mounted) {
+        ref.read(projectsProvider.notifier).refresh();
+      }
     }
   }
 }
 
 class AdaptiveProjectGrid extends StatelessWidget {
   final List<Project> projects;
-  final bool isFirstOpen;
+  final Function()? onCreateNew;
+  final Function()? onRefresh;
 
   const AdaptiveProjectGrid({
     super.key,
     required this.projects,
-    required this.isFirstOpen,
+    this.onCreateNew,
+    this.onRefresh,
   });
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
-    var count = 2;
-    if (size.width < 600) {
-      count = 2;
-    } else if (size.width < 1200) {
-      count = 4;
-    } else {
-      count = 6;
+    if (projects.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Feather.folder, size: 64, color: Colors.grey),
+            const SizedBox(height: 16),
+            Text(
+              'No projects found',
+              style: Theme.of(context).textTheme.bodyLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              icon: const Icon(Feather.plus),
+              label: const Text('Create New'),
+              onPressed: onCreateNew,
+            ),
+          ],
+        ),
+      );
     }
 
-    return _buildGrid(crossAxisCount: count);
-  }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final crossAxisCount = width < 600 ? 2 : (width < 1200 ? 3 : 4);
 
-  Widget _buildGrid({required int crossAxisCount}) {
-    return SliverGrid(
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        mainAxisSpacing: 16.0,
-        crossAxisSpacing: 16.0,
-        childAspectRatio: 1.0,
-      ),
-      delegate: SliverChildBuilderDelegate(
-        (BuildContext context, int index) {
-          return AnimationConfiguration.staggeredGrid(
-            position: index,
-            duration: const Duration(milliseconds: 375),
-            columnCount: crossAxisCount,
-            child: ScaleAnimation(
-              child: FadeInAnimation(
-                child: ProjectTile(project: projects[index]),
-              ),
-            ),
-          );
-        },
-        childCount: projects.length,
-      ),
-    );
-  }
-}
-
-class Project {
-  final String id;
-  final String name;
-  final int width;
-  final int height;
-  final Color color;
-
-  Project({
-    required this.id,
-    required this.name,
-    required this.width,
-    required this.height,
-    required this.color,
-  });
-}
-
-class ProjectTile extends StatelessWidget {
-  final Project project;
-
-  const ProjectTile({super.key, required this.project});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => PixelDrawScreen(
-              id: project.id,
-              name: project.name,
-              width: project.width,
-              height: project.height,
-            ),
-          ),
+        return MasonryGridView.count(
+          crossAxisCount: crossAxisCount,
+          mainAxisSpacing: 16,
+          crossAxisSpacing: 16,
+          padding: const EdgeInsets.all(16),
+          itemCount: projects.length,
+          itemBuilder: (context, index) {
+            return ProjectCard(
+              project: projects[index],
+              onRefresh: onRefresh,
+            );
+          },
         );
       },
-      child: Container(
-        decoration: BoxDecoration(
-          color: project.color.withOpacity(0.8),
-          borderRadius: BorderRadius.circular(16.0),
-          boxShadow: [
-            BoxShadow(
-              color: project.color.withOpacity(0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            CustomPaint(
-              painter: PixelGridPainter(
-                width: project.width,
-                height: project.height,
-                color: Colors.white.withOpacity(0.2),
-              ),
-            ),
-            Center(
-              child: Text(
-                project.name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-            ),
-            Positioned(
-              right: 8,
-              bottom: 8,
-              child: Text(
-                '${project.width}x${project.height}',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
 
-class PixelGridPainter extends CustomPainter {
-  final int width;
-  final int height;
-  final Color color;
+class ProjectCard extends StatelessWidget {
+  final Project project;
+  final Function()? onRefresh;
 
-  PixelGridPainter({
-    required this.width,
-    required this.height,
-    required this.color,
-  });
+  const ProjectCard({super.key, required this.project, this.onRefresh});
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1;
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        onTap: () async {
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => PixelDrawScreen(project: project),
+            ),
+          );
 
-    final cellWidth = size.width / width;
-    final cellHeight = size.height / height;
-
-    for (int i = 1; i < width; i++) {
-      canvas.drawLine(
-        Offset(i * cellWidth, 0),
-        Offset(i * cellWidth, size.height),
-        paint,
-      );
-    }
-
-    for (int i = 1; i < height; i++) {
-      canvas.drawLine(
-        Offset(0, i * cellHeight),
-        Offset(size.width, i * cellHeight),
-        paint,
-      );
-    }
+          onRefresh?.call();
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        project.name,
+                        style: MediaQuery.sizeOf(context).adaptiveValue(
+                          Theme.of(context).textTheme.titleSmall,
+                          {
+                            ScreenSize.md:
+                                Theme.of(context).textTheme.titleMedium,
+                            ScreenSize.lg:
+                                Theme.of(context).textTheme.titleMedium,
+                            ScreenSize.xl:
+                                Theme.of(context).textTheme.titleLarge,
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                AspectRatio(
+                  aspectRatio: project.width / project.height,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: LayersPreview(
+                      width: project.width,
+                      height: project.height,
+                      layers: project.layers,
+                      builder: (context, image) {
+                        return image != null
+                            ? RawImage(
+                                image: image,
+                                fit: BoxFit.cover,
+                              )
+                            : const ColoredBox(color: Colors.white);
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _buildInfoChip(
+                      context,
+                      icon: Feather.grid,
+                      label: '${project.width}x${project.height}',
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                    _buildInfoChip(
+                      context,
+                      icon: Feather.clock,
+                      label: _formatLastEdited(project.editedAt),
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  Widget _buildInfoChip(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: color, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatLastEdited(DateTime lastEdited) {
+    final now = DateTime.now();
+    final difference = now.difference(lastEdited);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d. ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h. ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m. ago';
+    } else {
+      return 'Just now';
+    }
+  }
 }

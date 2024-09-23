@@ -4,35 +4,33 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:pixelverse/ui/widgets/layers_panel.dart';
 
+import '../../data.dart';
 import '../../providers/pixel_controller_provider.dart';
 import '../../core/tools.dart';
 import '../widgets/pixel_grid_widget.dart';
+import '../widgets/layers_panel.dart';
 
 class PixelDrawScreen extends HookConsumerWidget {
   const PixelDrawScreen({
     super.key,
-    required this.id,
-    required this.name,
-    required this.width,
-    required this.height,
+    required this.project,
   });
 
-  final String id;
-  final String name;
-  final int width;
-  final int height;
+  final Project project;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentTool = useState<PixelTool>(PixelTool.pencil);
+    final currentTool = useState(PixelTool.pencil);
+    final width = project.width;
+    final height = project.height;
+
     final state = ref.watch(
-      pixelDrawNotifierProvider(width: width, height: height),
+      pixelDrawNotifierProvider(project),
     );
     final notifier = useMemoized(
       () => ref.read(
-        pixelDrawNotifierProvider(width: width, height: height).notifier,
+        pixelDrawNotifierProvider(project).notifier,
       ),
       [width, height],
     );
@@ -102,8 +100,7 @@ class PixelDrawScreen extends HookConsumerWidget {
                                       border: Border.all(color: Colors.grey),
                                     ),
                                     child: PixelPainter(
-                                      width: width,
-                                      height: height,
+                                      project: project,
                                       gridScale: gridScale,
                                       gridOffset: gridOffset,
                                       currentTool: currentTool,
@@ -234,8 +231,7 @@ class PixelDrawScreen extends HookConsumerWidget {
 class PixelPainter extends HookConsumerWidget {
   const PixelPainter({
     super.key,
-    required this.width,
-    required this.height,
+    required this.project,
     required this.gridScale,
     required this.gridOffset,
     required this.currentTool,
@@ -243,8 +239,7 @@ class PixelPainter extends HookConsumerWidget {
     required this.sprayIntensity,
   });
 
-  final int width;
-  final int height;
+  final Project project;
   final ValueNotifier<double> gridScale;
   final ValueNotifier<Offset> gridOffset;
   final ValueNotifier<PixelTool> currentTool;
@@ -254,25 +249,25 @@ class PixelPainter extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(
-      pixelDrawNotifierProvider(width: width, height: height),
+      pixelDrawNotifierProvider(project),
     );
     final notifier = useMemoized(
       () => ref.read(
-        pixelDrawNotifierProvider(width: width, height: height).notifier,
+        pixelDrawNotifierProvider(project).notifier,
       ),
-      [width, height],
+      [project],
     );
 
     return CustomPaint(
       painter: GridPainter(
-        width: width,
-        height: height,
+        width: project.width,
+        height: project.height,
         scale: gridScale.value,
         offset: gridOffset.value,
       ),
       child: PixelGrid(
-        width: width,
-        height: height,
+        width: project.width,
+        height: project.height,
         layers: state.layers,
         onTapPixel: (x, y) {
           switch (currentTool.value) {
