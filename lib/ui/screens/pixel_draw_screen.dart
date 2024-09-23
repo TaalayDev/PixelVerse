@@ -4,6 +4,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:pixelverse/ui/widgets/layers_panel.dart';
 
 import '../../providers/pixel_controller_provider.dart';
 import '../../core/tools.dart';
@@ -48,110 +49,153 @@ class PixelDrawScreen extends HookConsumerWidget {
     final sprayIntensity = useState(5);
 
     return Scaffold(
-      body: Row(
-        children: [
-          if (MediaQuery.of(context).size.width > 600)
-            Container(
-              width: 60,
-              color: Colors.grey[200],
-              child: ToolMenu(
-                currentTool: currentTool,
-                onSelectTool: (tool) => currentTool.value = tool,
-                onColorPicker: () {
-                  showColorPicker(context, notifier);
-                },
-                currentColor: state.currentColor,
-              ),
-            ),
-          Expanded(
-            child: Column(
-              children: [
-                ToolBar(
+      backgroundColor: Colors.grey[200],
+      body: SafeArea(
+        child: Row(
+          children: [
+            if (MediaQuery.of(context).size.width > 600)
+              Container(
+                width: 60,
+                color: Colors.grey[200],
+                child: ToolMenu(
                   currentTool: currentTool,
-                  brushSize: brushSize,
-                  sprayIntensity: sprayIntensity,
                   onSelectTool: (tool) => currentTool.value = tool,
-                  onUndo: state.canUndo ? notifier.undo : null,
-                  onRedo: state.canRedo ? notifier.redo : null,
-                  onSave: () {
-                    // Implement save functionality
-                  },
-                  currentColor: state.currentColor,
                   onColorPicker: () {
                     showColorPicker(context, notifier);
                   },
+                  currentColor: state.currentColor,
                 ),
-                Expanded(
-                  child: Center(
-                    child: AspectRatio(
-                      aspectRatio: width / height,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Container(
-                          clipBehavior: Clip.hardEdge,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            border: Border.all(color: Colors.grey),
+              ),
+            Expanded(
+              child: ColoredBox(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                child: Column(
+                  children: [
+                    ToolBar(
+                      currentTool: currentTool,
+                      brushSize: brushSize,
+                      sprayIntensity: sprayIntensity,
+                      onSelectTool: (tool) => currentTool.value = tool,
+                      onUndo: state.canUndo ? notifier.undo : null,
+                      onRedo: state.canRedo ? notifier.redo : null,
+                      onSave: () {
+                        // Implement save functionality
+                      },
+                      currentColor: state.currentColor,
+                      onColorPicker: () {
+                        showColorPicker(context, notifier);
+                      },
+                    ),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Center(
+                              child: AspectRatio(
+                                aspectRatio: width / height,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Container(
+                                    clipBehavior: Clip.hardEdge,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      border: Border.all(color: Colors.grey),
+                                    ),
+                                    child: PixelPainter(
+                                      width: width,
+                                      height: height,
+                                      gridScale: gridScale,
+                                      gridOffset: gridOffset,
+                                      currentTool: currentTool,
+                                      brushSize: brushSize,
+                                      sprayIntensity: sprayIntensity,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
-                          child: PixelPainter(
-                            width: width,
-                            height: height,
-                            gridScale: gridScale,
-                            gridOffset: gridOffset,
-                            currentTool: currentTool,
-                            brushSize: brushSize,
-                            sprayIntensity: sprayIntensity,
-                          ),
-                        ),
+                          if (MediaQuery.of(context).size.width > 600)
+                            Container(
+                              color: Colors.grey[200],
+                              child: LayersPanel(
+                                width: width,
+                                height: height,
+                                layers: state.layers,
+                                activeLayerIndex: state.currentLayerIndex,
+                                onLayerAdded: (name) {
+                                  notifier.addLayer(name);
+                                },
+                                onLayerVisibilityChanged: (index) {
+                                  notifier.toggleLayerVisibility(index);
+                                },
+                                onLayerSelected: (index) {
+                                  notifier.selectLayer(index);
+                                },
+                                onLayerDeleted: (index) {
+                                  notifier.removeLayer(index);
+                                },
+                                onLayerLockedChanged: (index) {},
+                                onLayerNameChanged: (index, name) {},
+                                onLayerReordered: (oldIndex, newIndex) {
+                                  notifier.reorderLayers(newIndex, oldIndex);
+                                },
+                                onLayerOpacityChanged: (index, opacity) {},
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                  ),
+                    if (MediaQuery.of(context).size.width <= 600)
+                      BottomAppBar(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.edit,
+                                  color: currentTool.value == PixelTool.pencil
+                                      ? Colors.blue
+                                      : null),
+                              onPressed: () =>
+                                  currentTool.value = PixelTool.pencil,
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.format_color_fill,
+                                  color: currentTool.value == PixelTool.fill
+                                      ? Colors.blue
+                                      : null),
+                              onPressed: () =>
+                                  currentTool.value = PixelTool.fill,
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.cleaning_services,
+                                  color: currentTool.value == PixelTool.eraser
+                                      ? Colors.blue
+                                      : null),
+                              onPressed: () =>
+                                  currentTool.value = PixelTool.eraser,
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.color_lens),
+                              onPressed: () {
+                                showColorPicker(context, notifier);
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.grid_on),
+                              onPressed: () {
+                                // Implement grid size change
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
-                if (MediaQuery.of(context).size.width <= 600)
-                  BottomAppBar(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.edit,
-                              color: currentTool.value == PixelTool.pencil
-                                  ? Colors.blue
-                                  : null),
-                          onPressed: () => currentTool.value = PixelTool.pencil,
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.format_color_fill,
-                              color: currentTool.value == PixelTool.fill
-                                  ? Colors.blue
-                                  : null),
-                          onPressed: () => currentTool.value = PixelTool.fill,
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.cleaning_services,
-                              color: currentTool.value == PixelTool.eraser
-                                  ? Colors.blue
-                                  : null),
-                          onPressed: () => currentTool.value = PixelTool.eraser,
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.color_lens),
-                          onPressed: () {
-                            showColorPicker(context, notifier);
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.grid_on),
-                          onPressed: () {
-                            // Implement grid size change
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -229,7 +273,7 @@ class PixelPainter extends HookConsumerWidget {
       child: PixelGrid(
         width: width,
         height: height,
-        pixels: state.pixels,
+        layers: state.layers,
         onTapPixel: (x, y) {
           switch (currentTool.value) {
             case PixelTool.pencil:
@@ -255,14 +299,14 @@ class PixelPainter extends HookConsumerWidget {
           }
         },
         onBrushStroke: (points) {
-          notifier.updatePixels(points);
+          notifier.fillPixels(points);
         },
         currentTool: currentTool.value,
         currentColor: state.currentColor,
         brushSize: brushSize.value,
         sprayIntensity: sprayIntensity.value,
         onDrawShape: (points) {
-          notifier.updatePixels(points);
+          notifier.fillPixels(points);
         },
         onStartDrawing: () {
           notifier.saveState();
@@ -475,9 +519,14 @@ class ToolBar extends StatelessWidget {
                         onPressed: () {},
                       ),
                       const SizedBox(width: 8),
+                      const SizedBox(
+                        height: 30,
+                        child: VerticalDivider(),
+                      ),
+                      const SizedBox(width: 16),
                       // brush size
                       Container(
-                        height: 40,
+                        height: 35,
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.black),
                           borderRadius: BorderRadius.circular(4),
@@ -503,7 +552,7 @@ class ToolBar extends StatelessWidget {
                       const SizedBox(width: 8),
                       // spray intensity
                       Container(
-                        height: 40,
+                        height: 35,
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.black),
                           borderRadius: BorderRadius.circular(4),

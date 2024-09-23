@@ -1,7 +1,8 @@
 import 'dart:math';
+import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/tools.dart';
@@ -10,7 +11,7 @@ import '../../data.dart';
 class PixelGrid extends StatefulWidget {
   final int width;
   final int height;
-  final List<Color> pixels;
+  final List<Layer> layers;
   final Function(int x, int y) onTapPixel;
   final Function(List<Point<int>>) onBrushStroke;
   final Function() onStartDrawing;
@@ -36,7 +37,7 @@ class PixelGrid extends StatefulWidget {
     super.key,
     required this.width,
     required this.height,
-    required this.pixels,
+    required this.layers,
     required this.onTapPixel,
     required this.onBrushStroke,
     required this.currentTool,
@@ -78,7 +79,6 @@ class _PixelGridState extends State<PixelGrid> {
   bool _isDraggingSelection = false;
   Offset? _selectionStart;
   Offset? _selectionCurrent;
-  List<MapEntry<Point<int>, Color>>? _selectedPixels;
 
   Offset? _gradientStart;
   Offset? _gradientEnd;
@@ -107,6 +107,14 @@ class _PixelGridState extends State<PixelGrid> {
         _currentScale = widget.zoomLevel;
       });
     }
+  }
+
+  List<int> get _pixels {
+    List<int> pixels = List.filled(widget.width * widget.height, 0);
+    for (final layer in widget.layers.where((layer) => layer.isVisible)) {
+      pixels = _mergePixels(pixels, layer.pixels);
+    }
+    return pixels;
   }
 
   @override
@@ -194,7 +202,7 @@ class _PixelGridState extends State<PixelGrid> {
           painter: _PixelGridPainter(
             width: widget.width,
             height: widget.height,
-            pixels: widget.pixels,
+            pixels: _pixels,
             previewPixels: _previewPixels,
             previewColor: widget.currentColor,
             selectionRect: _selectionRect,
@@ -286,8 +294,8 @@ class _PixelGridState extends State<PixelGrid> {
     final y = (position.dy / pixelHeight).floor();
 
     if (x >= 0 && x < widget.width && y >= 0 && y < widget.height) {
-      final pickedColor = widget.pixels[y * widget.width + x];
-      widget.onColorPicked?.call(pickedColor);
+      final pickedColor = _pixels[y * widget.width + x];
+      widget.onColorPicked?.call(Color(pickedColor));
     }
   }
 
@@ -468,7 +476,6 @@ class _PixelGridState extends State<PixelGrid> {
       _selectionCurrent = position;
       _selectionRect = Rect.fromPoints(_selectionStart!, _selectionCurrent!);
 
-      _selectedPixels = null;
       _isDraggingSelection = false;
 
       widget.onSelectionChanged?.call(null);
@@ -511,22 +518,12 @@ class _PixelGridState extends State<PixelGrid> {
     int x1 = (_selectionRect!.right / pixelWidth).ceil();
     int y1 = (_selectionRect!.bottom / pixelHeight).ceil();
 
-    // Extract the selected pixels
-    List<MapEntry<Point<int>, Color>> selectedPixels = [];
-    for (int y = y0; y < y1; y++) {
-      for (int x = x0; x < x1; x++) {
-        final color = widget.pixels[y * widget.width + x];
-        selectedPixels.add(MapEntry(Point(x, y), color));
-      }
-    }
-
     x0 = x0.clamp(0, widget.width - 1);
     y0 = y0.clamp(0, widget.height - 1);
     x1 = x1.clamp(0, widget.width);
     y1 = y1.clamp(0, widget.height);
 
     setState(() {
-      _selectedPixels = selectedPixels;
       _isDraggingSelection = true;
     });
 
@@ -973,6 +970,18 @@ class _PixelGridState extends State<PixelGrid> {
     return pixels;
   }
 
+  List<int> _mergePixels(List<int> pixels1, List<int> pixels2) {
+    final mergedPixels = List<int>.from(pixels1);
+
+    for (int i = 0; i < pixels2.length; i++) {
+      if (pixels2[i] != 0) {
+        mergedPixels[i] = pixels2[i];
+      }
+    }
+
+    return mergedPixels;
+  }
+
   bool _isPointInsideRect(Offset point, Rect rect) {
     return rect.contains(point);
   }
@@ -981,7 +990,7 @@ class _PixelGridState extends State<PixelGrid> {
 class _PixelGridPainter extends CustomPainter {
   final int width;
   final int height;
-  final List<Color> pixels;
+  final List<int> pixels;
   final List<Point<int>> previewPixels;
   final Color previewColor;
   final Rect? selectionRect;
@@ -1018,19 +1027,19 @@ class _PixelGridPainter extends CustomPainter {
     final pixelWidth = size.width / width;
     final pixelHeight = size.height / height;
 
-    // Draw existing pixels
+    // Draw layers pixels
+
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
-        if (pixels[y * width + x] == Colors.transparent) continue;
-
-        final pixelColor = pixels[y * width + x];
+        final index = y * width + x;
+        final color = Color(pixels[index]);
         final rect = Rect.fromLTWH(
           x * pixelWidth,
           y * pixelHeight,
           pixelWidth,
           pixelHeight,
         );
-        canvas.drawRect(rect, Paint()..color = pixelColor);
+        canvas.drawRect(rect, Paint()..color = color);
       }
     }
 
@@ -1185,7 +1194,7 @@ class _PixelGridPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _PixelGridPainter oldDelegate) {
-    return pixels != oldDelegate.pixels ||
+    return listEquals(pixels, oldDelegate.pixels) ||
         listEquals(previewPixels, oldDelegate.previewPixels) ||
         previewColor != oldDelegate.previewColor ||
         selectionRect != oldDelegate.selectionRect ||
