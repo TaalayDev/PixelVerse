@@ -1,6 +1,4 @@
 import 'dart:math';
-import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -489,6 +487,7 @@ class _PixelGridState extends State<PixelGrid> {
   }
 
   void _startDrawing(Offset position) {
+    _previewPixels.clear();
     _startPosition = position;
     _handleDrawing(position);
   }
@@ -545,6 +544,10 @@ class _PixelGridState extends State<PixelGrid> {
     _startPosition = null;
     _currentPosition = null;
     setState(() {});
+  }
+
+  void _onTapPixel(int x, int y) {
+    _previewPixels.add(Point(x, y));
   }
 
   void _handleDrawing(Offset position) {
@@ -1051,7 +1054,7 @@ class _PixelGridPainter extends CustomPainter {
           pixelWidth,
           pixelHeight,
         );
-        canvas.drawRect(rect, Paint()..color = previewColor.withOpacity(0.5));
+        canvas.drawRect(rect, Paint()..color = previewColor);
       }
     }
 
