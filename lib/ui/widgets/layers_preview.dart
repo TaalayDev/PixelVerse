@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../core.dart';
 import '../../data.dart';
 
 class LayersPreview extends StatefulWidget {
@@ -60,7 +61,7 @@ class _LayersPreviewState extends State<LayersPreview> {
       }
     }
 
-    final image = await _createImageFromPixels(
+    final image = await ImageHelper.createImageFromPixels(
       pixels,
       widget.width,
       widget.height,
@@ -72,40 +73,5 @@ class _LayersPreviewState extends State<LayersPreview> {
   @override
   Widget build(BuildContext context) {
     return widget.builder(context, _image);
-  }
-
-  Future<ui.Image> _createImageFromPixels(
-    Uint32List pixels,
-    int width,
-    int height,
-  ) async {
-    final Completer<ui.Image> completer = Completer();
-    Uint32List fixedPixels = _fixColorChannels(pixels);
-    ui.decodeImageFromPixels(
-      Uint8List.view(fixedPixels.buffer),
-      width,
-      height,
-      ui.PixelFormat.rgba8888,
-      (ui.Image img) {
-        completer.complete(img);
-      },
-    );
-    return completer.future;
-  }
-
-  Uint32List _fixColorChannels(Uint32List pixels) {
-    for (int i = 0; i < pixels.length; i++) {
-      int pixel = pixels[i];
-
-      // Extract the color channels
-      int a = (pixel >> 24) & 0xFF;
-      int r = (pixel >> 16) & 0xFF;
-      int g = (pixel >> 8) & 0xFF;
-      int b = (pixel) & 0xFF;
-
-      // Reassemble with swapped channels (if needed)
-      pixels[i] = (a << 24) | (b << 16) | (g << 8) | r;
-    }
-    return pixels;
   }
 }

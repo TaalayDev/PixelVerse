@@ -8,7 +8,6 @@ import 'data.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await LocalStorage.init();
-  await DatabaseService.init();
 
   setupLogger();
 

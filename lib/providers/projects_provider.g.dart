@@ -6,12 +6,12 @@ part of 'projects_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$projectsHash() => r'843f96ea388dc14cfab355d75994061370f6ec77';
+String _$projectsHash() => r'288a0cb068c1f3490f569c9a2852bc021486d2de';
 
 /// See also [Projects].
 @ProviderFor(Projects)
 final projectsProvider =
-    AutoDisposeNotifierProvider<Projects, List<Project>>.internal(
+    AutoDisposeStreamNotifierProvider<Projects, List<Project>>.internal(
   Projects.new,
   name: r'projectsProvider',
   debugGetCreateSourceHash:
@@ -20,6 +20,6 @@ final projectsProvider =
   allTransitiveDependencies: null,
 );
 
-typedef _$Projects = AutoDisposeNotifier<List<Project>>;
+typedef _$Projects = AutoDisposeStreamNotifier<List<Project>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

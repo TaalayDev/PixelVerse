@@ -4,10 +4,13 @@ import 'dart:typed_data';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:pixelverse/core.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:uuid/uuid.dart';
 
 import '../core/tools.dart';
 import '../data.dart';
+import 'providers.dart';
 
 part 'pixel_controller_provider.g.dart';
 
@@ -120,9 +123,10 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
           ? project.layers
           : [
               Layer(
-                1,
-                'Layer 1',
-                Uint32List(project.width * project.height),
+                layerId: 0,
+                id: const Uuid().v4(),
+                name: 'Layer 1',
+                pixels: Uint32List(project.width * project.height),
               ),
             ],
       currentColor: Colors.black,
@@ -132,22 +136,26 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     );
   }
 
-  void addLayer(String name) {
+  void addLayer(String name) async {
     final newLayer = Layer(
-      state.layers.length + 1,
-      name,
-      Uint32List(width * height),
-    );
-    state = state.copyWith(
-      layers: [...state.layers, newLayer],
-      currentLayerIndex: state.layers.length,
+      layerId: 0,
+      id: const Uuid().v4(),
+      name: name,
+      pixels: Uint32List(width * height),
     );
 
-    _updateProject();
+    final layer =
+        await ref.watch(projectRepo).createLayer(project.id, newLayer);
+
+    state = state.copyWith(
+      layers: [...state.layers, layer],
+      currentLayerIndex: state.layers.length,
+    );
   }
 
   void removeLayer(int index) {
-    if (state.layers.length <= 1) return; // Ensure at least one layer remains
+    if (state.layers.length <= 1) return;
+    final layer = state.layers[index];
     final layers = List<Layer>.from(state.layers)..removeAt(index);
     int newIndex = state.currentLayerIndex;
     if (newIndex >= layers.length) {
@@ -158,7 +166,7 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
       currentLayerIndex: newIndex,
     );
 
-    _updateProject();
+    ref.watch(projectRepo).deleteLayer(layer.layerId);
   }
 
   void selectLayer(int index) {
@@ -172,7 +180,7 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     layers[index] = layer.copyWith(isVisible: !layer.isVisible);
     state = state.copyWith(layers: layers);
 
-    _updateProject();
+    ref.watch(projectRepo).updateLayer(project.id, layers[index]);
   }
 
   void reorderLayers(int oldIndex, int newIndex) {
@@ -463,10 +471,12 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     return x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom;
   }
 
-  Future<void> _updateProject() async {
-    await DatabaseService.updateProject(project.copyWith(
-      layers: state.layers,
-      editedAt: DateTime.now(),
-    ));
+  void _updateProject() async {
+    ref.watch(projectRepo).updateProject(
+          project.copyWith(
+            layers: state.layers,
+            editedAt: DateTime.now(),
+          ),
+        );
   }
 }

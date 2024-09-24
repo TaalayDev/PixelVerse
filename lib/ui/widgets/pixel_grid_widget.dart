@@ -187,8 +187,6 @@ class _PixelGridState extends State<PixelGrid> {
             if (!_isPointInsideSelection(transformedPosition)) {
               _startSelection(transformedPosition);
             }
-          } else if (widget.currentTool == PixelTool.pen) {
-            _handlePenTap(transformedPosition);
           } else {
             widget.onStartDrawing();
             _startDrawing(transformedPosition);
@@ -220,6 +218,7 @@ class _PixelGridState extends State<PixelGrid> {
   }
 
   void _handlePanStart(Offset position) {
+    print('Pan start: $position');
     // Adjust for scale and offset
     final transformedPosition = (position - _currentOffset) / _currentScale;
     if (widget.currentTool == PixelTool.select) {

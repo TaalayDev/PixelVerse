@@ -1,25 +1,17 @@
-import 'package:hive/hive.dart';
+import 'dart:typed_data';
+
 import 'package:equatable/equatable.dart';
 
 import 'layer.dart';
 
-part 'project_model.g.dart';
-
-@HiveType(typeId: 0)
-class Project extends HiveObject with EquatableMixin {
-  @HiveField(0)
-  final String id;
-  @HiveField(1)
+class Project with EquatableMixin {
+  final int id;
   final String name;
-  @HiveField(2)
   final int width;
-  @HiveField(3)
   final int height;
-  @HiveField(4)
   final List<Layer> layers;
-  @HiveField(5)
+  final Uint8List? thumbnail;
   final DateTime createdAt;
-  @HiveField(6)
   final DateTime editedAt;
 
   Project({
@@ -29,23 +21,27 @@ class Project extends HiveObject with EquatableMixin {
     required this.height,
     required this.createdAt,
     required this.editedAt,
+    this.thumbnail,
     this.layers = const [],
   });
 
   Project copyWith({
+    int? id,
     String? name,
     int? width,
     int? height,
     List<Layer>? layers,
+    Uint8List? thumbnail,
     DateTime? createdAt,
     DateTime? editedAt,
   }) {
     return Project(
-      id: id,
+      id: id ?? this.id,
       name: name ?? this.name,
       width: width ?? this.width,
       height: height ?? this.height,
       layers: layers ?? this.layers,
+      thumbnail: thumbnail ?? this.thumbnail,
       createdAt: createdAt ?? this.createdAt,
       editedAt: editedAt ?? this.editedAt,
     );
@@ -53,5 +49,5 @@ class Project extends HiveObject with EquatableMixin {
 
   @override
   List<Object?> get props =>
-      [id, name, width, height, layers, createdAt, editedAt];
+      [id, name, width, height, layers, createdAt, editedAt, thumbnail];
 }

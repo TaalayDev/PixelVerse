@@ -1,13 +1,16 @@
+import 'dart:async';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:pixelverse/core.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../data.dart';
+import '../../core.dart';
 import '../../providers/projects_provider.dart';
 import '../widgets.dart';
 import 'about_screen.dart';
@@ -19,6 +22,15 @@ class ProjectsScreen extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final projects = ref.watch(projectsProvider);
+    final overlayLoader = useState<OverlayEntry?>(null);
+
+    useEffect(() {
+      return () {
+        if (overlayLoader.value?.mounted == true) {
+          overlayLoader.value?.remove();
+        }
+      };
+    }, []);
 
     return Scaffold(
       appBar: AppBar(
@@ -48,10 +60,35 @@ class ProjectsScreen extends HookConsumerWidget {
           ),
         ],
       ),
-      body: AdaptiveProjectGrid(
-        projects: projects,
-        onCreateNew: () => _navigateToNewProject(context, ref),
-        onRefresh: () => ref.read(projectsProvider.notifier).refresh(),
+      body: projects.when(
+        data: (projects) => AdaptiveProjectGrid(
+          projects: projects,
+          onCreateNew: () => _navigateToNewProject(context, ref),
+          onTapProject: (project) {
+            overlayLoader.value = _openProject(context, ref, project.id);
+          },
+        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stackTrace) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Feather.alert_circle, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(
+                'An error occurred',
+                style: Theme.of(context).textTheme.bodyLarge,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                icon: const Icon(Feather.refresh_cw),
+                label: const Text('Try Again'),
+                onPressed: () => ref.refresh(projectsProvider),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -64,42 +101,69 @@ class ProjectsScreen extends HookConsumerWidget {
 
     if (result != null && context.mounted) {
       final project = Project(
-        id: const Uuid().v4(),
+        id: 0,
         name: result.name,
         width: result.width,
         height: result.height,
         createdAt: DateTime.now(),
         editedAt: DateTime.now(),
         layers: [
-          Layer(1, 'Layer 1', Uint32List(result.width * result.height)),
+          Layer(
+            layerId: 0,
+            id: const Uuid().v4(),
+            name: 'Layer 1',
+            pixels: Uint32List(result.width * result.height),
+          ),
         ],
       );
 
-      ref.read(projectsProvider.notifier).addProject(project);
-
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => PixelDrawScreen(project: project),
-        ),
-      );
+      final loader = showLoader(context, loadingText: 'Creating project...');
+      final newProject =
+          await ref.read(projectsProvider.notifier).addProject(project);
 
       if (context.mounted) {
-        ref.read(projectsProvider.notifier).refresh();
+        loader.remove();
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => PixelDrawScreen(project: newProject),
+          ),
+        );
       }
     }
+  }
+
+  OverlayEntry _openProject(
+    BuildContext context,
+    WidgetRef ref,
+    int projectId,
+  ) {
+    final loader = showLoader(context, loadingText: 'Opening project...');
+
+    ref.read(projectsProvider.notifier).getProject(projectId).then((project) {
+      loader.remove();
+      if (project != null) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => PixelDrawScreen(project: project),
+          ),
+        );
+      }
+    });
+
+    return loader;
   }
 }
 
 class AdaptiveProjectGrid extends StatelessWidget {
   final List<Project> projects;
   final Function()? onCreateNew;
-  final Function()? onRefresh;
+  final Function(Project)? onTapProject;
 
   const AdaptiveProjectGrid({
     super.key,
     required this.projects,
     this.onCreateNew,
-    this.onRefresh,
+    this.onTapProject,
   });
 
   @override
@@ -141,7 +205,7 @@ class AdaptiveProjectGrid extends StatelessWidget {
           itemBuilder: (context, index) {
             return ProjectCard(
               project: projects[index],
-              onRefresh: onRefresh,
+              onTapProject: onTapProject,
             );
           },
         );
@@ -152,9 +216,9 @@ class AdaptiveProjectGrid extends StatelessWidget {
 
 class ProjectCard extends StatelessWidget {
   final Project project;
-  final Function()? onRefresh;
+  final Function(Project)? onTapProject;
 
-  const ProjectCard({super.key, required this.project, this.onRefresh});
+  const ProjectCard({super.key, required this.project, this.onTapProject});
 
   @override
   Widget build(BuildContext context) {
@@ -162,14 +226,8 @@ class ProjectCard extends StatelessWidget {
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
-        onTap: () async {
-          await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => PixelDrawScreen(project: project),
-            ),
-          );
-
-          onRefresh?.call();
+        onTap: () {
+          onTapProject?.call(project);
         },
         child: Container(
           decoration: BoxDecoration(
@@ -203,25 +261,7 @@ class ProjectCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 AspectRatio(
                   aspectRatio: project.width / project.height,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: LayersPreview(
-                      width: project.width,
-                      height: project.height,
-                      layers: project.layers,
-                      builder: (context, image) {
-                        return image != null
-                            ? RawImage(
-                                image: image,
-                                fit: BoxFit.cover,
-                              )
-                            : const ColoredBox(color: Colors.white);
-                      },
-                    ),
-                  ),
+                  child: ProjectThumbnailWidget(project: project),
                 ),
                 const SizedBox(height: 16),
                 Wrap(
@@ -292,5 +332,68 @@ class ProjectCard extends StatelessWidget {
     } else {
       return 'Just now';
     }
+  }
+}
+
+class ProjectThumbnailWidget extends StatefulWidget {
+  const ProjectThumbnailWidget({
+    super.key,
+    required this.project,
+  });
+
+  final Project project;
+
+  @override
+  State<ProjectThumbnailWidget> createState() => _ProjectThumbnailWidgetState();
+}
+
+class _ProjectThumbnailWidgetState extends State<ProjectThumbnailWidget> {
+  ui.Image? _image;
+
+  @override
+  void initState() {
+    _createImageFromPixels();
+    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant ProjectThumbnailWidget oldWidget) {
+    if (oldWidget.project.thumbnail != widget.project.thumbnail) {
+      _createImageFromPixels();
+    }
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: _image != null && context.mounted
+          ? RawImage(image: _image, fit: BoxFit.cover)
+          : const Center(
+              child: Icon(Feather.image, size: 48),
+            ),
+    );
+  }
+
+  Future<void> _createImageFromPixels() async {
+    if (widget.project.thumbnail == null) {
+      return;
+    }
+
+    ui.decodeImageFromPixels(
+      widget.project.thumbnail!,
+      widget.project.width,
+      widget.project.height,
+      ui.PixelFormat.rgba8888,
+      (ui.Image img) {
+        setState(() {
+          _image = img;
+        });
+      },
+    );
   }
 }
