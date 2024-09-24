@@ -32,7 +32,7 @@ class PixelDrawScreen extends HookConsumerWidget {
       () => ref.read(
         pixelDrawNotifierProvider(project).notifier,
       ),
-      [width, height],
+      [project.id],
     );
 
     useEffect(() {
@@ -104,6 +104,7 @@ class PixelDrawScreen extends HookConsumerWidget {
                                       gridScale: gridScale,
                                       gridOffset: gridOffset,
                                       currentTool: currentTool,
+                                      currentColor: state.currentColor,
                                       brushSize: brushSize,
                                       sprayIntensity: sprayIntensity,
                                     ),
@@ -235,6 +236,7 @@ class PixelPainter extends HookConsumerWidget {
     required this.gridScale,
     required this.gridOffset,
     required this.currentTool,
+    required this.currentColor,
     required this.brushSize,
     required this.sprayIntensity,
   });
@@ -243,19 +245,20 @@ class PixelPainter extends HookConsumerWidget {
   final ValueNotifier<double> gridScale;
   final ValueNotifier<Offset> gridOffset;
   final ValueNotifier<PixelTool> currentTool;
+  final Color currentColor;
   final ValueNotifier<int> brushSize;
   final ValueNotifier<int> sprayIntensity;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(
-      pixelDrawNotifierProvider(project),
+    final layers = ref.watch(
+      pixelDrawNotifierProvider(project).select((state) => state.layers),
     );
     final notifier = useMemoized(
       () => ref.read(
         pixelDrawNotifierProvider(project).notifier,
       ),
-      [project],
+      [project.id],
     );
 
     return CustomPaint(
@@ -268,7 +271,7 @@ class PixelPainter extends HookConsumerWidget {
       child: PixelGrid(
         width: project.width,
         height: project.height,
-        layers: state.layers,
+        layers: layers,
         onTapPixel: (x, y) {
           switch (currentTool.value) {
             case PixelTool.pencil:
@@ -297,7 +300,7 @@ class PixelPainter extends HookConsumerWidget {
           notifier.fillPixels(points);
         },
         currentTool: currentTool.value,
-        currentColor: state.currentColor,
+        currentColor: currentColor,
         brushSize: brushSize.value,
         sprayIntensity: sprayIntensity.value,
         onDrawShape: (points) {

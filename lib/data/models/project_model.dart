@@ -48,6 +48,5 @@ class Project with EquatableMixin {
   }
 
   @override
-  List<Object?> get props =>
-      [id, name, width, height, layers, createdAt, editedAt, thumbnail];
+  List<Object?> get props => [id, name, width, height];
 }

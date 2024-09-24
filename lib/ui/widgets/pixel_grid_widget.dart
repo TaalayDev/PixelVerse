@@ -1,10 +1,15 @@
+import 'dart:async';
+import 'dart:ui' as ui;
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/tools.dart';
 import '../../data.dart';
+
+class PixelGridController extends ChangeNotifier {}
 
 class PixelGrid extends StatefulWidget {
   final int width;
@@ -24,6 +29,7 @@ class PixelGrid extends StatefulWidget {
   final int brushSize;
   final int sprayIntensity;
   final PixelTool currentTool;
+  final MirrorAxis mirrorAxis;
   final Color currentColor;
   final Function(List<Point<int>>) onDrawShape;
 
@@ -52,6 +58,7 @@ class PixelGrid extends StatefulWidget {
     this.sprayIntensity = 5,
     this.zoomLevel = 1.0,
     this.currentOffset = Offset.zero,
+    this.mirrorAxis = MirrorAxis.vertical,
     this.onZoom,
   });
 
@@ -94,8 +101,19 @@ class _PixelGridState extends State<PixelGrid> {
   int _pointerCount = 0;
   final _closeThreshold = 10.0;
 
+  late Uint32List _cachedPixels;
+  late List<Layer> _cachedLayers;
+
+  ui.Image? _cachedImage;
+
   RenderBox get renderBox =>
       _boxKey.currentContext!.findRenderObject() as RenderBox;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateCachedPixels();
+  }
 
   @override
   void didUpdateWidget(covariant PixelGrid oldWidget) {
@@ -105,12 +123,32 @@ class _PixelGridState extends State<PixelGrid> {
         _currentScale = widget.zoomLevel;
       });
     }
+    if (widget.layers != oldWidget.layers) {
+      _updateCachedPixels();
+    }
   }
 
-  List<int> get _pixels {
-    List<int> pixels = List.filled(widget.width * widget.height, 0);
+  void _updateCachedPixels() {
+    _cachedImage = null;
+    _cachedLayers = List<Layer>.from(widget.layers);
+    _cachedPixels = Uint32List(widget.width * widget.height);
     for (final layer in widget.layers.where((layer) => layer.isVisible)) {
-      pixels = _mergePixels(pixels, layer.pixels);
+      _cachedPixels = _mergePixels(_cachedPixels, layer.pixels);
+    }
+
+    _updateCachedImage();
+  }
+
+  Uint32List get pixels {
+    Uint32List pixels = _cachedPixels;
+    for (int i = 0; i < _previewPixels.length; i++) {
+      final point = _previewPixels[i];
+      final index = point.y * widget.width + point.x;
+      if (index >= 0 && index < _cachedPixels.length) {
+        pixels[index] = widget.currentTool == PixelTool.eraser
+            ? Colors.transparent.value
+            : widget.currentColor.value;
+      }
     }
     return pixels;
   }
@@ -186,7 +224,7 @@ class _PixelGridState extends State<PixelGrid> {
               _startSelection(transformedPosition);
             }
           } else {
-            widget.onStartDrawing();
+            // widget.onStartDrawing();
             _startDrawing(transformedPosition);
           }
         },
@@ -198,9 +236,11 @@ class _PixelGridState extends State<PixelGrid> {
           painter: _PixelGridPainter(
             width: widget.width,
             height: widget.height,
-            pixels: _pixels,
+            pixels: pixels,
             previewPixels: _previewPixels,
-            previewColor: widget.currentColor,
+            previewColor: widget.currentTool == PixelTool.eraser
+                ? Colors.transparent
+                : widget.currentColor,
             selectionRect: _selectionRect,
             gradientStart: _gradientStart,
             gradientEnd: _gradientEnd,
@@ -216,7 +256,6 @@ class _PixelGridState extends State<PixelGrid> {
   }
 
   void _handlePanStart(Offset position) {
-    print('Pan start: $position');
     // Adjust for scale and offset
     final transformedPosition = (position - _currentOffset) / _currentScale;
     if (widget.currentTool == PixelTool.select) {
@@ -233,7 +272,7 @@ class _PixelGridState extends State<PixelGrid> {
       widget.onStartDrawing();
       _handlePenTap(transformedPosition);
     } else {
-      widget.onStartDrawing();
+      // widget.onStartDrawing();
       _startDrawing(transformedPosition);
     }
   }
@@ -291,7 +330,7 @@ class _PixelGridState extends State<PixelGrid> {
     final y = (position.dy / pixelHeight).floor();
 
     if (x >= 0 && x < widget.width && y >= 0 && y < widget.height) {
-      final pickedColor = _pixels[y * widget.width + x];
+      final pickedColor = _cachedPixels[y * widget.width + x];
       widget.onColorPicked?.call(Color(pickedColor));
     }
   }
@@ -487,7 +526,6 @@ class _PixelGridState extends State<PixelGrid> {
   }
 
   void _startDrawing(Offset position) {
-    _previewPixels.clear();
     _startPosition = position;
     _handleDrawing(position);
   }
@@ -536,7 +574,10 @@ class _PixelGridState extends State<PixelGrid> {
   void _endDrawing() {
     if (widget.currentTool == PixelTool.line ||
         widget.currentTool == PixelTool.rectangle ||
-        widget.currentTool == PixelTool.circle) {
+        widget.currentTool == PixelTool.circle ||
+        widget.currentTool == PixelTool.pencil ||
+        widget.currentTool == PixelTool.eraser ||
+        widget.currentTool == PixelTool.mirror) {
       widget.onDrawShape(_previewPixels);
     }
     _previewPixels.clear();
@@ -547,7 +588,29 @@ class _PixelGridState extends State<PixelGrid> {
   }
 
   void _onTapPixel(int x, int y) {
+    if (!_inInSelectionBounds(x, y)) return;
     _previewPixels.add(Point(x, y));
+  }
+
+  bool _inInSelectionBounds(int x, int y) {
+    if (_selectionRect == null) return true;
+    final boxSize = context.size!;
+    final pixelWidth = boxSize.width / widget.width;
+    final pixelHeight = boxSize.height / widget.height;
+
+    final x0 = (_selectionRect!.left / pixelWidth).floor();
+    final y0 = (_selectionRect!.top / pixelHeight).floor();
+    final x1 = (_selectionRect!.right / pixelWidth).ceil();
+    final y1 = (_selectionRect!.bottom / pixelHeight).ceil();
+
+    return x >= x0 && x < x1 && y >= y0 && y < y1;
+  }
+
+  List<Point<int>> _filterPoints(List<Point<int>> pixels) {
+    if (_selectionRect == null) return pixels;
+    return pixels.where((point) {
+      return _inInSelectionBounds(point.x, point.y);
+    }).toList();
   }
 
   void _handleDrawing(Offset position) {
@@ -559,35 +622,38 @@ class _PixelGridState extends State<PixelGrid> {
 
     if (x >= 0 && x < widget.width && y >= 0 && y < widget.height) {
       if (widget.currentTool == PixelTool.pencil ||
-          widget.currentTool == PixelTool.eraser ||
-          widget.currentTool == PixelTool.mirror) {
+          widget.currentTool == PixelTool.eraser) {
         if (_previousPosition != null) {
           final previousX = (_previousPosition!.dx / pixelWidth).floor();
           final previousY = (_previousPosition!.dy / pixelHeight).floor();
           _drawLine(previousX, previousY, x, y);
         } else {
-          widget.onTapPixel(x, y);
+          _onTapPixel(x, y);
         }
         _previousPosition = position;
+        setState(() {});
       } else if (widget.currentTool == PixelTool.line) {
         if (_startPosition != null && _currentPosition != null) {
           final startX = (_startPosition!.dx / pixelWidth).floor();
           final startY = (_startPosition!.dy / pixelHeight).floor();
-          _previewPixels = _getLinePixels(startX, startY, x, y);
+          _previewPixels = _filterPoints(_getLinePixels(startX, startY, x, y));
           setState(() {});
         }
       } else if (widget.currentTool == PixelTool.rectangle) {
         if (_startPosition != null && _currentPosition != null) {
           final startX = (_startPosition!.dx / pixelWidth).floor();
           final startY = (_startPosition!.dy / pixelHeight).floor();
-          _previewPixels = _getRectanglePixels(startX, startY, x, y);
+          _previewPixels = _filterPoints(
+            _getRectanglePixels(startX, startY, x, y),
+          );
           setState(() {});
         }
       } else if (widget.currentTool == PixelTool.circle) {
         if (_startPosition != null && _currentPosition != null) {
           final startX = (_startPosition!.dx / pixelWidth).floor();
           final startY = (_startPosition!.dy / pixelHeight).floor();
-          _previewPixels = _getCirclePixels(startX, startY, x, y);
+          _previewPixels =
+              _filterPoints(_getCirclePixels(startX, startY, x, y));
           setState(() {});
         }
       } else if (widget.currentTool == PixelTool.brush) {
@@ -609,9 +675,9 @@ class _PixelGridState extends State<PixelGrid> {
         }
 
         _previousPosition = position;
-        widget.onBrushStroke(pixelsToUpdate);
+        widget.onBrushStroke(_filterPoints(pixelsToUpdate));
       } else if (widget.currentTool == PixelTool.mirror) {
-        _drawMirror(x, y);
+        _drawMirror(position, x, y, pixelWidth, pixelHeight);
       } else if (widget.currentTool == PixelTool.pixelPerfectLine) {
         if (_previousPosition != null) {
           final previousX = (_previousPosition!.dx / pixelWidth).floor();
@@ -620,12 +686,13 @@ class _PixelGridState extends State<PixelGrid> {
           final linePixels =
               _getPixelPerfectLinePixels(previousX, previousY, x, y);
           for (final point in linePixels) {
-            widget.onTapPixel(point.x, point.y);
+            _onTapPixel(point.x, point.y);
           }
         } else {
-          widget.onTapPixel(x, y);
+          _onTapPixel(x, y);
         }
         _previousPosition = position;
+        setState(() {});
       } else if (widget.currentTool == PixelTool.sprayPaint) {
         final intensity = widget.sprayIntensity;
         final brushSize = widget.brushSize;
@@ -655,15 +722,48 @@ class _PixelGridState extends State<PixelGrid> {
         }
 
         _previousPosition = position;
-        widget.onBrushStroke(pixelsToUpdate);
+        widget.onBrushStroke(_filterPoints(pixelsToUpdate));
       }
     }
   }
 
-  void _drawMirror(int x, int y) {
-    widget.onTapPixel(x, y);
-    final mirrorX = widget.width - 1 - x;
-    widget.onTapPixel(mirrorX, y);
+  void _drawMirror(
+    Offset position,
+    int x,
+    int y,
+    double pixelWidth,
+    double pixelHeight,
+  ) {
+    if (_previousPosition != null) {
+      final previousX = (_previousPosition!.dx / pixelWidth).floor();
+      final previousY = (_previousPosition!.dy / pixelHeight).floor();
+      _drawLine(previousX, previousY, x, y);
+
+      switch (widget.mirrorAxis) {
+        case MirrorAxis.horizontal:
+          final mirrorY = widget.height - 1 - y;
+          _drawLine(previousX, previousY, x, mirrorY);
+          break;
+        case MirrorAxis.vertical:
+          final mirrorX = widget.width - 1 - x;
+          _drawLine(widget.width - 1 - previousX, previousY, mirrorX, y);
+          break;
+        case MirrorAxis.both:
+          final mirrorX = widget.width - 1 - x;
+          final mirrorY = widget.height - 1 - y;
+          _drawLine(widget.width - 1 - previousX, previousY, mirrorX, y);
+          _drawLine(previousX, previousY, x, mirrorY);
+          _drawLine(widget.width - 1 - previousX, previousY, mirrorX, mirrorY);
+
+          break;
+      }
+    } else {
+      _onTapPixel(x, y);
+      final mirrorX = widget.width - 1 - x;
+      _onTapPixel(mirrorX, y);
+    }
+    _previousPosition = position;
+    setState(() {});
   }
 
   List<Point<int>> _getPenPathPixels(
@@ -904,7 +1004,7 @@ class _PixelGridState extends State<PixelGrid> {
     int err = dx - dy;
 
     while (true) {
-      widget.onTapPixel(x0, y0);
+      _onTapPixel(x0, y0);
 
       if (x0 == x1 && y0 == y1) break;
       int e2 = 2 * err;
@@ -972,9 +1072,8 @@ class _PixelGridState extends State<PixelGrid> {
     return pixels;
   }
 
-  List<int> _mergePixels(List<int> pixels1, List<int> pixels2) {
-    final mergedPixels = List<int>.from(pixels1);
-
+  Uint32List _mergePixels(Uint32List pixels1, Uint32List pixels2) {
+    final mergedPixels = Uint32List.fromList(pixels1);
     for (int i = 0; i < pixels2.length; i++) {
       if (pixels2[i] != 0) {
         mergedPixels[i] = pixels2[i];
@@ -984,15 +1083,31 @@ class _PixelGridState extends State<PixelGrid> {
     return mergedPixels;
   }
 
-  bool _isPointInsideRect(Offset point, Rect rect) {
-    return rect.contains(point);
+  void _updateCachedImage() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final size = renderBox.size;
+      final imgData = pixels.buffer.asUint8List();
+
+      ui.decodeImageFromPixels(
+        imgData,
+        size.width.toInt(),
+        size.height.toInt(),
+        ui.PixelFormat.bgra8888,
+        (image) {
+          setState(() {
+            print('Updating cached image');
+            _cachedImage = image;
+          });
+        },
+      );
+    });
   }
 }
 
 class _PixelGridPainter extends CustomPainter {
   final int width;
   final int height;
-  final List<int> pixels;
+  final Uint32List pixels;
   final List<Point<int>> previewPixels;
   final Color previewColor;
   final Rect? selectionRect;
@@ -1030,33 +1145,7 @@ class _PixelGridPainter extends CustomPainter {
     final pixelHeight = size.height / height;
 
     // Draw layers pixels
-
-    for (int y = 0; y < height; y++) {
-      for (int x = 0; x < width; x++) {
-        final index = y * width + x;
-        final color = Color(pixels[index]);
-        final rect = Rect.fromLTWH(
-          x * pixelWidth,
-          y * pixelHeight,
-          pixelWidth,
-          pixelHeight,
-        );
-        canvas.drawRect(rect, Paint()..color = color);
-      }
-    }
-
-    // Draw preview pixels
-    for (final point in previewPixels) {
-      if (point.x >= 0 && point.x < width && point.y >= 0 && point.y < height) {
-        final rect = Rect.fromLTWH(
-          point.x * pixelWidth,
-          point.y * pixelHeight,
-          pixelWidth,
-          pixelHeight,
-        );
-        canvas.drawRect(rect, Paint()..color = previewColor);
-      }
-    }
+    _drawPixels(canvas, size, pixelWidth, pixelHeight);
 
     if (selectionRect != null &&
         selectionRect!.width > 0 &&
@@ -1192,6 +1281,55 @@ class _PixelGridPainter extends CustomPainter {
     }
 
     canvas.restore();
+  }
+
+  void _drawPixels(
+    Canvas canvas,
+    Size size,
+    double pixelWidth,
+    double pixelHeight,
+  ) {
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        final index = y * width + x;
+        final color = Color(pixels[index]);
+        if (color.alpha == 0) continue;
+
+        final rect = Rect.fromLTWH(
+          x * pixelWidth,
+          y * pixelHeight,
+          pixelWidth,
+          pixelHeight,
+        );
+        canvas.drawRect(rect, paint..color = color);
+      }
+    }
+  }
+
+  void _drawPreviewPixels(
+    Canvas canvas,
+    Size size,
+    double pixelWidth,
+    double pixelHeight,
+  ) {
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    for (final point in previewPixels) {
+      final x = point.x;
+      final y = point.y;
+      final index = y * width + x;
+      final color = previewColor;
+
+      final rect = Rect.fromLTWH(
+        x * pixelWidth,
+        y * pixelHeight,
+        pixelWidth,
+        pixelHeight,
+      );
+      canvas.drawRect(rect, paint..color = color);
+    }
   }
 
   @override

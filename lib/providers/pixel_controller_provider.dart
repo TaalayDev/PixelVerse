@@ -4,7 +4,6 @@ import 'dart:typed_data';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
-import 'package:pixelverse/core.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
@@ -96,7 +95,10 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   set currentTool(PixelTool tool) => state = state.copyWith(currentTool: tool);
   MirrorAxis get mirrorAxis => state.mirrorAxis;
   Color get currentColor => state.currentColor;
-  set currentColor(Color color) => state = state.copyWith(currentColor: color);
+  set currentColor(Color color) {
+    print('Setting color: $color');
+    state = state.copyWith(currentColor: color);
+  }
 
   Layer get currentLayer => state.layers[state.currentLayerIndex];
 
@@ -116,6 +118,7 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
 
   @override
   PixelDrawState build(Project project) {
+    print('Building PixelDrawNotifier');
     return PixelDrawState(
       width: project.width,
       height: project.height,
@@ -284,11 +287,14 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
 
   void fillPixels(List<Point<int>> pixels) {
     final newPixels = currentLayer.pixels;
+    final color = currentTool == PixelTool.eraser
+        ? Colors.transparent.value
+        : currentColor.value;
 
     for (final point in pixels) {
       int index = point.y * state.width + point.x;
       if (index >= 0 && index < newPixels.length) {
-        newPixels[index] = currentColor.value;
+        newPixels[index] = color;
       }
     }
 
@@ -338,9 +344,22 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   }
 
   void drawShape(List<Point<int>> points) {
+    final pixels = Uint32List.fromList(currentLayer.pixels);
+    final fillColor = currentTool == PixelTool.eraser
+        ? Colors.transparent.value
+        : currentColor.value;
+
     for (final point in points) {
-      setPixel(point.x, point.y);
+      final x = point.x;
+      final y = point.y;
+      if (!_isWithinBounds(x, y)) continue;
+      if (!_isInSelectionBounds(x, y)) continue;
+
+      final index = y * width + x;
+      pixels[index] = fillColor;
     }
+
+    _updateCurrentLayer(pixels);
   }
 
   void clear() {
