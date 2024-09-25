@@ -38,30 +38,27 @@ class LayersPanel extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return SizedBox(
-      width: 250,
-      child: Column(
-        children: [
-          const Divider(),
-          _buildLayersPanelHeader(),
-          Expanded(
-            child: ReorderableListView.builder(
-              itemCount: layers.length,
-              onReorder: (oldIndex, newIndex) {
-                onLayerReordered(newIndex, oldIndex);
-              },
-              itemBuilder: (context, index) {
-                final layer = layers[index];
-                return _buildLayerTile(
-                  context,
-                  layer,
-                  index,
-                );
-              },
-            ),
+    return Column(
+      children: [
+        const Divider(),
+        _buildLayersPanelHeader(),
+        Expanded(
+          child: ReorderableListView.builder(
+            itemCount: layers.length,
+            onReorder: (oldIndex, newIndex) {
+              onLayerReordered(newIndex, oldIndex);
+            },
+            itemBuilder: (context, index) {
+              final layer = layers[index];
+              return _buildLayerTile(
+                context,
+                layer,
+                index,
+              );
+            },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -91,7 +88,7 @@ class LayersPanel extends HookConsumerWidget {
     final contentColor =
         index == activeLayerIndex ? Colors.white : Colors.black;
     return Card(
-      key: ValueKey(layer.name),
+      key: ValueKey(layer.id),
       color: index == activeLayerIndex ? Colors.blue.withOpacity(0.5) : null,
       child: ListTile(
         leading: ClipRRect(

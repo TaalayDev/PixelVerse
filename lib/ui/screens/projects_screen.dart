@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -38,12 +39,46 @@ class ProjectsScreen extends HookConsumerWidget {
           children: [
             const SizedBox(width: 16),
             TextButton.icon(
+              icon: const Icon(Feather.upload),
+              label: const Text('Open'),
+              onPressed: () async {
+                final error = await ref
+                    .read(projectsProvider.notifier)
+                    .importProject(context);
+                if (error != null) {
+                  switch (error) {
+                    default:
+                      showTopFlushbar(
+                        context,
+                        message: const Text('Неправильное сожержимое файла'),
+                      );
+                      break;
+                  }
+                }
+              },
+              style: TextButton.styleFrom(
+                backgroundColor:
+                    Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              ),
+            ),
+            const SizedBox(width: 16),
+            TextButton.icon(
               icon: const Icon(Feather.info),
               label: const Text('About'),
               onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => const AboutScreen(),
-                ));
+                showDialog(
+                  context: context,
+                  builder: (context) => Dialog(
+                    child: ClipRRect(
+                      clipBehavior: Clip.antiAlias,
+                      borderRadius: BorderRadius.circular(16),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 600),
+                        child: const AboutScreen(),
+                      ),
+                    ),
+                  ),
+                );
               },
               style: TextButton.styleFrom(
                 backgroundColor:

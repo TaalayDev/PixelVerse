@@ -36,7 +36,7 @@ class ProjectLocalRepo extends ProjectRepo {
     final completer = Completer<void>();
     queueManager.add(() async {
       final pixels = Uint32List(project.width * project.height);
-      for (final layer in project.layers) {
+      for (final layer in project.layers.where((layer) => layer.isVisible)) {
         for (int i = 0; i < pixels.length; i++) {
           pixels[i] = pixels[i] == 0 ? layer.pixels[i] : pixels[i];
         }

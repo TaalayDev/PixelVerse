@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -8,6 +9,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
+import '../core/utils.dart';
 import '../core/tools.dart';
 import '../data.dart';
 import 'providers.dart';
@@ -283,7 +285,8 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   }
 
   void fillPixels(List<Point<int>> pixels) {
-    final newPixels = currentLayer.pixels;
+    saveState();
+    final newPixels = Uint32List.fromList(currentLayer.pixels);
     final color = currentTool == PixelTool.eraser
         ? Colors.transparent.value
         : currentColor.value;
@@ -341,6 +344,7 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   }
 
   void drawShape(List<Point<int>> points) {
+    saveState();
     final pixels = Uint32List.fromList(currentLayer.pixels);
     final fillColor = currentTool == PixelTool.eraser
         ? Colors.transparent.value
@@ -494,5 +498,21 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
             editedAt: DateTime.now(),
           ),
         );
+  }
+
+  void exportImage(BuildContext context) async {
+    final pixels = Uint32List(project.width * project.height);
+    for (final layer in project.layers.where((layer) => layer.isVisible)) {
+      for (int i = 0; i < pixels.length; i++) {
+        pixels[i] = pixels[i] == 0 ? layer.pixels[i] : pixels[i];
+      }
+    }
+    await FileUtils(context).save32Bit(pixels, project.width, project.height);
+  }
+
+  void exportJson(BuildContext context) {
+    final json = project.toJson();
+    final jsonString = jsonEncode(json);
+    FileUtils(context).save('${project.name}.pv', jsonString);
   }
 }

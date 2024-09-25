@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'dart:math';
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -148,6 +149,7 @@ class _PixelGridState extends State<PixelGrid> {
       _cachedPixels = _mergePixels(_cachedPixels, layer.pixels);
     }
     _cacheController._isDirty = true;
+    print('Cached pixels updated');
   }
 
   Uint32List get pixels {
@@ -171,7 +173,6 @@ class _PixelGridState extends State<PixelGrid> {
       child: GestureDetector(
         onScaleStart: (details) {
           _pointerCount = details.pointerCount;
-          print('onScaleStart');
           if (_pointerCount == 1) {
             // One finger touch
             if (widget.currentTool == PixelTool.drag) {
@@ -238,7 +239,7 @@ class _PixelGridState extends State<PixelGrid> {
           } else if (widget.currentTool == PixelTool.pen) {
             _handlePenTap(transformedPosition);
           } else {
-            // widget.onStartDrawing();
+            widget.onStartDrawing();
             _startDrawing(transformedPosition);
           }
         },
@@ -262,6 +263,9 @@ class _PixelGridState extends State<PixelGrid> {
             offset: _currentOffset,
             penPoints: _penPoints,
             isDrawingPenPath: _isDrawingPenPath,
+            blendMode: widget.currentTool == PixelTool.eraser
+                ? BlendMode.darken
+                : BlendMode.srcOver,
             cacheController: _cacheController,
           ),
           size: Size.infinite,
@@ -288,7 +292,7 @@ class _PixelGridState extends State<PixelGrid> {
       _handlePenTap(transformedPosition);
     } else {
       // widget.onStartDrawing();
-      _startDrawing(transformedPosition);
+      // _startDrawing(transformedPosition);
     }
   }
 
@@ -595,6 +599,7 @@ class _PixelGridState extends State<PixelGrid> {
         widget.currentTool == PixelTool.mirror) {
       widget.onDrawShape(_previewPixels);
     }
+    _cacheController._isDirty = true;
     // _previewPixels.clear();
     _previousPosition = null;
     _startPosition = null;
@@ -1114,6 +1119,7 @@ class _PixelGridPainter extends CustomPainter {
 
   final List<Offset> penPoints;
   final bool isDrawingPenPath;
+  final BlendMode blendMode;
   final _CacheController cacheController;
 
   _PixelGridPainter({
@@ -1130,6 +1136,7 @@ class _PixelGridPainter extends CustomPainter {
     required this.penPoints,
     required this.isDrawingPenPath,
     required this.cacheController,
+    this.blendMode = BlendMode.srcOver,
   }) : super(repaint: cacheController);
 
   @override
@@ -1332,13 +1339,17 @@ class _PixelGridPainter extends CustomPainter {
     double pixelWidth,
     double pixelHeight,
   ) {
-    final paint = Paint()..style = PaintingStyle.fill;
+    final paint = Paint()
+      ..style = PaintingStyle.fill
+      ..blendMode = blendMode;
 
     for (final point in previewPixels) {
       final x = point.x;
       final y = point.y;
       final index = y * width + x;
       final color = previewColor;
+
+      //if (color.alpha == 0) continue;
 
       final rect = Rect.fromLTWH(
         x * pixelWidth,

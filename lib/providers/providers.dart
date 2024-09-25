@@ -7,7 +7,7 @@ import '../data.dart';
 
 final databaseProvider = Provider((ref) => AppDatabase());
 final queueManagerProvider = Provider((ref) => QueueManager());
-final projectRepo = Provider((ref) => ProjectLocalRepo(
+final projectRepo = Provider<ProjectRepo>((ref) => ProjectLocalRepo(
       ref.read(databaseProvider),
       ref.read(queueManagerProvider),
     ));

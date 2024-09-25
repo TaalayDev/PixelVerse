@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:flutter/cupertino.dart';
+import 'package:pixelverse/core/utils.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../data.dart';
@@ -26,5 +30,19 @@ class Projects extends _$Projects {
 
   Future<void> deleteProject(Project project) async {
     return ref.read(projectRepo).deleteProject(project);
+  }
+
+  Future<String?> importProject(BuildContext context) async {
+    try {
+      final contents = await FileUtils(context).readProjectFileContents();
+      if (contents == null) return null;
+      final project = Project.fromJson(jsonDecode(contents));
+
+      addProject(project);
+    } catch (e, s) {
+      debugPrint(e.toString());
+      debugPrint(s.toString());
+      return e.toString();
+    }
   }
 }

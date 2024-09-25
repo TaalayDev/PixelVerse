@@ -8,8 +8,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../data.dart';
 import '../../providers/pixel_controller_provider.dart';
 import '../../core/tools.dart';
-import '../widgets/pixel_grid_widget.dart';
-import '../widgets/layers_panel.dart';
+import '../widgets.dart';
 
 class PixelDrawScreen extends HookConsumerWidget {
   const PixelDrawScreen({
@@ -76,9 +75,8 @@ class PixelDrawScreen extends HookConsumerWidget {
                       onSelectTool: (tool) => currentTool.value = tool,
                       onUndo: state.canUndo ? notifier.undo : null,
                       onRedo: state.canRedo ? notifier.redo : null,
-                      onSave: () {
-                        // Implement save functionality
-                      },
+                      exportAsImage: () => notifier.exportImage(context),
+                      export: () => notifier.exportJson(context),
                       currentColor: state.currentColor,
                       onColorPicker: () {
                         showColorPicker(context, notifier);
@@ -116,29 +114,50 @@ class PixelDrawScreen extends HookConsumerWidget {
                           if (MediaQuery.of(context).size.width > 600)
                             Container(
                               color: Colors.grey[200],
-                              child: LayersPanel(
-                                width: width,
-                                height: height,
-                                layers: state.layers,
-                                activeLayerIndex: state.currentLayerIndex,
-                                onLayerAdded: (name) {
-                                  notifier.addLayer(name);
-                                },
-                                onLayerVisibilityChanged: (index) {
-                                  notifier.toggleLayerVisibility(index);
-                                },
-                                onLayerSelected: (index) {
-                                  notifier.selectLayer(index);
-                                },
-                                onLayerDeleted: (index) {
-                                  notifier.removeLayer(index);
-                                },
-                                onLayerLockedChanged: (index) {},
-                                onLayerNameChanged: (index, name) {},
-                                onLayerReordered: (oldIndex, newIndex) {
-                                  notifier.reorderLayers(newIndex, oldIndex);
-                                },
-                                onLayerOpacityChanged: (index, opacity) {},
+                              child: SizedBox(
+                                width: 250,
+                                child: Column(
+                                  children: [
+                                    Expanded(
+                                      child: LayersPanel(
+                                        width: width,
+                                        height: height,
+                                        layers: state.layers,
+                                        activeLayerIndex:
+                                            state.currentLayerIndex,
+                                        onLayerAdded: (name) {
+                                          notifier.addLayer(name);
+                                        },
+                                        onLayerVisibilityChanged: (index) {
+                                          notifier.toggleLayerVisibility(index);
+                                        },
+                                        onLayerSelected: (index) {
+                                          notifier.selectLayer(index);
+                                        },
+                                        onLayerDeleted: (index) {
+                                          notifier.removeLayer(index);
+                                        },
+                                        onLayerLockedChanged: (index) {},
+                                        onLayerNameChanged: (index, name) {},
+                                        onLayerReordered: (oldIndex, newIndex) {
+                                          notifier.reorderLayers(
+                                              newIndex, oldIndex);
+                                        },
+                                        onLayerOpacityChanged:
+                                            (index, opacity) {},
+                                      ),
+                                    ),
+                                    const Divider(),
+                                    Expanded(
+                                      child: ColorPalettePanel(
+                                        currentColor: state.currentColor,
+                                        onColorSelected: (color) {
+                                          notifier.currentColor = color;
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                         ],
@@ -307,7 +326,7 @@ class PixelPainter extends HookConsumerWidget {
           notifier.fillPixels(points);
         },
         onStartDrawing: () {
-          notifier.saveState();
+          // notifier.saveState();
         },
         onFinishDrawing: () {},
         onSelectionChanged: (rect) {
@@ -436,7 +455,9 @@ class ToolBar extends StatelessWidget {
   final Function(PixelTool) onSelectTool;
   final VoidCallback? onUndo;
   final VoidCallback? onRedo;
-  final VoidCallback onSave;
+  final VoidCallback? import;
+  final VoidCallback? export;
+  final VoidCallback? exportAsImage;
   final Color currentColor;
   final Function() onColorPicker;
 
@@ -448,7 +469,9 @@ class ToolBar extends StatelessWidget {
     required this.onSelectTool,
     required this.onUndo,
     required this.onRedo,
-    required this.onSave,
+    this.import,
+    this.export,
+    this.exportAsImage,
     required this.currentColor,
     required this.onColorPicker,
   });
@@ -593,10 +616,62 @@ class ToolBar extends StatelessWidget {
                 onPressed: onRedo,
                 tooltip: 'Redo',
               ),
-              IconButton(
+              PopupMenuButton(
                 icon: const Icon(Feather.save, size: 18),
-                onPressed: onSave,
                 tooltip: 'Save',
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'import',
+                    child: ListTile(
+                      leading: Icon(Feather.upload),
+                      title: Text('Open'),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'projects',
+                    child: ListTile(
+                      leading: Icon(Feather.list),
+                      title: Text('Projects'),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'export',
+                    child: ListTile(
+                      leading: Icon(Feather.save),
+                      title: Text('Export'),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'exportAsImage',
+                    child: ListTile(
+                      leading: Icon(Feather.image),
+                      title: Text('Export as Image'),
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'share',
+                    child: ListTile(
+                      leading: Icon(Feather.share),
+                      title: Text('Share'),
+                    ),
+                  ),
+                ],
+                onSelected: (value) {
+                  switch (value) {
+                    case 'import':
+                      import?.call();
+                      break;
+                    case 'export':
+                      export?.call();
+                      break;
+                    case 'exportAsImage':
+                      exportAsImage?.call();
+                      break;
+                    case 'projects':
+                      Navigator.of(context).pop();
+                      break;
+                  }
+                },
               ),
             ],
           ),
