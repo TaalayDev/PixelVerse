@@ -67,6 +67,14 @@ class ProjectsScreen extends HookConsumerWidget {
           onTapProject: (project) {
             overlayLoader.value = _openProject(context, ref, project.id);
           },
+          onDeleteProject: (project) {
+            ref.read(projectsProvider.notifier).deleteProject(project);
+          },
+          onEditProject: (project) {
+            ref
+                .read(projectsProvider.notifier)
+                .renameProject(project.id, project.name);
+          },
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => Center(
@@ -158,12 +166,16 @@ class AdaptiveProjectGrid extends StatelessWidget {
   final List<Project> projects;
   final Function()? onCreateNew;
   final Function(Project)? onTapProject;
+  final Function(Project)? onDeleteProject;
+  final Function(Project)? onEditProject;
 
   const AdaptiveProjectGrid({
     super.key,
     required this.projects,
     this.onCreateNew,
     this.onTapProject,
+    this.onDeleteProject,
+    this.onEditProject,
   });
 
   @override
@@ -206,6 +218,8 @@ class AdaptiveProjectGrid extends StatelessWidget {
             return ProjectCard(
               project: projects[index],
               onTapProject: onTapProject,
+              onDeleteProject: onDeleteProject,
+              onEditProject: onEditProject,
             );
           },
         );
@@ -217,8 +231,16 @@ class AdaptiveProjectGrid extends StatelessWidget {
 class ProjectCard extends StatelessWidget {
   final Project project;
   final Function(Project)? onTapProject;
+  final Function(Project)? onDeleteProject;
+  final Function(Project)? onEditProject;
 
-  const ProjectCard({super.key, required this.project, this.onTapProject});
+  const ProjectCard({
+    super.key,
+    required this.project,
+    this.onTapProject,
+    this.onDeleteProject,
+    this.onEditProject,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -266,10 +288,20 @@ class ProjectCard extends StatelessWidget {
                       itemBuilder: (context) {
                         return [
                           const PopupMenuItem(
-                            value: 'edit',
+                            value: 'rename',
                             child: Row(
                               children: [
                                 Icon(Feather.edit_2),
+                                SizedBox(width: 8),
+                                Text('Rename'),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Feather.edit),
                                 SizedBox(width: 8),
                                 Text('Edit'),
                               ],
@@ -290,6 +322,17 @@ class ProjectCard extends StatelessWidget {
                       onSelected: (value) {
                         if (value == 'edit') {
                           onTapProject?.call(project);
+                        } else if (value == 'rename') {
+                          showDialog(
+                            context: context,
+                            builder: (context) => RenameProjectDialog(
+                              onRename: (name) {
+                                onEditProject?.call(
+                                  project.copyWith(name: name),
+                                );
+                              },
+                            ),
+                          );
                         } else if (value == 'delete') {
                           showDialog(
                             context: context,
@@ -302,12 +345,14 @@ class ProjectCard extends StatelessWidget {
                                 TextButton(
                                   onPressed: () {
                                     Navigator.of(context).pop();
+                                    onDeleteProject?.call(project);
                                   },
                                   child: const Text('Cancel'),
                                 ),
                                 TextButton(
                                   onPressed: () {
                                     Navigator.of(context).pop();
+                                    onDeleteProject?.call(project);
                                   },
                                   child: const Text('Delete'),
                                 ),
@@ -455,6 +500,53 @@ class _ProjectThumbnailWidgetState extends State<ProjectThumbnailWidget> {
           _image = img;
         });
       },
+    );
+  }
+}
+
+class RenameProjectDialog extends HookWidget {
+  const RenameProjectDialog({super.key, this.onRename});
+
+  final Function(String name)? onRename;
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = useTextEditingController();
+
+    return AlertDialog(
+      title: const Text('Rename Project'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: controller,
+            decoration: const InputDecoration(
+              labelText: 'Project Name',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            if (controller.text.isEmpty) {
+              return;
+            }
+
+            Navigator.of(context).pop();
+            onRename?.call(controller.text);
+          },
+          child: const Text('Rename'),
+        ),
+      ],
     );
   }
 }

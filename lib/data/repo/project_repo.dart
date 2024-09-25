@@ -12,6 +12,8 @@ abstract class ProjectRepo {
   Future<Project?> fetchProject(int projectId);
   Future<Project> createProject(Project project);
   Future<void> updateProject(Project project);
+  Future<void> renameProject(int projectId, String name);
+  Future<void> deleteProject(Project project);
   Future<Layer> createLayer(int projectId, Layer layer);
   Future<void> updateLayer(int projectId, Layer layer);
   Future<void> deleteLayer(int layerId);
@@ -43,6 +45,26 @@ class ProjectLocalRepo extends ProjectRepo {
       await db.updateProject(
         project.copyWith(thumbnail: ImageHelper.convertToBytes(pixels)),
       );
+      completer.complete();
+    });
+    return completer.future;
+  }
+
+  @override
+  Future<void> renameProject(int projectId, String name) async {
+    final completer = Completer<void>();
+    queueManager.add(() async {
+      await db.renameProject(projectId, name);
+      completer.complete();
+    });
+    return completer.future;
+  }
+
+  @override
+  Future<void> deleteProject(Project project) async {
+    final completer = Completer<void>();
+    queueManager.add(() async {
+      await db.deleteProject(project.id);
       completer.complete();
     });
     return completer.future;

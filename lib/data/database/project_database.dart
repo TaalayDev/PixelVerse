@@ -231,6 +231,17 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
+  Future<void> deleteProject(int projectId) async {
+    await (delete(projectsTable)..where((tbl) => tbl.id.equals(projectId)))
+        .go();
+  }
+
+  Future<void> renameProject(int projectId, String name) async {
+    (update(projectsTable)
+      ..where((tbl) => tbl.id.equals(projectId))
+      ..write(ProjectsTableCompanion(name: Value(name))));
+  }
+
   Future<Layer> insertLayer(int projectId, Layer layer) async {
     final layerId = await into(layersTable).insert(LayersTableCompanion(
       layerId: Value(layer.id),

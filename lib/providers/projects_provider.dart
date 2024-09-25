@@ -19,4 +19,12 @@ class Projects extends _$Projects {
   Future<Project?> getProject(int projectId) async {
     return ref.read(projectRepo).fetchProject(projectId);
   }
+
+  Future<void> renameProject(int projectId, String name) async {
+    return ref.read(projectRepo).renameProject(projectId, name);
+  }
+
+  Future<void> deleteProject(Project project) async {
+    return ref.read(projectRepo).deleteProject(project);
+  }
 }
