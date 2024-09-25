@@ -256,6 +256,67 @@ class ProjectCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                    PopupMenuButton(
+                      icon: const Icon(Feather.more_vertical),
+                      style: IconButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(25, 25),
+                        iconSize: 20,
+                      ),
+                      itemBuilder: (context) {
+                        return [
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Feather.edit_2),
+                                SizedBox(width: 8),
+                                Text('Edit'),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Feather.trash_2),
+                                SizedBox(width: 8),
+                                Text('Delete'),
+                              ],
+                            ),
+                          ),
+                        ];
+                      },
+                      onSelected: (value) {
+                        if (value == 'edit') {
+                          onTapProject?.call(project);
+                        } else if (value == 'delete') {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Delete Project'),
+                              content: const Text(
+                                'Are you sure you want to delete this project?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: const Text('Delete'),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      },
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),

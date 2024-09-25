@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:ui' as ui;
 import 'dart:math';
 import 'dart:typed_data';
@@ -14,8 +13,11 @@ class _CacheController extends ChangeNotifier {
   ui.Image? _cachedImage;
   bool _isDirty = true;
 
+  Function()? _onCached;
+
   void updateImage(ui.Image image) {
     _cachedImage = image;
+    _onCached?.call();
     notifyListeners();
   }
 }
@@ -121,6 +123,9 @@ class _PixelGridState extends State<PixelGrid> {
   void initState() {
     super.initState();
     _updateCachedPixels();
+    _cacheController._onCached = () {
+      _previewPixels.clear();
+    };
   }
 
   @override
@@ -166,6 +171,7 @@ class _PixelGridState extends State<PixelGrid> {
       child: GestureDetector(
         onScaleStart: (details) {
           _pointerCount = details.pointerCount;
+          print('onScaleStart');
           if (_pointerCount == 1) {
             // One finger touch
             if (widget.currentTool == PixelTool.drag) {
@@ -229,6 +235,8 @@ class _PixelGridState extends State<PixelGrid> {
             if (!_isPointInsideSelection(transformedPosition)) {
               _startSelection(transformedPosition);
             }
+          } else if (widget.currentTool == PixelTool.pen) {
+            _handlePenTap(transformedPosition);
           } else {
             // widget.onStartDrawing();
             _startDrawing(transformedPosition);
@@ -587,7 +595,7 @@ class _PixelGridState extends State<PixelGrid> {
         widget.currentTool == PixelTool.mirror) {
       widget.onDrawShape(_previewPixels);
     }
-    _previewPixels.clear();
+    // _previewPixels.clear();
     _previousPosition = null;
     _startPosition = null;
     _currentPosition = null;
@@ -1134,7 +1142,7 @@ class _PixelGridPainter extends CustomPainter {
     final pixelHeight = size.height / height;
 
     // Draw layers pixels
-    if (cacheController._cachedImage != null && !cacheController._isDirty) {
+    if (cacheController._cachedImage != null) {
       final imageRect = Rect.fromLTWH(
         0,
         0,
@@ -1151,6 +1159,8 @@ class _PixelGridPainter extends CustomPainter {
       _drawPreviewPixels(canvas, size, pixelWidth, pixelHeight);
     } else {
       _drawPixels(canvas, size, pixelWidth, pixelHeight);
+    }
+    if (cacheController._isDirty) {
       cacheController._isDirty = false;
       _createImage(pixels, width, height);
     }
@@ -1308,8 +1318,8 @@ class _PixelGridPainter extends CustomPainter {
         final rect = Rect.fromLTWH(
           x * pixelWidth,
           y * pixelHeight,
-          pixelWidth + 1,
-          pixelHeight + 1,
+          pixelWidth,
+          pixelHeight,
         );
         canvas.drawRect(rect, paint..color = color);
       }

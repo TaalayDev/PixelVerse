@@ -594,7 +594,7 @@ class ToolBar extends StatelessWidget {
                 tooltip: 'Redo',
               ),
               IconButton(
-                icon: const Icon(Feather.save),
+                icon: const Icon(Feather.save, size: 18),
                 onPressed: onSave,
                 tooltip: 'Save',
               ),
