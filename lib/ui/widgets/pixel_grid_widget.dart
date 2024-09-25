@@ -1135,7 +1135,6 @@ class _PixelGridPainter extends CustomPainter {
 
     // Draw layers pixels
     if (cacheController._cachedImage != null && !cacheController._isDirty) {
-      print('Drawing cached image');
       final imageRect = Rect.fromLTWH(
         0,
         0,
@@ -1151,7 +1150,6 @@ class _PixelGridPainter extends CustomPainter {
       );
       _drawPreviewPixels(canvas, size, pixelWidth, pixelHeight);
     } else {
-      print('Drawing pixels');
       _drawPixels(canvas, size, pixelWidth, pixelHeight);
       cacheController._isDirty = false;
       _createImage(pixels, width, height);
@@ -1310,8 +1308,8 @@ class _PixelGridPainter extends CustomPainter {
         final rect = Rect.fromLTWH(
           x * pixelWidth,
           y * pixelHeight,
-          pixelWidth,
-          pixelHeight,
+          pixelWidth + 1,
+          pixelHeight + 1,
         );
         canvas.drawRect(rect, paint..color = color);
       }
@@ -1349,7 +1347,7 @@ class _PixelGridPainter extends CustomPainter {
   ) async {
     final image =
         await ImageHelper.createImageFromPixels(pixels, width, height);
-    cacheController._cachedImage = image;
+    cacheController.updateImage(image);
   }
 
   @override
