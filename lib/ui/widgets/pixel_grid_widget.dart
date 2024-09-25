@@ -6,10 +6,19 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../core.dart';
 import '../../core/tools.dart';
 import '../../data.dart';
 
-class PixelGridController extends ChangeNotifier {}
+class _CacheController extends ChangeNotifier {
+  ui.Image? _cachedImage;
+  bool _isDirty = true;
+
+  void updateImage(ui.Image image) {
+    _cachedImage = image;
+    notifyListeners();
+  }
+}
 
 class PixelGrid extends StatefulWidget {
   final int width;
@@ -104,10 +113,9 @@ class _PixelGridState extends State<PixelGrid> {
   late Uint32List _cachedPixels;
   late List<Layer> _cachedLayers;
 
-  ui.Image? _cachedImage;
-
   RenderBox get renderBox =>
       _boxKey.currentContext!.findRenderObject() as RenderBox;
+  final _cacheController = _CacheController();
 
   @override
   void initState() {
@@ -129,14 +137,12 @@ class _PixelGridState extends State<PixelGrid> {
   }
 
   void _updateCachedPixels() {
-    _cachedImage = null;
     _cachedLayers = List<Layer>.from(widget.layers);
     _cachedPixels = Uint32List(widget.width * widget.height);
     for (final layer in widget.layers.where((layer) => layer.isVisible)) {
       _cachedPixels = _mergePixels(_cachedPixels, layer.pixels);
     }
-
-    _updateCachedImage();
+    _cacheController._isDirty = true;
   }
 
   Uint32List get pixels {
@@ -248,6 +254,7 @@ class _PixelGridState extends State<PixelGrid> {
             offset: _currentOffset,
             penPoints: _penPoints,
             isDrawingPenPath: _isDrawingPenPath,
+            cacheController: _cacheController,
           ),
           size: Size.infinite,
         ),
@@ -1082,26 +1089,6 @@ class _PixelGridState extends State<PixelGrid> {
 
     return mergedPixels;
   }
-
-  void _updateCachedImage() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final size = renderBox.size;
-      final imgData = pixels.buffer.asUint8List();
-
-      ui.decodeImageFromPixels(
-        imgData,
-        size.width.toInt(),
-        size.height.toInt(),
-        ui.PixelFormat.bgra8888,
-        (image) {
-          setState(() {
-            print('Updating cached image');
-            _cachedImage = image;
-          });
-        },
-      );
-    });
-  }
 }
 
 class _PixelGridPainter extends CustomPainter {
@@ -1119,6 +1106,7 @@ class _PixelGridPainter extends CustomPainter {
 
   final List<Offset> penPoints;
   final bool isDrawingPenPath;
+  final _CacheController cacheController;
 
   _PixelGridPainter({
     required this.width,
@@ -1133,7 +1121,8 @@ class _PixelGridPainter extends CustomPainter {
     required this.offset,
     required this.penPoints,
     required this.isDrawingPenPath,
-  });
+    required this.cacheController,
+  }) : super(repaint: cacheController);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1145,7 +1134,28 @@ class _PixelGridPainter extends CustomPainter {
     final pixelHeight = size.height / height;
 
     // Draw layers pixels
-    _drawPixels(canvas, size, pixelWidth, pixelHeight);
+    if (cacheController._cachedImage != null && !cacheController._isDirty) {
+      print('Drawing cached image');
+      final imageRect = Rect.fromLTWH(
+        0,
+        0,
+        cacheController._cachedImage!.width.toDouble(),
+        cacheController._cachedImage!.height.toDouble(),
+      );
+      final canvasRect = Offset.zero & size;
+      canvas.drawImageRect(
+        cacheController._cachedImage!,
+        imageRect,
+        canvasRect,
+        Paint(),
+      );
+      _drawPreviewPixels(canvas, size, pixelWidth, pixelHeight);
+    } else {
+      print('Drawing pixels');
+      _drawPixels(canvas, size, pixelWidth, pixelHeight);
+      cacheController._isDirty = false;
+      _createImage(pixels, width, height);
+    }
 
     if (selectionRect != null &&
         selectionRect!.width > 0 &&
@@ -1330,6 +1340,16 @@ class _PixelGridPainter extends CustomPainter {
       );
       canvas.drawRect(rect, paint..color = color);
     }
+  }
+
+  void _createImage(
+    Uint32List pixels,
+    int width,
+    int height,
+  ) async {
+    final image =
+        await ImageHelper.createImageFromPixels(pixels, width, height);
+    cacheController._cachedImage = image;
   }
 
   @override

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
@@ -95,10 +96,7 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   set currentTool(PixelTool tool) => state = state.copyWith(currentTool: tool);
   MirrorAxis get mirrorAxis => state.mirrorAxis;
   Color get currentColor => state.currentColor;
-  set currentColor(Color color) {
-    print('Setting color: $color');
-    state = state.copyWith(currentColor: color);
-  }
+  set currentColor(Color color) => state = state.copyWith(currentColor: color);
 
   Layer get currentLayer => state.layers[state.currentLayerIndex];
 
@@ -118,7 +116,6 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
 
   @override
   PixelDrawState build(Project project) {
-    print('Building PixelDrawNotifier');
     return PixelDrawState(
       width: project.width,
       height: project.height,
