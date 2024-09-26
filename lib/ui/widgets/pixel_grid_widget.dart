@@ -10,29 +10,6 @@ import '../../core.dart';
 import '../../core/tools.dart';
 import '../../data.dart';
 
-extension _LayerListExtension on List<Layer> {
-  Uint32List getPixels(int width, int height, {Uint32List? extraPixels}) {
-    final pixels = Uint32List(width * height);
-    for (final layer in where((layer) => layer.isVisible)) {
-      for (int i = 0; i < layer.pixels.length; i++) {
-        if (layer.pixels[i] != Colors.transparent.value) {
-          pixels[i] = layer.pixels[i];
-        }
-      }
-    }
-
-    if (extraPixels != null) {
-      for (int i = 0; i < extraPixels.length; i++) {
-        if (extraPixels[i] != Colors.transparent.value) {
-          pixels[i] = extraPixels[i];
-        }
-      }
-    }
-
-    return pixels;
-  }
-}
-
 class _CacheModel {
   ui.Image? image;
   bool isDirty = true;
