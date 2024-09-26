@@ -291,6 +291,7 @@ class PixelPainter extends HookConsumerWidget {
         width: project.width,
         height: project.height,
         layers: layers,
+        currentLayerIndex: notifier.currentLayerIndex,
         onTapPixel: (x, y) {
           switch (currentTool.value) {
             case PixelTool.pencil:

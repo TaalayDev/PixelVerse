@@ -10,16 +10,77 @@ import '../../core.dart';
 import '../../core/tools.dart';
 import '../../data.dart';
 
+extension _LayerListExtension on List<Layer> {
+  Uint32List getPixels(int width, int height, {Uint32List? extraPixels}) {
+    final pixels = Uint32List(width * height);
+    for (final layer in where((layer) => layer.isVisible)) {
+      for (int i = 0; i < layer.pixels.length; i++) {
+        if (layer.pixels[i] != Colors.transparent.value) {
+          pixels[i] = layer.pixels[i];
+        }
+      }
+    }
+
+    if (extraPixels != null) {
+      for (int i = 0; i < extraPixels.length; i++) {
+        if (extraPixels[i] != Colors.transparent.value) {
+          pixels[i] = extraPixels[i];
+        }
+      }
+    }
+
+    return pixels;
+  }
+}
+
+class _CacheModel {
+  ui.Image? image;
+  bool isDirty = true;
+}
+
 class _CacheController extends ChangeNotifier {
-  ui.Image? _cachedImage;
-  bool _isDirty = true;
+  final Map<int, _CacheModel> _cachedLayerImages;
 
-  Function()? _onCached;
+  Function()? _onCacheUpdated;
 
-  void updateImage(ui.Image image) {
-    _cachedImage = image;
-    _onCached?.call();
+  _CacheController() : _cachedLayerImages = {};
+
+  void updateLayerImage(int layer, ui.Image image) {
+    print('Updating layer $layer image');
+    if (_cachedLayerImages.containsKey(layer)) {
+      _cachedLayerImages[layer]!.image = image;
+      _cachedLayerImages[layer]!.isDirty = false;
+    } else {
+      _cachedLayerImages[layer] = _CacheModel()
+        ..image = image
+        ..isDirty = false;
+    }
+    _onCacheUpdated?.call();
     notifyListeners();
+  }
+
+  void markLayerDirty(int layer) {
+    _cachedLayerImages[layer]?.isDirty = true;
+    notifyListeners();
+  }
+
+  void _createImage(
+    int layer,
+    Uint32List pixels,
+    int width,
+    int height,
+  ) async {
+    final image =
+        await ImageHelper.createImageFromPixels(pixels, width, height);
+    updateLayerImage(layer, image);
+  }
+
+  @override
+  void dispose() {
+    for (var image in _cachedLayerImages.entries) {
+      image.value.image?.dispose();
+    }
+    super.dispose();
   }
 }
 
@@ -48,6 +109,7 @@ class PixelGrid extends StatefulWidget {
   final double zoomLevel;
   final Offset currentOffset;
   final Function(double, Offset)? onZoom;
+  final int currentLayerIndex;
 
   const PixelGrid({
     super.key,
@@ -72,6 +134,7 @@ class PixelGrid extends StatefulWidget {
     this.currentOffset = Offset.zero,
     this.mirrorAxis = MirrorAxis.vertical,
     this.onZoom,
+    required this.currentLayerIndex,
   });
 
   @override
@@ -118,15 +181,17 @@ class _PixelGridState extends State<PixelGrid> {
 
   RenderBox get renderBox =>
       _boxKey.currentContext!.findRenderObject() as RenderBox;
-  final _cacheController = _CacheController();
+  late final _CacheController _cacheController;
+  int get currentLayerId => widget.layers[widget.currentLayerIndex].layerId;
 
   @override
   void initState() {
     super.initState();
-    _updateCachedPixels();
-    _cacheController._onCached = () {
+    _cacheController = _CacheController();
+    _cacheController._onCacheUpdated = () {
       _previewPixels.clear();
     };
+    _updateCachedPixels(cacheAll: true);
   }
 
   @override
@@ -142,28 +207,37 @@ class _PixelGridState extends State<PixelGrid> {
     }
   }
 
-  void _updateCachedPixels() {
+  void _updateCachedPixels({bool cacheAll = false}) {
     _cachedLayers = List<Layer>.from(widget.layers);
     _cachedPixels = Uint32List(widget.width * widget.height);
-    for (final layer in widget.layers.where((layer) => layer.isVisible)) {
+    for (var i = 0; i < _cachedLayers.length; i++) {
+      final layer = _cachedLayers[i];
+      if (!layer.isVisible) continue;
       _cachedPixels = _mergePixels(_cachedPixels, layer.pixels);
-    }
-    _cacheController._isDirty = true;
-    print('Cached pixels updated');
-  }
-
-  Uint32List get pixels {
-    Uint32List pixels = _cachedPixels;
-    for (int i = 0; i < _previewPixels.length; i++) {
-      final point = _previewPixels[i];
-      final index = point.y * widget.width + point.x;
-      if (index >= 0 && index < _cachedPixels.length) {
-        pixels[index] = widget.currentTool == PixelTool.eraser
-            ? Colors.transparent.value
-            : widget.currentColor.value;
+      if (i == widget.currentLayerIndex) {
+        _cacheController._createImage(
+          layer.layerId,
+          Uint32List.fromList(layer.pixels),
+          widget.width,
+          widget.height,
+        );
+        _cachedPixels = _mergePixelsWithPoint(
+          _cachedPixels,
+          _previewPixels,
+          widget.currentTool == PixelTool.eraser
+              ? Colors.transparent.value
+              : widget.currentColor.value,
+        );
+      } else if (cacheAll) {
+        _cacheController._createImage(
+          layer.layerId,
+          layer.pixels,
+          widget.width,
+          widget.height,
+        );
       }
     }
-    return pixels;
+    _cacheController.markLayerDirty(currentLayerId);
   }
 
   @override
@@ -251,7 +325,7 @@ class _PixelGridState extends State<PixelGrid> {
           painter: _PixelGridPainter(
             width: widget.width,
             height: widget.height,
-            pixels: pixels,
+            pixels: _cachedPixels,
             previewPixels: _previewPixels,
             previewColor: widget.currentTool == PixelTool.eraser
                 ? Colors.transparent
@@ -267,6 +341,8 @@ class _PixelGridState extends State<PixelGrid> {
                 ? BlendMode.darken
                 : BlendMode.srcOver,
             cacheController: _cacheController,
+            currentLayerIndex: widget.currentLayerIndex,
+            layers: _cachedLayers,
           ),
           size: Size.infinite,
         ),
@@ -599,7 +675,7 @@ class _PixelGridState extends State<PixelGrid> {
         widget.currentTool == PixelTool.mirror) {
       widget.onDrawShape(_previewPixels);
     }
-    _cacheController._isDirty = true;
+    _cacheController.markLayerDirty(currentLayerId);
     // _previewPixels.clear();
     _previousPosition = null;
     _startPosition = null;
@@ -1102,6 +1178,22 @@ class _PixelGridState extends State<PixelGrid> {
 
     return mergedPixels;
   }
+
+  Uint32List _mergePixelsWithPoint(
+    Uint32List pixels,
+    List<Point<int>> points,
+    int color,
+  ) {
+    final mergedPixels = Uint32List.fromList(pixels);
+    for (final point in points) {
+      final index = point.y * widget.width + point.x;
+      if (index >= 0 && index < pixels.length) {
+        mergedPixels[index] = color;
+      }
+    }
+
+    return mergedPixels;
+  }
 }
 
 class _PixelGridPainter extends CustomPainter {
@@ -1120,6 +1212,8 @@ class _PixelGridPainter extends CustomPainter {
   final List<Offset> penPoints;
   final bool isDrawingPenPath;
   final BlendMode blendMode;
+  final List<Layer> layers;
+  final int currentLayerIndex;
   final _CacheController cacheController;
 
   _PixelGridPainter({
@@ -1135,6 +1229,8 @@ class _PixelGridPainter extends CustomPainter {
     required this.offset,
     required this.penPoints,
     required this.isDrawingPenPath,
+    required this.layers,
+    required this.currentLayerIndex,
     required this.cacheController,
     this.blendMode = BlendMode.srcOver,
   }) : super(repaint: cacheController);
@@ -1149,27 +1245,32 @@ class _PixelGridPainter extends CustomPainter {
     final pixelHeight = size.height / height;
 
     // Draw layers pixels
-    if (cacheController._cachedImage != null) {
-      final imageRect = Rect.fromLTWH(
-        0,
-        0,
-        cacheController._cachedImage!.width.toDouble(),
-        cacheController._cachedImage!.height.toDouble(),
-      );
-      final canvasRect = Offset.zero & size;
-      canvas.drawImageRect(
-        cacheController._cachedImage!,
-        imageRect,
-        canvasRect,
-        Paint(),
-      );
-      _drawPreviewPixels(canvas, size, pixelWidth, pixelHeight);
+    Rect? imageRect;
+    final canvasRect = Offset.zero & size;
+    if (cacheController._cachedLayerImages.isNotEmpty) {
+      for (int i = 0; i < layers.length; i++) {
+        final layer = layers[i];
+        final image = cacheController._cachedLayerImages[layer.layerId]?.image;
+        if (image != null) {
+          imageRect ??= Rect.fromLTWH(
+            0,
+            0,
+            image.width.toDouble(),
+            image.height.toDouble(),
+          );
+          canvas.drawImageRect(
+            image,
+            imageRect,
+            canvasRect,
+            Paint(),
+          );
+        }
+        if (i == currentLayerIndex) {
+          _drawPreviewPixels(canvas, size, pixelWidth, pixelHeight);
+        }
+      }
     } else {
       _drawPixels(canvas, size, pixelWidth, pixelHeight);
-    }
-    if (cacheController._isDirty) {
-      cacheController._isDirty = false;
-      _createImage(pixels, width, height);
     }
 
     if (selectionRect != null &&
@@ -1361,15 +1462,15 @@ class _PixelGridPainter extends CustomPainter {
     }
   }
 
-  void _createImage(
-    Uint32List pixels,
-    int width,
-    int height,
-  ) async {
-    final image =
-        await ImageHelper.createImageFromPixels(pixels, width, height);
-    cacheController.updateImage(image);
-  }
+  // void _createImage(
+  //   Uint32List pixels,
+  //   int width,
+  //   int height,
+  // ) async {
+  //   final image =
+  //       await ImageHelper.createImageFromPixels(pixels, width, height);
+  //   cacheController.updateImage(image);
+  // }
 
   @override
   bool shouldRepaint(covariant _PixelGridPainter oldDelegate) {

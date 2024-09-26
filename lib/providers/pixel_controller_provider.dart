@@ -101,6 +101,7 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   set currentColor(Color color) => state = state.copyWith(currentColor: color);
 
   Layer get currentLayer => state.layers[state.currentLayerIndex];
+  int get currentLayerIndex => state.currentLayerIndex;
 
   final List<PixelDrawState> _undoStack = [];
   final List<PixelDrawState> _redoStack = [];
