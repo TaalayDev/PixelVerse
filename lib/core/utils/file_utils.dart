@@ -119,6 +119,43 @@ class FileUtils {
     return completer.future;
   }
 
+  Future<img.Image?> pickImageFile() async {
+    final completer = Completer<img.Image?>();
+
+    if (kIsWeb) {
+      final html.InputElement input =
+          html.document.createElement('input') as html.InputElement
+            ..type = 'file'
+            ..accept = 'image/*'
+            ..style.display = 'none';
+
+      input.onChange.listen((event) {
+        final html.File file = input.files!.first;
+        final reader = html.FileReader();
+        reader.readAsArrayBuffer(file);
+        reader.onLoadEnd.listen((event) {
+          final Uint8List bytes = Uint8List.fromList(
+            reader.result as List<int>,
+          );
+          completer.complete(img.decodeImage(bytes));
+        });
+      });
+      html.document.body!.children.add(input);
+      input.click();
+    } else {
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+      );
+
+      if (result != null) {
+        final File file = File(result.files.single.path!);
+        final bytes = img.decodeImage(await file.readAsBytes());
+      }
+    }
+
+    return completer.future;
+  }
+
   Future<void> _saveImage(Uint8List imageData, String fileName) async {
     if (kIsWeb) {
       _downloadFileWeb(imageData, fileName);

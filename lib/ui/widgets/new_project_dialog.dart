@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
+const kMaxPixelWidth = 5024;
+const kMaxPixelHeight = 5024;
+
 class ProjectTemplate {
   final String name;
   final int width;
@@ -110,8 +113,10 @@ class _NewProjectDialogState extends State<NewProjectDialog> {
                             return 'Enter width';
                           }
                           int? width = int.tryParse(value);
-                          if (width == null || width < 1 || width > 1024) {
-                            return 'Width: 1-1024';
+                          if (width == null ||
+                              width < 1 ||
+                              width > kMaxPixelWidth) {
+                            return 'Width: 1-$kMaxPixelWidth';
                           }
                           return null;
                         },
@@ -136,8 +141,10 @@ class _NewProjectDialogState extends State<NewProjectDialog> {
                             return 'Enter height';
                           }
                           int? height = int.tryParse(value);
-                          if (height == null || height < 1 || height > 1024) {
-                            return 'Height: 1-1024';
+                          if (height == null ||
+                              height < 1 ||
+                              height > kMaxPixelHeight) {
+                            return 'Height: 1-$kMaxPixelHeight';
                           }
                           return null;
                         },

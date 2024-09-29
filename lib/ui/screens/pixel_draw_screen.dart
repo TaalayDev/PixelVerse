@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -81,34 +83,53 @@ class PixelDrawScreen extends HookConsumerWidget {
                       onColorPicker: () {
                         showColorPicker(context, notifier);
                       },
+                      import: () => notifier.importImage(context),
                     ),
                     Expanded(
                       child: Row(
                         children: [
                           Expanded(
-                            child: Center(
-                              child: AspectRatio(
-                                aspectRatio: width / height,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Container(
-                                    clipBehavior: Clip.hardEdge,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      border: Border.all(color: Colors.grey),
-                                    ),
-                                    child: PixelPainter(
-                                      project: project,
-                                      gridScale: gridScale,
-                                      gridOffset: gridOffset,
-                                      currentTool: currentTool,
-                                      currentColor: state.currentColor,
-                                      brushSize: brushSize,
-                                      sprayIntensity: sprayIntensity,
+                            child: Stack(
+                              clipBehavior: Clip.hardEdge,
+                              children: [
+                                Container(
+                                  alignment: Alignment.center,
+                                  decoration: const BoxDecoration(),
+                                  clipBehavior: Clip.hardEdge,
+                                  child: AspectRatio(
+                                    aspectRatio: width / height,
+                                    child: Transform(
+                                      transform: Matrix4.identity()
+                                        ..translate(
+                                          gridOffset.value.dx,
+                                          gridOffset.value.dy,
+                                        )
+                                        ..scale(gridScale.value),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Container(
+                                          clipBehavior: Clip.hardEdge,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            border: Border.all(
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                          child: PixelPainter(
+                                            project: project,
+                                            gridScale: gridScale,
+                                            gridOffset: gridOffset,
+                                            currentTool: currentTool,
+                                            currentColor: state.currentColor,
+                                            brushSize: brushSize,
+                                            sprayIntensity: sprayIntensity,
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
+                              ],
                             ),
                           ),
                           if (MediaQuery.of(context).size.width > 600)
@@ -282,10 +303,10 @@ class PixelPainter extends HookConsumerWidget {
 
     return CustomPaint(
       painter: GridPainter(
-        width: project.width,
-        height: project.height,
-        scale: gridScale.value,
-        offset: gridOffset.value,
+        width: min(project.width, 64),
+        height: min(project.height, 64),
+        // scale: gridScale.value,
+        // offset: gridOffset.value,
       ),
       child: PixelGrid(
         width: project.width,

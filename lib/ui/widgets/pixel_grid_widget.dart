@@ -146,6 +146,8 @@ class _PixelGridState extends State<PixelGrid> {
   // Variables for zooming and panning
   late double _currentScale = widget.zoomLevel;
   late Offset _currentOffset = widget.currentOffset;
+  late double _scale = widget.zoomLevel;
+  late Offset _offset = widget.currentOffset;
   Offset _normalizedOffset = Offset.zero;
   Offset? _panStartPosition;
 
@@ -227,14 +229,13 @@ class _PixelGridState extends State<PixelGrid> {
           if (_pointerCount == 1) {
             // One finger touch
             if (widget.currentTool == PixelTool.drag) {
-              _panStartPosition = details.focalPoint - _currentOffset;
+              _panStartPosition = details.focalPoint - _offset;
             } else {
               _handlePanStart(details.localFocalPoint);
             }
           } else if (_pointerCount == 2) {
             // Two finger touch for zooming
-            _normalizedOffset =
-                (_currentOffset - details.focalPoint) / _currentScale;
+            _normalizedOffset = (_offset - details.focalPoint) / _scale;
           }
         },
         onScaleUpdate: (details) {
@@ -243,21 +244,20 @@ class _PixelGridState extends State<PixelGrid> {
             // One finger touch
             if (widget.currentTool == PixelTool.drag) {
               setState(() {
-                _currentOffset = details.focalPoint - _panStartPosition!;
+                _offset = details.focalPoint - _panStartPosition!;
               });
-              widget.onZoom?.call(_currentScale, _currentOffset);
+              widget.onZoom?.call(_scale, _offset);
             } else {
               _handlePanUpdate(details.localFocalPoint);
             }
           } else if (_pointerCount == 2) {
             // Two finger touch for zooming and panning
             setState(() {
-              _currentScale = (_currentScale * details.scale).clamp(0.5, 10.0);
-              _currentOffset =
-                  details.focalPoint + _normalizedOffset * _currentScale;
+              _scale = (_scale * details.scale).clamp(0.5, 10.0);
+              _offset = details.focalPoint + _normalizedOffset * _scale;
             });
 
-            widget.onZoom?.call(_currentScale, _currentOffset);
+            widget.onZoom?.call(_scale, _offset);
           }
         },
         onScaleEnd: (details) {

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:image/image.dart' as img;
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -515,5 +516,63 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     final json = project.toJson();
     final jsonString = jsonEncode(json);
     FileUtils(context).save('${project.name}.pv', jsonString);
+  }
+
+  void importImage(BuildContext context) async {
+    final image = await FileUtils(context).pickImageFile();
+    if (image != null) {
+      img.Image resizedImage;
+      if (image.width != width || image.height != height) {
+        resizedImage = img.copyResize(
+          image,
+          width: width,
+          height: height,
+          // You can use different interpolation methods for different effects
+          interpolation: img.Interpolation.average,
+        );
+      } else {
+        resizedImage = image;
+      }
+
+      // Optionally, reduce the color palette to create a pixel art effect
+      img.Image pixelArtImage = resizedImage;
+
+      // Convert the image pixels to Uint32List
+      final pixels = Uint32List(width * height);
+      for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+          final pixel = pixelArtImage.getPixel(x, y);
+
+          // Convert the pixel to ARGB format expected by Flutter
+          final a = pixel.a.toInt();
+          final r = pixel.r.toInt();
+          final g = pixel.g.toInt();
+          final b = pixel.b.toInt();
+
+          final colorValue = (a << 24) | (r << 16) | (g << 8) | b;
+          pixels[y * width + x] = colorValue;
+        }
+      }
+
+      // Create a new layer with the imported image pixels
+      final newLayer = Layer(
+        layerId: 0,
+        id: const Uuid().v4(),
+        name: 'Imported Image',
+        pixels: pixels,
+        isVisible: true,
+      );
+
+      final layer =
+          await ref.watch(projectRepo).createLayer(project.id, newLayer);
+
+      state = state.copyWith(
+        layers: [...state.layers, layer],
+        currentLayerIndex: state.layers.length,
+      );
+
+      // Update the project repository
+      _updateProject();
+    }
   }
 }
