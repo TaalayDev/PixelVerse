@@ -19,7 +19,7 @@ PixelVerse is a powerful and intuitive pixel art creation tool designed for both
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/pixelverse.git
+   git clone https://github.com/TaalayDev/PixelVerse.git
    ```
 2. Navigate to the project directory:
    ```
