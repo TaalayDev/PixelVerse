@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../data.dart';
+import '../../pixel/image_painter.dart';
 import 'layers_preview.dart';
 
 class LayersPanel extends HookConsumerWidget {
@@ -154,10 +155,7 @@ class LayersPanel extends HookConsumerWidget {
         layers: [layer],
         builder: (context, image) {
           return image != null
-              ? RawImage(
-                  image: image,
-                  fit: BoxFit.cover,
-                )
+              ? CustomPaint(painter: ImagePainter(image))
               : const ColoredBox(color: Colors.white);
         },
       ),

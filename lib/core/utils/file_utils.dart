@@ -33,20 +33,23 @@ class FileUtils {
   }
 
   Future<void> save32Bit(Uint32List pixels, int width, int height) async {
-    final Uint8List byteData = pixels.buffer.asUint8List();
+    // final Uint8List byteData = Uint8List.fromList(
+    //     pixels.buffer.asUint8List(pixels.offsetInBytes, pixels.lengthInBytes));
 
-    // Create the image using the correct format
-    final img.Image image = img.Image.fromBytes(
-      width: width,
-      height: height,
-      bytes: byteData.buffer,
-      format: img.Format.uint32, // Use uint32 for Uint32List
-    );
-    final jpg = img.encodeJpg(image, quality: 90);
+    // final img.Image image = img.Image.fromBytes(
+    //   width: width,
+    //   height: height,
+    //   bytes: byteData.buffer,
+    //   format: img.Format.uint32,
+    // );
 
+    // final jpg = img.encodeJpg(image, quality: 90);
+
+    final image =
+        await ImageHelper.createImageFromPixels(pixels, width, height);
     final fileName = 'pixelart_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-    _saveImage(jpg, fileName);
+    await _saveUIImage(image, fileName);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Image saved as $fileName')),
@@ -89,7 +92,7 @@ class FileUtils {
       final html.InputElement input =
           html.document.createElement('input') as html.InputElement
             ..type = 'file'
-            ..accept = '.pv'
+            ..accept = '.pxv'
             ..style.display = 'none';
 
       input.onChange.listen((event) {
@@ -106,7 +109,7 @@ class FileUtils {
     } else {
       final FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['pv'],
+        allowedExtensions: ['pxv'],
       );
 
       if (result != null) {
@@ -150,6 +153,8 @@ class FileUtils {
       if (result != null) {
         final File file = File(result.files.single.path!);
         final bytes = img.decodeImage(await file.readAsBytes());
+
+        completer.complete(bytes);
       }
     }
 
@@ -170,6 +175,13 @@ class FileUtils {
         await _saveToDocuments(imageData, fileName);
       }
     }
+  }
+
+  Future<void> _saveUIImage(ui.Image image, String fileName) async {
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    final pngBytes = byteData!.buffer.asUint8List();
+
+    _saveImage(pngBytes, fileName);
   }
 
   Future<void> _saveWithFilePicker(Uint8List jpg, String fileName) async {

@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
 class ColorPalettePanel extends HookWidget {
   final Color currentColor;
   final Function(Color) onColorSelected;
+  final Function() onSelectEyedropper;
+  final bool isEyedropperSelected;
 
   const ColorPalettePanel({
     super.key,
     required this.currentColor,
     required this.onColorSelected,
+    required this.onSelectEyedropper,
+    required this.isEyedropperSelected,
   });
 
   @override
@@ -164,9 +169,22 @@ class ColorPalettePanel extends HookWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Color Palette',
-            style: Theme.of(context).textTheme.titleMedium,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Color Palette',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              IconButton(
+                icon: Icon(
+                  MaterialCommunityIcons.eyedropper,
+                  color: isEyedropperSelected ? Colors.blue : null,
+                  size: 18,
+                ),
+                onPressed: () => onSelectEyedropper(),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           Expanded(

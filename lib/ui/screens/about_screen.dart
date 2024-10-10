@@ -102,8 +102,8 @@ class AboutScreen extends StatelessWidget {
       'Intuitive pixel editing tools',
       'Custom color palettes',
       'Layer support for complex artwork',
-      'Export in various formats',
-      'Community sharing and inspiration',
+      'Export in various formats (in planning)',
+      'Community sharing and inspiration (in planning)',
     ];
 
     return Padding(

@@ -21,6 +21,24 @@ class ImageHelper {
     return completer.future;
   }
 
+  static Future<ui.Image> createImageFrom(
+    Uint8List pixels,
+    int width,
+    int height,
+  ) async {
+    final Completer<ui.Image> completer = Completer();
+    ui.decodeImageFromPixels(
+      pixels,
+      width,
+      height,
+      ui.PixelFormat.rgba8888,
+      (ui.Image img) {
+        completer.complete(img);
+      },
+    );
+    return completer.future;
+  }
+
   static Uint8List convertToBytes(Uint32List pixels) {
     final fixedChannels = fixColorChannels(pixels);
     return Uint8List.view(fixedChannels.buffer);

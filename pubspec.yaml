@@ -92,6 +92,7 @@ dependencies:
   # database
   drift: ^2.20.2
   drift_flutter: ^0.2.0
+  custom_mouse_cursor: ^1.1.2
 
 dev_dependencies:
   flutter_test:

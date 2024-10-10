@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:pixelverse/core/utils/cursor_manager.dart';
 import 'projects_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -14,6 +15,7 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   final List<Pixel> _pixels = [];
+  double _progress = 0.0;
 
   @override
   void initState() {
@@ -27,7 +29,21 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    Future.delayed(const Duration(seconds: 4), _navigateToNextScreen);
+    _init();
+  }
+
+  void _init() async {
+    await CursorManager.instance.init();
+
+    // Simulate loading progress
+    for (int i = 0; i < 100; i++) {
+      await Future.delayed(const Duration(milliseconds: 20));
+      setState(() {
+        _progress = i / 100;
+      });
+    }
+
+    Future.delayed(const Duration(milliseconds: 500), _navigateToNextScreen);
   }
 
   @override

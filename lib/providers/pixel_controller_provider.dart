@@ -11,7 +11,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
 import '../core/utils.dart';
-import '../core/tools.dart';
+import '../pixel/tools.dart';
 import '../data.dart';
 import 'providers.dart';
 
@@ -254,9 +254,9 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     final index = y * width + x;
     pixels[index] = currentColor.value;
 
-    if (currentTool == PixelTool.mirror) {
-      _applyMirror(pixels, x, y);
-    }
+    // if (currentTool == PixelTool.mirror) {
+    //   _applyMirror(pixels, x, y);
+    // }
 
     if (_selectionRect != null) {
       _selectedPixels.add(MapEntry(Point(x, y), currentColor.value));
@@ -266,17 +266,20 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   }
 
   void _applyMirror(Uint32List pixels, int x, int y) {
+    final color = currentTool == PixelTool.eraser
+        ? Colors.transparent.value
+        : currentColor.value;
     switch (mirrorAxis) {
       case MirrorAxis.horizontal:
         final mirroredY = height - 1 - y;
         if (_isWithinBounds(x, mirroredY)) {
-          pixels[mirroredY * width + x] = currentColor.value;
+          pixels[mirroredY * width + x] = color;
         }
         break;
       case MirrorAxis.vertical:
         final mirroredX = width - 1 - x;
         if (_isWithinBounds(mirroredX, y)) {
-          pixels[y * width + mirroredX] = currentColor.value;
+          pixels[y * width + mirroredX] = color;
         }
         break;
       case MirrorAxis.both:
@@ -286,7 +289,7 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     }
   }
 
-  void fillPixels(List<Point<int>> pixels) {
+  void fillPixels(List<Point<int>> pixels, PixelModifier modifier) {
     saveState();
     final newPixels = Uint32List.fromList(currentLayer.pixels);
     final color = currentTool == PixelTool.eraser
@@ -297,6 +300,10 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
       int index = point.y * state.width + point.x;
       if (index >= 0 && index < newPixels.length) {
         newPixels[index] = color;
+
+        if (modifier == PixelModifier.mirror) {
+          _applyMirror(newPixels, point.x, point.y);
+        }
       }
     }
 
@@ -446,7 +453,7 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
       final newX = entry.key.x + dx;
       final newY = entry.key.y + dy;
       if (newX >= 0 && newX < width && newY >= 0 && newY < height) {
-        pixels[newY * width + newX] = entry.value == Colors.transparent
+        pixels[newY * width + newX] = entry.value == Colors.transparent.value
             ? pixels[newY * width + newX]
             : entry.value;
         newSelectedPixels.add(MapEntry(Point(newX, newY), entry.value));
@@ -515,7 +522,7 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   void exportJson(BuildContext context) {
     final json = project.toJson();
     final jsonString = jsonEncode(json);
-    FileUtils(context).save('${project.name}.pv', jsonString);
+    FileUtils(context).save('${project.name}.pxv', jsonString);
   }
 
   void importImage(BuildContext context) async {

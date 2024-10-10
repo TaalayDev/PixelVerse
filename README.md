@@ -2,7 +2,7 @@
 
 PixelVerse is a powerful and intuitive pixel art creation tool designed for both beginners and experienced pixel artists. With a wide range of features and a user-friendly interface, PixelVerse makes it easy to bring your pixelated visions to life.
 
-![PixelVerse Logo](path/to/logo.png)
+![PixelVerse Logo](assets/images/logo.png)
 
 ## Features
 
@@ -14,8 +14,6 @@ PixelVerse is a powerful and intuitive pixel art creation tool designed for both
 - **Mirror Drawing**: Create symmetrical art effortlessly.
 - **Undo/Redo**: Easily correct mistakes or revert changes.
 - **Export Options**: Save your work in various formats, including image and project files.
-
-![Feature Showcase](path/to/feature_showcase.gif)
 
 ## Getting Started
 
@@ -38,17 +36,11 @@ PixelVerse is a powerful and intuitive pixel art creation tool designed for both
 
 ## Screenshots
 
-### Home Screen
-![Home Screen](path/to/home_screen.png)
-*The home screen displays your recent projects and allows you to create new ones.*
-
-### Pixel Editor
-![Pixel Editor](path/to/pixel_editor.png)
-*The main pixel editing interface with tools, color palette, and canvas.*
-
-### Layer Management
-![Layer Management](path/to/layer_management.png)
-*Manage multiple layers for complex artwork creation.*
+Mobile | Desktop
+--- | ---
+![Mobile Home](screenshots/mobile_home.png) | ![Desktop Home](screenshots/desktop_home.png)
+![Mobile Drawing](screenshots/mobile_drawing.png) | ![Desktop Drawing](screenshots/desktop_drawing.png)
+![Mobile Layers](screenshots/mobile_layers.png) |
 
 ## Usage
 
@@ -71,16 +63,11 @@ PixelVerse is a powerful and intuitive pixel art creation tool designed for both
 
 ## Contributing
 
-We welcome contributions to PixelVerse! Please read our [Contributing Guide](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+Contributions to project are welcome! Please feel free to submit pull requests, create issues or spread the word.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- Thanks to all the contributors who have helped shape PixelVerse.
-- Special thanks to the Flutter community for their invaluable resources and support.
+This project is licensed under the MIT License.
 
 ---
 

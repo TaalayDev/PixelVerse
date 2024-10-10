@@ -12,6 +12,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../data.dart';
 import '../../core.dart';
+import '../../pixel/image_painter.dart';
 import '../../providers/projects_provider.dart';
 import '../widgets.dart';
 import 'about_screen.dart';
@@ -251,6 +252,7 @@ class AdaptiveProjectGrid extends StatelessWidget {
           itemCount: projects.length,
           itemBuilder: (context, index) {
             return ProjectCard(
+              key: ValueKey(projects[index].id),
               project: projects[index],
               onTapProject: onTapProject,
               onDeleteProject: onDeleteProject,
@@ -513,7 +515,7 @@ class _ProjectThumbnailWidgetState extends State<ProjectThumbnailWidget> {
         borderRadius: BorderRadius.circular(8),
       ),
       child: _image != null && context.mounted
-          ? RawImage(image: _image, fit: BoxFit.cover)
+          ? CustomPaint(painter: ImagePainter(_image!))
           : const Center(
               child: Icon(Feather.image, size: 48),
             ),
@@ -521,21 +523,21 @@ class _ProjectThumbnailWidgetState extends State<ProjectThumbnailWidget> {
   }
 
   Future<void> _createImageFromPixels() async {
-    if (widget.project.thumbnail == null) {
+    final pixels = widget.project.thumbnail;
+    if (pixels == null) {
       return;
     }
 
-    ui.decodeImageFromPixels(
-      widget.project.thumbnail!,
+    final image = await ImageHelper.createImageFrom(
+      pixels,
       widget.project.width,
       widget.project.height,
-      ui.PixelFormat.rgba8888,
-      (ui.Image img) {
-        setState(() {
-          _image = img;
-        });
-      },
     );
+    if (context.mounted) {
+      setState(() {
+        _image = image;
+      });
+    }
   }
 }
 
