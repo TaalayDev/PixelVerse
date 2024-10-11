@@ -5,9 +5,8 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:pixelverse/core/utils/cursor_manager.dart';
 
+import '../../core/utils/cursor_manager.dart';
 import '../../pixel/tools/selection_tool.dart';
 import '../../core.dart';
 import '../../pixel/tools.dart';
@@ -821,10 +820,7 @@ class _PixelGridPainter extends CustomPainter {
     final canvasRect = Offset.zero & size;
     if (cacheController._cachedLayerImages.isNotEmpty) {
       for (int i = 0; i < layers.length; i++) {
-        canvas.saveLayer(
-          canvasRect,
-          Paint(),
-        );
+        canvas.saveLayer(canvasRect, Paint());
         final layer = layers[i];
         final image = cacheController._cachedLayerImages[layer.layerId]?.image;
         if (image != null) {

@@ -160,7 +160,7 @@ class SelectionUtils {
 
   bool inInSelectionBounds(int x, int y) {
     final selectionRect = _selectionRect;
-    print(selectionRect);
+
     if (selectionRect == null) return true;
     final boxSize = size();
     final pixelWidth = boxSize.width / width;

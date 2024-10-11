@@ -8,6 +8,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 
 import '../core/utils.dart';
@@ -581,5 +582,24 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
       // Update the project repository
       _updateProject();
     }
+  }
+
+  Future<void> share(BuildContext context) async {
+    final pixels = Uint32List(project.width * project.height);
+    for (final layer in project.layers.where((layer) => layer.isVisible)) {
+      for (int i = 0; i < pixels.length; i++) {
+        pixels[i] = pixels[i] == 0 ? layer.pixels[i] : pixels[i];
+      }
+    }
+
+    Share.shareXFiles(
+      [
+        XFile.fromData(
+          ImageHelper.convertToBytes(pixels),
+          name: '${project.name}.png',
+          mimeType: 'image/png',
+        ),
+      ],
+    );
   }
 }

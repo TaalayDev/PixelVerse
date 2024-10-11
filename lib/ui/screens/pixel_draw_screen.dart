@@ -49,265 +49,301 @@ class PixelDrawScreen extends HookConsumerWidget {
     final gridOffset = useState(Offset.zero);
     final brushSize = useState(1);
     final sprayIntensity = useState(5);
+    final normalizedOffset = useState(Offset(
+      gridOffset.value.dx / gridScale.value,
+      gridOffset.value.dy / gridScale.value,
+    ));
 
     return Scaffold(
       backgroundColor: Colors.grey[200],
       body: SafeArea(
-        child: Stack(
+        child: Row(
           children: [
-            Positioned.fill(
-              child: Row(
-                children: [
-                  if (MediaQuery.of(context).size.width > 600)
-                    Container(
-                      width: 60,
-                      color: Colors.grey[200],
-                      child: ToolMenu(
-                        currentTool: currentTool,
-                        onSelectTool: (tool) => currentTool.value = tool,
-                        onColorPicker: () {
-                          showColorPicker(context, notifier);
-                        },
-                        currentColor: state.currentColor,
-                      ),
+            if (MediaQuery.of(context).size.width > 600)
+              Container(
+                width: 60,
+                color: Colors.grey[200],
+                child: ToolMenu(
+                  currentTool: currentTool,
+                  onSelectTool: (tool) => currentTool.value = tool,
+                  onColorPicker: () {
+                    showColorPicker(context, notifier);
+                  },
+                  currentColor: state.currentColor,
+                ),
+              ),
+            Expanded(
+              child: ColoredBox(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                child: Column(
+                  children: [
+                    ToolBar(
+                      currentTool: currentTool,
+                      brushSize: brushSize,
+                      sprayIntensity: sprayIntensity,
+                      onSelectTool: (tool) => currentTool.value = tool,
+                      onUndo: state.canUndo ? notifier.undo : null,
+                      onRedo: state.canRedo ? notifier.redo : null,
+                      exportAsImage: () => notifier.exportImage(context),
+                      export: () => notifier.exportJson(context),
+                      currentColor: state.currentColor,
+                      onColorPicker: () {
+                        showColorPicker(context, notifier);
+                      },
+                      import: () => notifier.importImage(context),
+                      currentModifier: currentModifier,
+                      onSelectModifier: (modifier) {
+                        currentModifier.value = modifier;
+                      },
+                      onZoomIn: () {
+                        gridScale.value =
+                            (gridScale.value * 1.1).clamp(0.5, 5.0);
+                      },
+                      onZoomOut: () {
+                        gridScale.value =
+                            (gridScale.value / 1.1).clamp(0.5, 5.0);
+                      },
+                      onShare: () => notifier.share(context),
                     ),
-                  Expanded(
-                    child: ColoredBox(
-                      color: Theme.of(context).scaffoldBackgroundColor,
-                      child: Column(
+                    Expanded(
+                      child: Row(
                         children: [
-                          ToolBar(
-                            currentTool: currentTool,
-                            brushSize: brushSize,
-                            sprayIntensity: sprayIntensity,
-                            onSelectTool: (tool) => currentTool.value = tool,
-                            onUndo: state.canUndo ? notifier.undo : null,
-                            onRedo: state.canRedo ? notifier.redo : null,
-                            exportAsImage: () => notifier.exportImage(context),
-                            export: () => notifier.exportJson(context),
-                            currentColor: state.currentColor,
-                            onColorPicker: () {
-                              showColorPicker(context, notifier);
-                            },
-                            import: () => notifier.importImage(context),
-                            currentModifier: currentModifier,
-                            onSelectModifier: (modifier) {
-                              currentModifier.value = modifier;
-                            },
-                          ),
                           Expanded(
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Stack(
+                            child: GestureDetector(
+                              onScaleStart: (details) {
+                                final pointerCount = details.pointerCount;
+                                if (pointerCount == 2) {
+                                  normalizedOffset.value =
+                                      (gridOffset.value - details.focalPoint) /
+                                          gridScale.value;
+                                }
+                              },
+                              onScaleUpdate: (details) {
+                                final pointerCount = details.pointerCount;
+                                if (pointerCount == 2) {
+                                  gridScale.value =
+                                      (details.scale * gridScale.value)
+                                          .clamp(0.5, 5.0);
+                                  gridOffset.value = details.focalPoint +
+                                      normalizedOffset.value * gridScale.value;
+                                }
+                              },
+                              onScaleEnd: (details) {},
+                              child: Stack(
+                                clipBehavior: Clip.hardEdge,
+                                children: [
+                                  Container(
+                                    alignment: Alignment.center,
+                                    decoration: const BoxDecoration(),
                                     clipBehavior: Clip.hardEdge,
-                                    children: [
-                                      Container(
-                                        alignment: Alignment.center,
-                                        decoration: const BoxDecoration(),
-                                        clipBehavior: Clip.hardEdge,
-                                        child: AspectRatio(
-                                          aspectRatio: width / height,
-                                          child: Transform(
-                                            transform: Matrix4.identity()
-                                              ..translate(
-                                                gridOffset.value.dx,
-                                                gridOffset.value.dy,
-                                              )
-                                              ..scale(gridScale.value),
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Container(
-                                                clipBehavior: Clip.hardEdge,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white,
-                                                  border: Border.all(
-                                                    color: Colors.grey,
-                                                  ),
-                                                ),
-                                                child: PixelPainter(
-                                                  project: project,
-                                                  gridScale: gridScale,
-                                                  gridOffset: gridOffset,
-                                                  currentTool:
-                                                      currentTool.value,
-                                                  currentModifier:
-                                                      currentModifier.value,
-                                                  currentColor:
-                                                      state.currentColor,
-                                                  brushSize: brushSize,
-                                                  sprayIntensity:
-                                                      sprayIntensity,
-                                                ),
+                                    child: AspectRatio(
+                                      aspectRatio: width / height,
+                                      child: Transform(
+                                        transform: Matrix4.identity()
+                                          ..translate(
+                                            gridOffset.value.dx,
+                                            gridOffset.value.dy,
+                                          )
+                                          ..scale(gridScale.value),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Container(
+                                            clipBehavior: Clip.hardEdge,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              border: Border.all(
+                                                color: Colors.grey,
                                               ),
+                                            ),
+                                            child: PixelPainter(
+                                              project: project,
+                                              gridScale: gridScale,
+                                              gridOffset: gridOffset,
+                                              currentTool: currentTool.value,
+                                              currentModifier:
+                                                  currentModifier.value,
+                                              currentColor: state.currentColor,
+                                              brushSize: brushSize,
+                                              sprayIntensity: sprayIntensity,
                                             ),
                                           ),
                                         ),
                                       ),
-                                    ],
+                                    ),
                                   ),
-                                ),
-                                if (MediaQuery.sizeOf(context).width > 600)
-                                  Container(
-                                    color: Colors.grey[200],
-                                    child: SizedBox(
-                                      width: 250,
-                                      child: Column(
+                                  if (MediaQuery.sizeOf(context).width < 600)
+                                    Positioned(
+                                      left: 16,
+                                      right: 16,
+                                      top: 16,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Expanded(
-                                            child: LayersPanel(
-                                              width: width,
-                                              height: height,
-                                              layers: state.layers,
-                                              activeLayerIndex:
-                                                  state.currentLayerIndex,
-                                              onLayerAdded: (name) {
-                                                notifier.addLayer(name);
-                                              },
-                                              onLayerVisibilityChanged:
-                                                  (index) {
-                                                notifier.toggleLayerVisibility(
-                                                    index);
-                                              },
-                                              onLayerSelected: (index) {
-                                                notifier.selectLayer(index);
-                                              },
-                                              onLayerDeleted: (index) {
-                                                notifier.removeLayer(index);
-                                              },
-                                              onLayerLockedChanged: (index) {},
-                                              onLayerNameChanged:
-                                                  (index, name) {},
-                                              onLayerReordered:
-                                                  (oldIndex, newIndex) {
-                                                notifier.reorderLayers(
-                                                  newIndex,
-                                                  oldIndex,
-                                                );
-                                              },
-                                              onLayerOpacityChanged:
-                                                  (index, opacity) {},
+                                          if (currentTool.value ==
+                                                  PixelTool.brush ||
+                                              currentTool.value ==
+                                                  PixelTool.eraser ||
+                                              currentTool.value ==
+                                                  PixelTool.sprayPaint) ...[
+                                            Container(
+                                              height: 40,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(0.1),
+                                                    blurRadius: 4,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  const SizedBox(width: 8),
+                                                  const Icon(Icons.brush),
+                                                  SizedBox(
+                                                    width: 150,
+                                                    child: Slider(
+                                                      value: brushSize.value
+                                                          .toDouble(),
+                                                      min: 1,
+                                                      max: 10,
+                                                      onChanged: (value) {
+                                                        brushSize.value =
+                                                            value.toInt();
+                                                      },
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                          const Divider(),
-                                          Expanded(
-                                            child: ColorPalettePanel(
-                                              currentColor: state.currentColor,
-                                              isEyedropperSelected:
-                                                  currentTool.value ==
-                                                      PixelTool.eyedropper,
-                                              onSelectEyedropper: () {
-                                                currentTool.value =
-                                                    PixelTool.eyedropper;
-                                              },
-                                              onColorSelected: (color) {
-                                                notifier.currentColor = color;
-                                              },
+                                            const SizedBox(width: 16),
+                                          ],
+                                          if (currentTool.value ==
+                                              PixelTool.sprayPaint) ...[
+                                            Container(
+                                              height: 40,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(0.1),
+                                                    blurRadius: 4,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  const SizedBox(width: 8),
+                                                  const Icon(
+                                                      MaterialCommunityIcons
+                                                          .spray),
+                                                  SizedBox(
+                                                    width: 150,
+                                                    child: Slider(
+                                                      value: sprayIntensity
+                                                          .value
+                                                          .toDouble(),
+                                                      min: 1,
+                                                      max: 10,
+                                                      onChanged: (value) {
+                                                        sprayIntensity.value =
+                                                            value.toInt();
+                                                      },
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          ),
+                                          ]
                                         ],
                                       ),
                                     ),
-                                  ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                          if (MediaQuery.sizeOf(context).width <= 600)
-                            ToolsBottomBar(
-                              currentTool: currentTool,
-                              state: state,
-                              notifier: notifier,
-                              width: width,
-                              height: height,
+                          if (MediaQuery.sizeOf(context).width > 600)
+                            Container(
+                              color: Colors.grey[200],
+                              child: SizedBox(
+                                width: 250,
+                                child: Column(
+                                  children: [
+                                    Expanded(
+                                      child: LayersPanel(
+                                        width: width,
+                                        height: height,
+                                        layers: state.layers,
+                                        activeLayerIndex:
+                                            state.currentLayerIndex,
+                                        onLayerAdded: (name) {
+                                          notifier.addLayer(name);
+                                        },
+                                        onLayerVisibilityChanged: (index) {
+                                          notifier.toggleLayerVisibility(index);
+                                        },
+                                        onLayerSelected: (index) {
+                                          notifier.selectLayer(index);
+                                        },
+                                        onLayerDeleted: (index) {
+                                          notifier.removeLayer(index);
+                                        },
+                                        onLayerLockedChanged: (index) {},
+                                        onLayerNameChanged: (index, name) {},
+                                        onLayerReordered: (oldIndex, newIndex) {
+                                          notifier.reorderLayers(
+                                            newIndex,
+                                            oldIndex,
+                                          );
+                                        },
+                                        onLayerOpacityChanged:
+                                            (index, opacity) {},
+                                      ),
+                                    ),
+                                    const Divider(),
+                                    Expanded(
+                                      child: ColorPalettePanel(
+                                        currentColor: state.currentColor,
+                                        isEyedropperSelected:
+                                            currentTool.value ==
+                                                PixelTool.eyedropper,
+                                        onSelectEyedropper: () {
+                                          currentTool.value =
+                                              PixelTool.eyedropper;
+                                        },
+                                        onColorSelected: (color) {
+                                          notifier.currentColor = color;
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                         ],
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            if (MediaQuery.sizeOf(context).width < 600)
-              Positioned(
-                left: 16,
-                right: 16,
-                top: 70,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    if (currentTool.value == PixelTool.brush ||
-                        currentTool.value == PixelTool.eraser ||
-                        currentTool.value == PixelTool.sprayPaint) ...[
-                      Container(
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            const SizedBox(width: 8),
-                            const Icon(Icons.brush),
-                            SizedBox(
-                              width: 150,
-                              child: Slider(
-                                value: brushSize.value.toDouble(),
-                                min: 1,
-                                max: 10,
-                                onChanged: (value) {
-                                  brushSize.value = value.toInt();
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
+                    if (MediaQuery.sizeOf(context).width <= 600)
+                      ToolsBottomBar(
+                        currentTool: currentTool,
+                        state: state,
+                        notifier: notifier,
+                        width: width,
+                        height: height,
                       ),
-                      const SizedBox(width: 16),
-                    ],
-                    if (currentTool.value == PixelTool.sprayPaint) ...[
-                      Container(
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            const SizedBox(width: 8),
-                            const Icon(MaterialCommunityIcons.spray),
-                            SizedBox(
-                              width: 150,
-                              child: Slider(
-                                value: sprayIntensity.value.toDouble(),
-                                min: 1,
-                                max: 10,
-                                onChanged: (value) {
-                                  sprayIntensity.value = value.toInt();
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ]
                   ],
                 ),
               ),
+            ),
           ],
         ),
       ),
@@ -744,11 +780,14 @@ class ToolBar extends StatelessWidget {
   final ValueNotifier<int> sprayIntensity;
   final Function(PixelTool) onSelectTool;
   final Function(PixelModifier) onSelectModifier;
+  final VoidCallback? onZoomIn;
+  final VoidCallback? onZoomOut;
   final VoidCallback? onUndo;
   final VoidCallback? onRedo;
   final VoidCallback? import;
   final VoidCallback? export;
   final VoidCallback? exportAsImage;
+  final VoidCallback? onShare;
   final Color currentColor;
   final Function() onColorPicker;
 
@@ -762,9 +801,12 @@ class ToolBar extends StatelessWidget {
     required this.onSelectModifier,
     required this.onUndo,
     required this.onRedo,
+    this.onZoomIn,
+    this.onZoomOut,
     this.import,
     this.export,
     this.exportAsImage,
+    this.onShare,
     required this.currentColor,
     required this.onColorPicker,
   });
@@ -811,12 +853,12 @@ class ToolBar extends StatelessWidget {
                       // zoom in and out
                       IconButton(
                         icon: const Icon(Feather.zoom_in),
-                        onPressed: () {},
+                        onPressed: onZoomIn,
                       ),
                       const SizedBox(width: 8),
                       IconButton(
                         icon: const Icon(Feather.zoom_out),
-                        onPressed: () {},
+                        onPressed: onZoomOut,
                       ),
                       const SizedBox(width: 8),
                       if (MediaQuery.of(context).size.width > 600) ...[
@@ -927,6 +969,9 @@ class ToolBar extends StatelessWidget {
                       break;
                     case 'projects':
                       Navigator.of(context).pop();
+                      break;
+                    case 'share':
+                      onShare?.call();
                       break;
                   }
                 },
