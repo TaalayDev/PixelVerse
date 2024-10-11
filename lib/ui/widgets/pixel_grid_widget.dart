@@ -1064,37 +1064,82 @@ class _PixelGridPainter extends CustomPainter {
     double pixelWidth,
     double pixelHeight,
   ) {
-    final paint = Paint()
-      ..style = PaintingStyle.fill
-      ..blendMode = blendMode;
+    final List<Offset> positions = [];
+    final List<Color> colors = [];
+    final List<int> indices = [];
+    int vertexIndex = 0;
 
     for (final point in previewPixels) {
       final x = point.x;
       final y = point.y;
-      final index = y * width + x;
       final color = previewColor;
       if (color.alpha == 0) continue;
 
-      final rect = Rect.fromLTWH(
-        x * pixelWidth,
-        y * pixelHeight,
-        pixelWidth,
-        pixelHeight,
-      );
-      canvas.drawRect(rect, paint..color = color);
+      final double left = x * pixelWidth;
+      final double top = y * pixelHeight;
+      final double right = left + pixelWidth;
+      final double bottom = top + pixelHeight;
 
+      // Define the four vertices of the pixel quad
+      positions.add(Offset(left, top));
+      positions.add(Offset(right, top));
+      positions.add(Offset(right, bottom));
+      positions.add(Offset(left, bottom));
+
+      // Add the same color for all four vertices
+      colors.add(color);
+      colors.add(color);
+      colors.add(color);
+      colors.add(color);
+
+      // Define indices for the two triangles of the quad
+      indices.add(vertexIndex);
+      indices.add(vertexIndex + 1);
+      indices.add(vertexIndex + 2);
+
+      indices.add(vertexIndex);
+      indices.add(vertexIndex + 2);
+      indices.add(vertexIndex + 3);
+
+      vertexIndex += 4;
+
+      // Handle mirror modifier if applicable
       if (previewModifier == PixelModifier.mirror) {
         final mirrorX = width - 1 - x;
-        final mirrorY = point.y;
-        final mirrorRect = Rect.fromLTWH(
-          mirrorX * pixelWidth,
-          mirrorY * pixelHeight,
-          pixelWidth,
-          pixelHeight,
-        );
-        canvas.drawRect(mirrorRect, paint..color = color);
+        final mirrorLeft = mirrorX * pixelWidth;
+        final mirrorRight = mirrorLeft + pixelWidth;
+
+        positions.add(Offset(mirrorLeft, top));
+        positions.add(Offset(mirrorRight, top));
+        positions.add(Offset(mirrorRight, bottom));
+        positions.add(Offset(mirrorLeft, bottom));
+
+        colors.add(color);
+        colors.add(color);
+        colors.add(color);
+        colors.add(color);
+
+        indices.add(vertexIndex);
+        indices.add(vertexIndex + 1);
+        indices.add(vertexIndex + 2);
+
+        indices.add(vertexIndex);
+        indices.add(vertexIndex + 2);
+        indices.add(vertexIndex + 3);
+
+        vertexIndex += 4;
       }
     }
+
+    final vertices = Vertices(
+      VertexMode.triangles,
+      positions,
+      colors: colors,
+      indices: indices,
+    );
+
+    final paint = Paint()..blendMode = blendMode;
+    canvas.drawVertices(vertices, BlendMode.srcOver, paint);
   }
 
   @override
