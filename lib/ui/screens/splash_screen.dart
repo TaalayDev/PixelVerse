@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:pixelverse/config/assets.dart';
 import 'package:pixelverse/core/utils/cursor_manager.dart';
 import 'projects_screen.dart';
 
@@ -71,9 +72,7 @@ class _SplashScreenState extends State<SplashScreen>
             SizedBox(
               width: 200,
               height: 200,
-              child: CustomPaint(
-                painter: PixelArtPainter(_pixels, _controller.value),
-              ),
+              child: Image.asset(Assets.images.logo),
             ),
             const SizedBox(height: 20),
             Text(

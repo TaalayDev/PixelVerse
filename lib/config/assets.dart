@@ -3,7 +3,7 @@
 class Assets {
   const Assets._();
 
-  static const images = ();
+  static const images = (logo: 'assets/images/logo.png',);
 
   static const vectors = ();
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../../config/assets.dart';
+
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
@@ -165,9 +167,7 @@ class PixelArtLogo extends StatelessWidget {
     return SizedBox(
       width: 100,
       height: 100,
-      child: CustomPaint(
-        painter: PixelArtLogoPainter(),
-      ),
+      child: Image.asset(Assets.images.logo),
     ).animate().scale(duration: 600.ms, curve: Curves.elasticOut);
   }
 }
