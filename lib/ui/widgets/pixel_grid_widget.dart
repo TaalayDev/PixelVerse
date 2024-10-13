@@ -982,53 +982,6 @@ class _PixelGridPainter extends CustomPainter {
     canvas.restore();
   }
 
-  Vertices _createVertices(
-    Canvas canvas,
-    Size size,
-    double pixelWidth,
-    double pixelHeight,
-  ) {
-    final vertices = Vertices.raw(
-      VertexMode.triangles,
-      Float32List.fromList([
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        size.width,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        size.width,
-        size.height,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        size.height,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-      ]),
-    );
-
-    return vertices;
-  }
-
   void _drawPixels(
     Canvas canvas,
     Size size,

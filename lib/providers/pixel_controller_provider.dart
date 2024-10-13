@@ -417,7 +417,7 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     _originalSelectionRect = selection;
     if (selection != null) {
       _selectedPixels = _getSelectedPixels(selection);
-      _cachedPixels = currentLayer.pixels;
+      _cachedPixels = Uint32List.fromList(currentLayer.pixels);
     } else {
       _selectedPixels = [];
       _cachedPixels = Uint32List(0);

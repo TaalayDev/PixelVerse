@@ -160,14 +160,14 @@ class AboutScreen extends StatelessWidget {
 }
 
 class PixelArtLogo extends StatelessWidget {
-  const PixelArtLogo({Key? key}) : super(key: key);
+  const PixelArtLogo({super.key});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: 100,
       height: 100,
-      child: Image.asset(Assets.images.logo),
+      child: Image.asset(Assets.images.logoTransparent),
     ).animate().scale(duration: 600.ms, curve: Curves.elasticOut);
   }
 }
