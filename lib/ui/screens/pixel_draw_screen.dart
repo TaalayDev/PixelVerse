@@ -423,7 +423,7 @@ class ToolsBottomBar extends StatelessWidget {
                               : null,
                         ),
                         onPressed: () {
-                          Navigator.of(context).pop(PixelTool.pen);
+                          Navigator.of(context).pop(PixelTool.pencil);
                         },
                       ),
                       IconButton(
@@ -480,6 +480,18 @@ class ToolsBottomBar extends StatelessWidget {
                         onPressed: () {
                           currentTool.value = PixelTool.circle;
                           Navigator.of(context).pop(PixelTool.circle);
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          CupertinoIcons.pencil,
+                          color: currentTool.value == PixelTool.pen
+                              ? Colors.blue
+                              : null,
+                        ),
+                        onPressed: () {
+                          currentTool.value = PixelTool.pen;
+                          Navigator.of(context).pop(PixelTool.pen);
                         },
                       ),
                       IconButton(
