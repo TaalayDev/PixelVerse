@@ -21,9 +21,9 @@ class _AppState extends State<App> {
   final localeManager = LocaleManager();
 
   void toggleTheme() {
-    final newType = _appTheme.type == ThemeType.lightOrange
-        ? ThemeType.darkOrange
-        : ThemeType.lightOrange;
+    final newType = _appTheme.type == ThemeType.lightDarkBlue
+        ? ThemeType.darkDarkBlue
+        : ThemeType.lightDarkBlue;
 
     _appTheme = AppTheme.fromType(newType);
   }

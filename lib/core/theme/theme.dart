@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 enum ThemeType {
-  lightOrange,
-  darkOrange;
+  lightDarkBlue,
+  darkDarkBlue;
 
-  bool get isLight => this == ThemeType.lightOrange;
-  bool get isDark => this == ThemeType.darkOrange;
+  bool get isLight => this == ThemeType.lightDarkBlue;
+  bool get isDark => this == ThemeType.darkDarkBlue;
 }
 
 class AppTheme {
-  static const defaultType = ThemeType.darkOrange;
+  static const defaultType = ThemeType.darkDarkBlue;
   static final defaultTheme = AppTheme.fromType(defaultType);
 
   late ThemeType type;
@@ -22,12 +22,12 @@ class AppTheme {
 
   factory AppTheme.fromType(ThemeType type) {
     switch (type) {
-      case ThemeType.lightOrange:
+      case ThemeType.lightDarkBlue:
         return AppTheme(isDark: false)
           ..type = type
           ..primaryColor = const Color.fromARGB(255, 0, 142, 5);
 
-      case ThemeType.darkOrange:
+      case ThemeType.darkDarkBlue:
         return AppTheme(isDark: true)
           ..type = type
           ..primaryColor = const Color.fromARGB(255, 0, 142, 5);

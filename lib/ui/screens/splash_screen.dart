@@ -1,8 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:pixelverse/config/assets.dart';
-import 'package:pixelverse/core/utils/cursor_manager.dart';
+
+import '../../config/assets.dart';
+import '../../core/utils/cursor_manager.dart';
 import 'projects_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -64,7 +65,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF091126),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -72,7 +73,7 @@ class _SplashScreenState extends State<SplashScreen>
             SizedBox(
               width: 200,
               height: 200,
-              child: Image.asset(Assets.images.logoTransparent),
+              child: Image.asset(Assets.images.logo),
             ),
             const SizedBox(height: 20),
             Text(

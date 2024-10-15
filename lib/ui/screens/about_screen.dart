@@ -16,7 +16,7 @@ class AboutScreen extends StatelessWidget {
         ),
         title: const Text('About PixelVerse'),
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: const Color(0xFF091126),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -40,8 +40,8 @@ class AboutScreen extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Theme.of(context).primaryColor,
-            Colors.green.shade900,
+            const Color(0xFF091126),
+            const Color(0xFF091126).withOpacity(0.8),
           ],
         ),
       ),
@@ -167,7 +167,7 @@ class PixelArtLogo extends StatelessWidget {
     return SizedBox(
       width: 100,
       height: 100,
-      child: Image.asset(Assets.images.logoTransparent),
+      child: Image.asset(Assets.images.logo),
     ).animate().scale(duration: 600.ms, curve: Curves.elasticOut);
   }
 }

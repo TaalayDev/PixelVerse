@@ -34,6 +34,10 @@ build() {
     buildType="appbundle"
   elif [ "$buildType" == "ios" ] || [ "$buildType" == "ipa" ]; then
     echo "Building iOS"
+  # macos
+  elif [ "$buildType" == "macos" ] || [ "$buildType" == "macos" ]; then
+    echo "Building macOS"
+    buildType="macos"
   else
     echo "Invalid build type"
     exit 1
@@ -82,6 +86,18 @@ build() {
 
       # Open ipa folder
       open_folder "build/ios/ipa"
+    elif [ "$buildType" == "macos" ]; then
+      # Open transporter to upload
+      open "/Applications/Transporter.app"
+      if [ $? -eq 0 ]; then
+        echo "Transporter opened"
+      else
+        echo "Transporter failed"
+        exit 1
+      fi
+
+      # Open dmg folder
+      open_folder "build/macos/Build/Products/Release"
     elif [ "$buildType" == "appbundle" ]; then
       # Open appbundle folder
       open_folder "build/app/outputs/bundle/release"
