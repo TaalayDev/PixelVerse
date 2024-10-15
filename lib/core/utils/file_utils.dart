@@ -10,7 +10,7 @@ import 'package:universal_html/html.dart' as html;
 import 'package:file_picker/file_picker.dart';
 import 'package:platform/platform.dart';
 import 'package:image/image.dart' as img;
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 
 import 'image_helper.dart';
 
@@ -212,7 +212,7 @@ class FileUtils {
   }
 
   Future<void> _saveToGallery(Uint8List jpg, String fileName) async {
-    await ImageGallerySaver.saveImage(jpg, name: fileName);
+    await ImageGallerySaverPlus.saveImage(jpg, name: fileName);
   }
 
   Future<void> _saveToDocuments(Uint8List jpg, String fileName) async {

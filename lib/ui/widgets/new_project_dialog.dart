@@ -10,8 +10,11 @@ class ProjectTemplate {
   final int width;
   final int height;
 
-  ProjectTemplate(
-      {required this.name, required this.width, required this.height});
+  ProjectTemplate({
+    required this.name,
+    required this.width,
+    required this.height,
+  });
 }
 
 class NewProjectDialog extends StatefulWidget {
@@ -24,8 +27,8 @@ class NewProjectDialog extends StatefulWidget {
 class _NewProjectDialogState extends State<NewProjectDialog> {
   final _formKey = GlobalKey<FormState>();
   String _projectName = '';
-  int _width = 32;
-  int _height = 32;
+  int _width = 16;
+  int _height = 16;
 
   final List<ProjectTemplate> _templates = [
     ProjectTemplate(name: 'Tiny Icon', width: 16, height: 16),

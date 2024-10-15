@@ -1,8 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -292,141 +293,149 @@ class ProjectCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        project.name,
-                        style: MediaQuery.sizeOf(context).adaptiveValue(
-                          Theme.of(context).textTheme.titleSmall,
-                          {
-                            ScreenSize.md:
-                                Theme.of(context).textTheme.titleMedium,
-                            ScreenSize.lg:
-                                Theme.of(context).textTheme.titleMedium,
-                            ScreenSize.xl:
-                                Theme.of(context).textTheme.titleLarge,
-                          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (kIsWeb || !Platform.isAndroid) const SizedBox(height: 8),
+              Row(
+                children: [
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      project.name,
+                      style: MediaQuery.sizeOf(context).adaptiveValue(
+                        Theme.of(context).textTheme.titleSmall,
+                        {
+                          ScreenSize.md:
+                              Theme.of(context).textTheme.titleMedium,
+                          ScreenSize.lg:
+                              Theme.of(context).textTheme.titleMedium,
+                          ScreenSize.xl: Theme.of(context).textTheme.titleLarge,
+                        },
+                      ),
+                    ),
+                  ),
+                  PopupMenuButton(
+                    icon: const Icon(Feather.more_vertical),
+                    style: IconButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(25, 25),
+                      iconSize: 20,
+                    ),
+                    itemBuilder: (context) {
+                      return [
+                        const PopupMenuItem(
+                          value: 'rename',
+                          child: Row(
+                            children: [
+                              Icon(Feather.edit_2),
+                              SizedBox(width: 8),
+                              Text('Rename'),
+                            ],
+                          ),
                         ),
-                      ),
-                    ),
-                    PopupMenuButton(
-                      icon: const Icon(Feather.more_vertical),
-                      style: IconButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        minimumSize: const Size(25, 25),
-                        iconSize: 20,
-                      ),
-                      itemBuilder: (context) {
-                        return [
-                          const PopupMenuItem(
-                            value: 'rename',
-                            child: Row(
-                              children: [
-                                Icon(Feather.edit_2),
-                                SizedBox(width: 8),
-                                Text('Rename'),
-                              ],
-                            ),
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              Icon(Feather.edit),
+                              SizedBox(width: 8),
+                              Text('Edit'),
+                            ],
                           ),
-                          const PopupMenuItem(
-                            value: 'edit',
-                            child: Row(
-                              children: [
-                                Icon(Feather.edit),
-                                SizedBox(width: 8),
-                                Text('Edit'),
-                              ],
-                            ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Feather.trash_2),
+                              SizedBox(width: 8),
+                              Text('Delete'),
+                            ],
                           ),
-                          const PopupMenuItem(
-                            value: 'delete',
-                            child: Row(
-                              children: [
-                                Icon(Feather.trash_2),
-                                SizedBox(width: 8),
-                                Text('Delete'),
-                              ],
-                            ),
+                        ),
+                      ];
+                    },
+                    onSelected: (value) {
+                      if (value == 'edit') {
+                        onTapProject?.call(project);
+                      } else if (value == 'rename') {
+                        showDialog(
+                          context: context,
+                          builder: (context) => RenameProjectDialog(
+                            onRename: (name) {
+                              onEditProject?.call(
+                                project.copyWith(name: name),
+                              );
+                            },
                           ),
-                        ];
-                      },
-                      onSelected: (value) {
-                        if (value == 'edit') {
-                          onTapProject?.call(project);
-                        } else if (value == 'rename') {
-                          showDialog(
-                            context: context,
-                            builder: (context) => RenameProjectDialog(
-                              onRename: (name) {
-                                onEditProject?.call(
-                                  project.copyWith(name: name),
-                                );
-                              },
+                        );
+                      } else if (value == 'delete') {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Delete Project'),
+                            content: const Text(
+                              'Are you sure you want to delete this project?',
                             ),
-                          );
-                        } else if (value == 'delete') {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Delete Project'),
-                              content: const Text(
-                                'Are you sure you want to delete this project?',
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  onDeleteProject?.call(project);
+                                },
+                                child: const Text('Cancel'),
                               ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                    onDeleteProject?.call(project);
-                                  },
-                                  child: const Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                    onDeleteProject?.call(project);
-                                  },
-                                  child: const Text('Delete'),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                AspectRatio(
-                  aspectRatio: project.width / project.height,
-                  child: ProjectThumbnailWidget(project: project),
-                ),
-                const SizedBox(height: 16),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  onDeleteProject?.call(project);
+                                },
+                                child: const Text('Delete'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                  if (kIsWeb || !Platform.isAndroid) const SizedBox(width: 8),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildInfoChip(
-                      context,
-                      icon: Feather.grid,
-                      label: '${project.width}x${project.height}',
-                      color: Theme.of(context).colorScheme.secondary,
+                    const SizedBox(height: 12),
+                    AspectRatio(
+                      aspectRatio: project.width / project.height,
+                      child: ProjectThumbnailWidget(project: project),
                     ),
-                    _buildInfoChip(
-                      context,
-                      icon: Feather.clock,
-                      label: _formatLastEdited(project.editedAt),
-                      color: Theme.of(context).colorScheme.secondary,
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _buildInfoChip(
+                          context,
+                          icon: Feather.grid,
+                          label: '${project.width}x${project.height}',
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                        _buildInfoChip(
+                          context,
+                          icon: Feather.clock,
+                          label: _formatLastEdited(project.editedAt),
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 16),
+            ],
           ),
         ),
       ),
