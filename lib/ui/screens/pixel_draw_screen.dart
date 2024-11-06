@@ -6,6 +6,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:pixelverse/ui/widgets/shortcuts_wrapper.dart';
 
 import '../../pixel/image_painter.dart';
 import '../../providers/pixel_controller_provider.dart';
@@ -60,368 +61,379 @@ class PixelDrawScreen extends HookConsumerWidget {
     final showPrevFrames = useState(false);
     final isAnimationTimelineExpanded = useState(false);
 
-    return Scaffold(
-      backgroundColor: Colors.grey[200],
-      body: SafeArea(
-        child: Row(
-          children: [
-            if (MediaQuery.of(context).size.width > 600)
-              Container(
-                width: 60,
-                color: Colors.grey[200],
-                child: ToolMenu(
-                  currentTool: currentTool,
-                  onSelectTool: (tool) => currentTool.value = tool,
-                  onColorPicker: () {
-                    showColorPicker(context, notifier);
-                  },
-                  currentColor: state.currentColor,
+    return ShortcutsWrapper(
+      onUndo: state.canUndo ? notifier.undo : () {},
+      onRedo: state.canRedo ? notifier.redo : () {},
+      onSave: () => notifier.exportAnimation(context),
+      child: Scaffold(
+        backgroundColor: Colors.grey[200],
+        body: SafeArea(
+          child: Row(
+            children: [
+              if (MediaQuery.of(context).size.width > 600)
+                Container(
+                  width: 60,
+                  color: Colors.grey[200],
+                  child: ToolMenu(
+                    currentTool: currentTool,
+                    onSelectTool: (tool) => currentTool.value = tool,
+                    onColorPicker: () {
+                      showColorPicker(context, notifier);
+                    },
+                    currentColor: state.currentColor,
+                  ),
                 ),
-              ),
-            Expanded(
-              child: ColoredBox(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                child: Column(
-                  children: [
-                    ToolBar(
-                      currentTool: currentTool,
-                      brushSize: brushSize,
-                      sprayIntensity: sprayIntensity,
-                      onSelectTool: (tool) => currentTool.value = tool,
-                      onUndo: state.canUndo ? notifier.undo : null,
-                      onRedo: state.canRedo ? notifier.redo : null,
-                      exportAsImage: () => notifier.exportAnimation(
-                        context,
-                        background: true,
+              Expanded(
+                child: ColoredBox(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  child: Column(
+                    children: [
+                      ToolBar(
+                        currentTool: currentTool,
+                        brushSize: brushSize,
+                        sprayIntensity: sprayIntensity,
+                        onSelectTool: (tool) => currentTool.value = tool,
+                        onUndo: state.canUndo ? notifier.undo : null,
+                        onRedo: state.canRedo ? notifier.redo : null,
+                        exportAsImage: () => notifier.exportAnimation(
+                          context,
+                          background: true,
+                        ),
+                        export: () => notifier.exportJson(context),
+                        currentColor: state.currentColor,
+                        showPrevFrames: showPrevFrames.value,
+                        onColorPicker: () {
+                          showColorPicker(context, notifier);
+                        },
+                        import: () => notifier.importImage(context),
+                        currentModifier: currentModifier,
+                        onSelectModifier: (modifier) {
+                          currentModifier.value = modifier;
+                        },
+                        onZoomIn: () {
+                          gridScale.value =
+                              (gridScale.value * 1.1).clamp(0.5, 5.0);
+                        },
+                        onZoomOut: () {
+                          gridScale.value =
+                              (gridScale.value / 1.1).clamp(0.5, 5.0);
+                        },
+                        onShare: () => notifier.share(context),
+                        showPrevFramesOpacity: () {
+                          showPrevFrames.value = !showPrevFrames.value;
+                        },
                       ),
-                      export: () => notifier.exportJson(context),
-                      currentColor: state.currentColor,
-                      showPrevFrames: showPrevFrames.value,
-                      onColorPicker: () {
-                        showColorPicker(context, notifier);
-                      },
-                      import: () => notifier.importImage(context),
-                      currentModifier: currentModifier,
-                      onSelectModifier: (modifier) {
-                        currentModifier.value = modifier;
-                      },
-                      onZoomIn: () {
-                        gridScale.value =
-                            (gridScale.value * 1.1).clamp(0.5, 5.0);
-                      },
-                      onZoomOut: () {
-                        gridScale.value =
-                            (gridScale.value / 1.1).clamp(0.5, 5.0);
-                      },
-                      onShare: () => notifier.share(context),
-                      showPrevFramesOpacity: () {
-                        showPrevFrames.value = !showPrevFrames.value;
-                      },
-                    ),
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: GestureDetector(
-                              onScaleStart: (details) {
-                                final pointerCount = details.pointerCount;
-                                if (pointerCount == 2) {
-                                  normalizedOffset.value =
-                                      (gridOffset.value - details.focalPoint) /
-                                          gridScale.value;
-                                }
-                              },
-                              onScaleUpdate: (details) {
-                                final pointerCount = details.pointerCount;
-                                if (pointerCount == 2) {
-                                  gridScale.value =
-                                      (details.scale * gridScale.value)
-                                          .clamp(0.5, 5.0);
-                                  gridOffset.value = details.focalPoint +
-                                      normalizedOffset.value * gridScale.value;
-                                }
-                              },
-                              onScaleEnd: (details) {},
-                              child: Stack(
-                                clipBehavior: Clip.hardEdge,
-                                children: [
-                                  Container(
-                                    alignment: Alignment.center,
-                                    decoration: const BoxDecoration(),
-                                    clipBehavior: Clip.hardEdge,
-                                    child: AspectRatio(
-                                      aspectRatio: width / height,
-                                      child: Transform(
-                                        transform: Matrix4.identity()
-                                          ..translate(
-                                            gridOffset.value.dx,
-                                            gridOffset.value.dy,
-                                          )
-                                          ..scale(gridScale.value),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Container(
-                                            clipBehavior: Clip.hardEdge,
-                                            decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              border: Border.all(
-                                                color: Colors.grey,
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: GestureDetector(
+                                onScaleStart: (details) {
+                                  final pointerCount = details.pointerCount;
+                                  if (pointerCount == 2) {
+                                    normalizedOffset.value = (gridOffset.value -
+                                            details.focalPoint) /
+                                        gridScale.value;
+                                  }
+                                },
+                                onScaleUpdate: (details) {
+                                  final pointerCount = details.pointerCount;
+                                  if (pointerCount == 2) {
+                                    gridScale.value =
+                                        (details.scale * gridScale.value)
+                                            .clamp(0.5, 5.0);
+                                    gridOffset.value = details.focalPoint +
+                                        normalizedOffset.value *
+                                            gridScale.value;
+                                  }
+                                },
+                                onScaleEnd: (details) {},
+                                child: Stack(
+                                  clipBehavior: Clip.hardEdge,
+                                  children: [
+                                    Container(
+                                      alignment: Alignment.center,
+                                      decoration: const BoxDecoration(),
+                                      clipBehavior: Clip.hardEdge,
+                                      child: AspectRatio(
+                                        aspectRatio: width / height,
+                                        child: Transform(
+                                          transform: Matrix4.identity()
+                                            ..translate(
+                                              gridOffset.value.dx,
+                                              gridOffset.value.dy,
+                                            )
+                                            ..scale(gridScale.value),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Container(
+                                              clipBehavior: Clip.hardEdge,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                border: Border.all(
+                                                  color: Colors.grey,
+                                                ),
                                               ),
-                                            ),
-                                            child: PixelPainter(
-                                              project: project,
-                                              state: state,
-                                              gridScale: gridScale,
-                                              gridOffset: gridOffset,
-                                              currentTool: currentTool.value,
-                                              currentModifier:
-                                                  currentModifier.value,
-                                              currentColor: state.currentColor,
-                                              brushSize: brushSize,
-                                              sprayIntensity: sprayIntensity,
-                                              showPrevFrames:
-                                                  showPrevFrames.value,
+                                              child: PixelPainter(
+                                                project: project,
+                                                state: state,
+                                                gridScale: gridScale,
+                                                gridOffset: gridOffset,
+                                                currentTool: currentTool.value,
+                                                currentModifier:
+                                                    currentModifier.value,
+                                                currentColor:
+                                                    state.currentColor,
+                                                brushSize: brushSize,
+                                                sprayIntensity: sprayIntensity,
+                                                showPrevFrames:
+                                                    showPrevFrames.value,
+                                              ),
                                             ),
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  if (MediaQuery.sizeOf(context).width < 600)
-                                    Positioned(
-                                      left: 16,
-                                      right: 16,
-                                      top: 16,
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          if (currentTool.value ==
-                                                  PixelTool.brush ||
-                                              currentTool.value ==
-                                                  PixelTool.eraser ||
-                                              currentTool.value ==
-                                                  PixelTool.sprayPaint) ...[
-                                            Container(
-                                              height: 40,
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.black
-                                                        .withOpacity(0.1),
-                                                    blurRadius: 4,
-                                                    offset: const Offset(0, 2),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: Row(
-                                                children: [
-                                                  const SizedBox(width: 8),
-                                                  const Icon(Icons.brush),
-                                                  SizedBox(
-                                                    width: 150,
-                                                    child: Slider(
-                                                      value: brushSize.value
-                                                          .toDouble(),
-                                                      min: 1,
-                                                      max: 10,
-                                                      onChanged: (value) {
-                                                        brushSize.value =
-                                                            value.toInt();
-                                                      },
+                                    if (MediaQuery.sizeOf(context).width < 600)
+                                      Positioned(
+                                        left: 16,
+                                        right: 16,
+                                        top: 16,
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            if (currentTool.value ==
+                                                    PixelTool.brush ||
+                                                currentTool.value ==
+                                                    PixelTool.eraser ||
+                                                currentTool.value ==
+                                                    PixelTool.sprayPaint) ...[
+                                              Container(
+                                                height: 40,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.black
+                                                          .withOpacity(0.1),
+                                                      blurRadius: 4,
+                                                      offset:
+                                                          const Offset(0, 2),
                                                     ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    const SizedBox(width: 8),
+                                                    const Icon(Icons.brush),
+                                                    SizedBox(
+                                                      width: 150,
+                                                      child: Slider(
+                                                        value: brushSize.value
+                                                            .toDouble(),
+                                                        min: 1,
+                                                        max: 10,
+                                                        onChanged: (value) {
+                                                          brushSize.value =
+                                                              value.toInt();
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                            const SizedBox(width: 16),
+                                              const SizedBox(width: 16),
+                                            ],
+                                            if (currentTool.value ==
+                                                PixelTool.sprayPaint) ...[
+                                              Container(
+                                                height: 40,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.black
+                                                          .withOpacity(0.1),
+                                                      blurRadius: 4,
+                                                      offset:
+                                                          const Offset(0, 2),
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    const SizedBox(width: 8),
+                                                    const Icon(
+                                                      MaterialCommunityIcons
+                                                          .spray,
+                                                    ),
+                                                    SizedBox(
+                                                      width: 150,
+                                                      child: Slider(
+                                                        value: sprayIntensity
+                                                            .value
+                                                            .toDouble(),
+                                                        min: 1,
+                                                        max: 10,
+                                                        onChanged: (value) {
+                                                          sprayIntensity.value =
+                                                              value.toInt();
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ]
                                           ],
-                                          if (currentTool.value ==
-                                              PixelTool.sprayPaint) ...[
-                                            Container(
-                                              height: 40,
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.black
-                                                        .withOpacity(0.1),
-                                                    blurRadius: 4,
-                                                    offset: const Offset(0, 2),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: Row(
-                                                children: [
-                                                  const SizedBox(width: 8),
-                                                  const Icon(
-                                                    MaterialCommunityIcons
-                                                        .spray,
-                                                  ),
-                                                  SizedBox(
-                                                    width: 150,
-                                                    child: Slider(
-                                                      value: sprayIntensity
-                                                          .value
-                                                          .toDouble(),
-                                                      min: 1,
-                                                      max: 10,
-                                                      onChanged: (value) {
-                                                        sprayIntensity.value =
-                                                            value.toInt();
-                                                      },
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ]
-                                        ],
+                                        ),
                                       ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          if (MediaQuery.sizeOf(context).width > 600)
-                            Container(
-                              color: Colors.grey[200],
-                              child: SizedBox(
-                                width: 250,
-                                child: Column(
-                                  children: [
-                                    Expanded(
-                                      child: LayersPanel(
-                                        width: width,
-                                        height: height,
-                                        layers: state.currentFrame.layers,
-                                        activeLayerIndex:
-                                            state.currentLayerIndex,
-                                        onLayerAdded: (name) {
-                                          notifier.addLayer(name);
-                                        },
-                                        onLayerVisibilityChanged: (index) {
-                                          notifier.toggleLayerVisibility(index);
-                                        },
-                                        onLayerSelected: (index) {
-                                          notifier.selectLayer(index);
-                                        },
-                                        onLayerDeleted: (index) {
-                                          notifier.removeLayer(index);
-                                        },
-                                        onLayerLockedChanged: (index) {},
-                                        onLayerNameChanged: (index, name) {},
-                                        onLayerReordered: (oldIndex, newIndex) {
-                                          notifier.reorderLayers(
-                                            newIndex,
-                                            oldIndex,
-                                          );
-                                        },
-                                        onLayerOpacityChanged:
-                                            (index, opacity) {},
-                                      ),
-                                    ),
-                                    const Divider(),
-                                    Expanded(
-                                      child: ColorPalettePanel(
-                                        currentColor: state.currentColor,
-                                        isEyedropperSelected:
-                                            currentTool.value ==
-                                                PixelTool.eyedropper,
-                                        onSelectEyedropper: () {
-                                          currentTool.value =
-                                              PixelTool.eyedropper;
-                                        },
-                                        onColorSelected: (color) {
-                                          notifier.currentColor = color;
-                                        },
-                                      ),
-                                    ),
                                   ],
                                 ),
                               ),
                             ),
-                        ],
+                            if (MediaQuery.sizeOf(context).width > 600)
+                              Container(
+                                color: Colors.grey[200],
+                                child: SizedBox(
+                                  width: 250,
+                                  child: Column(
+                                    children: [
+                                      Expanded(
+                                        child: LayersPanel(
+                                          width: width,
+                                          height: height,
+                                          layers: state.currentFrame.layers,
+                                          activeLayerIndex:
+                                              state.currentLayerIndex,
+                                          onLayerAdded: (name) {
+                                            notifier.addLayer(name);
+                                          },
+                                          onLayerVisibilityChanged: (index) {
+                                            notifier
+                                                .toggleLayerVisibility(index);
+                                          },
+                                          onLayerSelected: (index) {
+                                            notifier.selectLayer(index);
+                                          },
+                                          onLayerDeleted: (index) {
+                                            notifier.removeLayer(index);
+                                          },
+                                          onLayerLockedChanged: (index) {},
+                                          onLayerNameChanged: (index, name) {},
+                                          onLayerReordered:
+                                              (oldIndex, newIndex) {
+                                            notifier.reorderLayers(
+                                              newIndex,
+                                              oldIndex,
+                                            );
+                                          },
+                                          onLayerOpacityChanged:
+                                              (index, opacity) {},
+                                        ),
+                                      ),
+                                      const Divider(),
+                                      Expanded(
+                                        child: ColorPalettePanel(
+                                          currentColor: state.currentColor,
+                                          isEyedropperSelected:
+                                              currentTool.value ==
+                                                  PixelTool.eyedropper,
+                                          onSelectEyedropper: () {
+                                            currentTool.value =
+                                                PixelTool.eyedropper;
+                                          },
+                                          onColorSelected: (color) {
+                                            notifier.currentColor = color;
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
-                    AnimationTimeline(
-                      width: width,
-                      height: height,
-                      itemsHeight: 80,
-                      onSelectFrame: (index) {
-                        notifier.selectFrame(index);
-                      },
-                      onAddFrame: () {
-                        notifier.addFrame('Frame ${state.frames.length + 1}');
-                      },
-                      copyFrame: (index) {
-                        notifier.addFrame(
-                          'Frame ${state.frames.length + 1}',
-                          copyFrame: index,
-                        );
-                      },
-                      onDeleteFrame: (index) {
-                        notifier.removeFrame(index);
-                      },
-                      onDurationChanged: (index, duration) {
-                        notifier.updateFrame(
-                          index,
-                          state.frames[index].copyWith(duration: duration),
-                        );
-                      },
-                      onFrameReordered: (oldIndex, newIndex) {},
-                      onPlayPause: () {
-                        isPlaying.value = !isPlaying.value;
-                        if (isPlaying.value) {
-                          showAnimationPreviewDialog(
-                            context,
-                            frames: state.frames,
-                            width: width,
-                            height: height,
-                          ).then((_) {
-                            isPlaying.value = false;
-                          });
-                        }
-                      },
-                      onStop: () {
-                        isPlaying.value = false;
-                        notifier.selectFrame(0);
-                      },
-                      onNextFrame: () {
-                        notifier.nextFrame();
-                      },
-                      onPreviousFrame: () {
-                        notifier.prevFrame();
-                      },
-                      frames: state.frames,
-                      selectedFrameIndex: state.currentFrameIndex,
-                      isPlaying: isPlaying.value,
-                      settings: const AnimationSettings(),
-                      onSettingsChanged: (settings) {},
-                      isExpanded: isAnimationTimelineExpanded.value,
-                      onExpandChanged: () {
-                        isAnimationTimelineExpanded.value =
-                            !isAnimationTimelineExpanded.value;
-                      },
-                    ),
-                    if (MediaQuery.sizeOf(context).width <= 600)
-                      ToolsBottomBar(
-                        currentTool: currentTool,
-                        state: state,
-                        notifier: notifier,
+                      AnimationTimeline(
                         width: width,
                         height: height,
+                        itemsHeight: 80,
+                        onSelectFrame: (index) {
+                          notifier.selectFrame(index);
+                        },
+                        onAddFrame: () {
+                          notifier.addFrame('Frame ${state.frames.length + 1}');
+                        },
+                        copyFrame: (index) {
+                          notifier.addFrame(
+                            'Frame ${state.frames.length + 1}',
+                            copyFrame: index,
+                          );
+                        },
+                        onDeleteFrame: (index) {
+                          notifier.removeFrame(index);
+                        },
+                        onDurationChanged: (index, duration) {
+                          notifier.updateFrame(
+                            index,
+                            state.frames[index].copyWith(duration: duration),
+                          );
+                        },
+                        onFrameReordered: (oldIndex, newIndex) {},
+                        onPlayPause: () {
+                          isPlaying.value = !isPlaying.value;
+                          if (isPlaying.value) {
+                            showAnimationPreviewDialog(
+                              context,
+                              frames: state.frames,
+                              width: width,
+                              height: height,
+                            ).then((_) {
+                              isPlaying.value = false;
+                            });
+                          }
+                        },
+                        onStop: () {
+                          isPlaying.value = false;
+                          notifier.selectFrame(0);
+                        },
+                        onNextFrame: () {
+                          notifier.nextFrame();
+                        },
+                        onPreviousFrame: () {
+                          notifier.prevFrame();
+                        },
+                        frames: state.frames,
+                        selectedFrameIndex: state.currentFrameIndex,
+                        isPlaying: isPlaying.value,
+                        settings: const AnimationSettings(),
+                        onSettingsChanged: (settings) {},
+                        isExpanded: isAnimationTimelineExpanded.value,
+                        onExpandChanged: () {
+                          isAnimationTimelineExpanded.value =
+                              !isAnimationTimelineExpanded.value;
+                        },
                       ),
-                  ],
+                      if (MediaQuery.sizeOf(context).width <= 600)
+                        ToolsBottomBar(
+                          currentTool: currentTool,
+                          state: state,
+                          notifier: notifier,
+                          width: width,
+                          height: height,
+                        ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
