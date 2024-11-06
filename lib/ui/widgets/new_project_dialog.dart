@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
+import 'package:pixelverse/l10n/strings.dart';
 
 const kMaxPixelWidth = 5024;
 const kMaxPixelHeight = 5024;
@@ -44,7 +45,7 @@ class _NewProjectDialogState extends State<NewProjectDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(
-        'New Project',
+        Strings.of(context).newProject,
         style: Theme.of(context).textTheme.headlineSmall,
       ),
       content: Form(
@@ -54,10 +55,10 @@ class _NewProjectDialogState extends State<NewProjectDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Project Name',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.create),
+                decoration: InputDecoration(
+                  labelText: Strings.of(context).projectName,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.create),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -69,10 +70,10 @@ class _NewProjectDialogState extends State<NewProjectDialog> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<int>(
-                decoration: const InputDecoration(
-                  labelText: 'Template',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Octicons.repo_template),
+                decoration: InputDecoration(
+                  labelText: Strings.of(context).template,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Octicons.repo_template),
                 ),
                 style: Theme.of(context).textTheme.bodyMedium,
                 value: _selectedTemplateIndex,
@@ -101,10 +102,10 @@ class _NewProjectDialogState extends State<NewProjectDialog> {
                   children: [
                     Expanded(
                       child: TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: 'Width',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.width_normal),
+                        decoration: InputDecoration(
+                          labelText: Strings.of(context).width,
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.width_normal),
                         ),
                         keyboardType: TextInputType.number,
                         inputFormatters: [
@@ -129,10 +130,10 @@ class _NewProjectDialogState extends State<NewProjectDialog> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: 'Height',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.height),
+                        decoration: InputDecoration(
+                          labelText: Strings.of(context).height,
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.height),
                         ),
                         keyboardType: TextInputType.number,
                         inputFormatters: [
@@ -162,11 +163,11 @@ class _NewProjectDialogState extends State<NewProjectDialog> {
       ),
       actions: [
         TextButton(
-          child: const Text('Cancel'),
+          child: Text(Strings.of(context).cancel),
           onPressed: () => Navigator.of(context).pop(),
         ),
         ElevatedButton(
-          child: const Text('Create'),
+          child: Text(Strings.of(context).create),
           onPressed: () {
             if (_formKey.currentState!.validate()) {
               _formKey.currentState!.save();

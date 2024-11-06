@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:pixelverse/l10n/strings.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 import '../../config/assets.dart';
 
@@ -14,7 +16,7 @@ class AboutScreen extends StatelessWidget {
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text('About PixelVerse'),
+        title: Text(Strings.of(context).aboutTitle),
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
         backgroundColor: const Color(0xFF091126),
       ),
@@ -52,7 +54,7 @@ class AboutScreen extends StatelessWidget {
             const PixelArtLogo(),
             const SizedBox(height: 16),
             Text(
-              'PixelVerse',
+              Strings.of(context).appName,
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
@@ -67,7 +69,7 @@ class AboutScreen extends StatelessWidget {
               ),
             ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.3, end: 0),
             Text(
-              'Version 1.0.0',
+              Strings.of(context).version('1.1.0'),
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.white.withOpacity(0.8),
@@ -86,12 +88,12 @@ class AboutScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Welcome to PixelVerse!',
+            Strings.of(context).welcome,
             style: Theme.of(context).textTheme.headlineSmall,
           ).animate().fadeIn(duration: 600.ms).slideX(begin: -0.2, end: 0),
           const SizedBox(height: 8),
           Text(
-            'PixelVerse is your gateway to creating amazing pixel art. Whether you\'re a seasoned artist or just starting out, our app provides the tools you need to bring your pixelated visions to life.',
+            Strings.of(context).aboutAppDescription,
             style: Theme.of(context).textTheme.bodyLarge,
           ).animate().fadeIn(delay: 300.ms, duration: 600.ms),
         ],
@@ -100,14 +102,12 @@ class AboutScreen extends StatelessWidget {
   }
 
   Widget _buildFeaturesList(BuildContext context) {
-    final features = [
-      'Intuitive pixel editing tools',
-      'Custom color palettes',
-      'Layer support for complex artwork',
-      'Animation timeline for creating GIFs',
-      'Export in various formats (in planning)',
-      'Community sharing and inspiration (in planning)',
-    ];
+    final features = Strings.of(context)
+        .features
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -115,7 +115,7 @@ class AboutScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Key Features:',
+            Strings.of(context).featuresTitle,
             style: Theme.of(context).textTheme.titleLarge,
           ).animate().fadeIn(duration: 600.ms).slideX(begin: -0.2, end: 0),
           const SizedBox(height: 8),
@@ -144,16 +144,23 @@ class AboutScreen extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'Made with ❤️ by the PixelVerse Team',
+            Strings.of(context).visitWebsite,
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
-          Text(
-            '© 2024 PixelVerse. All rights reserved.',
-            style: Theme.of(context).textTheme.bodySmall,
-            textAlign: TextAlign.center,
-          ),
+          TextButton(
+            onPressed: () {
+              launchUrlString('https://taalaydev.github.io');
+            },
+            child: Text(
+              'https://taalaydev.github.io',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.secondary,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ).animate().fadeIn(delay: 600.ms, duration: 600.ms),
         ],
       ).animate().fadeIn(delay: 1000.ms, duration: 600.ms),
     );

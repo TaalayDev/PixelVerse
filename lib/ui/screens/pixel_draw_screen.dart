@@ -6,8 +6,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:pixelverse/ui/widgets/dialogs.dart';
-import 'package:pixelverse/ui/widgets/shortcuts_wrapper.dart';
+import 'package:pixelverse/l10n/strings.dart';
 
 import '../../pixel/image_painter.dart';
 import '../../providers/pixel_controller_provider.dart';
@@ -16,6 +15,8 @@ import '../../pixel/tools.dart';
 import '../../data.dart';
 import '../widgets/animation_timeline.dart';
 import '../widgets/menu_value_field.dart';
+import '../widgets/shortcuts_wrapper.dart';
+import '../widgets/dialogs.dart';
 import '../widgets.dart';
 
 class PixelDrawScreen extends HookConsumerWidget {
@@ -482,7 +483,7 @@ class PixelDrawScreen extends HookConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Pick a color!'),
+        title: Text(Strings.of(context).pickAColor),
         content: SingleChildScrollView(
           child: MaterialPicker(
             pickerColor: controller.currentColor,
@@ -495,7 +496,7 @@ class PixelDrawScreen extends HookConsumerWidget {
         ),
         actions: <Widget>[
           ElevatedButton(
-            child: const Text('Got it'),
+            child: Text(Strings.of(context).gotIt),
             onPressed: () {
               Navigator.of(context).pop();
             },
@@ -1099,51 +1100,51 @@ class ToolBar extends StatelessWidget {
                 icon: Icon(Icons.undo,
                     color: onUndo != null ? null : Colors.grey),
                 onPressed: onUndo,
-                tooltip: 'Undo',
+                tooltip: Strings.of(context).undo,
               ),
               IconButton(
                 icon: Icon(Icons.redo,
                     color: onRedo != null ? null : Colors.grey),
                 onPressed: onRedo,
-                tooltip: 'Redo',
+                tooltip: Strings.of(context).redo,
               ),
               PopupMenuButton(
                 icon: const Icon(Feather.save, size: 18),
-                tooltip: 'Save',
+                tooltip: Strings.of(context).save,
                 itemBuilder: (context) => [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'import',
                     child: ListTile(
-                      leading: Icon(Feather.upload),
-                      title: Text('Open'),
+                      leading: const Icon(Feather.upload),
+                      title: Text(Strings.of(context).open),
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'projects',
                     child: ListTile(
-                      leading: Icon(Feather.list),
-                      title: Text('Projects'),
+                      leading: const Icon(Feather.list),
+                      title: Text(Strings.of(context).projects),
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'export',
                     child: ListTile(
-                      leading: Icon(Feather.save),
-                      title: Text('Export'),
+                      leading: const Icon(Feather.save),
+                      title: Text(Strings.of(context).save),
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'exportAsImage',
                     child: ListTile(
-                      leading: Icon(Feather.image),
-                      title: Text('Export as Image'),
+                      leading: const Icon(Feather.image),
+                      title: Text(Strings.of(context).saveAs),
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'share',
                     child: ListTile(
-                      leading: Icon(Feather.share),
-                      title: Text('Share'),
+                      leading: const Icon(Feather.share),
+                      title: Text(Strings.of(context).share),
                     ),
                   ),
                 ],
@@ -1200,25 +1201,25 @@ class ShapesMenuButton extends StatelessWidget {
         onSelectTool(result);
       },
       itemBuilder: (BuildContext context) => <PopupMenuEntry<PixelTool>>[
-        const PopupMenuItem<PixelTool>(
+        PopupMenuItem<PixelTool>(
           value: PixelTool.line,
           child: ListTile(
-            leading: Icon(Icons.show_chart),
-            title: Text('Line'),
+            leading: const Icon(Icons.show_chart),
+            title: Text(Strings.of(context).lineTool),
           ),
         ),
-        const PopupMenuItem<PixelTool>(
+        PopupMenuItem<PixelTool>(
           value: PixelTool.rectangle,
           child: ListTile(
-            leading: Icon(Icons.crop_square),
-            title: Text('Rectangle'),
+            leading: const Icon(Icons.crop_square),
+            title: Text(Strings.of(context).rectangleTool),
           ),
         ),
-        const PopupMenuItem<PixelTool>(
+        PopupMenuItem<PixelTool>(
           value: PixelTool.circle,
           child: ListTile(
-            leading: Icon(Icons.radio_button_unchecked),
-            title: Text('Circle'),
+            leading: const Icon(Icons.radio_button_unchecked),
+            title: Text(Strings.of(context).circleTool),
           ),
         ),
       ],

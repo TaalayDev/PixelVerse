@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:animated_reorderable_list/animated_reorderable_list.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:pixelverse/l10n/strings.dart';
 
 import '../../data.dart';
 import '../../pixel/image_painter.dart';
@@ -43,7 +44,7 @@ class LayersPanel extends HookConsumerWidget {
     return Column(
       children: [
         const Divider(),
-        _buildLayersPanelHeader(),
+        _buildLayersPanelHeader(context),
         Expanded(
           child: AnimatedReorderableListView(
             items: layers,
@@ -69,15 +70,15 @@ class LayersPanel extends HookConsumerWidget {
     );
   }
 
-  Widget _buildLayersPanelHeader() {
+  Widget _buildLayersPanelHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'Layers',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          Text(
+            Strings.of(context).layers,
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           IconButton(
             icon: const Icon(Icons.add),
@@ -173,17 +174,17 @@ class LayersPanel extends HookConsumerWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Delete Layer'),
-          content: const Text('Are you sure you want to delete this layer?'),
+          title: Text(Strings.of(context).deleteLayer),
+          content: Text(Strings.of(context).areYouSureWantToDeleteLayer),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: Text(Strings.of(context).cancel),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: const Text('Delete'),
+              child: Text(Strings.of(context).delete),
               onPressed: () {
                 Navigator.of(context).pop();
                 onLayerDeleted(index);

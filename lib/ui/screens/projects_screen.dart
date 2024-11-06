@@ -9,6 +9,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:pixelverse/l10n/strings.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../data.dart';
@@ -42,7 +43,7 @@ class ProjectsScreen extends HookConsumerWidget {
             const SizedBox(width: 16),
             TextButton.icon(
               icon: const Icon(Feather.upload),
-              label: const Text('Open'),
+              label: Text(Strings.of(context).open),
               onPressed: () async {
                 final error = await ref
                     .read(projectsProvider.notifier)
@@ -52,7 +53,7 @@ class ProjectsScreen extends HookConsumerWidget {
                     default:
                       showTopFlushbar(
                         context,
-                        message: const Text('Неправильное сожержимое файла'),
+                        message: Text(Strings.of(context).invalidFileContent),
                       );
                       break;
                   }
@@ -66,7 +67,7 @@ class ProjectsScreen extends HookConsumerWidget {
             const SizedBox(width: 16),
             TextButton.icon(
               icon: const Icon(Feather.info),
-              label: const Text('About'),
+              label: Text(Strings.of(context).about),
               onPressed: () {
                 showDialog(
                   context: context,
@@ -125,7 +126,7 @@ class ProjectsScreen extends HookConsumerWidget {
                         size: 64, color: Colors.red),
                     const SizedBox(height: 16),
                     Text(
-                      'An error occurred',
+                      Strings.of(context).anErrorOccurred,
                       style: Theme.of(context).textTheme.bodyLarge,
                       textAlign: TextAlign.center,
                     ),
@@ -138,7 +139,7 @@ class ProjectsScreen extends HookConsumerWidget {
                     const SizedBox(height: 16),
                     ElevatedButton.icon(
                       icon: const Icon(Feather.refresh_cw),
-                      label: const Text('Try Again'),
+                      label: Text(Strings.of(context).tryAgain),
                       onPressed: () => ref.refresh(projectsProvider),
                     ),
                   ],
@@ -173,7 +174,7 @@ class ProjectsScreen extends HookConsumerWidget {
             layers: [
               Layer(
                 layerId: 0,
-                id: Uuid().v4(),
+                id: const Uuid().v4(),
                 name: 'Layer 1',
                 pixels: Uint32List(result.width * result.height),
               ),
@@ -182,7 +183,10 @@ class ProjectsScreen extends HookConsumerWidget {
         ],
       );
 
-      final loader = showLoader(context, loadingText: 'Creating project...');
+      final loader = showLoader(
+        context,
+        loadingText: Strings.of(context).creatingProject,
+      );
       final newProject =
           await ref.read(projectsProvider.notifier).addProject(project);
 
@@ -202,7 +206,10 @@ class ProjectsScreen extends HookConsumerWidget {
     WidgetRef ref,
     int projectId,
   ) {
-    final loader = showLoader(context, loadingText: 'Opening project...');
+    final loader = showLoader(
+      context,
+      loadingText: Strings.of(context).openingProject,
+    );
 
     ref.read(projectsProvider.notifier).getProject(projectId).then((project) {
       loader.remove();
@@ -245,14 +252,14 @@ class AdaptiveProjectGrid extends StatelessWidget {
             const Icon(Feather.folder, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
             Text(
-              'No projects found',
+              Strings.of(context).noProjectsFound,
               style: Theme.of(context).textTheme.bodyLarge,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
             ElevatedButton.icon(
               icon: const Icon(Feather.plus),
-              label: const Text('Create New'),
+              label: Text(Strings.of(context).createNewProject),
               onPressed: onCreateNew,
             ),
           ],
@@ -344,33 +351,33 @@ class ProjectCard extends StatelessWidget {
                     ),
                     itemBuilder: (context) {
                       return [
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'rename',
                           child: Row(
                             children: [
-                              Icon(Feather.edit_2),
-                              SizedBox(width: 8),
-                              Text('Rename'),
+                              const Icon(Feather.edit_2),
+                              const SizedBox(width: 8),
+                              Text(Strings.of(context).rename),
                             ],
                           ),
                         ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'edit',
                           child: Row(
                             children: [
-                              Icon(Feather.edit),
-                              SizedBox(width: 8),
-                              Text('Edit'),
+                              const Icon(Feather.edit),
+                              const SizedBox(width: 8),
+                              Text(Strings.of(context).edit),
                             ],
                           ),
                         ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'delete',
                           child: Row(
                             children: [
-                              Icon(Feather.trash_2),
-                              SizedBox(width: 8),
-                              Text('Delete'),
+                              const Icon(Feather.trash_2),
+                              const SizedBox(width: 8),
+                              Text(Strings.of(context).delete),
                             ],
                           ),
                         ),
@@ -394,9 +401,9 @@ class ProjectCard extends StatelessWidget {
                         showDialog(
                           context: context,
                           builder: (context) => AlertDialog(
-                            title: const Text('Delete Project'),
-                            content: const Text(
-                              'Are you sure you want to delete this project?',
+                            title: Text(Strings.of(context).deleteProject),
+                            content: Text(
+                              Strings.of(context).areYouSureWantToDeleteProject,
                             ),
                             actions: [
                               TextButton(
@@ -404,14 +411,14 @@ class ProjectCard extends StatelessWidget {
                                   Navigator.of(context).pop();
                                   onDeleteProject?.call(project);
                                 },
-                                child: const Text('Cancel'),
+                                child: Text(Strings.of(context).cancel),
                               ),
                               TextButton(
                                 onPressed: () {
                                   Navigator.of(context).pop();
                                   onDeleteProject?.call(project);
                                 },
-                                child: const Text('Delete'),
+                                child: Text(Strings.of(context).delete),
                               ),
                             ],
                           ),
@@ -446,7 +453,7 @@ class ProjectCard extends StatelessWidget {
                         _buildInfoChip(
                           context,
                           icon: Feather.clock,
-                          label: _formatLastEdited(project.editedAt),
+                          label: _formatLastEdited(context, project.editedAt),
                           color: Theme.of(context).colorScheme.secondary,
                         ),
                       ],
@@ -491,18 +498,18 @@ class ProjectCard extends StatelessWidget {
     );
   }
 
-  String _formatLastEdited(DateTime lastEdited) {
+  String _formatLastEdited(BuildContext context, DateTime lastEdited) {
     final now = DateTime.now();
     final difference = now.difference(lastEdited);
 
     if (difference.inDays > 0) {
-      return '${difference.inDays}d. ago';
+      return Strings.of(context).timeAgo('${difference.inDays}d.');
     } else if (difference.inHours > 0) {
-      return '${difference.inHours}h. ago';
+      return Strings.of(context).timeAgo('${difference.inHours}h.');
     } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m. ago';
+      return Strings.of(context).timeAgo('${difference.inMinutes}m.');
     } else {
-      return 'Just now';
+      return Strings.of(context).justNow;
     }
   }
 }
@@ -580,15 +587,15 @@ class RenameProjectDialog extends HookWidget {
     final controller = useTextEditingController();
 
     return AlertDialog(
-      title: const Text('Rename Project'),
+      title: Text(Strings.of(context).renameProject),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
             controller: controller,
-            decoration: const InputDecoration(
-              labelText: 'Project Name',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: Strings.of(context).projectName,
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 16),
@@ -599,7 +606,7 @@ class RenameProjectDialog extends HookWidget {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          child: const Text('Cancel'),
+          child: Text(Strings.of(context).cancel),
         ),
         TextButton(
           onPressed: () {
@@ -610,7 +617,7 @@ class RenameProjectDialog extends HookWidget {
             Navigator.of(context).pop();
             onRename?.call(controller.text);
           },
-          child: const Text('Rename'),
+          child: Text(Strings.of(context).rename),
         ),
       ],
     );

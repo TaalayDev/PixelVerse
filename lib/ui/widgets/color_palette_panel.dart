@@ -3,6 +3,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
+import '../../l10n/strings.dart';
+
 class ColorPalettePanel extends HookWidget {
   final Color currentColor;
   final Function(Color) onColorSelected;
@@ -173,7 +175,7 @@ class ColorPalettePanel extends HookWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Color Palette',
+                Strings.of(context).colorPalette,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               IconButton(
@@ -212,17 +214,21 @@ class ColorPalettePanel extends HookWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Current Color',
+            Strings.of(context).currentColor,
             style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: 8),
-          Container(
-            width: double.infinity,
-            height: 40,
-            decoration: BoxDecoration(
-              color: currentColor,
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(4),
+          InkWell(
+            onTap: () => _showColorPicker(context, customColors),
+            borderRadius: BorderRadius.circular(4),
+            child: Container(
+              width: double.infinity,
+              height: 40,
+              decoration: BoxDecoration(
+                color: currentColor,
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(4),
+              ),
             ),
           ),
         ],
@@ -257,13 +263,15 @@ class ColorPalettePanel extends HookWidget {
   }
 
   void _showColorPicker(
-      BuildContext context, ValueNotifier<List<Color>> customColors) {
+    BuildContext context,
+    ValueNotifier<List<Color>> customColors,
+  ) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         Color pickerColor = Colors.blue;
         return AlertDialog(
-          title: const Text('Pick a color'),
+          title: Text(Strings.of(context).pickAColor),
           content: SingleChildScrollView(
             child: ColorPicker(
               pickerColor: pickerColor,
@@ -275,13 +283,13 @@ class ColorPalettePanel extends HookWidget {
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancel'),
+              child: Text(Strings.of(context).cancel),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: const Text('Add'),
+              child: Text(Strings.of(context).add),
               onPressed: () {
                 customColors.value = [...customColors.value, pickerColor];
                 onColorSelected(pickerColor);

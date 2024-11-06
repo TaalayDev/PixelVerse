@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:pixelverse/l10n/strings.dart';
 
 import '../../data.dart';
 import '../../pixel/animation_frame_controller.dart';
@@ -362,7 +363,7 @@ Future<void> showAnimationPreviewDialog(
     context: context,
     builder: (context) {
       return AlertDialog(
-        title: const Text('Animation Preview'),
+        title: Text(Strings.of(context).animationPreview),
         content: AnimationPreview(
           frames: frames,
           width: width,
@@ -371,7 +372,7 @@ Future<void> showAnimationPreviewDialog(
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
+            child: Text(Strings.of(context).close),
           ),
         ],
       );
