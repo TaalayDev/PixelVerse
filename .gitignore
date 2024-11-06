@@ -41,3 +41,25 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Ignore Google Services configuration
+google-services.json
+GoogleService-Info.plist
+
+# Firebase config
+firebase_options.dart
+lib/firebase_options.dart
+firebase.json
+
+# Other sensitive files
+*.jks
+key.properties
+upload-keystore.jks
+service-account.json
+
+# Build files containing secrets
+android/app/debug.keystore
+android/app/release.keystore
+android/keystore.properties
+ios/Runner.ipa
+ios/Runner.app.dSYM.zip

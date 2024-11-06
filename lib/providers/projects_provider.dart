@@ -17,6 +17,11 @@ class Projects extends _$Projects {
   }
 
   Future<Project> addProject(Project project) async {
+    ref.read(analyticsProvider).logEvent(name: 'add_project', parameters: {
+      'project_id': project.id,
+      'project_name': project.name,
+    });
+
     return ref.read(projectRepo).createProject(project);
   }
 
@@ -25,10 +30,20 @@ class Projects extends _$Projects {
   }
 
   Future<void> renameProject(int projectId, String name) async {
+    ref.read(analyticsProvider).logEvent(name: 'rename_project', parameters: {
+      'project_id': projectId,
+      'project_name': name,
+    });
+
     return ref.read(projectRepo).renameProject(projectId, name);
   }
 
   Future<void> deleteProject(Project project) async {
+    ref.read(analyticsProvider).logEvent(name: 'delete_project', parameters: {
+      'project_id': project.id,
+      'project_name': project.name,
+    });
+
     return ref.read(projectRepo).deleteProject(project);
   }
 

@@ -118,6 +118,8 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
       pixels: Uint32List(width * height),
     );
 
+    ref.read(analyticsProvider).logEvent(name: 'add_layer');
+
     final layer = await ref
         .watch(projectRepo)
         .createLayer(project.id, state.currentFrame.id, newLayer);
@@ -136,6 +138,7 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
 
   void removeLayer(int index) {
     if (currentFrame.layers.length <= 1) return;
+    ref.read(analyticsProvider).logEvent(name: 'delete_layer');
 
     final layer = currentFrame.layers[index];
     final layers = List<Layer>.from(currentFrame.layers)..removeAt(index);
@@ -166,6 +169,8 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   }
 
   void toggleLayerVisibility(int index) {
+    ref.read(analyticsProvider).logEvent(name: 'toggle_layer_visibility');
+
     final layers = List<Layer>.from(currentFrame.layers);
     final layer = layers[index];
     layers[index] = layer.copyWith(isVisible: !layer.isVisible);
@@ -182,6 +187,8 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   }
 
   void reorderLayers(int oldIndex, int newIndex) {
+    ref.read(analyticsProvider).logEvent(name: 'reorder_layers');
+
     final layers = List<Layer>.from(currentFrame.layers);
     final layer = layers.removeAt(oldIndex);
     layers.insert(newIndex, layer);
@@ -316,6 +323,7 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
 
   void fill(int x, int y) {
     if (!_isWithinBounds(x, y)) return;
+    ref.read(analyticsProvider).logEvent(name: 'fill_area');
 
     final pixels = Uint32List.fromList(currentLayer.pixels);
     final targetColor = pixels[y * width + x];
@@ -415,6 +423,8 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   }
 
   void setSelection(SelectionModel? selection) {
+    ref.read(analyticsProvider).logEvent(name: 'select_area');
+
     _selectionRect = selection;
     _originalSelectionRect = selection;
     if (selection != null) {
@@ -534,6 +544,8 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     String name, {
     int? copyFrame,
   }) async {
+    ref.read(analyticsProvider).logEvent(name: 'add_frame');
+
     final layers = copyFrame != null
         ? state.frames[copyFrame].layers.indexed.map((layer) {
             return layer.$2.copyWith(
@@ -596,6 +608,7 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
 
   void removeFrame(int index) {
     if (state.frames.length <= 1) return;
+    ref.read(analyticsProvider).logEvent(name: 'delete_frame');
 
     final frame = state.frames[index];
     final frames = List<AnimationFrame>.from(state.frames)..removeAt(index);
@@ -617,6 +630,8 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   }
 
   void exportImage(BuildContext context) async {
+    ref.read(analyticsProvider).logEvent(name: 'export_image');
+
     final pixels = Uint32List(state.width * state.height);
     for (final layer in currentFrame.layers.where((layer) => layer.isVisible)) {
       for (int i = 0; i < pixels.length; i++) {
@@ -627,12 +642,16 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   }
 
   void exportJson(BuildContext context) {
+    ref.read(analyticsProvider).logEvent(name: 'export_json');
+
     final json = project.toJson();
     final jsonString = jsonEncode(json);
     FileUtils(context).save('${project.name}.pxv', jsonString);
   }
 
   void importImage(BuildContext context) async {
+    ref.read(analyticsProvider).logEvent(name: 'import_image');
+
     final image = await FileUtils(context).pickImageFile();
     if (image != null) {
       img.Image resizedImage;
@@ -697,6 +716,8 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   }
 
   Future<void> share(BuildContext context) async {
+    ref.read(analyticsProvider).logEvent(name: 'share_project');
+
     final pixels = Uint32List(project.width * project.height);
     for (final layer in state.currentFrame.layers.where(
       (layer) => layer.isVisible,
@@ -721,6 +742,8 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     BuildContext context, {
     bool background = false,
   }) async {
+    ref.read(analyticsProvider).logEvent(name: 'export_animation');
+
     final images = <img.Image>[];
 
     for (final frame in state.frames) {

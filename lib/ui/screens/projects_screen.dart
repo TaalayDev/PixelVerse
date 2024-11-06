@@ -97,49 +97,56 @@ class ProjectsScreen extends HookConsumerWidget {
           ),
         ],
       ),
-      body: projects.when(
-        data: (projects) => AdaptiveProjectGrid(
-          projects: projects,
-          onCreateNew: () => _navigateToNewProject(context, ref),
-          onTapProject: (project) {
-            overlayLoader.value = _openProject(context, ref, project.id);
-          },
-          onDeleteProject: (project) {
-            ref.read(projectsProvider.notifier).deleteProject(project);
-          },
-          onEditProject: (project) {
-            ref
-                .read(projectsProvider.notifier)
-                .renameProject(project.id, project.name);
-          },
-        ),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Feather.alert_circle, size: 64, color: Colors.red),
-              const SizedBox(height: 16),
-              Text(
-                'An error occurred',
-                style: Theme.of(context).textTheme.bodyLarge,
-                textAlign: TextAlign.center,
+      body: Column(
+        children: [
+          Expanded(
+            child: projects.when(
+              data: (projects) => AdaptiveProjectGrid(
+                projects: projects,
+                onCreateNew: () => _navigateToNewProject(context, ref),
+                onTapProject: (project) {
+                  overlayLoader.value = _openProject(context, ref, project.id);
+                },
+                onDeleteProject: (project) {
+                  ref.read(projectsProvider.notifier).deleteProject(project);
+                },
+                onEditProject: (project) {
+                  ref
+                      .read(projectsProvider.notifier)
+                      .renameProject(project.id, project.name);
+                },
               ),
-              const SizedBox(height: 10),
-              Text(
-                error.toString(),
-                style: Theme.of(context).textTheme.bodySmall,
-                textAlign: TextAlign.center,
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stackTrace) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Feather.alert_circle,
+                        size: 64, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text(
+                      'An error occurred',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      error.toString(),
+                      style: Theme.of(context).textTheme.bodySmall,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      icon: const Icon(Feather.refresh_cw),
+                      label: const Text('Try Again'),
+                      onPressed: () => ref.refresh(projectsProvider),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                icon: const Icon(Feather.refresh_cw),
-                label: const Text('Try Again'),
-                onPressed: () => ref.refresh(projectsProvider),
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

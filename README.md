@@ -36,6 +36,16 @@ PixelVerse is a powerful and intuitive pixel art creation tool designed for both
    flutter run
    ```
 
+### Credentials Setup
+This project requires a google-services.json file for Firebase configuration. For security reasons, this file is not included in the repository.
+
+### Setup Instructions
+Create a Firebase project at Firebase Console
+Add an Android app to your Firebase project
+Download the google-services.json file
+Place the file in the android/app/ directory
+Do not commit this file to version control
+
 ## Screenshots
 
 Mobile | Desktop
