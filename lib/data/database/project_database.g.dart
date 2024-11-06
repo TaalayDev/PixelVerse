@@ -379,6 +379,384 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectsTableData> {
   }
 }
 
+class $FramesTableTable extends FramesTable
+    with TableInfo<$FramesTableTable, FramesTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FramesTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _projectIdMeta =
+      const VerificationMeta('projectId');
+  @override
+  late final GeneratedColumn<int> projectId = GeneratedColumn<int>(
+      'project_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES projects_table (id)'));
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 100),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _durationMeta =
+      const VerificationMeta('duration');
+  @override
+  late final GeneratedColumn<int> duration = GeneratedColumn<int>(
+      'duration', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _orderMeta = const VerificationMeta('order');
+  @override
+  late final GeneratedColumn<int> order = GeneratedColumn<int>(
+      'order', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _editedAtMeta =
+      const VerificationMeta('editedAt');
+  @override
+  late final GeneratedColumn<DateTime> editedAt = GeneratedColumn<DateTime>(
+      'edited_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, projectId, name, duration, order, createdAt, editedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'frames_table';
+  @override
+  VerificationContext validateIntegrity(Insertable<FramesTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('project_id')) {
+      context.handle(_projectIdMeta,
+          projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta));
+    } else if (isInserting) {
+      context.missing(_projectIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('duration')) {
+      context.handle(_durationMeta,
+          duration.isAcceptableOrUnknown(data['duration']!, _durationMeta));
+    } else if (isInserting) {
+      context.missing(_durationMeta);
+    }
+    if (data.containsKey('order')) {
+      context.handle(
+          _orderMeta, order.isAcceptableOrUnknown(data['order']!, _orderMeta));
+    } else if (isInserting) {
+      context.missing(_orderMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('edited_at')) {
+      context.handle(_editedAtMeta,
+          editedAt.isAcceptableOrUnknown(data['edited_at']!, _editedAtMeta));
+    } else if (isInserting) {
+      context.missing(_editedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FramesTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FramesTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      projectId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}project_id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      duration: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}duration'])!,
+      order: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}order'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      editedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}edited_at'])!,
+    );
+  }
+
+  @override
+  $FramesTableTable createAlias(String alias) {
+    return $FramesTableTable(attachedDatabase, alias);
+  }
+}
+
+class FramesTableData extends DataClass implements Insertable<FramesTableData> {
+  final int id;
+  final int projectId;
+  final String name;
+  final int duration;
+  final int order;
+  final DateTime createdAt;
+  final DateTime editedAt;
+  const FramesTableData(
+      {required this.id,
+      required this.projectId,
+      required this.name,
+      required this.duration,
+      required this.order,
+      required this.createdAt,
+      required this.editedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['project_id'] = Variable<int>(projectId);
+    map['name'] = Variable<String>(name);
+    map['duration'] = Variable<int>(duration);
+    map['order'] = Variable<int>(order);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['edited_at'] = Variable<DateTime>(editedAt);
+    return map;
+  }
+
+  FramesTableCompanion toCompanion(bool nullToAbsent) {
+    return FramesTableCompanion(
+      id: Value(id),
+      projectId: Value(projectId),
+      name: Value(name),
+      duration: Value(duration),
+      order: Value(order),
+      createdAt: Value(createdAt),
+      editedAt: Value(editedAt),
+    );
+  }
+
+  factory FramesTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FramesTableData(
+      id: serializer.fromJson<int>(json['id']),
+      projectId: serializer.fromJson<int>(json['projectId']),
+      name: serializer.fromJson<String>(json['name']),
+      duration: serializer.fromJson<int>(json['duration']),
+      order: serializer.fromJson<int>(json['order']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      editedAt: serializer.fromJson<DateTime>(json['editedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'projectId': serializer.toJson<int>(projectId),
+      'name': serializer.toJson<String>(name),
+      'duration': serializer.toJson<int>(duration),
+      'order': serializer.toJson<int>(order),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'editedAt': serializer.toJson<DateTime>(editedAt),
+    };
+  }
+
+  FramesTableData copyWith(
+          {int? id,
+          int? projectId,
+          String? name,
+          int? duration,
+          int? order,
+          DateTime? createdAt,
+          DateTime? editedAt}) =>
+      FramesTableData(
+        id: id ?? this.id,
+        projectId: projectId ?? this.projectId,
+        name: name ?? this.name,
+        duration: duration ?? this.duration,
+        order: order ?? this.order,
+        createdAt: createdAt ?? this.createdAt,
+        editedAt: editedAt ?? this.editedAt,
+      );
+  FramesTableData copyWithCompanion(FramesTableCompanion data) {
+    return FramesTableData(
+      id: data.id.present ? data.id.value : this.id,
+      projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      name: data.name.present ? data.name.value : this.name,
+      duration: data.duration.present ? data.duration.value : this.duration,
+      order: data.order.present ? data.order.value : this.order,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      editedAt: data.editedAt.present ? data.editedAt.value : this.editedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FramesTableData(')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('name: $name, ')
+          ..write('duration: $duration, ')
+          ..write('order: $order, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('editedAt: $editedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, projectId, name, duration, order, createdAt, editedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FramesTableData &&
+          other.id == this.id &&
+          other.projectId == this.projectId &&
+          other.name == this.name &&
+          other.duration == this.duration &&
+          other.order == this.order &&
+          other.createdAt == this.createdAt &&
+          other.editedAt == this.editedAt);
+}
+
+class FramesTableCompanion extends UpdateCompanion<FramesTableData> {
+  final Value<int> id;
+  final Value<int> projectId;
+  final Value<String> name;
+  final Value<int> duration;
+  final Value<int> order;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> editedAt;
+  const FramesTableCompanion({
+    this.id = const Value.absent(),
+    this.projectId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.duration = const Value.absent(),
+    this.order = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.editedAt = const Value.absent(),
+  });
+  FramesTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int projectId,
+    required String name,
+    required int duration,
+    required int order,
+    required DateTime createdAt,
+    required DateTime editedAt,
+  })  : projectId = Value(projectId),
+        name = Value(name),
+        duration = Value(duration),
+        order = Value(order),
+        createdAt = Value(createdAt),
+        editedAt = Value(editedAt);
+  static Insertable<FramesTableData> custom({
+    Expression<int>? id,
+    Expression<int>? projectId,
+    Expression<String>? name,
+    Expression<int>? duration,
+    Expression<int>? order,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? editedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (projectId != null) 'project_id': projectId,
+      if (name != null) 'name': name,
+      if (duration != null) 'duration': duration,
+      if (order != null) 'order': order,
+      if (createdAt != null) 'created_at': createdAt,
+      if (editedAt != null) 'edited_at': editedAt,
+    });
+  }
+
+  FramesTableCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? projectId,
+      Value<String>? name,
+      Value<int>? duration,
+      Value<int>? order,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? editedAt}) {
+    return FramesTableCompanion(
+      id: id ?? this.id,
+      projectId: projectId ?? this.projectId,
+      name: name ?? this.name,
+      duration: duration ?? this.duration,
+      order: order ?? this.order,
+      createdAt: createdAt ?? this.createdAt,
+      editedAt: editedAt ?? this.editedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (projectId.present) {
+      map['project_id'] = Variable<int>(projectId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (duration.present) {
+      map['duration'] = Variable<int>(duration.value);
+    }
+    if (order.present) {
+      map['order'] = Variable<int>(order.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (editedAt.present) {
+      map['edited_at'] = Variable<DateTime>(editedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FramesTableCompanion(')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('name: $name, ')
+          ..write('duration: $duration, ')
+          ..write('order: $order, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('editedAt: $editedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $LayersTableTable extends LayersTable
     with TableInfo<$LayersTableTable, LayersTableData> {
   @override
@@ -403,6 +781,15 @@ class $LayersTableTable extends LayersTable
       requiredDuringInsert: true,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('REFERENCES projects_table (id)'));
+  static const VerificationMeta _frameIdMeta =
+      const VerificationMeta('frameId');
+  @override
+  late final GeneratedColumn<int> frameId = GeneratedColumn<int>(
+      'frame_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES frames_table (id)'));
   static const VerificationMeta _layerIdMeta =
       const VerificationMeta('layerId');
   @override
@@ -453,9 +840,24 @@ class $LayersTableTable extends LayersTable
       type: DriftSqlType.double,
       requiredDuringInsert: false,
       defaultValue: const Constant(1.0));
+  static const VerificationMeta _orderMeta = const VerificationMeta('order');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, projectId, layerId, name, pixels, isVisible, isLocked, opacity];
+  late final GeneratedColumn<int> order = GeneratedColumn<int>(
+      'order', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        projectId,
+        frameId,
+        layerId,
+        name,
+        pixels,
+        isVisible,
+        isLocked,
+        opacity,
+        order
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -474,6 +876,12 @@ class $LayersTableTable extends LayersTable
           projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta));
     } else if (isInserting) {
       context.missing(_projectIdMeta);
+    }
+    if (data.containsKey('frame_id')) {
+      context.handle(_frameIdMeta,
+          frameId.isAcceptableOrUnknown(data['frame_id']!, _frameIdMeta));
+    } else if (isInserting) {
+      context.missing(_frameIdMeta);
     }
     if (data.containsKey('layer_id')) {
       context.handle(_layerIdMeta,
@@ -505,6 +913,12 @@ class $LayersTableTable extends LayersTable
       context.handle(_opacityMeta,
           opacity.isAcceptableOrUnknown(data['opacity']!, _opacityMeta));
     }
+    if (data.containsKey('order')) {
+      context.handle(
+          _orderMeta, order.isAcceptableOrUnknown(data['order']!, _orderMeta));
+    } else if (isInserting) {
+      context.missing(_orderMeta);
+    }
     return context;
   }
 
@@ -518,6 +932,8 @@ class $LayersTableTable extends LayersTable
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       projectId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}project_id'])!,
+      frameId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}frame_id'])!,
       layerId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}layer_id'])!,
       name: attachedDatabase.typeMapping
@@ -530,6 +946,8 @@ class $LayersTableTable extends LayersTable
           .read(DriftSqlType.bool, data['${effectivePrefix}is_locked'])!,
       opacity: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}opacity'])!,
+      order: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}order'])!,
     );
   }
 
@@ -542,32 +960,38 @@ class $LayersTableTable extends LayersTable
 class LayersTableData extends DataClass implements Insertable<LayersTableData> {
   final int id;
   final int projectId;
+  final int frameId;
   final String layerId;
   final String name;
   final Uint8List pixels;
   final bool isVisible;
   final bool isLocked;
   final double opacity;
+  final int order;
   const LayersTableData(
       {required this.id,
       required this.projectId,
+      required this.frameId,
       required this.layerId,
       required this.name,
       required this.pixels,
       required this.isVisible,
       required this.isLocked,
-      required this.opacity});
+      required this.opacity,
+      required this.order});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['project_id'] = Variable<int>(projectId);
+    map['frame_id'] = Variable<int>(frameId);
     map['layer_id'] = Variable<String>(layerId);
     map['name'] = Variable<String>(name);
     map['pixels'] = Variable<Uint8List>(pixels);
     map['is_visible'] = Variable<bool>(isVisible);
     map['is_locked'] = Variable<bool>(isLocked);
     map['opacity'] = Variable<double>(opacity);
+    map['order'] = Variable<int>(order);
     return map;
   }
 
@@ -575,12 +999,14 @@ class LayersTableData extends DataClass implements Insertable<LayersTableData> {
     return LayersTableCompanion(
       id: Value(id),
       projectId: Value(projectId),
+      frameId: Value(frameId),
       layerId: Value(layerId),
       name: Value(name),
       pixels: Value(pixels),
       isVisible: Value(isVisible),
       isLocked: Value(isLocked),
       opacity: Value(opacity),
+      order: Value(order),
     );
   }
 
@@ -590,12 +1016,14 @@ class LayersTableData extends DataClass implements Insertable<LayersTableData> {
     return LayersTableData(
       id: serializer.fromJson<int>(json['id']),
       projectId: serializer.fromJson<int>(json['projectId']),
+      frameId: serializer.fromJson<int>(json['frameId']),
       layerId: serializer.fromJson<String>(json['layerId']),
       name: serializer.fromJson<String>(json['name']),
       pixels: serializer.fromJson<Uint8List>(json['pixels']),
       isVisible: serializer.fromJson<bool>(json['isVisible']),
       isLocked: serializer.fromJson<bool>(json['isLocked']),
       opacity: serializer.fromJson<double>(json['opacity']),
+      order: serializer.fromJson<int>(json['order']),
     );
   }
   @override
@@ -604,44 +1032,52 @@ class LayersTableData extends DataClass implements Insertable<LayersTableData> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'projectId': serializer.toJson<int>(projectId),
+      'frameId': serializer.toJson<int>(frameId),
       'layerId': serializer.toJson<String>(layerId),
       'name': serializer.toJson<String>(name),
       'pixels': serializer.toJson<Uint8List>(pixels),
       'isVisible': serializer.toJson<bool>(isVisible),
       'isLocked': serializer.toJson<bool>(isLocked),
       'opacity': serializer.toJson<double>(opacity),
+      'order': serializer.toJson<int>(order),
     };
   }
 
   LayersTableData copyWith(
           {int? id,
           int? projectId,
+          int? frameId,
           String? layerId,
           String? name,
           Uint8List? pixels,
           bool? isVisible,
           bool? isLocked,
-          double? opacity}) =>
+          double? opacity,
+          int? order}) =>
       LayersTableData(
         id: id ?? this.id,
         projectId: projectId ?? this.projectId,
+        frameId: frameId ?? this.frameId,
         layerId: layerId ?? this.layerId,
         name: name ?? this.name,
         pixels: pixels ?? this.pixels,
         isVisible: isVisible ?? this.isVisible,
         isLocked: isLocked ?? this.isLocked,
         opacity: opacity ?? this.opacity,
+        order: order ?? this.order,
       );
   LayersTableData copyWithCompanion(LayersTableCompanion data) {
     return LayersTableData(
       id: data.id.present ? data.id.value : this.id,
       projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      frameId: data.frameId.present ? data.frameId.value : this.frameId,
       layerId: data.layerId.present ? data.layerId.value : this.layerId,
       name: data.name.present ? data.name.value : this.name,
       pixels: data.pixels.present ? data.pixels.value : this.pixels,
       isVisible: data.isVisible.present ? data.isVisible.value : this.isVisible,
       isLocked: data.isLocked.present ? data.isLocked.value : this.isLocked,
       opacity: data.opacity.present ? data.opacity.value : this.opacity,
+      order: data.order.present ? data.order.value : this.order,
     );
   }
 
@@ -650,105 +1086,125 @@ class LayersTableData extends DataClass implements Insertable<LayersTableData> {
     return (StringBuffer('LayersTableData(')
           ..write('id: $id, ')
           ..write('projectId: $projectId, ')
+          ..write('frameId: $frameId, ')
           ..write('layerId: $layerId, ')
           ..write('name: $name, ')
           ..write('pixels: $pixels, ')
           ..write('isVisible: $isVisible, ')
           ..write('isLocked: $isLocked, ')
-          ..write('opacity: $opacity')
+          ..write('opacity: $opacity, ')
+          ..write('order: $order')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, projectId, layerId, name,
-      $driftBlobEquality.hash(pixels), isVisible, isLocked, opacity);
+  int get hashCode => Object.hash(id, projectId, frameId, layerId, name,
+      $driftBlobEquality.hash(pixels), isVisible, isLocked, opacity, order);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is LayersTableData &&
           other.id == this.id &&
           other.projectId == this.projectId &&
+          other.frameId == this.frameId &&
           other.layerId == this.layerId &&
           other.name == this.name &&
           $driftBlobEquality.equals(other.pixels, this.pixels) &&
           other.isVisible == this.isVisible &&
           other.isLocked == this.isLocked &&
-          other.opacity == this.opacity);
+          other.opacity == this.opacity &&
+          other.order == this.order);
 }
 
 class LayersTableCompanion extends UpdateCompanion<LayersTableData> {
   final Value<int> id;
   final Value<int> projectId;
+  final Value<int> frameId;
   final Value<String> layerId;
   final Value<String> name;
   final Value<Uint8List> pixels;
   final Value<bool> isVisible;
   final Value<bool> isLocked;
   final Value<double> opacity;
+  final Value<int> order;
   const LayersTableCompanion({
     this.id = const Value.absent(),
     this.projectId = const Value.absent(),
+    this.frameId = const Value.absent(),
     this.layerId = const Value.absent(),
     this.name = const Value.absent(),
     this.pixels = const Value.absent(),
     this.isVisible = const Value.absent(),
     this.isLocked = const Value.absent(),
     this.opacity = const Value.absent(),
+    this.order = const Value.absent(),
   });
   LayersTableCompanion.insert({
     this.id = const Value.absent(),
     required int projectId,
+    required int frameId,
     required String layerId,
     required String name,
     required Uint8List pixels,
     this.isVisible = const Value.absent(),
     this.isLocked = const Value.absent(),
     this.opacity = const Value.absent(),
+    required int order,
   })  : projectId = Value(projectId),
+        frameId = Value(frameId),
         layerId = Value(layerId),
         name = Value(name),
-        pixels = Value(pixels);
+        pixels = Value(pixels),
+        order = Value(order);
   static Insertable<LayersTableData> custom({
     Expression<int>? id,
     Expression<int>? projectId,
+    Expression<int>? frameId,
     Expression<String>? layerId,
     Expression<String>? name,
     Expression<Uint8List>? pixels,
     Expression<bool>? isVisible,
     Expression<bool>? isLocked,
     Expression<double>? opacity,
+    Expression<int>? order,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (projectId != null) 'project_id': projectId,
+      if (frameId != null) 'frame_id': frameId,
       if (layerId != null) 'layer_id': layerId,
       if (name != null) 'name': name,
       if (pixels != null) 'pixels': pixels,
       if (isVisible != null) 'is_visible': isVisible,
       if (isLocked != null) 'is_locked': isLocked,
       if (opacity != null) 'opacity': opacity,
+      if (order != null) 'order': order,
     });
   }
 
   LayersTableCompanion copyWith(
       {Value<int>? id,
       Value<int>? projectId,
+      Value<int>? frameId,
       Value<String>? layerId,
       Value<String>? name,
       Value<Uint8List>? pixels,
       Value<bool>? isVisible,
       Value<bool>? isLocked,
-      Value<double>? opacity}) {
+      Value<double>? opacity,
+      Value<int>? order}) {
     return LayersTableCompanion(
       id: id ?? this.id,
       projectId: projectId ?? this.projectId,
+      frameId: frameId ?? this.frameId,
       layerId: layerId ?? this.layerId,
       name: name ?? this.name,
       pixels: pixels ?? this.pixels,
       isVisible: isVisible ?? this.isVisible,
       isLocked: isLocked ?? this.isLocked,
       opacity: opacity ?? this.opacity,
+      order: order ?? this.order,
     );
   }
 
@@ -760,6 +1216,9 @@ class LayersTableCompanion extends UpdateCompanion<LayersTableData> {
     }
     if (projectId.present) {
       map['project_id'] = Variable<int>(projectId.value);
+    }
+    if (frameId.present) {
+      map['frame_id'] = Variable<int>(frameId.value);
     }
     if (layerId.present) {
       map['layer_id'] = Variable<String>(layerId.value);
@@ -779,6 +1238,9 @@ class LayersTableCompanion extends UpdateCompanion<LayersTableData> {
     if (opacity.present) {
       map['opacity'] = Variable<double>(opacity.value);
     }
+    if (order.present) {
+      map['order'] = Variable<int>(order.value);
+    }
     return map;
   }
 
@@ -787,12 +1249,14 @@ class LayersTableCompanion extends UpdateCompanion<LayersTableData> {
     return (StringBuffer('LayersTableCompanion(')
           ..write('id: $id, ')
           ..write('projectId: $projectId, ')
+          ..write('frameId: $frameId, ')
           ..write('layerId: $layerId, ')
           ..write('name: $name, ')
           ..write('pixels: $pixels, ')
           ..write('isVisible: $isVisible, ')
           ..write('isLocked: $isLocked, ')
-          ..write('opacity: $opacity')
+          ..write('opacity: $opacity, ')
+          ..write('order: $order')
           ..write(')'))
         .toString();
   }
@@ -802,13 +1266,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $ProjectsTableTable projectsTable = $ProjectsTableTable(this);
+  late final $FramesTableTable framesTable = $FramesTableTable(this);
   late final $LayersTableTable layersTable = $LayersTableTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [projectsTable, layersTable];
+      [projectsTable, framesTable, layersTable];
 }
 
 typedef $$ProjectsTableTableCreateCompanionBuilder = ProjectsTableCompanion
@@ -836,6 +1301,21 @@ final class $$ProjectsTableTableReferences extends BaseReferences<_$AppDatabase,
     $ProjectsTableTable, ProjectsTableData> {
   $$ProjectsTableTableReferences(
       super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$FramesTableTable, List<FramesTableData>>
+      _framesTableRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.framesTable,
+              aliasName: $_aliasNameGenerator(
+                  db.projectsTable.id, db.framesTable.projectId));
+
+  $$FramesTableTableProcessedTableManager get framesTableRefs {
+    final manager = $$FramesTableTableTableManager($_db, $_db.framesTable)
+        .filter((f) => f.projectId.id($_item.id));
+
+    final cache = $_typedResult.readTableOrNull(_framesTableRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 
   static MultiTypedResultKey<$LayersTableTable, List<LayersTableData>>
       _layersTableRefsTable(_$AppDatabase db) =>
@@ -890,6 +1370,19 @@ class $$ProjectsTableTableFilterComposer
       column: $state.table.editedAt,
       builder: (column, joinBuilders) =>
           ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ComposableFilter framesTableRefs(
+      ComposableFilter Function($$FramesTableTableFilterComposer f) f) {
+    final $$FramesTableTableFilterComposer composer = $state.composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $state.db.framesTable,
+        getReferencedColumn: (t) => t.projectId,
+        builder: (joinBuilder, parentComposers) =>
+            $$FramesTableTableFilterComposer(ComposerState($state.db,
+                $state.db.framesTable, joinBuilder, parentComposers)));
+    return f(composer);
+  }
 
   ComposableFilter layersTableRefs(
       ComposableFilter Function($$LayersTableTableFilterComposer f) f) {
@@ -954,7 +1447,7 @@ class $$ProjectsTableTableTableManager extends RootTableManager<
     $$ProjectsTableTableUpdateCompanionBuilder,
     (ProjectsTableData, $$ProjectsTableTableReferences),
     ProjectsTableData,
-    PrefetchHooks Function({bool layersTableRefs})> {
+    PrefetchHooks Function({bool framesTableRefs, bool layersTableRefs})> {
   $$ProjectsTableTableTableManager(_$AppDatabase db, $ProjectsTableTable table)
       : super(TableManagerState(
           db: db,
@@ -1005,13 +1498,29 @@ class $$ProjectsTableTableTableManager extends RootTableManager<
                     $$ProjectsTableTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: ({layersTableRefs = false}) {
+          prefetchHooksCallback: (
+              {framesTableRefs = false, layersTableRefs = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [if (layersTableRefs) db.layersTable],
+              explicitlyWatchedTables: [
+                if (framesTableRefs) db.framesTable,
+                if (layersTableRefs) db.layersTable
+              ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
                 return [
+                  if (framesTableRefs)
+                    await $_getPrefetchedData(
+                        currentTable: table,
+                        referencedTable: $$ProjectsTableTableReferences
+                            ._framesTableRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProjectsTableTableReferences(db, table, p0)
+                                .framesTableRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.projectId == item.id),
+                        typedResults: items),
                   if (layersTableRefs)
                     await $_getPrefetchedData(
                         currentTable: table,
@@ -1041,28 +1550,316 @@ typedef $$ProjectsTableTableProcessedTableManager = ProcessedTableManager<
     $$ProjectsTableTableUpdateCompanionBuilder,
     (ProjectsTableData, $$ProjectsTableTableReferences),
     ProjectsTableData,
-    PrefetchHooks Function({bool layersTableRefs})>;
+    PrefetchHooks Function({bool framesTableRefs, bool layersTableRefs})>;
+typedef $$FramesTableTableCreateCompanionBuilder = FramesTableCompanion
+    Function({
+  Value<int> id,
+  required int projectId,
+  required String name,
+  required int duration,
+  required int order,
+  required DateTime createdAt,
+  required DateTime editedAt,
+});
+typedef $$FramesTableTableUpdateCompanionBuilder = FramesTableCompanion
+    Function({
+  Value<int> id,
+  Value<int> projectId,
+  Value<String> name,
+  Value<int> duration,
+  Value<int> order,
+  Value<DateTime> createdAt,
+  Value<DateTime> editedAt,
+});
+
+final class $$FramesTableTableReferences
+    extends BaseReferences<_$AppDatabase, $FramesTableTable, FramesTableData> {
+  $$FramesTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $ProjectsTableTable _projectIdTable(_$AppDatabase db) =>
+      db.projectsTable.createAlias(
+          $_aliasNameGenerator(db.framesTable.projectId, db.projectsTable.id));
+
+  $$ProjectsTableTableProcessedTableManager? get projectId {
+    if ($_item.projectId == null) return null;
+    final manager = $$ProjectsTableTableTableManager($_db, $_db.projectsTable)
+        .filter((f) => f.id($_item.projectId!));
+    final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static MultiTypedResultKey<$LayersTableTable, List<LayersTableData>>
+      _layersTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+          db.layersTable,
+          aliasName:
+              $_aliasNameGenerator(db.framesTable.id, db.layersTable.frameId));
+
+  $$LayersTableTableProcessedTableManager get layersTableRefs {
+    final manager = $$LayersTableTableTableManager($_db, $_db.layersTable)
+        .filter((f) => f.frameId.id($_item.id));
+
+    final cache = $_typedResult.readTableOrNull(_layersTableRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$FramesTableTableFilterComposer
+    extends FilterComposer<_$AppDatabase, $FramesTableTable> {
+  $$FramesTableTableFilterComposer(super.$state);
+  ColumnFilters<int> get id => $state.composableBuilder(
+      column: $state.table.id,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get name => $state.composableBuilder(
+      column: $state.table.name,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<int> get duration => $state.composableBuilder(
+      column: $state.table.duration,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<int> get order => $state.composableBuilder(
+      column: $state.table.order,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<DateTime> get createdAt => $state.composableBuilder(
+      column: $state.table.createdAt,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<DateTime> get editedAt => $state.composableBuilder(
+      column: $state.table.editedAt,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  $$ProjectsTableTableFilterComposer get projectId {
+    final $$ProjectsTableTableFilterComposer composer = $state.composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.projectId,
+        referencedTable: $state.db.projectsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder, parentComposers) =>
+            $$ProjectsTableTableFilterComposer(ComposerState($state.db,
+                $state.db.projectsTable, joinBuilder, parentComposers)));
+    return composer;
+  }
+
+  ComposableFilter layersTableRefs(
+      ComposableFilter Function($$LayersTableTableFilterComposer f) f) {
+    final $$LayersTableTableFilterComposer composer = $state.composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $state.db.layersTable,
+        getReferencedColumn: (t) => t.frameId,
+        builder: (joinBuilder, parentComposers) =>
+            $$LayersTableTableFilterComposer(ComposerState($state.db,
+                $state.db.layersTable, joinBuilder, parentComposers)));
+    return f(composer);
+  }
+}
+
+class $$FramesTableTableOrderingComposer
+    extends OrderingComposer<_$AppDatabase, $FramesTableTable> {
+  $$FramesTableTableOrderingComposer(super.$state);
+  ColumnOrderings<int> get id => $state.composableBuilder(
+      column: $state.table.id,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get name => $state.composableBuilder(
+      column: $state.table.name,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<int> get duration => $state.composableBuilder(
+      column: $state.table.duration,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<int> get order => $state.composableBuilder(
+      column: $state.table.order,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<DateTime> get createdAt => $state.composableBuilder(
+      column: $state.table.createdAt,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<DateTime> get editedAt => $state.composableBuilder(
+      column: $state.table.editedAt,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  $$ProjectsTableTableOrderingComposer get projectId {
+    final $$ProjectsTableTableOrderingComposer composer =
+        $state.composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.projectId,
+            referencedTable: $state.db.projectsTable,
+            getReferencedColumn: (t) => t.id,
+            builder: (joinBuilder, parentComposers) =>
+                $$ProjectsTableTableOrderingComposer(ComposerState($state.db,
+                    $state.db.projectsTable, joinBuilder, parentComposers)));
+    return composer;
+  }
+}
+
+class $$FramesTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $FramesTableTable,
+    FramesTableData,
+    $$FramesTableTableFilterComposer,
+    $$FramesTableTableOrderingComposer,
+    $$FramesTableTableCreateCompanionBuilder,
+    $$FramesTableTableUpdateCompanionBuilder,
+    (FramesTableData, $$FramesTableTableReferences),
+    FramesTableData,
+    PrefetchHooks Function({bool projectId, bool layersTableRefs})> {
+  $$FramesTableTableTableManager(_$AppDatabase db, $FramesTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          filteringComposer:
+              $$FramesTableTableFilterComposer(ComposerState(db, table)),
+          orderingComposer:
+              $$FramesTableTableOrderingComposer(ComposerState(db, table)),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> projectId = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<int> duration = const Value.absent(),
+            Value<int> order = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> editedAt = const Value.absent(),
+          }) =>
+              FramesTableCompanion(
+            id: id,
+            projectId: projectId,
+            name: name,
+            duration: duration,
+            order: order,
+            createdAt: createdAt,
+            editedAt: editedAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int projectId,
+            required String name,
+            required int duration,
+            required int order,
+            required DateTime createdAt,
+            required DateTime editedAt,
+          }) =>
+              FramesTableCompanion.insert(
+            id: id,
+            projectId: projectId,
+            name: name,
+            duration: duration,
+            order: order,
+            createdAt: createdAt,
+            editedAt: editedAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$FramesTableTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {projectId = false, layersTableRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (layersTableRefs) db.layersTable],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (projectId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.projectId,
+                    referencedTable:
+                        $$FramesTableTableReferences._projectIdTable(db),
+                    referencedColumn:
+                        $$FramesTableTableReferences._projectIdTable(db).id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (layersTableRefs)
+                    await $_getPrefetchedData(
+                        currentTable: table,
+                        referencedTable: $$FramesTableTableReferences
+                            ._layersTableRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$FramesTableTableReferences(db, table, p0)
+                                .layersTableRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.frameId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$FramesTableTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $FramesTableTable,
+    FramesTableData,
+    $$FramesTableTableFilterComposer,
+    $$FramesTableTableOrderingComposer,
+    $$FramesTableTableCreateCompanionBuilder,
+    $$FramesTableTableUpdateCompanionBuilder,
+    (FramesTableData, $$FramesTableTableReferences),
+    FramesTableData,
+    PrefetchHooks Function({bool projectId, bool layersTableRefs})>;
 typedef $$LayersTableTableCreateCompanionBuilder = LayersTableCompanion
     Function({
   Value<int> id,
   required int projectId,
+  required int frameId,
   required String layerId,
   required String name,
   required Uint8List pixels,
   Value<bool> isVisible,
   Value<bool> isLocked,
   Value<double> opacity,
+  required int order,
 });
 typedef $$LayersTableTableUpdateCompanionBuilder = LayersTableCompanion
     Function({
   Value<int> id,
   Value<int> projectId,
+  Value<int> frameId,
   Value<String> layerId,
   Value<String> name,
   Value<Uint8List> pixels,
   Value<bool> isVisible,
   Value<bool> isLocked,
   Value<double> opacity,
+  Value<int> order,
 });
 
 final class $$LayersTableTableReferences
@@ -1078,6 +1875,20 @@ final class $$LayersTableTableReferences
     final manager = $$ProjectsTableTableTableManager($_db, $_db.projectsTable)
         .filter((f) => f.id($_item.projectId!));
     final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $FramesTableTable _frameIdTable(_$AppDatabase db) =>
+      db.framesTable.createAlias(
+          $_aliasNameGenerator(db.layersTable.frameId, db.framesTable.id));
+
+  $$FramesTableTableProcessedTableManager? get frameId {
+    if ($_item.frameId == null) return null;
+    final manager = $$FramesTableTableTableManager($_db, $_db.framesTable)
+        .filter((f) => f.id($_item.frameId!));
+    final item = $_typedResult.readTableOrNull(_frameIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
@@ -1122,6 +1933,11 @@ class $$LayersTableTableFilterComposer
       builder: (column, joinBuilders) =>
           ColumnFilters(column, joinBuilders: joinBuilders));
 
+  ColumnFilters<int> get order => $state.composableBuilder(
+      column: $state.table.order,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
   $$ProjectsTableTableFilterComposer get projectId {
     final $$ProjectsTableTableFilterComposer composer = $state.composerBuilder(
         composer: this,
@@ -1131,6 +1947,18 @@ class $$LayersTableTableFilterComposer
         builder: (joinBuilder, parentComposers) =>
             $$ProjectsTableTableFilterComposer(ComposerState($state.db,
                 $state.db.projectsTable, joinBuilder, parentComposers)));
+    return composer;
+  }
+
+  $$FramesTableTableFilterComposer get frameId {
+    final $$FramesTableTableFilterComposer composer = $state.composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.frameId,
+        referencedTable: $state.db.framesTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder, parentComposers) =>
+            $$FramesTableTableFilterComposer(ComposerState($state.db,
+                $state.db.framesTable, joinBuilder, parentComposers)));
     return composer;
   }
 }
@@ -1173,6 +2001,11 @@ class $$LayersTableTableOrderingComposer
       builder: (column, joinBuilders) =>
           ColumnOrderings(column, joinBuilders: joinBuilders));
 
+  ColumnOrderings<int> get order => $state.composableBuilder(
+      column: $state.table.order,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
   $$ProjectsTableTableOrderingComposer get projectId {
     final $$ProjectsTableTableOrderingComposer composer =
         $state.composerBuilder(
@@ -1183,6 +2016,18 @@ class $$LayersTableTableOrderingComposer
             builder: (joinBuilder, parentComposers) =>
                 $$ProjectsTableTableOrderingComposer(ComposerState($state.db,
                     $state.db.projectsTable, joinBuilder, parentComposers)));
+    return composer;
+  }
+
+  $$FramesTableTableOrderingComposer get frameId {
+    final $$FramesTableTableOrderingComposer composer = $state.composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.frameId,
+        referencedTable: $state.db.framesTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder, parentComposers) =>
+            $$FramesTableTableOrderingComposer(ComposerState($state.db,
+                $state.db.framesTable, joinBuilder, parentComposers)));
     return composer;
   }
 }
@@ -1197,7 +2042,7 @@ class $$LayersTableTableTableManager extends RootTableManager<
     $$LayersTableTableUpdateCompanionBuilder,
     (LayersTableData, $$LayersTableTableReferences),
     LayersTableData,
-    PrefetchHooks Function({bool projectId})> {
+    PrefetchHooks Function({bool projectId, bool frameId})> {
   $$LayersTableTableTableManager(_$AppDatabase db, $LayersTableTable table)
       : super(TableManagerState(
           db: db,
@@ -1209,42 +2054,50 @@ class $$LayersTableTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
             Value<int> projectId = const Value.absent(),
+            Value<int> frameId = const Value.absent(),
             Value<String> layerId = const Value.absent(),
             Value<String> name = const Value.absent(),
             Value<Uint8List> pixels = const Value.absent(),
             Value<bool> isVisible = const Value.absent(),
             Value<bool> isLocked = const Value.absent(),
             Value<double> opacity = const Value.absent(),
+            Value<int> order = const Value.absent(),
           }) =>
               LayersTableCompanion(
             id: id,
             projectId: projectId,
+            frameId: frameId,
             layerId: layerId,
             name: name,
             pixels: pixels,
             isVisible: isVisible,
             isLocked: isLocked,
             opacity: opacity,
+            order: order,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
             required int projectId,
+            required int frameId,
             required String layerId,
             required String name,
             required Uint8List pixels,
             Value<bool> isVisible = const Value.absent(),
             Value<bool> isLocked = const Value.absent(),
             Value<double> opacity = const Value.absent(),
+            required int order,
           }) =>
               LayersTableCompanion.insert(
             id: id,
             projectId: projectId,
+            frameId: frameId,
             layerId: layerId,
             name: name,
             pixels: pixels,
             isVisible: isVisible,
             isLocked: isLocked,
             opacity: opacity,
+            order: order,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
@@ -1252,7 +2105,7 @@ class $$LayersTableTableTableManager extends RootTableManager<
                     $$LayersTableTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: ({projectId = false}) {
+          prefetchHooksCallback: ({projectId = false, frameId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -1278,6 +2131,16 @@ class $$LayersTableTableTableManager extends RootTableManager<
                         $$LayersTableTableReferences._projectIdTable(db).id,
                   ) as T;
                 }
+                if (frameId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.frameId,
+                    referencedTable:
+                        $$LayersTableTableReferences._frameIdTable(db),
+                    referencedColumn:
+                        $$LayersTableTableReferences._frameIdTable(db).id,
+                  ) as T;
+                }
 
                 return state;
               },
@@ -1299,13 +2162,15 @@ typedef $$LayersTableTableProcessedTableManager = ProcessedTableManager<
     $$LayersTableTableUpdateCompanionBuilder,
     (LayersTableData, $$LayersTableTableReferences),
     LayersTableData,
-    PrefetchHooks Function({bool projectId})>;
+    PrefetchHooks Function({bool projectId, bool frameId})>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
   $$ProjectsTableTableTableManager get projectsTable =>
       $$ProjectsTableTableTableManager(_db, _db.projectsTable);
+  $$FramesTableTableTableManager get framesTable =>
+      $$FramesTableTableTableManager(_db, _db.framesTable);
   $$LayersTableTableTableManager get layersTable =>
       $$LayersTableTableTableManager(_db, _db.layersTable);
 }

@@ -25,7 +25,7 @@ class FileUtils {
 
     final fileName = 'pixelart_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-    _saveImage(jpg, fileName);
+    saveImage(jpg, fileName);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Image saved as $fileName')),
@@ -33,23 +33,18 @@ class FileUtils {
   }
 
   Future<void> save32Bit(Uint32List pixels, int width, int height) async {
-    // final Uint8List byteData = Uint8List.fromList(
-    //     pixels.buffer.asUint8List(pixels.offsetInBytes, pixels.lengthInBytes));
+    final img.Image image = img.Image.fromBytes(
+      width: width,
+      height: height,
+      bytes: pixels.buffer,
+      numChannels: 4,
+    );
 
-    // final img.Image image = img.Image.fromBytes(
-    //   width: width,
-    //   height: height,
-    //   bytes: byteData.buffer,
-    //   format: img.Format.uint32,
-    // );
+    final jpg = img.encodeJpg(image, quality: 90);
 
-    // final jpg = img.encodeJpg(image, quality: 90);
-
-    final image =
-        await ImageHelper.createImageFromPixels(pixels, width, height);
     final fileName = 'pixelart_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-    await _saveUIImage(image, fileName);
+    await saveImage(jpg, fileName);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Image saved as $fileName')),
@@ -161,7 +156,7 @@ class FileUtils {
     return completer.future;
   }
 
-  Future<void> _saveImage(Uint8List imageData, String fileName) async {
+  Future<void> saveImage(Uint8List imageData, String fileName) async {
     if (kIsWeb) {
       _downloadFileWeb(imageData, fileName);
     } else {
@@ -181,7 +176,7 @@ class FileUtils {
     final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     final pngBytes = byteData!.buffer.asUint8List();
 
-    _saveImage(pngBytes, fileName);
+    saveImage(pngBytes, fileName);
   }
 
   Future<void> _saveWithFilePicker(Uint8List jpg, String fileName) async {
@@ -212,7 +207,11 @@ class FileUtils {
   }
 
   Future<void> _saveToGallery(Uint8List jpg, String fileName) async {
-    await ImageGallerySaverPlus.saveImage(jpg, name: fileName);
+    await ImageGallerySaverPlus.saveImage(
+      jpg,
+      name: fileName,
+      quality: 100,
+    );
   }
 
   Future<void> _saveToDocuments(Uint8List jpg, String fileName) async {

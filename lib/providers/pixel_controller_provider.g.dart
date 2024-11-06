@@ -6,7 +6,7 @@ part of 'pixel_controller_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$pixelDrawNotifierHash() => r'ecd7880c633b7b4073eecdd85710e3a465b3c1ae';
+String _$pixelDrawNotifierHash() => r'796f62ad06cc6b79f710a3527cc368dda9dca1d4';
 
 /// Copied from Dart SDK
 class _SystemHash {

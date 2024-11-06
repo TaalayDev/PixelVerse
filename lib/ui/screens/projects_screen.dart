@@ -125,6 +125,12 @@ class ProjectsScreen extends HookConsumerWidget {
                 style: Theme.of(context).textTheme.bodyLarge,
                 textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 10),
+              Text(
+                error.toString(),
+                style: Theme.of(context).textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 icon: const Icon(Feather.refresh_cw),
@@ -152,12 +158,19 @@ class ProjectsScreen extends HookConsumerWidget {
         height: result.height,
         createdAt: DateTime.now(),
         editedAt: DateTime.now(),
-        layers: [
-          Layer(
-            layerId: 0,
-            id: const Uuid().v4(),
-            name: 'Layer 1',
-            pixels: Uint32List(result.width * result.height),
+        frames: [
+          AnimationFrame(
+            id: 0,
+            name: 'Frame 1',
+            duration: 100,
+            layers: [
+              Layer(
+                layerId: 0,
+                id: Uuid().v4(),
+                name: 'Layer 1',
+                pixels: Uint32List(result.width * result.height),
+              ),
+            ],
           ),
         ],
       );

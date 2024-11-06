@@ -29,6 +29,7 @@ class LayersPreview extends StatefulWidget {
 class _LayersPreviewState extends State<LayersPreview> {
   ui.Image? _image;
   Timer? _debounceTimer;
+  Future? _future;
 
   @override
   void initState() {
@@ -39,7 +40,9 @@ class _LayersPreviewState extends State<LayersPreview> {
   @override
   void didUpdateWidget(covariant LayersPreview oldWidget) {
     if (!listEquals(oldWidget.layers, widget.layers)) {
-      _scheduleUpdateLayersPreview();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scheduleUpdateLayersPreview();
+      });
     }
     super.didUpdateWidget(oldWidget);
   }
@@ -49,7 +52,7 @@ class _LayersPreviewState extends State<LayersPreview> {
       _debounceTimer!.cancel();
     }
     _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-      _updateLayersPreview();
+      _future = _updateLayersPreview();
     });
   }
 
@@ -66,8 +69,18 @@ class _LayersPreviewState extends State<LayersPreview> {
       widget.width,
       widget.height,
     );
-    _image = image;
-    setState(() {});
+    if (context.mounted) {
+      setState(() {
+        _image = image;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    _debounceTimer = null;
+    super.dispose();
   }
 
   @override

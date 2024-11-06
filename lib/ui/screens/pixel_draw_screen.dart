@@ -6,13 +6,15 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:pixelverse/ui/widgets/customized_popup_menu.dart';
 
-import '../../data.dart';
+import '../../pixel/image_painter.dart';
 import '../../providers/pixel_controller_provider.dart';
+import '../../pixel/animation_frame_controller.dart';
 import '../../pixel/tools.dart';
-import '../widgets.dart';
+import '../../data.dart';
+import '../widgets/animation_timeline.dart';
 import '../widgets/menu_value_field.dart';
+import '../widgets.dart';
 
 class PixelDrawScreen extends HookConsumerWidget {
   const PixelDrawScreen({
@@ -29,13 +31,13 @@ class PixelDrawScreen extends HookConsumerWidget {
     final width = project.width;
     final height = project.height;
 
-    final state = ref.watch(
-      pixelDrawNotifierProvider(project),
+    final provider = useMemoized(
+      () => pixelDrawNotifierProvider(project),
+      [project.id],
     );
+    final state = ref.watch(provider);
     final notifier = useMemoized(
-      () => ref.read(
-        pixelDrawNotifierProvider(project).notifier,
-      ),
+      () => ref.read(provider.notifier),
       [project.id],
     );
 
@@ -53,6 +55,10 @@ class PixelDrawScreen extends HookConsumerWidget {
       gridOffset.value.dx / gridScale.value,
       gridOffset.value.dy / gridScale.value,
     ));
+
+    final isPlaying = useState(false);
+    final showPrevFrames = useState(false);
+    final isAnimationTimelineExpanded = useState(false);
 
     return Scaffold(
       backgroundColor: Colors.grey[200],
@@ -84,9 +90,13 @@ class PixelDrawScreen extends HookConsumerWidget {
                       onSelectTool: (tool) => currentTool.value = tool,
                       onUndo: state.canUndo ? notifier.undo : null,
                       onRedo: state.canRedo ? notifier.redo : null,
-                      exportAsImage: () => notifier.exportImage(context),
+                      exportAsImage: () => notifier.exportAnimation(
+                        context,
+                        background: true,
+                      ),
                       export: () => notifier.exportJson(context),
                       currentColor: state.currentColor,
+                      showPrevFrames: showPrevFrames.value,
                       onColorPicker: () {
                         showColorPicker(context, notifier);
                       },
@@ -104,6 +114,9 @@ class PixelDrawScreen extends HookConsumerWidget {
                             (gridScale.value / 1.1).clamp(0.5, 5.0);
                       },
                       onShare: () => notifier.share(context),
+                      showPrevFramesOpacity: () {
+                        showPrevFrames.value = !showPrevFrames.value;
+                      },
                     ),
                     Expanded(
                       child: Row(
@@ -157,6 +170,7 @@ class PixelDrawScreen extends HookConsumerWidget {
                                             ),
                                             child: PixelPainter(
                                               project: project,
+                                              state: state,
                                               gridScale: gridScale,
                                               gridOffset: gridOffset,
                                               currentTool: currentTool.value,
@@ -165,6 +179,8 @@ class PixelDrawScreen extends HookConsumerWidget {
                                               currentColor: state.currentColor,
                                               brushSize: brushSize,
                                               sprayIntensity: sprayIntensity,
+                                              showPrevFrames:
+                                                  showPrevFrames.value,
                                             ),
                                           ),
                                         ),
@@ -244,8 +260,9 @@ class PixelDrawScreen extends HookConsumerWidget {
                                                 children: [
                                                   const SizedBox(width: 8),
                                                   const Icon(
-                                                      MaterialCommunityIcons
-                                                          .spray),
+                                                    MaterialCommunityIcons
+                                                        .spray,
+                                                  ),
                                                   SizedBox(
                                                     width: 150,
                                                     child: Slider(
@@ -282,7 +299,7 @@ class PixelDrawScreen extends HookConsumerWidget {
                                       child: LayersPanel(
                                         width: width,
                                         height: height,
-                                        layers: state.layers,
+                                        layers: state.currentFrame.layers,
                                         activeLayerIndex:
                                             state.currentLayerIndex,
                                         onLayerAdded: (name) {
@@ -331,6 +348,66 @@ class PixelDrawScreen extends HookConsumerWidget {
                             ),
                         ],
                       ),
+                    ),
+                    AnimationTimeline(
+                      width: width,
+                      height: height,
+                      itemsHeight: 80,
+                      onSelectFrame: (index) {
+                        notifier.selectFrame(index);
+                      },
+                      onAddFrame: () {
+                        notifier.addFrame('Frame ${state.frames.length + 1}');
+                      },
+                      copyFrame: (index) {
+                        notifier.addFrame(
+                          'Frame ${state.frames.length + 1}',
+                          copyFrame: index,
+                        );
+                      },
+                      onDeleteFrame: (index) {
+                        notifier.removeFrame(index);
+                      },
+                      onDurationChanged: (index, duration) {
+                        notifier.updateFrame(
+                          index,
+                          state.frames[index].copyWith(duration: duration),
+                        );
+                      },
+                      onFrameReordered: (oldIndex, newIndex) {},
+                      onPlayPause: () {
+                        isPlaying.value = !isPlaying.value;
+                        if (isPlaying.value) {
+                          showAnimationPreviewDialog(
+                            context,
+                            frames: state.frames,
+                            width: width,
+                            height: height,
+                          ).then((_) {
+                            isPlaying.value = false;
+                          });
+                        }
+                      },
+                      onStop: () {
+                        isPlaying.value = false;
+                        notifier.selectFrame(0);
+                      },
+                      onNextFrame: () {
+                        notifier.nextFrame();
+                      },
+                      onPreviousFrame: () {
+                        notifier.prevFrame();
+                      },
+                      frames: state.frames,
+                      selectedFrameIndex: state.currentFrameIndex,
+                      isPlaying: isPlaying.value,
+                      settings: const AnimationSettings(),
+                      onSettingsChanged: (settings) {},
+                      isExpanded: isAnimationTimelineExpanded.value,
+                      onExpandChanged: () {
+                        isAnimationTimelineExpanded.value =
+                            !isAnimationTimelineExpanded.value;
+                      },
                     ),
                     if (MediaQuery.sizeOf(context).width <= 600)
                       ToolsBottomBar(
@@ -595,6 +672,7 @@ class PixelPainter extends HookConsumerWidget {
   const PixelPainter({
     super.key,
     required this.project,
+    required this.state,
     required this.gridScale,
     required this.gridOffset,
     required this.currentTool,
@@ -602,9 +680,11 @@ class PixelPainter extends HookConsumerWidget {
     required this.currentColor,
     required this.brushSize,
     required this.sprayIntensity,
+    this.showPrevFrames = false,
   });
 
   final Project project;
+  final PixelDrawState state;
   final ValueNotifier<double> gridScale;
   final ValueNotifier<Offset> gridOffset;
   final PixelTool currentTool;
@@ -612,12 +692,23 @@ class PixelPainter extends HookConsumerWidget {
   final Color currentColor;
   final ValueNotifier<int> brushSize;
   final ValueNotifier<int> sprayIntensity;
+  final bool showPrevFrames;
+
+  double calculateOnionSkinOpacity(int forIndex, int count) {
+    if (count <= 0 || forIndex.abs() > count) {
+      return 0.0;
+    }
+
+    const opacityRange = 0.5 - 0.01;
+    final step = opacityRange / count;
+
+    final opacity = (step * (forIndex.abs() - 1));
+
+    return opacity.clamp(0.1, 0.5);
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final layers = ref.watch(
-      pixelDrawNotifierProvider(project).select((state) => state.layers),
-    );
     final notifier = useMemoized(
       () => ref.read(
         pixelDrawNotifierProvider(project).notifier,
@@ -632,64 +723,90 @@ class PixelPainter extends HookConsumerWidget {
         // scale: gridScale.value,
         // offset: gridOffset.value,
       ),
-      child: PixelGrid(
-        width: project.width,
-        height: project.height,
-        layers: layers,
-        currentLayerIndex: notifier.currentLayerIndex,
-        onTapPixel: (x, y) {
-          switch (currentTool) {
-            case PixelTool.pencil:
-            case PixelTool.brush:
-            case PixelTool.pixelPerfectLine:
-            case PixelTool.sprayPaint:
-              notifier.setPixel(x, y);
-              break;
-            case PixelTool.fill:
-              notifier.fill(x, y);
-              break;
-            case PixelTool.eraser:
-              final originalColor = notifier.currentColor;
-              notifier.currentColor = Colors.transparent;
-              notifier.setPixel(x, y);
-              notifier.currentColor = originalColor;
-              break;
-            default:
-              break;
-          }
-        },
-        onBrushStroke: (points) {
-          notifier.fillPixels(points, currentModifier);
-        },
-        currentTool: currentTool,
-        currentColor: currentColor,
-        modifier: currentModifier,
-        brushSize: brushSize.value,
-        sprayIntensity: sprayIntensity.value,
-        onDrawShape: (points) {
-          notifier.fillPixels(points, currentModifier);
-        },
-        onStartDrawing: () {
-          // notifier.saveState();
-        },
-        onFinishDrawing: () {},
-        onSelectionChanged: (rect) {
-          notifier.setSelection(rect);
-        },
-        onMoveSelection: (rect) {
-          notifier.moveSelection(rect);
-        },
-        onColorPicked: (color) {
-          notifier.currentColor =
-              color == Colors.transparent ? Colors.white : color;
-        },
-        onGradientApplied: (gradientColors) {
-          notifier.applyGradient(gradientColors);
-        },
-        onZoom: (scale, offset) {
-          gridScale.value = scale;
-          gridOffset.value = offset;
-        },
+      child: Stack(
+        children: [
+          if (showPrevFrames)
+            for (var i = 0; i < state.currentFrameIndex; i++)
+              Positioned.fill(
+                child: Opacity(
+                  opacity: calculateOnionSkinOpacity(
+                    i,
+                    state.currentFrameIndex,
+                  ),
+                  child: LayersPreview(
+                    width: project.width,
+                    height: project.height,
+                    layers: state.frames[i].layers,
+                    builder: (context, image) {
+                      return image != null
+                          ? CustomPaint(painter: ImagePainter(image))
+                          : const ColoredBox(color: Colors.transparent);
+                    },
+                  ),
+                ),
+              ),
+          Positioned.fill(
+            child: PixelGrid(
+              width: project.width,
+              height: project.height,
+              layers: state.layers,
+              currentLayerIndex: state.currentLayerIndex,
+              onTapPixel: (x, y) {
+                switch (currentTool) {
+                  case PixelTool.pencil:
+                  case PixelTool.brush:
+                  case PixelTool.pixelPerfectLine:
+                  case PixelTool.sprayPaint:
+                    notifier.setPixel(x, y);
+                    break;
+                  case PixelTool.fill:
+                    notifier.fill(x, y);
+                    break;
+                  case PixelTool.eraser:
+                    final originalColor = notifier.currentColor;
+                    notifier.currentColor = Colors.transparent;
+                    notifier.setPixel(x, y);
+                    notifier.currentColor = originalColor;
+                    break;
+                  default:
+                    break;
+                }
+              },
+              onBrushStroke: (points) {
+                notifier.fillPixels(points, currentModifier);
+              },
+              currentTool: currentTool,
+              currentColor: currentColor,
+              modifier: currentModifier,
+              brushSize: brushSize.value,
+              sprayIntensity: sprayIntensity.value,
+              onDrawShape: (points) {
+                notifier.fillPixels(points, currentModifier);
+              },
+              onStartDrawing: () {
+                // notifier.saveState();
+              },
+              onFinishDrawing: () {},
+              onSelectionChanged: (rect) {
+                notifier.setSelection(rect);
+              },
+              onMoveSelection: (rect) {
+                notifier.moveSelection(rect);
+              },
+              onColorPicked: (color) {
+                notifier.currentColor =
+                    color == Colors.transparent ? Colors.white : color;
+              },
+              onGradientApplied: (gradientColors) {
+                notifier.applyGradient(gradientColors);
+              },
+              onZoom: (scale, offset) {
+                gridScale.value = scale;
+                gridOffset.value = offset;
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -790,6 +907,7 @@ class ToolBar extends StatelessWidget {
   final ValueNotifier<PixelModifier> currentModifier;
   final ValueNotifier<int> brushSize;
   final ValueNotifier<int> sprayIntensity;
+  final bool showPrevFrames;
   final Function(PixelTool) onSelectTool;
   final Function(PixelModifier) onSelectModifier;
   final VoidCallback? onZoomIn;
@@ -802,6 +920,7 @@ class ToolBar extends StatelessWidget {
   final VoidCallback? onShare;
   final Color currentColor;
   final Function() onColorPicker;
+  final Function()? showPrevFramesOpacity;
 
   const ToolBar({
     super.key,
@@ -813,6 +932,7 @@ class ToolBar extends StatelessWidget {
     required this.onSelectModifier,
     required this.onUndo,
     required this.onRedo,
+    this.showPrevFrames = false,
     this.onZoomIn,
     this.onZoomOut,
     this.import,
@@ -821,6 +941,7 @@ class ToolBar extends StatelessWidget {
     this.onShare,
     required this.currentColor,
     required this.onColorPicker,
+    this.showPrevFramesOpacity,
   });
 
   @override
@@ -879,6 +1000,16 @@ class ToolBar extends StatelessWidget {
                           child: VerticalDivider(),
                         ),
                         const SizedBox(width: 16),
+                        IconButton.filledTonal(
+                          icon: const Icon(Icons.animation_rounded),
+                          onPressed: showPrevFramesOpacity,
+                          splashColor: Colors.transparent,
+                          style: IconButton.styleFrom(
+                            backgroundColor:
+                                showPrevFrames ? null : Colors.transparent,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         if (tool == PixelTool.brush ||
                             tool == PixelTool.eraser ||
                             tool == PixelTool.sprayPaint) ...[

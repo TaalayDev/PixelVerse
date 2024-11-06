@@ -124,7 +124,7 @@ class AboutScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 4.0),
               child: Row(
                 children: [
-                  Icon(Icons.check, color: Colors.green),
+                  const Icon(Icons.check, color: Colors.green),
                   const SizedBox(width: 8),
                   Expanded(child: Text(entry.value)),
                 ],

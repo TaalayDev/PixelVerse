@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:animated_reorderable_list/animated_reorderable_list.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -44,8 +45,8 @@ class LayersPanel extends HookConsumerWidget {
         const Divider(),
         _buildLayersPanelHeader(),
         Expanded(
-          child: ReorderableListView.builder(
-            itemCount: layers.length,
+          child: AnimatedReorderableListView(
+            items: layers,
             onReorder: (oldIndex, newIndex) {
               onLayerReordered(newIndex, oldIndex);
             },
@@ -57,6 +58,11 @@ class LayersPanel extends HookConsumerWidget {
                 index,
               );
             },
+            enterTransition: [FlipInX(), ScaleIn()],
+            exitTransition: [SlideInLeft()],
+            insertDuration: const Duration(milliseconds: 300),
+            removeDuration: const Duration(milliseconds: 300),
+            isSameItem: (a, b) => a.id == b.id,
           ),
         ),
       ],

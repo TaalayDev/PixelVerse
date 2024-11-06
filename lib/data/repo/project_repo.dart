@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import '../../data.dart';
 import '../../core/utils/image_helper.dart';
 import '../../core/utils/queue_manager.dart';
-import '../database/project_database.dart';
-import '../models/layer.dart';
-import '../models/project_model.dart';
 
 abstract class ProjectRepo {
   Stream<List<Project>> fetchProjects();
@@ -14,8 +12,11 @@ abstract class ProjectRepo {
   Future<void> updateProject(Project project);
   Future<void> renameProject(int projectId, String name);
   Future<void> deleteProject(Project project);
-  Future<Layer> createLayer(int projectId, Layer layer);
-  Future<void> updateLayer(int projectId, Layer layer);
+  Future<AnimationFrame> createFrame(int projectId, AnimationFrame frame);
+  Future<void> updateFrame(int projectId, AnimationFrame frame);
+  Future<void> deleteFrame(int frameId);
+  Future<Layer> createLayer(int projectId, int frameId, Layer layer);
+  Future<void> updateLayer(int projectId, int frameId, Layer layer);
   Future<void> deleteLayer(int layerId);
 }
 
@@ -36,7 +37,9 @@ class ProjectLocalRepo extends ProjectRepo {
     final completer = Completer<void>();
     queueManager.add(() async {
       final pixels = Uint32List(project.width * project.height);
-      for (final layer in project.layers.where((layer) => layer.isVisible)) {
+      for (final layer in project.frames.first.layers.where(
+        (layer) => layer.isVisible,
+      )) {
         for (int i = 0; i < pixels.length; i++) {
           pixels[i] = pixels[i] == 0 ? layer.pixels[i] : pixels[i];
         }
@@ -71,20 +74,20 @@ class ProjectLocalRepo extends ProjectRepo {
   }
 
   @override
-  Future<Layer> createLayer(int projectId, Layer layer) async {
+  Future<Layer> createLayer(int projectId, int frameId, Layer layer) async {
     final completer = Completer<Layer>();
     queueManager.add(() async {
-      final newLayer = await db.insertLayer(projectId, layer);
+      final newLayer = await db.insertLayer(projectId, frameId, layer);
       completer.complete(newLayer);
     });
     return completer.future;
   }
 
   @override
-  Future<void> updateLayer(int projectId, Layer layer) async {
+  Future<void> updateLayer(int projectId, int frameId, Layer layer) async {
     final completer = Completer<void>();
     queueManager.add(() async {
-      await db.updateLayer(projectId, layer);
+      await db.updateLayer(projectId, frameId, layer);
       completer.complete();
     });
     return completer.future;
@@ -95,6 +98,36 @@ class ProjectLocalRepo extends ProjectRepo {
     final completer = Completer<void>();
     queueManager.add(() async {
       await db.deleteLayer(layerId);
+      completer.complete();
+    });
+    return completer.future;
+  }
+
+  @override
+  Future<AnimationFrame> createFrame(int projectId, AnimationFrame frame) {
+    final completer = Completer<AnimationFrame>();
+    queueManager.add(() async {
+      final newFrame = await db.insertFrame(projectId, frame);
+      completer.complete(newFrame);
+    });
+    return completer.future;
+  }
+
+  @override
+  Future<void> deleteFrame(int frameId) {
+    final completer = Completer<void>();
+    queueManager.add(() async {
+      await db.deleteFrame(frameId);
+      completer.complete();
+    });
+    return completer.future;
+  }
+
+  @override
+  Future<void> updateFrame(int projectId, AnimationFrame frame) {
+    final completer = Completer<void>();
+    queueManager.add(() async {
+      await db.updateFrame(projectId, frame);
       completer.complete();
     });
     return completer.future;

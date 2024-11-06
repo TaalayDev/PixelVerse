@@ -2,11 +2,11 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:image/image.dart' as img;
-import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
@@ -16,82 +16,43 @@ import '../pixel/tools.dart';
 import '../data.dart';
 import 'providers.dart';
 
+part 'pixel_controller_provider.freezed.dart';
 part 'pixel_controller_provider.g.dart';
 
-class PixelDrawState extends Equatable {
-  final int width;
-  final int height;
-  final List<Layer> layers;
-  final int currentLayerIndex;
-  final Color currentColor;
-  final PixelTool currentTool;
-  final MirrorAxis mirrorAxis;
-  final SelectionModel? selectionRect;
-  final bool canUndo;
-  final bool canRedo;
+extension ListX<T> on List<T> {
+  List<T> mapIndexed(T Function(int index, T item) f) {
+    return asMap().entries.map((e) => f(e.key, e.value)).toList();
+  }
+}
 
-  const PixelDrawState({
-    required this.width,
-    required this.height,
-    required this.layers,
-    this.currentLayerIndex = 0,
-    required this.currentColor,
-    required this.currentTool,
-    required this.mirrorAxis,
-    required this.selectionRect,
-    this.canUndo = false,
-    this.canRedo = false,
-  });
+@freezed
+class PixelDrawState with _$PixelDrawState {
+  const PixelDrawState._();
+  const factory PixelDrawState({
+    required final int width,
+    required final int height,
+    required final List<AnimationFrame> frames,
+    @Default(0) final int currentFrameIndex,
+    @Default(0) final int currentLayerIndex,
+    required final Color currentColor,
+    required final PixelTool currentTool,
+    required final MirrorAxis mirrorAxis,
+    final SelectionModel? selectionRect,
+    @Default(false) final bool canUndo,
+    @Default(false) final bool canRedo,
+  }) = _PixelDrawState;
 
-  List<Uint32List> get pixels => layers.fold(
+  AnimationFrame get currentFrame => frames[currentFrameIndex];
+  Layer get currentLayer => currentFrame.layers[currentLayerIndex];
+  List<Layer> get layers => currentFrame.layers;
+
+  List<Uint32List> get pixels => currentFrame.layers.fold(
         [],
         (List<Uint32List> acc, layer) {
           acc.add(layer.pixels);
           return acc;
         },
       );
-
-  PixelDrawState copyWith({
-    int? width,
-    int? height,
-    List<Layer>? layers,
-    int? currentLayerIndex,
-    Color? currentColor,
-    PixelTool? currentTool,
-    MirrorAxis? mirrorAxis,
-    bool? canUndo,
-    bool? canRedo,
-    SelectionModel? selectionRect,
-    List<List<Color>>? undoStack,
-    List<List<Color>>? redoStack,
-  }) {
-    return PixelDrawState(
-      width: width ?? this.width,
-      height: height ?? this.height,
-      layers: layers ?? this.layers,
-      currentLayerIndex: currentLayerIndex ?? this.currentLayerIndex,
-      currentColor: currentColor ?? this.currentColor,
-      currentTool: currentTool ?? this.currentTool,
-      mirrorAxis: mirrorAxis ?? this.mirrorAxis,
-      selectionRect: selectionRect ?? this.selectionRect,
-      canUndo: canUndo ?? this.canUndo,
-      canRedo: canRedo ?? this.canRedo,
-    );
-  }
-
-  @override
-  List<Object?> get props => [
-        width,
-        height,
-        layers,
-        currentColor,
-        currentTool,
-        mirrorAxis,
-        selectionRect,
-        canUndo,
-        canRedo,
-        currentLayerIndex,
-      ];
 }
 
 @riverpod
@@ -102,7 +63,8 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   Color get currentColor => state.currentColor;
   set currentColor(Color color) => state = state.copyWith(currentColor: color);
 
-  Layer get currentLayer => state.layers[state.currentLayerIndex];
+  AnimationFrame get currentFrame => state.currentFrame;
+  Layer get currentLayer => currentFrame.layers[state.currentLayerIndex];
   int get currentLayerIndex => state.currentLayerIndex;
 
   final List<PixelDrawState> _undoStack = [];
@@ -124,14 +86,21 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     return PixelDrawState(
       width: project.width,
       height: project.height,
-      layers: project.layers.isNotEmpty
-          ? project.layers
+      frames: project.frames.isNotEmpty
+          ? project.frames
           : [
-              Layer(
-                layerId: 0,
-                id: const Uuid().v4(),
-                name: 'Layer 1',
-                pixels: Uint32List(project.width * project.height),
+              AnimationFrame(
+                id: 0,
+                name: 'Frame 1',
+                duration: 100,
+                layers: [
+                  Layer(
+                    layerId: 0,
+                    id: const Uuid().v4(),
+                    name: 'Layer 1',
+                    pixels: Uint32List(project.width * project.height),
+                  ),
+                ],
               ),
             ],
       currentColor: Colors.black,
@@ -149,50 +118,84 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
       pixels: Uint32List(width * height),
     );
 
-    final layer =
-        await ref.watch(projectRepo).createLayer(project.id, newLayer);
+    final layer = await ref
+        .watch(projectRepo)
+        .createLayer(project.id, state.currentFrame.id, newLayer);
+
+    final frames = List<AnimationFrame>.from(state.frames);
+    final layers = List<Layer>.from(currentFrame.layers)..add(layer);
+    final updatedFrame = currentFrame.copyWith(layers: layers);
+
+    frames[state.currentFrameIndex] = updatedFrame;
 
     state = state.copyWith(
-      layers: [...state.layers, layer],
-      currentLayerIndex: state.layers.length,
+      frames: frames,
+      currentLayerIndex: layers.length - 1,
     );
   }
 
   void removeLayer(int index) {
-    if (state.layers.length <= 1) return;
-    final layer = state.layers[index];
-    final layers = List<Layer>.from(state.layers)..removeAt(index);
-    int newIndex = state.currentLayerIndex;
-    if (newIndex >= layers.length) {
-      newIndex = layers.length - 1;
+    if (currentFrame.layers.length <= 1) return;
+
+    final layer = currentFrame.layers[index];
+    final layers = List<Layer>.from(currentFrame.layers)..removeAt(index);
+
+    int newLayerIndex = state.currentLayerIndex;
+    if (newLayerIndex >= layers.length) {
+      newLayerIndex = layers.length - 1;
     }
+
+    final frames = List<AnimationFrame>.from(state.frames);
+    final updatedFrame =
+        currentFrame.copyWith(layers: layers.mapIndexed((i, layer) {
+      return layer.copyWith(order: i);
+    }));
+    frames[state.currentFrameIndex] = updatedFrame;
+
     state = state.copyWith(
-      layers: layers,
-      currentLayerIndex: newIndex,
+      frames: frames,
+      currentLayerIndex: newLayerIndex,
     );
 
     ref.watch(projectRepo).deleteLayer(layer.layerId);
   }
 
   void selectLayer(int index) {
-    if (index < 0 || index >= state.layers.length) return;
+    if (index < 0 || index >= currentFrame.layers.length) return;
     state = state.copyWith(currentLayerIndex: index);
   }
 
   void toggleLayerVisibility(int index) {
-    final layers = List<Layer>.from(state.layers);
+    final layers = List<Layer>.from(currentFrame.layers);
     final layer = layers[index];
     layers[index] = layer.copyWith(isVisible: !layer.isVisible);
-    state = state.copyWith(layers: layers);
 
-    ref.watch(projectRepo).updateLayer(project.id, layers[index]);
+    final frames = List<AnimationFrame>.from(state.frames);
+    final updatedFrame = currentFrame.copyWith(layers: layers);
+    frames[state.currentFrameIndex] = updatedFrame;
+
+    state = state.copyWith(frames: frames);
+
+    ref
+        .watch(projectRepo)
+        .updateLayer(project.id, currentFrame.id, layers[index]);
   }
 
   void reorderLayers(int oldIndex, int newIndex) {
-    final layers = List<Layer>.from(state.layers);
+    final layers = List<Layer>.from(currentFrame.layers);
     final layer = layers.removeAt(oldIndex);
     layers.insert(newIndex, layer);
-    state = state.copyWith(layers: layers);
+
+    state = state.copyWith(
+      frames: List<AnimationFrame>.from(state.frames)
+        ..[state.currentFrameIndex] =
+            currentFrame.copyWith(layers: layers.mapIndexed((i, layer) {
+          return layer.copyWith(order: i);
+        })),
+      currentLayerIndex: oldIndex == state.currentLayerIndex
+          ? newIndex
+          : state.currentLayerIndex,
+    );
 
     _updateProject();
   }
@@ -346,9 +349,13 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   }
 
   void _updateCurrentLayer(Uint32List pixels) {
-    final layers = List<Layer>.from(state.layers);
+    final layers = List<Layer>.from(currentFrame.layers);
     layers[state.currentLayerIndex] = currentLayer.copyWith(pixels: pixels);
-    state = state.copyWith(layers: layers);
+
+    state = state.copyWith(
+      frames: List<AnimationFrame>.from(state.frames)
+        ..[state.currentFrameIndex] = currentFrame.copyWith(layers: layers),
+    );
 
     _updateProject();
   }
@@ -394,11 +401,6 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     state = state.copyWith(
       width: newWidth,
       height: newHeight,
-      layers: [
-        ...state.layers.sublist(0, state.currentLayerIndex),
-        currentLayer.copyWith(pixels: newPixels),
-        ...state.layers.sublist(state.currentLayerIndex + 1),
-      ],
     );
   }
 
@@ -504,20 +506,124 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   void _updateProject() async {
     ref.watch(projectRepo).updateProject(
           project.copyWith(
-            layers: state.layers,
+            frames: state.frames,
             editedAt: DateTime.now(),
           ),
         );
   }
 
+  void selectFrame(int index) {
+    if (index < 0 || index >= state.frames.length) return;
+
+    state = state.copyWith(
+      currentFrameIndex: index,
+    );
+  }
+
+  void nextFrame() {
+    var index = state.currentFrameIndex + 1 % state.frames.length;
+    state = state.copyWith(currentFrameIndex: index);
+  }
+
+  void prevFrame() {
+    var index = state.currentFrameIndex - 1 % state.frames.length;
+    state = state.copyWith(currentFrameIndex: index);
+  }
+
+  void addFrame(
+    String name, {
+    int? copyFrame,
+  }) async {
+    final layers = copyFrame != null
+        ? state.frames[copyFrame].layers.indexed.map((layer) {
+            return layer.$2.copyWith(
+              id: const Uuid().v4(),
+              layerId: 0,
+              pixels: Uint32List.fromList(layer.$2.pixels),
+              order: layer.$1,
+            );
+          }).toList()
+        : [
+            Layer(
+              layerId: 0,
+              id: const Uuid().v4(),
+              name: name,
+              pixels: Uint32List(width * height),
+            )
+          ];
+    final newFrame = AnimationFrame(
+      id: 0,
+      name: name,
+      createdAt: DateTime.now(),
+      editedAt: DateTime.now(),
+      duration: 100,
+      layers: layers,
+      order: state.frames.map((frame) => frame.order).reduce(max) + 1,
+    );
+
+    final frame =
+        await ref.watch(projectRepo).createFrame(project.id, newFrame);
+
+    state = state.copyWith(
+      frames: [...state.frames, frame],
+      currentFrameIndex: state.frames.length,
+      currentLayerIndex: 0,
+    );
+  }
+
+  void reorderFrames(int oldIndex, int newIndex) {
+    final frames = List<AnimationFrame>.from(state.frames);
+    final frame = frames.removeAt(oldIndex);
+    frames.insert(newIndex, frame);
+
+    state = state.copyWith(
+      frames: frames,
+      currentFrameIndex: oldIndex == state.currentFrameIndex
+          ? newIndex
+          : state.currentFrameIndex,
+    );
+
+    _updateProject();
+  }
+
+  void updateFrame(int index, AnimationFrame frame) async {
+    await ref.watch(projectRepo).updateFrame(project.id, frame);
+
+    state = state.copyWith(
+      frames: List<AnimationFrame>.from(state.frames)..[index] = frame,
+    );
+  }
+
+  void removeFrame(int index) {
+    if (state.frames.length <= 1) return;
+
+    final frame = state.frames[index];
+    final frames = List<AnimationFrame>.from(state.frames)..removeAt(index);
+
+    int newFrameIndex = state.currentFrameIndex;
+    if (newFrameIndex >= frames.length) {
+      newFrameIndex = frames.length - 1;
+    }
+
+    state = state.copyWith(
+      frames: frames.mapIndexed((i, frame) {
+        return frame.copyWith(order: i);
+      }),
+      currentFrameIndex: newFrameIndex,
+      currentLayerIndex: 0,
+    );
+
+    ref.watch(projectRepo).deleteFrame(frame.id);
+  }
+
   void exportImage(BuildContext context) async {
-    final pixels = Uint32List(project.width * project.height);
-    for (final layer in project.layers.where((layer) => layer.isVisible)) {
+    final pixels = Uint32List(state.width * state.height);
+    for (final layer in currentFrame.layers.where((layer) => layer.isVisible)) {
       for (int i = 0; i < pixels.length; i++) {
         pixels[i] = pixels[i] == 0 ? layer.pixels[i] : pixels[i];
       }
     }
-    await FileUtils(context).save32Bit(pixels, project.width, project.height);
+    await FileUtils(context).save32Bit(pixels, state.width, state.height);
   }
 
   void exportJson(BuildContext context) {
@@ -571,12 +677,18 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
         isVisible: true,
       );
 
-      final layer =
-          await ref.watch(projectRepo).createLayer(project.id, newLayer);
+      final layer = await ref
+          .watch(projectRepo)
+          .createLayer(project.id, currentFrame.id, newLayer);
 
       state = state.copyWith(
-        layers: [...state.layers, layer],
-        currentLayerIndex: state.layers.length,
+        frames: state.frames.map((frame) {
+          if (frame.id == currentFrame.id) {
+            return frame.copyWith(layers: [...frame.layers, layer]);
+          }
+          return frame;
+        }).toList(),
+        currentLayerIndex: currentFrame.layers.length,
       );
 
       // Update the project repository
@@ -586,7 +698,9 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
 
   Future<void> share(BuildContext context) async {
     final pixels = Uint32List(project.width * project.height);
-    for (final layer in project.layers.where((layer) => layer.isVisible)) {
+    for (final layer in state.currentFrame.layers.where(
+      (layer) => layer.isVisible,
+    )) {
       for (int i = 0; i < pixels.length; i++) {
         pixels[i] = pixels[i] == 0 ? layer.pixels[i] : pixels[i];
       }
@@ -601,5 +715,62 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
         ),
       ],
     );
+  }
+
+  void exportAnimation(
+    BuildContext context, {
+    bool background = false,
+  }) async {
+    final images = <img.Image>[];
+
+    for (final frame in state.frames) {
+      final pixels = Uint32List(state.width * state.height);
+      for (final layer in frame.layers.where((layer) => layer.isVisible)) {
+        for (int i = 0; i < pixels.length; i++) {
+          pixels[i] = pixels[i] == 0 ? layer.pixels[i] : pixels[i];
+        }
+      }
+
+      final im = img.Image(
+        width: width,
+        height: height,
+        numChannels: 4,
+      );
+
+      for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+          final pixel = pixels[y * width + x];
+
+          // Extract ARGB channels from 32-bit color
+          final a = (pixel >> 24) & 0xFF;
+          final r = (pixel >> 16) & 0xFF;
+          final g = (pixel >> 8) & 0xFF;
+          final b = pixel & 0xFF;
+
+          if (a == 0 && background) {
+            im.setPixelRgba(x, y, 255, 255, 255, 0);
+          } else {
+            im.setPixelRgba(x, y, r, g, b, a);
+          }
+        }
+      }
+
+      images.add(im);
+    }
+    final gifEncoder = img.GifEncoder(
+      samplingFactor: 1,
+      quantizerType: img.QuantizerType.octree,
+      ditherSerpentine: true,
+    );
+    for (var i = 0; i < images.length; i++) {
+      gifEncoder.addFrame(
+        images[i],
+        duration: state.frames[i].duration ~/ 10,
+      );
+    }
+
+    final gifData = gifEncoder.finish();
+
+    await FileUtils(context).saveImage(gifData!, '${project.name}.gif');
   }
 }

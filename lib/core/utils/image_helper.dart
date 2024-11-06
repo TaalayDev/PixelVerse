@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
+import 'package:image/image.dart' as img;
 
 class ImageHelper {
   static Future<ui.Image> createImageFromPixels(
@@ -58,5 +59,22 @@ class ImageHelper {
       pixels[i] = (a << 24) | (b << 16) | (g << 8) | r;
     }
     return pixels;
+  }
+
+  static Future<img.Image> convertFlutterUiToImage(
+    int width,
+    int height,
+    ui.Image uiImage,
+  ) async {
+    final uiBytes = await uiImage.toByteData();
+
+    final image = img.Image.fromBytes(
+      width: width,
+      height: height,
+      bytes: uiBytes!.buffer,
+      numChannels: 4,
+    );
+
+    return image;
   }
 }
