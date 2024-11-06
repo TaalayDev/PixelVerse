@@ -6,6 +6,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:pixelverse/ui/widgets/dialogs.dart';
 import 'package:pixelverse/ui/widgets/shortcuts_wrapper.dart';
 
 import '../../pixel/image_painter.dart';
@@ -24,6 +25,44 @@ class PixelDrawScreen extends HookConsumerWidget {
   });
 
   final Project project;
+
+  void handleExport(BuildContext context, PixelDrawNotifier notifier) {
+    showSaveImageDialog(
+      context,
+      onSave: (options) async {
+        final format = options['format'] as String;
+        final transparent = options['transparent'] as bool;
+
+        switch (format) {
+          case 'png':
+            notifier.exportImage(
+              context,
+              background: !transparent,
+            );
+            break;
+
+          case 'gif':
+            notifier.exportAnimation(
+              context,
+              background: !transparent,
+            );
+            break;
+
+          case 'sprite-sheet':
+            final spriteOptions =
+                options['spriteSheetOptions'] as Map<String, dynamic>;
+            await notifier.exportSpriteSheet(
+              context,
+              columns: spriteOptions['columns'] as int,
+              spacing: spriteOptions['spacing'] as int,
+              includeAllFrames: spriteOptions['includeAllFrames'] as bool,
+              withBackground: !transparent,
+            );
+            break;
+        }
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -95,10 +134,7 @@ class PixelDrawScreen extends HookConsumerWidget {
                         onSelectTool: (tool) => currentTool.value = tool,
                         onUndo: state.canUndo ? notifier.undo : null,
                         onRedo: state.canRedo ? notifier.redo : null,
-                        exportAsImage: () => notifier.exportAnimation(
-                          context,
-                          background: true,
-                        ),
+                        exportAsImage: () => handleExport(context, notifier),
                         export: () => notifier.exportJson(context),
                         currentColor: state.currentColor,
                         showPrevFrames: showPrevFrames.value,

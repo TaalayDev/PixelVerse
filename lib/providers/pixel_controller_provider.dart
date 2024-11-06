@@ -629,13 +629,24 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     ref.watch(projectRepo).deleteFrame(frame.id);
   }
 
-  void exportImage(BuildContext context) async {
+  void exportImage(
+    BuildContext context, {
+    bool background = false,
+  }) async {
     ref.read(analyticsProvider).logEvent(name: 'export_image');
 
     final pixels = Uint32List(state.width * state.height);
+
     for (final layer in currentFrame.layers.where((layer) => layer.isVisible)) {
       for (int i = 0; i < pixels.length; i++) {
         pixels[i] = pixels[i] == 0 ? layer.pixels[i] : pixels[i];
+      }
+    }
+    if (background) {
+      for (int i = 0; i < pixels.length; i++) {
+        if (pixels[i] == 0) {
+          pixels[i] = Colors.white.value;
+        }
       }
     }
     await FileUtils(context).save32Bit(pixels, state.width, state.height);
@@ -795,5 +806,237 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     final gifData = gifEncoder.finish();
 
     await FileUtils(context).saveImage(gifData!, '${project.name}.gif');
+  }
+
+  Future<void> exportSpriteSheet(
+    BuildContext context, {
+    required int columns,
+    required int spacing,
+    required bool includeAllFrames,
+    bool withBackground = false,
+    Color backgroundColor = Colors.white,
+  }) async {
+    ref.read(analyticsProvider).logEvent(name: 'export_sprite_sheet');
+
+    // Calculate sprite sheet dimensions
+    final frames = includeAllFrames ? state.frames : [state.currentFrame];
+    final rows = (frames.length / columns).ceil();
+
+    // Calculate total dimensions including spacing
+    final totalWidth = (width * columns) + (spacing * (columns - 1));
+    final totalHeight = (height * rows) + (spacing * (rows - 1));
+
+    // Create sprite sheet image
+    final spriteSheet = img.Image(
+      width: totalWidth,
+      height: totalHeight,
+      numChannels: 4,
+    );
+
+    // Fill background if needed
+    if (withBackground) {
+      for (int y = 0; y < totalHeight; y++) {
+        for (int x = 0; x < totalWidth; x++) {
+          spriteSheet.setPixelRgba(
+            x,
+            y,
+            backgroundColor.red,
+            backgroundColor.green,
+            backgroundColor.blue,
+            backgroundColor.alpha,
+          );
+        }
+      }
+    }
+
+    // Draw each frame onto the sprite sheet
+    for (int i = 0; i < frames.length; i++) {
+      final frame = frames[i];
+      final row = i ~/ columns;
+      final col = i % columns;
+
+      // Calculate position for this frame
+      final xOffset = col * (width + spacing);
+      final yOffset = row * (height + spacing);
+
+      // Merge layers for this frame
+      final framePixels = Uint32List(width * height);
+      for (final layer in frame.layers.where((layer) => layer.isVisible)) {
+        for (int p = 0; p < framePixels.length; p++) {
+          if (layer.pixels[p] != 0) {
+            framePixels[p] = layer.pixels[p];
+          }
+        }
+      }
+
+      // Draw frame pixels onto sprite sheet
+      for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+          final pixel = framePixels[y * width + x];
+
+          // Skip transparent pixels if we're using a background
+          if (pixel == 0 && withBackground) continue;
+
+          // Extract ARGB channels
+          final a = (pixel >> 24) & 0xFF;
+          final r = (pixel >> 16) & 0xFF;
+          final g = (pixel >> 8) & 0xFF;
+          final b = pixel & 0xFF;
+
+          // Set pixel in sprite sheet
+          if (a > 0) {
+            spriteSheet.setPixelRgba(
+              x + xOffset,
+              y + yOffset,
+              r,
+              g,
+              b,
+              a,
+            );
+          }
+        }
+      }
+    }
+
+    // Draw grid lines if spacing > 0
+    if (spacing > 0) {
+      final gridColor = withBackground
+          ? Color.lerp(
+              backgroundColor,
+              backgroundColor.computeLuminance() > 0.5
+                  ? Colors.black
+                  : Colors.white,
+              0.1)!
+          : Colors.black.withOpacity(0.1);
+
+      // Draw vertical grid lines
+      for (int col = 1; col < columns; col++) {
+        final x = (col * width) + ((col - 1) * spacing);
+        for (int s = 0; s < spacing; s++) {
+          for (int y = 0; y < totalHeight; y++) {
+            spriteSheet.setPixelRgba(
+              x + s,
+              y,
+              gridColor.red,
+              gridColor.green,
+              gridColor.blue,
+              gridColor.alpha,
+            );
+          }
+        }
+      }
+
+      // Draw horizontal grid lines
+      for (int row = 1; row < rows; row++) {
+        final y = (row * height) + ((row - 1) * spacing);
+        for (int s = 0; s < spacing; s++) {
+          for (int x = 0; x < totalWidth; x++) {
+            spriteSheet.setPixelRgba(
+              x,
+              y + s,
+              gridColor.red,
+              gridColor.green,
+              gridColor.blue,
+              gridColor.alpha,
+            );
+          }
+        }
+      }
+    }
+
+    // Generate metadata for the sprite sheet
+    final metadata = {
+      'version': '1.0',
+      'frames': frames.length,
+      'columns': columns,
+      'frameWidth': width,
+      'frameHeight': height,
+      'spacing': spacing,
+      'frameData': frames
+          .map((frame) => {
+                'name': frame.name,
+                'duration': frame.duration,
+              })
+          .toList(),
+    };
+
+    // Save sprite sheet image
+    final pngData = img.encodePng(spriteSheet);
+    await FileUtils(context).saveImage(
+      pngData,
+      '${project.name}_sprite_sheet.png',
+    );
+
+    // Save metadata
+    final jsonData = jsonEncode(metadata);
+    await FileUtils(context).save(
+      '${project.name}_sprite_sheet.json',
+      jsonData,
+    );
+
+    // Show success message
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sprite sheet exported successfully'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+// Optional: Helper method to create preview image of sprite sheet
+  Future<ui.Image?> createSpriteSheetPreview({
+    required int columns,
+    required int spacing,
+    required bool includeAllFrames,
+    bool withBackground = false,
+    Color backgroundColor = Colors.white,
+  }) async {
+    final frames = includeAllFrames ? state.frames : [state.currentFrame];
+    final rows = (frames.length / columns).ceil();
+
+    final totalWidth = (width * columns) + (spacing * (columns - 1));
+    final totalHeight = (height * rows) + (spacing * (rows - 1));
+
+    // Create image data
+    final pixels = Uint32List(totalWidth * totalHeight);
+
+    // Fill background
+    if (withBackground) {
+      pixels.fillRange(0, pixels.length, backgroundColor.value);
+    }
+
+    // Add each frame
+    for (int i = 0; i < frames.length; i++) {
+      final frame = frames[i];
+      final row = i ~/ columns;
+      final col = i % columns;
+
+      final xOffset = col * (width + spacing);
+      final yOffset = row * (height + spacing);
+
+      // Merge frame layers
+      final framePixels = frame.pixels;
+
+      // Copy frame pixels to sprite sheet
+      for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+          final sourceIndex = y * width + x;
+          final targetIndex = (y + yOffset) * totalWidth + (x + xOffset);
+
+          if (framePixels[sourceIndex] != 0) {
+            pixels[targetIndex] = framePixels[sourceIndex];
+          }
+        }
+      }
+    }
+
+    // Create image from pixels
+    return ImageHelper.createImageFromPixels(
+      pixels,
+      totalWidth,
+      totalHeight,
+    );
   }
 }

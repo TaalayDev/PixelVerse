@@ -40,9 +40,9 @@ class FileUtils {
       numChannels: 4,
     );
 
-    final jpg = img.encodeJpg(image, quality: 90);
+    final jpg = img.encodePng(image);
 
-    final fileName = 'pixelart_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    final fileName = 'pixelart_${DateTime.now().millisecondsSinceEpoch}.png';
 
     await saveImage(jpg, fileName);
 
