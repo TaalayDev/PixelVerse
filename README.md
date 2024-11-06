@@ -13,6 +13,8 @@ PixelVerse is a powerful and intuitive pixel art creation tool designed for both
 - **Selection and Transform**: Select, move, and transform parts of your artwork.
 - **Mirror Drawing**: Create symmetrical art effortlessly.
 - **Undo/Redo**: Easily correct mistakes or revert changes.
+- **Zoom and Pan**: Get up close and personal with your artwork.
+- **Animation Support**: Create simple animations with frame management.
 - **Export Options**: Save your work in various formats, including image and project files.
 
 ## Getting Started

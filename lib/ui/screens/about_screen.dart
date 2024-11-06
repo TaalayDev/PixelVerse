@@ -104,7 +104,7 @@ class AboutScreen extends StatelessWidget {
       'Intuitive pixel editing tools',
       'Custom color palettes',
       'Layer support for complex artwork',
-      'Animation timeline for creating GIFs (coming soon)',
+      'Animation timeline for creating GIFs',
       'Export in various formats (in planning)',
       'Community sharing and inspiration (in planning)',
     ];
