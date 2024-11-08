@@ -1,13 +1,14 @@
 import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:pixelverse/l10n/strings.dart';
 
+import '../../l10n/strings.dart';
 import '../../pixel/image_painter.dart';
 import '../../providers/pixel_controller_provider.dart';
 import '../../pixel/animation_frame_controller.dart';
@@ -27,18 +28,27 @@ class PixelDrawScreen extends HookConsumerWidget {
 
   final Project project;
 
-  void handleExport(BuildContext context, PixelDrawNotifier notifier) {
+  void handleExport(
+    BuildContext context,
+    PixelDrawNotifier notifier,
+    PixelDrawState state,
+  ) {
     showSaveImageDialog(
       context,
+      state: state,
       onSave: (options) async {
         final format = options['format'] as String;
         final transparent = options['transparent'] as bool;
+        final width = options['exportWidth'] as double;
+        final height = options['exportHeight'] as double;
 
         switch (format) {
           case 'png':
             notifier.exportImage(
               context,
               background: !transparent,
+              exportWidth: width,
+              exportHeight: height,
             );
             break;
 
@@ -46,6 +56,8 @@ class PixelDrawScreen extends HookConsumerWidget {
             notifier.exportAnimation(
               context,
               background: !transparent,
+              exportWidth: width,
+              exportHeight: height,
             );
             break;
 
@@ -58,6 +70,8 @@ class PixelDrawScreen extends HookConsumerWidget {
               spacing: spriteOptions['spacing'] as int,
               includeAllFrames: spriteOptions['includeAllFrames'] as bool,
               withBackground: !transparent,
+              exportWidth: width,
+              exportHeight: height,
             );
             break;
         }
@@ -135,7 +149,11 @@ class PixelDrawScreen extends HookConsumerWidget {
                         onSelectTool: (tool) => currentTool.value = tool,
                         onUndo: state.canUndo ? notifier.undo : null,
                         onRedo: state.canRedo ? notifier.redo : null,
-                        exportAsImage: () => handleExport(context, notifier),
+                        exportAsImage: () => handleExport(
+                          context,
+                          notifier,
+                          state,
+                        ),
                         export: () => notifier.exportJson(context),
                         currentColor: state.currentColor,
                         showPrevFrames: showPrevFrames.value,
@@ -1126,13 +1144,16 @@ class ToolBar extends StatelessWidget {
                       title: Text(Strings.of(context).projects),
                     ),
                   ),
-                  PopupMenuItem(
-                    value: 'export',
-                    child: ListTile(
-                      leading: const Icon(Feather.save),
-                      title: Text(Strings.of(context).save),
+                  if (kIsWeb ||
+                      defaultTargetPlatform == TargetPlatform.macOS ||
+                      defaultTargetPlatform == TargetPlatform.windows)
+                    PopupMenuItem(
+                      value: 'export',
+                      child: ListTile(
+                        leading: const Icon(Feather.save),
+                        title: Text(Strings.of(context).save),
+                      ),
                     ),
-                  ),
                   PopupMenuItem(
                     value: 'exportAsImage',
                     child: ListTile(

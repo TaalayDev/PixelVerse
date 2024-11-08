@@ -32,13 +32,26 @@ class FileUtils {
     );
   }
 
-  Future<void> save32Bit(Uint32List pixels, int width, int height) async {
-    final img.Image image = img.Image.fromBytes(
+  Future<void> save32Bit(
+    Uint32List pixels,
+    int width,
+    int height, {
+    double? exportWidth,
+    double? exportHeight,
+  }) async {
+    img.Image image = img.Image.fromBytes(
       width: width,
       height: height,
       bytes: pixels.buffer,
       numChannels: 4,
     );
+    if (exportWidth != null && exportHeight != null) {
+      image = img.copyResize(
+        image,
+        width: exportWidth.toInt(),
+        height: exportHeight.toInt(),
+      );
+    }
 
     final jpg = img.encodePng(image);
 
@@ -172,7 +185,7 @@ class FileUtils {
     }
   }
 
-  Future<void> _saveUIImage(ui.Image image, String fileName) async {
+  Future<void> saveUIImage(ui.Image image, String fileName) async {
     final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     final pngBytes = byteData!.buffer.asUint8List();
 

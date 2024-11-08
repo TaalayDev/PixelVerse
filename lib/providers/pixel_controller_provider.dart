@@ -629,29 +629,6 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     ref.watch(projectRepo).deleteFrame(frame.id);
   }
 
-  void exportImage(
-    BuildContext context, {
-    bool background = false,
-  }) async {
-    ref.read(analyticsProvider).logEvent(name: 'export_image');
-
-    final pixels = Uint32List(state.width * state.height);
-
-    for (final layer in currentFrame.layers.where((layer) => layer.isVisible)) {
-      for (int i = 0; i < pixels.length; i++) {
-        pixels[i] = pixels[i] == 0 ? layer.pixels[i] : pixels[i];
-      }
-    }
-    if (background) {
-      for (int i = 0; i < pixels.length; i++) {
-        if (pixels[i] == 0) {
-          pixels[i] = Colors.white.value;
-        }
-      }
-    }
-    await FileUtils(context).save32Bit(pixels, state.width, state.height);
-  }
-
   void exportJson(BuildContext context) {
     ref.read(analyticsProvider).logEvent(name: 'export_json');
 
@@ -749,9 +726,36 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     );
   }
 
+  void exportImage(
+    BuildContext context, {
+    bool background = false,
+    double? exportWidth,
+    double? exportHeight,
+  }) async {
+    ref.read(analyticsProvider).logEvent(name: 'export_image');
+
+    final pixels = Uint32List(state.width * state.height);
+
+    for (final layer in currentFrame.layers.where((layer) => layer.isVisible)) {
+      for (int i = 0; i < pixels.length; i++) {
+        pixels[i] = pixels[i] == 0 ? layer.pixels[i] : pixels[i];
+      }
+    }
+    if (background) {
+      for (int i = 0; i < pixels.length; i++) {
+        if (pixels[i] == 0) {
+          pixels[i] = Colors.white.value;
+        }
+      }
+    }
+    await FileUtils(context).save32Bit(pixels, state.width, state.height);
+  }
+
   void exportAnimation(
     BuildContext context, {
     bool background = false,
+    double? exportWidth,
+    double? exportHeight,
   }) async {
     ref.read(analyticsProvider).logEvent(name: 'export_animation');
 
@@ -789,7 +793,15 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
         }
       }
 
-      images.add(im);
+      if (exportWidth != null && exportHeight != null) {
+        images.add(img.copyResize(
+          im,
+          width: exportWidth.toInt(),
+          height: exportHeight.toInt(),
+        ));
+      } else {
+        images.add(im);
+      }
     }
     final gifEncoder = img.GifEncoder(
       samplingFactor: 1,
@@ -815,6 +827,8 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     required bool includeAllFrames,
     bool withBackground = false,
     Color backgroundColor = Colors.white,
+    double? exportWidth,
+    double? exportHeight,
   }) async {
     ref.read(analyticsProvider).logEvent(name: 'export_sprite_sheet');
 
@@ -827,7 +841,7 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     final totalHeight = (height * rows) + (spacing * (rows - 1));
 
     // Create sprite sheet image
-    final spriteSheet = img.Image(
+    var spriteSheet = img.Image(
       width: totalWidth,
       height: totalHeight,
       numChannels: 4,
@@ -944,6 +958,17 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
       }
     }
 
+    if (exportWidth != null && exportHeight != null) {
+      final totalWidth = (exportWidth * columns) + (spacing * (columns - 1));
+      final totalHeight = (exportHeight * rows) + (spacing * (rows - 1));
+
+      spriteSheet = img.copyResize(
+        spriteSheet,
+        width: totalWidth.toInt(),
+        height: totalHeight.toInt(),
+      );
+    }
+
     // Generate metadata for the sprite sheet
     final metadata = {
       'version': '1.0',
@@ -968,11 +993,11 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     );
 
     // Save metadata
-    final jsonData = jsonEncode(metadata);
-    await FileUtils(context).save(
-      '${project.name}_sprite_sheet.json',
-      jsonData,
-    );
+    // final jsonData = jsonEncode(metadata);
+    // await FileUtils(context).save(
+    //   '${project.name}_sprite_sheet.json',
+    //   jsonData,
+    // );
 
     // Show success message
     if (context.mounted) {
