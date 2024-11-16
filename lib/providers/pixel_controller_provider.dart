@@ -93,8 +93,6 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
 
   @override
   PixelDrawState build(Project project) {
-    print('Building PixelDrawNotifier ${project.id} ${project.hashCode}');
-
     return PixelDrawState(
       width: project.width,
       height: project.height,

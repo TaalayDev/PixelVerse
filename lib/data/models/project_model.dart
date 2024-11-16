@@ -39,7 +39,6 @@ class Project with EquatableMixin {
     DateTime? createdAt,
     DateTime? editedAt,
   }) {
-    print('copyWith');
     return Project(
       id: id ?? this.id,
       name: name ?? this.name,
