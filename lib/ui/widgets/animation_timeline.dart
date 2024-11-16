@@ -1,21 +1,21 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:pixelverse/l10n/strings.dart';
 
-import '../../data.dart';
 import '../../pixel/animation_frame_controller.dart';
 import '../../pixel/image_painter.dart';
+import '../../l10n/strings.dart';
+import '../../data.dart';
 import '../widgets.dart';
+import 'app_expandable.dart';
 
-class AnimationTimeline extends ConsumerStatefulWidget {
+class AnimationTimeline extends HookWidget {
   const AnimationTimeline({
     super.key,
-    required this.height,
     required this.width,
-    required this.itemsHeight,
+    required this.height,
     required this.onSelectFrame,
     required this.onAddFrame,
     required this.onDeleteFrame,
@@ -25,19 +25,25 @@ class AnimationTimeline extends ConsumerStatefulWidget {
     required this.onStop,
     required this.onNextFrame,
     required this.onPreviousFrame,
+    required this.states,
     required this.frames,
-    required this.selectedFrameIndex,
+    required this.selectedStateId,
+    required this.selectedFrameId,
     required this.isPlaying,
     required this.settings,
     required this.onSettingsChanged,
     this.isExpanded = false,
     required this.onExpandChanged,
     required this.copyFrame,
+    required this.onAddState,
+    required this.onRenameState,
+    required this.onDeleteState,
+    required this.onDuplicateState,
+    required this.onSelectedStateChanged,
   });
 
   final int width;
   final int height;
-  final double itemsHeight;
   final Function(int) onSelectFrame;
   final VoidCallback onAddFrame;
   final Function(int) onDeleteFrame;
@@ -47,307 +53,457 @@ class AnimationTimeline extends ConsumerStatefulWidget {
   final VoidCallback onStop;
   final VoidCallback onNextFrame;
   final VoidCallback onPreviousFrame;
+  final List<AnimationStateModel> states;
   final List<AnimationFrame> frames;
-  final int selectedFrameIndex;
+  final int selectedStateId;
+  final int selectedFrameId;
   final bool isPlaying;
   final AnimationSettings settings;
   final Function(AnimationSettings) onSettingsChanged;
   final bool isExpanded;
   final VoidCallback onExpandChanged;
-  final Function(int index) copyFrame;
+  final Function(int) copyFrame;
+  final Function(String) onAddState;
+  final Function(int, String) onRenameState;
+  final Function(int) onDeleteState;
+  final Function(int) onDuplicateState;
+  final Function(int) onSelectedStateChanged;
 
-  @override
-  ConsumerState<AnimationTimeline> createState() => _AnimationTimelineState();
-}
-
-class _AnimationTimelineState extends ConsumerState<AnimationTimeline> {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 5),
-          _buildControls(),
-          const SizedBox(height: 2),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            transitionBuilder: (child, animation) {
-              return FadeTransition(
-                opacity: animation,
-                child: SizeTransition(
-                  sizeFactor: animation,
-                  child: child,
-                ),
-              );
-            },
-            child: widget.isExpanded
-                ? SizedBox(
-                    key: const ValueKey('timeline'),
-                    height: widget.itemsHeight,
-                    child: _buildTimeline(),
-                  )
-                : const SizedBox(),
-          ),
-        ],
-      ),
+    final textController = useTextEditingController(
+      text: frames
+          .firstWhere(
+            (f) => f.id == selectedFrameId,
+          )
+          .duration
+          .toString(),
     );
-  }
 
-  Widget _buildControls() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          children: [
-            IconButton(
-              icon: const Icon(Feather.skip_back, size: 15),
-              onPressed: widget.onPreviousFrame,
-              tooltip: 'Previous Frame',
-              iconSize: 15,
-            ),
-            IconButton(
-              icon: Icon(
-                widget.isPlaying ? Feather.pause : Feather.play,
-                size: 15,
-              ),
-              onPressed: widget.onPlayPause,
-              tooltip: widget.isPlaying ? 'Pause' : 'Play',
-              iconSize: 15,
-            ),
-            IconButton(
-              icon: const Icon(Feather.square, size: 15),
-              onPressed: widget.onStop,
-              tooltip: 'Stop',
-              iconSize: 15,
-            ),
-            IconButton(
-              icon: const Icon(Feather.skip_forward, size: 15),
-              onPressed: widget.onNextFrame,
-              tooltip: 'Next Frame',
-              iconSize: 15,
-            ),
-          ],
-        ),
-        Row(
-          children: [
-            IconButton(
-              icon: const Icon(Feather.plus),
-              onPressed: widget.onAddFrame,
-              tooltip: 'Add Frame',
-              iconSize: 15,
-            ),
-            IconButton(
-              onPressed: () => widget.copyFrame(widget.selectedFrameIndex),
-              icon: const Icon(Feather.copy),
-              tooltip: 'Copy Frame',
-              iconSize: 15,
-            ),
-            IconButton(
-              icon: Icon(
-                widget.isExpanded
-                    ? Icons.keyboard_arrow_down
-                    : Icons.keyboard_arrow_up,
-              ),
-              onPressed: widget.onExpandChanged,
-              tooltip: 'Expand',
-              iconSize: 15,
-            ),
-          ],
+        _buildMainControlBar(context, textController),
+        AppExpandable(
+          expand: isExpanded,
+          child: _buildExpandedTimeline(context, textController),
         ),
       ],
     );
   }
 
-  Widget _buildTimeline() {
-    return Column(
-      children: [
-        Expanded(
-          child: ReorderableListView(
-            scrollDirection: Axis.horizontal,
-            onReorder: widget.onFrameReordered,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            buildDefaultDragHandles: false,
-            children: [
-              for (int i = 0; i < widget.frames.length; i++)
-                _buildFrameItem(i, widget.frames[i]),
-            ],
+  Widget _buildMainControlBar(
+    BuildContext context,
+    TextEditingController textController,
+  ) {
+    return Container(
+      height: 40,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).dividerColor.withOpacity(0.5),
           ),
         ),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 20,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: widget.frames.length,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (context, index) => SizedBox(
-              width: 50,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: Row(
+          children: [
+            // Playback controls
+            _PlaybackControls(
+              isPlaying: isPlaying,
+              onPlayPause: onPlayPause,
+              onStop: onStop,
+              onNextFrame: onNextFrame,
+              onPreviousFrame: onPreviousFrame,
+            ),
+            VerticalDivider(
+              color: Theme.of(context).dividerColor.withOpacity(0.5),
+              width: 1,
+              thickness: 1,
+            ),
+            const SizedBox(width: 16),
+
+            const Spacer(),
+
+            // Frame duration
+            SizedBox(
+              width: 64,
               child: TextFormField(
-                initialValue: widget.frames[index].duration.toString(),
+                controller: textController,
                 decoration: const InputDecoration(
                   contentPadding: EdgeInsets.symmetric(
                     horizontal: 8,
-                    vertical: 4,
+                    vertical: 0,
                   ),
                   isDense: true,
-                  border: OutlineInputBorder(),
+                  suffix: Text(
+                    'ms',
+                    style: TextStyle(fontSize: 10),
+                  ),
                 ),
-                keyboardType: TextInputType.number,
-                textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 12),
+                keyboardType: TextInputType.number,
                 onChanged: (value) {
                   final duration = int.tryParse(value);
                   if (duration != null) {
-                    widget.onDurationChanged(index, duration);
+                    final index =
+                        frames.indexWhere((e) => e.id == selectedFrameId);
+                    onDurationChanged(index, duration);
                   }
                 },
               ),
             ),
+            const SizedBox(width: 8),
+
+            // Frame actions
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Feather.copy, size: 16),
+                  onPressed:
+                      isExpanded ? () => copyFrame(selectedFrameId) : null,
+                  tooltip: 'Copy Frame',
+                ),
+                IconButton(
+                  icon: const Icon(Feather.plus, size: 16),
+                  onPressed: isExpanded ? onAddFrame : null,
+                  tooltip: 'Add Frame',
+                ),
+                IconButton(
+                  icon: const Icon(
+                    Feather.trash,
+                    size: 16,
+                    color: Colors.red,
+                  ),
+                  onPressed: isExpanded
+                      ? () {
+                          final index =
+                              frames.indexWhere((e) => e.id == selectedFrameId);
+                          onDeleteFrame(index);
+                        }
+                      : null,
+                  tooltip: 'Delete Frame',
+                ),
+              ],
+            ),
+
+            // Expand/collapse button
+            IconButton(
+              icon: Icon(
+                isExpanded
+                    ? Icons.keyboard_arrow_down
+                    : Icons.keyboard_arrow_up,
+                size: 16,
+              ),
+              onPressed: onExpandChanged,
+              tooltip: isExpanded ? 'Collapse' : 'Expand',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExpandedTimeline(
+    BuildContext context,
+    TextEditingController controller,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+      ),
+      child: _StatesPanel(
+        states: states,
+        selectedStateId: selectedStateId,
+        onAddState: onAddState,
+        onDeleteState: onDeleteState,
+        onRenameState: onRenameState,
+        onSelectedStateChanged: onSelectedStateChanged,
+        frames: frames,
+        selectedFrameId: selectedFrameId,
+        width: width,
+        height: height,
+        onSelectFrame: (frameId) {
+          onSelectFrame(frameId);
+
+          final index = frames.indexWhere((e) => e.id == frameId);
+          controller.text = frames[index].duration.toString();
+        },
+        copyFrame: copyFrame,
+      ),
+    );
+  }
+}
+
+class _PlaybackControls extends StatelessWidget {
+  const _PlaybackControls({
+    required this.isPlaying,
+    required this.onPlayPause,
+    required this.onStop,
+    required this.onNextFrame,
+    required this.onPreviousFrame,
+  });
+
+  final bool isPlaying;
+  final VoidCallback onPlayPause;
+  final VoidCallback onStop;
+  final VoidCallback onNextFrame;
+  final VoidCallback onPreviousFrame;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(
+          icon: const Icon(Feather.skip_back, size: 16),
+          onPressed: onPreviousFrame,
+          tooltip: 'Previous Frame',
+        ),
+        IconButton(
+          icon: Icon(
+            isPlaying ? Feather.pause : Feather.play,
+            size: 16,
+          ),
+          onPressed: onPlayPause,
+          tooltip: isPlaying ? 'Pause' : 'Play',
+        ),
+        IconButton(
+          icon: const Icon(Feather.square, size: 16),
+          onPressed: onStop,
+          tooltip: 'Stop',
+        ),
+        IconButton(
+          icon: const Icon(Feather.skip_forward, size: 16),
+          onPressed: onNextFrame,
+          tooltip: 'Next Frame',
+        ),
+      ],
+    );
+  }
+}
+
+class _StatesPanel extends StatelessWidget {
+  const _StatesPanel({
+    required this.states,
+    required this.selectedStateId,
+    required this.onAddState,
+    required this.onDeleteState,
+    required this.onRenameState,
+    required this.onSelectedStateChanged,
+    required this.frames,
+    required this.selectedFrameId,
+    required this.width,
+    required this.height,
+    required this.onSelectFrame,
+    required this.copyFrame,
+  });
+
+  final List<AnimationStateModel> states;
+  final int selectedStateId;
+  final List<AnimationFrame> frames;
+  final int selectedFrameId;
+  final int width;
+  final int height;
+  final Function(String) onAddState;
+  final Function(int) onDeleteState;
+  final Function(int, String) onRenameState;
+  final Function(int) onSelectedStateChanged;
+  final Function(int) onSelectFrame;
+  final Function(int) copyFrame;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: states.length,
+            itemBuilder: (context, index) {
+              final state = states[index];
+
+              return Container(
+                key: ValueKey(state.id),
+                height: 40,
+                color: state.id == selectedStateId
+                    ? Theme.of(context).primaryColor.withOpacity(0.1)
+                    : null,
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 150,
+                      child: ListTile(
+                        dense: true,
+                        selected: state.id == selectedStateId,
+                        title: Text(
+                          state.name,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        trailing: PopupMenuButton(
+                          child: const Icon(Feather.more_vertical, size: 16),
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Text('delete'),
+                            ),
+                          ],
+                          onSelected: (value) {
+                            if (value == 'delete') {
+                              onDeleteState(state.id);
+                            }
+                          },
+                        ),
+                        onTap: () => onSelectedStateChanged(state.id),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 5),
+                      ),
+                    ),
+                    VerticalDivider(
+                      color: Theme.of(context).dividerColor.withOpacity(0.5),
+                      width: 1,
+                      thickness: 1,
+                    ),
+                    Expanded(
+                      child: _FramesGrid(
+                        frames: frames
+                            .where(
+                              (f) => f.stateId == state.id,
+                            )
+                            .toList(),
+                        selectedFrameId: selectedFrameId,
+                        onSelectFrame: (index) {
+                          if (state.id != selectedStateId) {
+                            onSelectedStateChanged(state.id);
+                          }
+
+                          onSelectFrame(index);
+                        },
+                        width: width,
+                        height: height,
+                      ),
+                    )
+                  ],
+                ),
+              );
+            },
+            separatorBuilder: (context, index) {
+              return const Divider(height: 1);
+            },
+          ),
+        ),
+        const Divider(height: 1),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Row(
+            children: [
+              TextButton.icon(
+                icon: const Icon(Icons.add, size: 16),
+                label: const Text('Add State', style: TextStyle(fontSize: 12)),
+                onPressed: () => _showAddStateDialog(context),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildFrameItem(int index, AnimationFrame frame) {
-    final isSelected = index == widget.selectedFrameIndex;
-
-    return KeyedSubtree(
-      key: ValueKey(frame.id),
-      child: Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: InkWell(
-          onTap: () => widget.onSelectFrame(index),
-          child: Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: isSelected
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.grey.shade300,
-                width: 2,
-              ),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Stack(
-              children: [
-                if (frame.pixels.isNotEmpty)
-                  Positioned.fill(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: LayersPreview(
-                        width: widget.width,
-                        height: widget.height,
-                        layers: frame.layers,
-                        builder: (context, image) {
-                          return image != null
-                              ? CustomPaint(painter: ImagePainter(image))
-                              : const ColoredBox(color: Colors.white);
-                        },
-                      ),
-                    ),
-                  ),
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: InkWell(
-                    child: const Icon(
-                      Feather.trash_2,
-                      size: 10,
-                      color: Colors.red,
-                    ),
-                    onTap: () => widget.onDeleteFrame(index),
-                  ),
-                ),
-              ],
-            ),
+  Future<void> _showAddStateDialog(BuildContext context) async {
+    final controller = TextEditingController();
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add Animation State'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'State Name',
           ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (controller.text.isNotEmpty) {
+                onAddState(controller.text);
+                Navigator.of(context).pop();
+              }
+            },
+            child: const Text('Add'),
+          ),
+        ],
       ),
     );
   }
+}
 
-  Widget _buildSettingsPanel() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Animation Settings',
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('FPS'),
-              SizedBox(
-                width: 80,
-                child: TextFormField(
-                  initialValue: widget.settings.fps.toString(),
-                  decoration: const InputDecoration(
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    isDense: true,
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.center,
-                  onChanged: (value) {
-                    final fps = int.tryParse(value);
-                    if (fps != null) {
-                      widget.onSettingsChanged(
-                        widget.settings.copyWith(fps: fps),
-                      );
-                    }
+class _FramesGrid extends StatelessWidget {
+  const _FramesGrid({
+    required this.frames,
+    required this.selectedFrameId,
+    required this.onSelectFrame,
+    required this.width,
+    required this.height,
+  });
+
+  final List<AnimationFrame> frames;
+  final int selectedFrameId;
+  final Function(int) onSelectFrame;
+  final int width;
+  final int height;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: GridView.builder(
+        shrinkWrap: true,
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 18,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          mainAxisExtent: 18,
+        ),
+        itemCount: frames.length,
+        itemBuilder: (context, index) {
+          final frame = frames[index];
+          final isSelected = frame.id == selectedFrameId;
+
+          return InkWell(
+            key: ValueKey(frame.id),
+            onTap: () => onSelectFrame(frame.id),
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).dividerColor.withOpacity(0.2),
+                  width: isSelected ? 1.5 : 1,
+                ),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LayersPreview(
+                  width: width,
+                  height: height,
+                  layers: frame.layers,
+                  builder: (context, image) {
+                    return image != null
+                        ? CustomPaint(painter: ImagePainter(image))
+                        : const ColoredBox(color: Colors.white);
                   },
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          SwitchListTile(
-            title: const Text('Loop'),
-            value: widget.settings.loop,
-            onChanged: (value) {
-              widget.onSettingsChanged(
-                widget.settings.copyWith(loop: value),
-              );
-            },
-          ),
-          SwitchListTile(
-            title: const Text('Ping-pong'),
-            value: widget.settings.pingPong,
-            onChanged: (value) {
-              widget.onSettingsChanged(
-                widget.settings.copyWith(pingPong: value),
-              );
-            },
-          ),
-          SwitchListTile(
-            title: const Text('Auto-play'),
-            value: widget.settings.autoPlay,
-            onChanged: (value) {
-              widget.onSettingsChanged(
-                widget.settings.copyWith(autoPlay: value),
-              );
-            },
-          ),
-        ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -363,11 +519,15 @@ Future<void> showAnimationPreviewDialog(
     context: context,
     builder: (context) {
       return AlertDialog(
-        title: Text(Strings.of(context).animationPreview),
-        content: AnimationPreview(
-          frames: frames,
-          width: width,
-          height: height,
+        content: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimationPreview(
+              frames: frames,
+              width: width,
+              height: height,
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -447,7 +607,7 @@ class _AnimationPreviewState extends State<AnimationPreview> {
               builder: (context, image) {
                 return image != null
                     ? CustomPaint(painter: ImagePainter(image))
-                    : const ColoredBox(color: Colors.yellow);
+                    : const ColoredBox(color: Colors.white);
               },
             ),
           ),

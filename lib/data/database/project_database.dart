@@ -41,9 +41,22 @@ class LayersTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+class AnimationStateTable extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get projectId => integer().references(ProjectsTable, #id)();
+  TextColumn get name => text().withLength(min: 1, max: 100)();
+  IntColumn get frameRate => integer()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get editedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 class FramesTable extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get projectId => integer().references(ProjectsTable, #id)();
+  IntColumn get stateId => integer().references(AnimationStateTable, #id)();
   TextColumn get name => text().withLength(min: 1, max: 100)();
   IntColumn get duration => integer()();
   IntColumn get order => integer()();
@@ -62,7 +75,7 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase() => instance;
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration {
@@ -78,6 +91,9 @@ class AppDatabase extends _$AppDatabase {
             layersTable,
             newColumns: [layersTable.order],
           ));
+        }
+        if (from < 3) {
+          await _from2To3(migrator);
         }
       },
     );
@@ -101,8 +117,58 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
+  Future<void> _from2To3(Migrator migrator) async {
+    await customStatement('PRAGMA foreign_keys = OFF');
+    await migrator.createTable(animationStateTable);
+
+    final projectStates = <int, int>{};
+
+    final projects = await select(projectsTable).get();
+    for (final project in projects) {
+      final id = await into(animationStateTable).insert(
+        AnimationStateTableCompanion(
+          projectId: Value(project.id),
+          name: const Value('Animation'),
+          frameRate: const Value(24),
+          createdAt: Value(DateTime.now()),
+          editedAt: Value(DateTime.now()),
+        ),
+      );
+
+      projectStates[project.id] = id;
+    }
+
+    await customStatement('''
+      ALTER TABLE ${framesTable.actualTableName} ADD COLUMN state_id INTEGER NOT NULL REFERENCES ${animationStateTable.actualTableName}(id) ON DELETE CASCADE ON UPDATE CASCADE DEFAULT ${projectStates.values.first};
+    ''');
+
+    for (final project in projectStates.entries) {
+      final frames = await (select(framesTable)
+            ..where((tbl) => tbl.projectId.equals(project.key)))
+          .get();
+      for (final frame in frames) {
+        await update(framesTable).replace(FramesTableCompanion(
+          id: Value(frame.id),
+          projectId: Value(frame.projectId),
+          name: Value(frame.name),
+          duration: Value(frame.duration),
+          stateId: Value(project.value),
+          order: Value(frame.order),
+          createdAt: Value(frame.createdAt),
+          editedAt: Value(frame.editedAt),
+        ));
+      }
+    }
+
+    await customStatement('PRAGMA foreign_keys = ON;');
+  }
+
   Stream<List<Project>> getAllProjects() async* {
     final query = select(projectsTable).join([
+      leftOuterJoin(
+        animationStateTable,
+        animationStateTable.projectId.equalsExp(projectsTable.id),
+      ),
       leftOuterJoin(
         framesTable,
         framesTable.projectId.equalsExp(projectsTable.id),
@@ -117,16 +183,22 @@ class AppDatabase extends _$AppDatabase {
           expression: projectsTable.editedAt,
           mode: OrderingMode.desc,
         ),
+        OrderingTerm(
+          expression: animationStateTable.id,
+          mode: OrderingMode.asc,
+        ),
         OrderingTerm(expression: framesTable.order, mode: OrderingMode.asc),
         OrderingTerm(expression: layersTable.order, mode: OrderingMode.asc),
       ]);
 
     yield* query.watch().map((rows) {
       final projects = <int, Project>{};
+      final states = <int, AnimationStateModel>{};
       final frames = <int, AnimationFrame>{};
 
       for (final row in rows) {
         final projectRow = row.readTable(projectsTable);
+        final stateRow = row.readTableOrNull(animationStateTable);
         final frameRow = row.readTableOrNull(framesTable);
         final layerRow = row.readTableOrNull(layersTable);
 
@@ -141,8 +213,22 @@ class AppDatabase extends _$AppDatabase {
             createdAt: projectRow.createdAt,
             editedAt: projectRow.editedAt,
             frames: [],
+            states: [],
           );
           projects[projectRow.id] = project;
+        }
+
+        if (stateRow != null) {
+          var state = states[stateRow.id];
+          if (state == null) {
+            state = AnimationStateModel(
+              id: stateRow.id,
+              name: stateRow.name,
+              frameRate: stateRow.frameRate,
+            );
+            states[stateRow.id] = state;
+            project.states.add(state);
+          }
         }
 
         if (frameRow != null) {
@@ -150,6 +236,7 @@ class AppDatabase extends _$AppDatabase {
           if (frame == null) {
             frame = AnimationFrame(
               id: frameRow.id,
+              stateId: frameRow.stateId,
               name: frameRow.name,
               duration: frameRow.duration,
               createdAt: frameRow.createdAt,
@@ -182,6 +269,10 @@ class AppDatabase extends _$AppDatabase {
   Future<Project?> getProject(int projectId) async {
     final query = select(projectsTable).join([
       leftOuterJoin(
+        animationStateTable,
+        animationStateTable.projectId.equalsExp(projectsTable.id),
+      ),
+      leftOuterJoin(
         framesTable,
         framesTable.projectId.equalsExp(projectsTable.id),
       ),
@@ -191,6 +282,10 @@ class AppDatabase extends _$AppDatabase {
       ),
     ])
       ..orderBy([
+        OrderingTerm(
+          expression: animationStateTable.id,
+          mode: OrderingMode.asc,
+        ),
         OrderingTerm(expression: framesTable.order, mode: OrderingMode.asc),
         OrderingTerm(expression: layersTable.order, mode: OrderingMode.asc),
       ])
@@ -204,9 +299,11 @@ class AppDatabase extends _$AppDatabase {
 
     final projectMap = <int, Project>{};
     final frameMap = <int, AnimationFrame>{};
+    final stateMap = <int, AnimationStateModel>{};
 
     for (final row in rows) {
       final project = row.readTable(projectsTable);
+      final state = row.readTableOrNull(animationStateTable);
       final frame = row.readTableOrNull(framesTable);
       final layer = row.readTableOrNull(layersTable);
 
@@ -219,14 +316,25 @@ class AppDatabase extends _$AppDatabase {
           thumbnail: project.thumbnail,
           createdAt: project.createdAt,
           editedAt: project.editedAt,
+          states: [],
           frames: [],
         );
+      }
+
+      if (state != null && !stateMap.containsKey(state.id)) {
+        stateMap[state.id] = AnimationStateModel(
+          id: state.id,
+          name: state.name,
+          frameRate: state.frameRate,
+        );
+        projectMap[project.id]!.states.add(stateMap[state.id]!);
       }
 
       if (frame != null) {
         if (!frameMap.containsKey(frame.id)) {
           frameMap[frame.id] = AnimationFrame(
             id: frame.id,
+            stateId: frame.stateId,
             name: frame.name,
             duration: frame.duration,
             createdAt: frame.createdAt,
@@ -236,7 +344,10 @@ class AppDatabase extends _$AppDatabase {
           projectMap[project.id]!.frames.add(frameMap[frame.id]!);
         }
 
-        if (layer != null && layer.frameId == frame.id) {
+        final containsLayer = frameMap[frame.id]!
+            .layers
+            .any((element) => element.layerId == layer?.id);
+        if (layer != null && layer.frameId == frame.id && !containsLayer) {
           frameMap[frame.id]!.layers.add(Layer(
                 layerId: layer.id,
                 id: layer.layerId,
@@ -263,10 +374,25 @@ class AppDatabase extends _$AppDatabase {
       editedAt: Value(project.editedAt),
     ));
 
+    final states = <AnimationStateModel>[];
+    for (final state in project.states) {
+      final stateId = await into(animationStateTable).insert(
+        AnimationStateTableCompanion(
+          projectId: Value(projectId),
+          name: Value(state.name),
+          frameRate: Value(state.frameRate),
+          createdAt: Value(DateTime.now()),
+          editedAt: Value(DateTime.now()),
+        ),
+      );
+      states.add(state.copyWith(id: stateId));
+    }
+
     final frames = <AnimationFrame>[];
     for (final frame in project.frames) {
       final frameId = await into(framesTable).insert(FramesTableCompanion(
         projectId: Value(projectId),
+        stateId: Value(frame.stateId),
         name: Value(frame.name),
         duration: Value(frame.duration),
         createdAt: Value(frame.createdAt),
@@ -307,10 +433,32 @@ class AppDatabase extends _$AppDatabase {
       editedAt: Value(project.editedAt),
     ));
 
+    for (final state in project.states) {
+      if (state.id == 0) {
+        await into(animationStateTable).insert(AnimationStateTableCompanion(
+          projectId: Value(project.id),
+          name: Value(state.name),
+          frameRate: Value(state.frameRate),
+          createdAt: Value(DateTime.now()),
+          editedAt: Value(DateTime.now()),
+        ));
+      } else {
+        await update(animationStateTable).replace(AnimationStateTableCompanion(
+          id: Value(state.id),
+          projectId: Value(project.id),
+          name: Value(state.name),
+          frameRate: Value(state.frameRate),
+          createdAt: Value(DateTime.now()),
+          editedAt: Value(DateTime.now()),
+        ));
+      }
+    }
+
     for (final frame in project.frames) {
       if (frame.id == 0) {
         final frameId = await into(framesTable).insert(FramesTableCompanion(
           projectId: Value(project.id),
+          stateId: Value(frame.stateId),
           name: Value(frame.name),
           duration: Value(frame.duration),
           createdAt: Value(frame.createdAt),
@@ -333,6 +481,7 @@ class AppDatabase extends _$AppDatabase {
         await update(framesTable).replace(FramesTableCompanion(
           id: Value(frame.id),
           projectId: Value(project.id),
+          stateId: Value(frame.stateId),
           name: Value(frame.name),
           duration: Value(frame.duration),
           createdAt: Value(frame.createdAt),
@@ -375,6 +524,9 @@ class AppDatabase extends _$AppDatabase {
   Future<void> deleteProject(int projectId) async {
     await (delete(projectsTable)..where((tbl) => tbl.id.equals(projectId)))
         .go();
+    await (delete(animationStateTable)
+          ..where((tbl) => tbl.projectId.equals(projectId)))
+        .go();
     await (delete(framesTable)..where((tbl) => tbl.projectId.equals(projectId)))
         .go();
     await (delete(layersTable)..where((tbl) => tbl.projectId.equals(projectId)))
@@ -387,6 +539,43 @@ class AppDatabase extends _$AppDatabase {
       ..write(ProjectsTableCompanion(name: Value(name))));
   }
 
+  Future<AnimationStateModel> insertState(
+    int projectId,
+    AnimationStateModel state,
+  ) async {
+    final stateId = await into(animationStateTable).insert(
+      AnimationStateTableCompanion(
+        projectId: Value(projectId),
+        name: Value(state.name),
+        frameRate: Value(state.frameRate),
+        createdAt: Value(DateTime.now()),
+        editedAt: Value(DateTime.now()),
+      ),
+    );
+
+    return state.copyWith(id: stateId);
+  }
+
+  Future<void> updateState(int projectId, AnimationStateModel state) async {
+    await update(animationStateTable).replace(
+      AnimationStateTableCompanion(
+        id: Value(state.id),
+        projectId: Value(projectId),
+        name: Value(state.name),
+        frameRate: Value(state.frameRate),
+        createdAt: Value(DateTime.now()),
+        editedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  Future<void> deleteState(int stateId) async {
+    await (delete(animationStateTable)..where((tbl) => tbl.id.equals(stateId)))
+        .go();
+    await (delete(framesTable)..where((tbl) => tbl.stateId.equals(stateId)))
+        .go();
+  }
+
   Future<AnimationFrame> insertFrame(
     int projectId,
     AnimationFrame frame,
@@ -394,6 +583,7 @@ class AppDatabase extends _$AppDatabase {
     final frameId = await into(framesTable).insert(FramesTableCompanion(
       projectId: Value(projectId),
       name: Value(frame.name),
+      stateId: Value(frame.stateId),
       duration: Value(frame.duration),
       createdAt: Value(frame.createdAt),
       editedAt: Value(frame.editedAt),
@@ -423,6 +613,7 @@ class AppDatabase extends _$AppDatabase {
     await update(framesTable).replace(FramesTableCompanion(
       id: Value(frame.id),
       projectId: Value(projectId),
+      stateId: Value(frame.stateId),
       name: Value(frame.name),
       duration: Value(frame.duration),
       createdAt: Value(frame.createdAt),

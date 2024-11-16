@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -9,9 +8,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:pixelverse/l10n/strings.dart';
-import 'package:uuid/uuid.dart';
 
+import '../../l10n/strings.dart';
 import '../../data.dart';
 import '../../core.dart';
 import '../../pixel/image_painter.dart';
@@ -106,7 +104,7 @@ class ProjectsScreen extends HookConsumerWidget {
                 projects: projects,
                 onCreateNew: () => _navigateToNewProject(context, ref),
                 onTapProject: (project) {
-                  overlayLoader.value = _openProject(context, ref, project.id);
+                  _openProject(context, ref, project.id, overlayLoader);
                 },
                 onDeleteProject: (project) {
                   ref.read(projectsProvider.notifier).deleteProject(project);
@@ -122,8 +120,11 @@ class ProjectsScreen extends HookConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Feather.alert_circle,
-                        size: 64, color: Colors.red),
+                    const Icon(
+                      Feather.alert_circle,
+                      size: 64,
+                      color: Colors.red,
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       Strings.of(context).anErrorOccurred,
@@ -133,6 +134,11 @@ class ProjectsScreen extends HookConsumerWidget {
                     const SizedBox(height: 10),
                     Text(
                       error.toString(),
+                      style: Theme.of(context).textTheme.bodySmall,
+                      textAlign: TextAlign.center,
+                    ),
+                    Text(
+                      stackTrace.toString(),
                       style: Theme.of(context).textTheme.bodySmall,
                       textAlign: TextAlign.center,
                     ),
@@ -166,21 +172,6 @@ class ProjectsScreen extends HookConsumerWidget {
         height: result.height,
         createdAt: DateTime.now(),
         editedAt: DateTime.now(),
-        frames: [
-          AnimationFrame(
-            id: 0,
-            name: 'Frame 1',
-            duration: 100,
-            layers: [
-              Layer(
-                layerId: 0,
-                id: const Uuid().v4(),
-                name: 'Layer 1',
-                pixels: Uint32List(result.width * result.height),
-              ),
-            ],
-          ),
-        ],
       );
 
       final loader = showLoader(
@@ -201,28 +192,31 @@ class ProjectsScreen extends HookConsumerWidget {
     }
   }
 
-  OverlayEntry _openProject(
+  void _openProject(
     BuildContext context,
     WidgetRef ref,
     int projectId,
-  ) {
-    final loader = showLoader(
+    ValueNotifier<OverlayEntry?> loader,
+  ) async {
+    loader.value = showLoader(
       context,
       loadingText: Strings.of(context).openingProject,
     );
 
-    ref.read(projectsProvider.notifier).getProject(projectId).then((project) {
-      loader.remove();
-      if (project != null) {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => PixelDrawScreen(project: project),
-          ),
-        );
-      }
-    });
+    final project =
+        await ref.read(projectsProvider.notifier).getProject(projectId);
 
-    return loader;
+    if (project != null && context.mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) {
+            return PixelDrawScreen(project: project);
+          },
+        ),
+      );
+    }
+
+    loader.value?.remove();
   }
 }
 

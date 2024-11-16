@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
-import 'package:pixelverse/core/utils.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:uuid/uuid.dart';
 
+import '../core/utils.dart';
 import '../data.dart';
 import 'providers.dart';
 
@@ -16,13 +18,43 @@ class Projects extends _$Projects {
     return ref.read(projectRepo).fetchProjects();
   }
 
-  Future<Project> addProject(Project project) async {
+  Future<Project> addProject(Project newProject) async {
     ref.read(analyticsProvider).logEvent(name: 'add_project', parameters: {
-      'project_id': project.id,
-      'project_name': project.name,
+      'project_id': newProject.id,
+      'project_name': newProject.name,
     });
 
-    return ref.read(projectRepo).createProject(project);
+    final project = await ref.read(projectRepo).createProject(newProject);
+    final state = await ref.read(projectRepo).createState(
+          project.id,
+          const AnimationStateModel(
+            id: 0,
+            name: 'Animation',
+            frameRate: 24,
+          ),
+        );
+    final frame = await ref.read(projectRepo).createFrame(
+          project.id,
+          AnimationFrame(
+            id: 0,
+            stateId: state.id,
+            name: 'Frame 1',
+            duration: 100,
+            layers: [
+              Layer(
+                layerId: 0,
+                id: const Uuid().v4(),
+                name: 'Layer 1',
+                pixels: Uint32List(project.width * project.height),
+                order: 0,
+              ),
+            ],
+          ),
+        );
+    return project.copyWith(
+      states: [state],
+      frames: [frame],
+    );
   }
 
   Future<Project?> getProject(int projectId) async {

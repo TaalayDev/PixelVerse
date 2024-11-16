@@ -39,6 +39,7 @@ class AppTheme {
 
     return t.copyWith(
       primaryColor: primaryColor,
+      brightness: isDark ? Brightness.dark : Brightness.light,
       visualDensity: VisualDensity.adaptivePlatformDensity,
       textTheme: GoogleFonts.sourceCodeProTextTheme(t.textTheme),
       colorScheme: ColorScheme.fromSeed(

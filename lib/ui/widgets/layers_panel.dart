@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:animated_reorderable_list/animated_reorderable_list.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:pixelverse/l10n/strings.dart';
 
-import '../../data.dart';
 import '../../pixel/image_painter.dart';
+import '../../l10n/strings.dart';
+import '../../data.dart';
 import 'layers_preview.dart';
 
 class LayersPanel extends HookConsumerWidget {
@@ -45,6 +45,7 @@ class LayersPanel extends HookConsumerWidget {
       children: [
         const Divider(),
         _buildLayersPanelHeader(context),
+        Divider(color: Theme.of(context).dividerColor.withOpacity(0.2)),
         Expanded(
           child: AnimatedReorderableListView(
             items: layers,
@@ -72,7 +73,7 @@ class LayersPanel extends HookConsumerWidget {
 
   Widget _buildLayersPanelHeader(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

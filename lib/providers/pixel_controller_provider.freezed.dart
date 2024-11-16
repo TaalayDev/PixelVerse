@@ -18,7 +18,10 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$PixelDrawState {
   int get width => throw _privateConstructorUsedError;
   int get height => throw _privateConstructorUsedError;
+  List<AnimationStateModel> get animationStates =>
+      throw _privateConstructorUsedError;
   List<AnimationFrame> get frames => throw _privateConstructorUsedError;
+  int get currentAnimationStateIndex => throw _privateConstructorUsedError;
   int get currentFrameIndex => throw _privateConstructorUsedError;
   int get currentLayerIndex => throw _privateConstructorUsedError;
   ui.Color get currentColor => throw _privateConstructorUsedError;
@@ -42,7 +45,9 @@ abstract class $PixelDrawStateCopyWith<$Res> {
   $Res call(
       {int width,
       int height,
+      List<AnimationStateModel> animationStates,
       List<AnimationFrame> frames,
+      int currentAnimationStateIndex,
       int currentFrameIndex,
       int currentLayerIndex,
       ui.Color currentColor,
@@ -68,7 +73,9 @@ class _$PixelDrawStateCopyWithImpl<$Res, $Val extends PixelDrawState>
   $Res call({
     Object? width = null,
     Object? height = null,
+    Object? animationStates = null,
     Object? frames = null,
+    Object? currentAnimationStateIndex = null,
     Object? currentFrameIndex = null,
     Object? currentLayerIndex = null,
     Object? currentColor = null,
@@ -87,10 +94,18 @@ class _$PixelDrawStateCopyWithImpl<$Res, $Val extends PixelDrawState>
           ? _value.height
           : height // ignore: cast_nullable_to_non_nullable
               as int,
+      animationStates: null == animationStates
+          ? _value.animationStates
+          : animationStates // ignore: cast_nullable_to_non_nullable
+              as List<AnimationStateModel>,
       frames: null == frames
           ? _value.frames
           : frames // ignore: cast_nullable_to_non_nullable
               as List<AnimationFrame>,
+      currentAnimationStateIndex: null == currentAnimationStateIndex
+          ? _value.currentAnimationStateIndex
+          : currentAnimationStateIndex // ignore: cast_nullable_to_non_nullable
+              as int,
       currentFrameIndex: null == currentFrameIndex
           ? _value.currentFrameIndex
           : currentFrameIndex // ignore: cast_nullable_to_non_nullable
@@ -138,7 +153,9 @@ abstract class _$$PixelDrawStateImplCopyWith<$Res>
   $Res call(
       {int width,
       int height,
+      List<AnimationStateModel> animationStates,
       List<AnimationFrame> frames,
+      int currentAnimationStateIndex,
       int currentFrameIndex,
       int currentLayerIndex,
       ui.Color currentColor,
@@ -162,7 +179,9 @@ class __$$PixelDrawStateImplCopyWithImpl<$Res>
   $Res call({
     Object? width = null,
     Object? height = null,
+    Object? animationStates = null,
     Object? frames = null,
+    Object? currentAnimationStateIndex = null,
     Object? currentFrameIndex = null,
     Object? currentLayerIndex = null,
     Object? currentColor = null,
@@ -181,10 +200,18 @@ class __$$PixelDrawStateImplCopyWithImpl<$Res>
           ? _value.height
           : height // ignore: cast_nullable_to_non_nullable
               as int,
+      animationStates: null == animationStates
+          ? _value._animationStates
+          : animationStates // ignore: cast_nullable_to_non_nullable
+              as List<AnimationStateModel>,
       frames: null == frames
           ? _value._frames
           : frames // ignore: cast_nullable_to_non_nullable
               as List<AnimationFrame>,
+      currentAnimationStateIndex: null == currentAnimationStateIndex
+          ? _value.currentAnimationStateIndex
+          : currentAnimationStateIndex // ignore: cast_nullable_to_non_nullable
+              as int,
       currentFrameIndex: null == currentFrameIndex
           ? _value.currentFrameIndex
           : currentFrameIndex // ignore: cast_nullable_to_non_nullable
@@ -227,7 +254,9 @@ class _$PixelDrawStateImpl extends _PixelDrawState {
   const _$PixelDrawStateImpl(
       {required this.width,
       required this.height,
+      required final List<AnimationStateModel> animationStates,
       required final List<AnimationFrame> frames,
+      this.currentAnimationStateIndex = 0,
       this.currentFrameIndex = 0,
       this.currentLayerIndex = 0,
       required this.currentColor,
@@ -236,13 +265,22 @@ class _$PixelDrawStateImpl extends _PixelDrawState {
       this.selectionRect,
       this.canUndo = false,
       this.canRedo = false})
-      : _frames = frames,
+      : _animationStates = animationStates,
+        _frames = frames,
         super._();
 
   @override
   final int width;
   @override
   final int height;
+  final List<AnimationStateModel> _animationStates;
+  @override
+  List<AnimationStateModel> get animationStates {
+    if (_animationStates is EqualUnmodifiableListView) return _animationStates;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_animationStates);
+  }
+
   final List<AnimationFrame> _frames;
   @override
   List<AnimationFrame> get frames {
@@ -251,6 +289,9 @@ class _$PixelDrawStateImpl extends _PixelDrawState {
     return EqualUnmodifiableListView(_frames);
   }
 
+  @override
+  @JsonKey()
+  final int currentAnimationStateIndex;
   @override
   @JsonKey()
   final int currentFrameIndex;
@@ -274,7 +315,7 @@ class _$PixelDrawStateImpl extends _PixelDrawState {
 
   @override
   String toString() {
-    return 'PixelDrawState(width: $width, height: $height, frames: $frames, currentFrameIndex: $currentFrameIndex, currentLayerIndex: $currentLayerIndex, currentColor: $currentColor, currentTool: $currentTool, mirrorAxis: $mirrorAxis, selectionRect: $selectionRect, canUndo: $canUndo, canRedo: $canRedo)';
+    return 'PixelDrawState(width: $width, height: $height, animationStates: $animationStates, frames: $frames, currentAnimationStateIndex: $currentAnimationStateIndex, currentFrameIndex: $currentFrameIndex, currentLayerIndex: $currentLayerIndex, currentColor: $currentColor, currentTool: $currentTool, mirrorAxis: $mirrorAxis, selectionRect: $selectionRect, canUndo: $canUndo, canRedo: $canRedo)';
   }
 
   @override
@@ -284,7 +325,13 @@ class _$PixelDrawStateImpl extends _PixelDrawState {
             other is _$PixelDrawStateImpl &&
             (identical(other.width, width) || other.width == width) &&
             (identical(other.height, height) || other.height == height) &&
+            const DeepCollectionEquality()
+                .equals(other._animationStates, _animationStates) &&
             const DeepCollectionEquality().equals(other._frames, _frames) &&
+            (identical(other.currentAnimationStateIndex,
+                    currentAnimationStateIndex) ||
+                other.currentAnimationStateIndex ==
+                    currentAnimationStateIndex) &&
             (identical(other.currentFrameIndex, currentFrameIndex) ||
                 other.currentFrameIndex == currentFrameIndex) &&
             (identical(other.currentLayerIndex, currentLayerIndex) ||
@@ -306,7 +353,9 @@ class _$PixelDrawStateImpl extends _PixelDrawState {
       runtimeType,
       width,
       height,
+      const DeepCollectionEquality().hash(_animationStates),
       const DeepCollectionEquality().hash(_frames),
+      currentAnimationStateIndex,
       currentFrameIndex,
       currentLayerIndex,
       currentColor,
@@ -328,7 +377,9 @@ abstract class _PixelDrawState extends PixelDrawState {
   const factory _PixelDrawState(
       {required final int width,
       required final int height,
+      required final List<AnimationStateModel> animationStates,
       required final List<AnimationFrame> frames,
+      final int currentAnimationStateIndex,
       final int currentFrameIndex,
       final int currentLayerIndex,
       required final ui.Color currentColor,
@@ -344,7 +395,11 @@ abstract class _PixelDrawState extends PixelDrawState {
   @override
   int get height;
   @override
+  List<AnimationStateModel> get animationStates;
+  @override
   List<AnimationFrame> get frames;
+  @override
+  int get currentAnimationStateIndex;
   @override
   int get currentFrameIndex;
   @override

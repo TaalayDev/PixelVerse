@@ -72,7 +72,7 @@ class _SaveImageDialogState extends State<SaveImageDialog> {
 
   @override
   void initState() {
-    final framesLength = widget.state.frames.length;
+    final framesLength = widget.state.currentFrames.length;
     if (!columnOptions.contains(framesLength)) {
       columnOptions.add(framesLength);
       columnOptions.sort();
@@ -264,7 +264,7 @@ class _SaveImageDialogState extends State<SaveImageDialog> {
                 return AnimationPreview(
                   width: widget.state.width,
                   height: widget.state.height,
-                  frames: widget.state.frames,
+                  frames: widget.state.currentFrames,
                 );
               } else {
                 return SizedBox(
@@ -273,7 +273,7 @@ class _SaveImageDialogState extends State<SaveImageDialog> {
                   child: SpriteSheetPreview(
                     width: widget.state.width,
                     height: widget.state.height,
-                    frames: widget.state.frames,
+                    frames: widget.state.currentFrames,
                     columns: spriteSheetColumns,
                     spacing: spriteSheetSpacing,
                     includeAllFrames: includeAllFrames,

@@ -379,6 +379,352 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectsTableData> {
   }
 }
 
+class $AnimationStateTableTable extends AnimationStateTable
+    with TableInfo<$AnimationStateTableTable, AnimationStateTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AnimationStateTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _projectIdMeta =
+      const VerificationMeta('projectId');
+  @override
+  late final GeneratedColumn<int> projectId = GeneratedColumn<int>(
+      'project_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES projects_table (id)'));
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 100),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _frameRateMeta =
+      const VerificationMeta('frameRate');
+  @override
+  late final GeneratedColumn<int> frameRate = GeneratedColumn<int>(
+      'frame_rate', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _editedAtMeta =
+      const VerificationMeta('editedAt');
+  @override
+  late final GeneratedColumn<DateTime> editedAt = GeneratedColumn<DateTime>(
+      'edited_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, projectId, name, frameRate, createdAt, editedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'animation_state_table';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<AnimationStateTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('project_id')) {
+      context.handle(_projectIdMeta,
+          projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta));
+    } else if (isInserting) {
+      context.missing(_projectIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('frame_rate')) {
+      context.handle(_frameRateMeta,
+          frameRate.isAcceptableOrUnknown(data['frame_rate']!, _frameRateMeta));
+    } else if (isInserting) {
+      context.missing(_frameRateMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('edited_at')) {
+      context.handle(_editedAtMeta,
+          editedAt.isAcceptableOrUnknown(data['edited_at']!, _editedAtMeta));
+    } else if (isInserting) {
+      context.missing(_editedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AnimationStateTableData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AnimationStateTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      projectId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}project_id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      frameRate: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}frame_rate'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      editedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}edited_at'])!,
+    );
+  }
+
+  @override
+  $AnimationStateTableTable createAlias(String alias) {
+    return $AnimationStateTableTable(attachedDatabase, alias);
+  }
+}
+
+class AnimationStateTableData extends DataClass
+    implements Insertable<AnimationStateTableData> {
+  final int id;
+  final int projectId;
+  final String name;
+  final int frameRate;
+  final DateTime createdAt;
+  final DateTime editedAt;
+  const AnimationStateTableData(
+      {required this.id,
+      required this.projectId,
+      required this.name,
+      required this.frameRate,
+      required this.createdAt,
+      required this.editedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['project_id'] = Variable<int>(projectId);
+    map['name'] = Variable<String>(name);
+    map['frame_rate'] = Variable<int>(frameRate);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['edited_at'] = Variable<DateTime>(editedAt);
+    return map;
+  }
+
+  AnimationStateTableCompanion toCompanion(bool nullToAbsent) {
+    return AnimationStateTableCompanion(
+      id: Value(id),
+      projectId: Value(projectId),
+      name: Value(name),
+      frameRate: Value(frameRate),
+      createdAt: Value(createdAt),
+      editedAt: Value(editedAt),
+    );
+  }
+
+  factory AnimationStateTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AnimationStateTableData(
+      id: serializer.fromJson<int>(json['id']),
+      projectId: serializer.fromJson<int>(json['projectId']),
+      name: serializer.fromJson<String>(json['name']),
+      frameRate: serializer.fromJson<int>(json['frameRate']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      editedAt: serializer.fromJson<DateTime>(json['editedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'projectId': serializer.toJson<int>(projectId),
+      'name': serializer.toJson<String>(name),
+      'frameRate': serializer.toJson<int>(frameRate),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'editedAt': serializer.toJson<DateTime>(editedAt),
+    };
+  }
+
+  AnimationStateTableData copyWith(
+          {int? id,
+          int? projectId,
+          String? name,
+          int? frameRate,
+          DateTime? createdAt,
+          DateTime? editedAt}) =>
+      AnimationStateTableData(
+        id: id ?? this.id,
+        projectId: projectId ?? this.projectId,
+        name: name ?? this.name,
+        frameRate: frameRate ?? this.frameRate,
+        createdAt: createdAt ?? this.createdAt,
+        editedAt: editedAt ?? this.editedAt,
+      );
+  AnimationStateTableData copyWithCompanion(AnimationStateTableCompanion data) {
+    return AnimationStateTableData(
+      id: data.id.present ? data.id.value : this.id,
+      projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      name: data.name.present ? data.name.value : this.name,
+      frameRate: data.frameRate.present ? data.frameRate.value : this.frameRate,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      editedAt: data.editedAt.present ? data.editedAt.value : this.editedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AnimationStateTableData(')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('name: $name, ')
+          ..write('frameRate: $frameRate, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('editedAt: $editedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, projectId, name, frameRate, createdAt, editedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AnimationStateTableData &&
+          other.id == this.id &&
+          other.projectId == this.projectId &&
+          other.name == this.name &&
+          other.frameRate == this.frameRate &&
+          other.createdAt == this.createdAt &&
+          other.editedAt == this.editedAt);
+}
+
+class AnimationStateTableCompanion
+    extends UpdateCompanion<AnimationStateTableData> {
+  final Value<int> id;
+  final Value<int> projectId;
+  final Value<String> name;
+  final Value<int> frameRate;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> editedAt;
+  const AnimationStateTableCompanion({
+    this.id = const Value.absent(),
+    this.projectId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.frameRate = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.editedAt = const Value.absent(),
+  });
+  AnimationStateTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int projectId,
+    required String name,
+    required int frameRate,
+    required DateTime createdAt,
+    required DateTime editedAt,
+  })  : projectId = Value(projectId),
+        name = Value(name),
+        frameRate = Value(frameRate),
+        createdAt = Value(createdAt),
+        editedAt = Value(editedAt);
+  static Insertable<AnimationStateTableData> custom({
+    Expression<int>? id,
+    Expression<int>? projectId,
+    Expression<String>? name,
+    Expression<int>? frameRate,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? editedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (projectId != null) 'project_id': projectId,
+      if (name != null) 'name': name,
+      if (frameRate != null) 'frame_rate': frameRate,
+      if (createdAt != null) 'created_at': createdAt,
+      if (editedAt != null) 'edited_at': editedAt,
+    });
+  }
+
+  AnimationStateTableCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? projectId,
+      Value<String>? name,
+      Value<int>? frameRate,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? editedAt}) {
+    return AnimationStateTableCompanion(
+      id: id ?? this.id,
+      projectId: projectId ?? this.projectId,
+      name: name ?? this.name,
+      frameRate: frameRate ?? this.frameRate,
+      createdAt: createdAt ?? this.createdAt,
+      editedAt: editedAt ?? this.editedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (projectId.present) {
+      map['project_id'] = Variable<int>(projectId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (frameRate.present) {
+      map['frame_rate'] = Variable<int>(frameRate.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (editedAt.present) {
+      map['edited_at'] = Variable<DateTime>(editedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AnimationStateTableCompanion(')
+          ..write('id: $id, ')
+          ..write('projectId: $projectId, ')
+          ..write('name: $name, ')
+          ..write('frameRate: $frameRate, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('editedAt: $editedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $FramesTableTable extends FramesTable
     with TableInfo<$FramesTableTable, FramesTableData> {
   @override
@@ -403,6 +749,15 @@ class $FramesTableTable extends FramesTable
       requiredDuringInsert: true,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('REFERENCES projects_table (id)'));
+  static const VerificationMeta _stateIdMeta =
+      const VerificationMeta('stateId');
+  @override
+  late final GeneratedColumn<int> stateId = GeneratedColumn<int>(
+      'state_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES animation_state_table (id)'));
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
@@ -436,7 +791,7 @@ class $FramesTableTable extends FramesTable
       type: DriftSqlType.dateTime, requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns =>
-      [id, projectId, name, duration, order, createdAt, editedAt];
+      [id, projectId, stateId, name, duration, order, createdAt, editedAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -455,6 +810,12 @@ class $FramesTableTable extends FramesTable
           projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta));
     } else if (isInserting) {
       context.missing(_projectIdMeta);
+    }
+    if (data.containsKey('state_id')) {
+      context.handle(_stateIdMeta,
+          stateId.isAcceptableOrUnknown(data['state_id']!, _stateIdMeta));
+    } else if (isInserting) {
+      context.missing(_stateIdMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
@@ -499,6 +860,8 @@ class $FramesTableTable extends FramesTable
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       projectId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}project_id'])!,
+      stateId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}state_id'])!,
       name: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
       duration: attachedDatabase.typeMapping
@@ -521,6 +884,7 @@ class $FramesTableTable extends FramesTable
 class FramesTableData extends DataClass implements Insertable<FramesTableData> {
   final int id;
   final int projectId;
+  final int stateId;
   final String name;
   final int duration;
   final int order;
@@ -529,6 +893,7 @@ class FramesTableData extends DataClass implements Insertable<FramesTableData> {
   const FramesTableData(
       {required this.id,
       required this.projectId,
+      required this.stateId,
       required this.name,
       required this.duration,
       required this.order,
@@ -539,6 +904,7 @@ class FramesTableData extends DataClass implements Insertable<FramesTableData> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['project_id'] = Variable<int>(projectId);
+    map['state_id'] = Variable<int>(stateId);
     map['name'] = Variable<String>(name);
     map['duration'] = Variable<int>(duration);
     map['order'] = Variable<int>(order);
@@ -551,6 +917,7 @@ class FramesTableData extends DataClass implements Insertable<FramesTableData> {
     return FramesTableCompanion(
       id: Value(id),
       projectId: Value(projectId),
+      stateId: Value(stateId),
       name: Value(name),
       duration: Value(duration),
       order: Value(order),
@@ -565,6 +932,7 @@ class FramesTableData extends DataClass implements Insertable<FramesTableData> {
     return FramesTableData(
       id: serializer.fromJson<int>(json['id']),
       projectId: serializer.fromJson<int>(json['projectId']),
+      stateId: serializer.fromJson<int>(json['stateId']),
       name: serializer.fromJson<String>(json['name']),
       duration: serializer.fromJson<int>(json['duration']),
       order: serializer.fromJson<int>(json['order']),
@@ -578,6 +946,7 @@ class FramesTableData extends DataClass implements Insertable<FramesTableData> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'projectId': serializer.toJson<int>(projectId),
+      'stateId': serializer.toJson<int>(stateId),
       'name': serializer.toJson<String>(name),
       'duration': serializer.toJson<int>(duration),
       'order': serializer.toJson<int>(order),
@@ -589,6 +958,7 @@ class FramesTableData extends DataClass implements Insertable<FramesTableData> {
   FramesTableData copyWith(
           {int? id,
           int? projectId,
+          int? stateId,
           String? name,
           int? duration,
           int? order,
@@ -597,6 +967,7 @@ class FramesTableData extends DataClass implements Insertable<FramesTableData> {
       FramesTableData(
         id: id ?? this.id,
         projectId: projectId ?? this.projectId,
+        stateId: stateId ?? this.stateId,
         name: name ?? this.name,
         duration: duration ?? this.duration,
         order: order ?? this.order,
@@ -607,6 +978,7 @@ class FramesTableData extends DataClass implements Insertable<FramesTableData> {
     return FramesTableData(
       id: data.id.present ? data.id.value : this.id,
       projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      stateId: data.stateId.present ? data.stateId.value : this.stateId,
       name: data.name.present ? data.name.value : this.name,
       duration: data.duration.present ? data.duration.value : this.duration,
       order: data.order.present ? data.order.value : this.order,
@@ -620,6 +992,7 @@ class FramesTableData extends DataClass implements Insertable<FramesTableData> {
     return (StringBuffer('FramesTableData(')
           ..write('id: $id, ')
           ..write('projectId: $projectId, ')
+          ..write('stateId: $stateId, ')
           ..write('name: $name, ')
           ..write('duration: $duration, ')
           ..write('order: $order, ')
@@ -630,14 +1003,15 @@ class FramesTableData extends DataClass implements Insertable<FramesTableData> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, projectId, name, duration, order, createdAt, editedAt);
+  int get hashCode => Object.hash(
+      id, projectId, stateId, name, duration, order, createdAt, editedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is FramesTableData &&
           other.id == this.id &&
           other.projectId == this.projectId &&
+          other.stateId == this.stateId &&
           other.name == this.name &&
           other.duration == this.duration &&
           other.order == this.order &&
@@ -648,6 +1022,7 @@ class FramesTableData extends DataClass implements Insertable<FramesTableData> {
 class FramesTableCompanion extends UpdateCompanion<FramesTableData> {
   final Value<int> id;
   final Value<int> projectId;
+  final Value<int> stateId;
   final Value<String> name;
   final Value<int> duration;
   final Value<int> order;
@@ -656,6 +1031,7 @@ class FramesTableCompanion extends UpdateCompanion<FramesTableData> {
   const FramesTableCompanion({
     this.id = const Value.absent(),
     this.projectId = const Value.absent(),
+    this.stateId = const Value.absent(),
     this.name = const Value.absent(),
     this.duration = const Value.absent(),
     this.order = const Value.absent(),
@@ -665,12 +1041,14 @@ class FramesTableCompanion extends UpdateCompanion<FramesTableData> {
   FramesTableCompanion.insert({
     this.id = const Value.absent(),
     required int projectId,
+    required int stateId,
     required String name,
     required int duration,
     required int order,
     required DateTime createdAt,
     required DateTime editedAt,
   })  : projectId = Value(projectId),
+        stateId = Value(stateId),
         name = Value(name),
         duration = Value(duration),
         order = Value(order),
@@ -679,6 +1057,7 @@ class FramesTableCompanion extends UpdateCompanion<FramesTableData> {
   static Insertable<FramesTableData> custom({
     Expression<int>? id,
     Expression<int>? projectId,
+    Expression<int>? stateId,
     Expression<String>? name,
     Expression<int>? duration,
     Expression<int>? order,
@@ -688,6 +1067,7 @@ class FramesTableCompanion extends UpdateCompanion<FramesTableData> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (projectId != null) 'project_id': projectId,
+      if (stateId != null) 'state_id': stateId,
       if (name != null) 'name': name,
       if (duration != null) 'duration': duration,
       if (order != null) 'order': order,
@@ -699,6 +1079,7 @@ class FramesTableCompanion extends UpdateCompanion<FramesTableData> {
   FramesTableCompanion copyWith(
       {Value<int>? id,
       Value<int>? projectId,
+      Value<int>? stateId,
       Value<String>? name,
       Value<int>? duration,
       Value<int>? order,
@@ -707,6 +1088,7 @@ class FramesTableCompanion extends UpdateCompanion<FramesTableData> {
     return FramesTableCompanion(
       id: id ?? this.id,
       projectId: projectId ?? this.projectId,
+      stateId: stateId ?? this.stateId,
       name: name ?? this.name,
       duration: duration ?? this.duration,
       order: order ?? this.order,
@@ -723,6 +1105,9 @@ class FramesTableCompanion extends UpdateCompanion<FramesTableData> {
     }
     if (projectId.present) {
       map['project_id'] = Variable<int>(projectId.value);
+    }
+    if (stateId.present) {
+      map['state_id'] = Variable<int>(stateId.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
@@ -747,6 +1132,7 @@ class FramesTableCompanion extends UpdateCompanion<FramesTableData> {
     return (StringBuffer('FramesTableCompanion(')
           ..write('id: $id, ')
           ..write('projectId: $projectId, ')
+          ..write('stateId: $stateId, ')
           ..write('name: $name, ')
           ..write('duration: $duration, ')
           ..write('order: $order, ')
@@ -1266,6 +1652,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $ProjectsTableTable projectsTable = $ProjectsTableTable(this);
+  late final $AnimationStateTableTable animationStateTable =
+      $AnimationStateTableTable(this);
   late final $FramesTableTable framesTable = $FramesTableTable(this);
   late final $LayersTableTable layersTable = $LayersTableTable(this);
   @override
@@ -1273,7 +1661,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [projectsTable, framesTable, layersTable];
+      [projectsTable, animationStateTable, framesTable, layersTable];
 }
 
 typedef $$ProjectsTableTableCreateCompanionBuilder = ProjectsTableCompanion
@@ -1301,6 +1689,24 @@ final class $$ProjectsTableTableReferences extends BaseReferences<_$AppDatabase,
     $ProjectsTableTable, ProjectsTableData> {
   $$ProjectsTableTableReferences(
       super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$AnimationStateTableTable,
+      List<AnimationStateTableData>> _animationStateTableRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.animationStateTable,
+          aliasName: $_aliasNameGenerator(
+              db.projectsTable.id, db.animationStateTable.projectId));
+
+  $$AnimationStateTableTableProcessedTableManager get animationStateTableRefs {
+    final manager =
+        $$AnimationStateTableTableTableManager($_db, $_db.animationStateTable)
+            .filter((f) => f.projectId.id($_item.id));
+
+    final cache =
+        $_typedResult.readTableOrNull(_animationStateTableRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 
   static MultiTypedResultKey<$FramesTableTable, List<FramesTableData>>
       _framesTableRefsTable(_$AppDatabase db) =>
@@ -1370,6 +1776,23 @@ class $$ProjectsTableTableFilterComposer
       column: $state.table.editedAt,
       builder: (column, joinBuilders) =>
           ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ComposableFilter animationStateTableRefs(
+      ComposableFilter Function($$AnimationStateTableTableFilterComposer f) f) {
+    final $$AnimationStateTableTableFilterComposer composer =
+        $state.composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $state.db.animationStateTable,
+            getReferencedColumn: (t) => t.projectId,
+            builder: (joinBuilder, parentComposers) =>
+                $$AnimationStateTableTableFilterComposer(ComposerState(
+                    $state.db,
+                    $state.db.animationStateTable,
+                    joinBuilder,
+                    parentComposers)));
+    return f(composer);
+  }
 
   ComposableFilter framesTableRefs(
       ComposableFilter Function($$FramesTableTableFilterComposer f) f) {
@@ -1447,7 +1870,10 @@ class $$ProjectsTableTableTableManager extends RootTableManager<
     $$ProjectsTableTableUpdateCompanionBuilder,
     (ProjectsTableData, $$ProjectsTableTableReferences),
     ProjectsTableData,
-    PrefetchHooks Function({bool framesTableRefs, bool layersTableRefs})> {
+    PrefetchHooks Function(
+        {bool animationStateTableRefs,
+        bool framesTableRefs,
+        bool layersTableRefs})> {
   $$ProjectsTableTableTableManager(_$AppDatabase db, $ProjectsTableTable table)
       : super(TableManagerState(
           db: db,
@@ -1499,16 +1925,31 @@ class $$ProjectsTableTableTableManager extends RootTableManager<
                   ))
               .toList(),
           prefetchHooksCallback: (
-              {framesTableRefs = false, layersTableRefs = false}) {
+              {animationStateTableRefs = false,
+              framesTableRefs = false,
+              layersTableRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
+                if (animationStateTableRefs) db.animationStateTable,
                 if (framesTableRefs) db.framesTable,
                 if (layersTableRefs) db.layersTable
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
                 return [
+                  if (animationStateTableRefs)
+                    await $_getPrefetchedData(
+                        currentTable: table,
+                        referencedTable: $$ProjectsTableTableReferences
+                            ._animationStateTableRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProjectsTableTableReferences(db, table, p0)
+                                .animationStateTableRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.projectId == item.id),
+                        typedResults: items),
                   if (framesTableRefs)
                     await $_getPrefetchedData(
                         currentTable: table,
@@ -1550,11 +1991,286 @@ typedef $$ProjectsTableTableProcessedTableManager = ProcessedTableManager<
     $$ProjectsTableTableUpdateCompanionBuilder,
     (ProjectsTableData, $$ProjectsTableTableReferences),
     ProjectsTableData,
-    PrefetchHooks Function({bool framesTableRefs, bool layersTableRefs})>;
+    PrefetchHooks Function(
+        {bool animationStateTableRefs,
+        bool framesTableRefs,
+        bool layersTableRefs})>;
+typedef $$AnimationStateTableTableCreateCompanionBuilder
+    = AnimationStateTableCompanion Function({
+  Value<int> id,
+  required int projectId,
+  required String name,
+  required int frameRate,
+  required DateTime createdAt,
+  required DateTime editedAt,
+});
+typedef $$AnimationStateTableTableUpdateCompanionBuilder
+    = AnimationStateTableCompanion Function({
+  Value<int> id,
+  Value<int> projectId,
+  Value<String> name,
+  Value<int> frameRate,
+  Value<DateTime> createdAt,
+  Value<DateTime> editedAt,
+});
+
+final class $$AnimationStateTableTableReferences extends BaseReferences<
+    _$AppDatabase, $AnimationStateTableTable, AnimationStateTableData> {
+  $$AnimationStateTableTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $ProjectsTableTable _projectIdTable(_$AppDatabase db) =>
+      db.projectsTable.createAlias($_aliasNameGenerator(
+          db.animationStateTable.projectId, db.projectsTable.id));
+
+  $$ProjectsTableTableProcessedTableManager? get projectId {
+    if ($_item.projectId == null) return null;
+    final manager = $$ProjectsTableTableTableManager($_db, $_db.projectsTable)
+        .filter((f) => f.id($_item.projectId!));
+    final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static MultiTypedResultKey<$FramesTableTable, List<FramesTableData>>
+      _framesTableRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.framesTable,
+              aliasName: $_aliasNameGenerator(
+                  db.animationStateTable.id, db.framesTable.stateId));
+
+  $$FramesTableTableProcessedTableManager get framesTableRefs {
+    final manager = $$FramesTableTableTableManager($_db, $_db.framesTable)
+        .filter((f) => f.stateId.id($_item.id));
+
+    final cache = $_typedResult.readTableOrNull(_framesTableRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$AnimationStateTableTableFilterComposer
+    extends FilterComposer<_$AppDatabase, $AnimationStateTableTable> {
+  $$AnimationStateTableTableFilterComposer(super.$state);
+  ColumnFilters<int> get id => $state.composableBuilder(
+      column: $state.table.id,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<String> get name => $state.composableBuilder(
+      column: $state.table.name,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<int> get frameRate => $state.composableBuilder(
+      column: $state.table.frameRate,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<DateTime> get createdAt => $state.composableBuilder(
+      column: $state.table.createdAt,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<DateTime> get editedAt => $state.composableBuilder(
+      column: $state.table.editedAt,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  $$ProjectsTableTableFilterComposer get projectId {
+    final $$ProjectsTableTableFilterComposer composer = $state.composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.projectId,
+        referencedTable: $state.db.projectsTable,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder, parentComposers) =>
+            $$ProjectsTableTableFilterComposer(ComposerState($state.db,
+                $state.db.projectsTable, joinBuilder, parentComposers)));
+    return composer;
+  }
+
+  ComposableFilter framesTableRefs(
+      ComposableFilter Function($$FramesTableTableFilterComposer f) f) {
+    final $$FramesTableTableFilterComposer composer = $state.composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $state.db.framesTable,
+        getReferencedColumn: (t) => t.stateId,
+        builder: (joinBuilder, parentComposers) =>
+            $$FramesTableTableFilterComposer(ComposerState($state.db,
+                $state.db.framesTable, joinBuilder, parentComposers)));
+    return f(composer);
+  }
+}
+
+class $$AnimationStateTableTableOrderingComposer
+    extends OrderingComposer<_$AppDatabase, $AnimationStateTableTable> {
+  $$AnimationStateTableTableOrderingComposer(super.$state);
+  ColumnOrderings<int> get id => $state.composableBuilder(
+      column: $state.table.id,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<String> get name => $state.composableBuilder(
+      column: $state.table.name,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<int> get frameRate => $state.composableBuilder(
+      column: $state.table.frameRate,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<DateTime> get createdAt => $state.composableBuilder(
+      column: $state.table.createdAt,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<DateTime> get editedAt => $state.composableBuilder(
+      column: $state.table.editedAt,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  $$ProjectsTableTableOrderingComposer get projectId {
+    final $$ProjectsTableTableOrderingComposer composer =
+        $state.composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.projectId,
+            referencedTable: $state.db.projectsTable,
+            getReferencedColumn: (t) => t.id,
+            builder: (joinBuilder, parentComposers) =>
+                $$ProjectsTableTableOrderingComposer(ComposerState($state.db,
+                    $state.db.projectsTable, joinBuilder, parentComposers)));
+    return composer;
+  }
+}
+
+class $$AnimationStateTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $AnimationStateTableTable,
+    AnimationStateTableData,
+    $$AnimationStateTableTableFilterComposer,
+    $$AnimationStateTableTableOrderingComposer,
+    $$AnimationStateTableTableCreateCompanionBuilder,
+    $$AnimationStateTableTableUpdateCompanionBuilder,
+    (AnimationStateTableData, $$AnimationStateTableTableReferences),
+    AnimationStateTableData,
+    PrefetchHooks Function({bool projectId, bool framesTableRefs})> {
+  $$AnimationStateTableTableTableManager(
+      _$AppDatabase db, $AnimationStateTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          filteringComposer: $$AnimationStateTableTableFilterComposer(
+              ComposerState(db, table)),
+          orderingComposer: $$AnimationStateTableTableOrderingComposer(
+              ComposerState(db, table)),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> projectId = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<int> frameRate = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> editedAt = const Value.absent(),
+          }) =>
+              AnimationStateTableCompanion(
+            id: id,
+            projectId: projectId,
+            name: name,
+            frameRate: frameRate,
+            createdAt: createdAt,
+            editedAt: editedAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int projectId,
+            required String name,
+            required int frameRate,
+            required DateTime createdAt,
+            required DateTime editedAt,
+          }) =>
+              AnimationStateTableCompanion.insert(
+            id: id,
+            projectId: projectId,
+            name: name,
+            frameRate: frameRate,
+            createdAt: createdAt,
+            editedAt: editedAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$AnimationStateTableTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {projectId = false, framesTableRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (framesTableRefs) db.framesTable],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (projectId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.projectId,
+                    referencedTable: $$AnimationStateTableTableReferences
+                        ._projectIdTable(db),
+                    referencedColumn: $$AnimationStateTableTableReferences
+                        ._projectIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (framesTableRefs)
+                    await $_getPrefetchedData(
+                        currentTable: table,
+                        referencedTable: $$AnimationStateTableTableReferences
+                            ._framesTableRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$AnimationStateTableTableReferences(db, table, p0)
+                                .framesTableRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.stateId == item.id),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$AnimationStateTableTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $AnimationStateTableTable,
+    AnimationStateTableData,
+    $$AnimationStateTableTableFilterComposer,
+    $$AnimationStateTableTableOrderingComposer,
+    $$AnimationStateTableTableCreateCompanionBuilder,
+    $$AnimationStateTableTableUpdateCompanionBuilder,
+    (AnimationStateTableData, $$AnimationStateTableTableReferences),
+    AnimationStateTableData,
+    PrefetchHooks Function({bool projectId, bool framesTableRefs})>;
 typedef $$FramesTableTableCreateCompanionBuilder = FramesTableCompanion
     Function({
   Value<int> id,
   required int projectId,
+  required int stateId,
   required String name,
   required int duration,
   required int order,
@@ -1565,6 +2281,7 @@ typedef $$FramesTableTableUpdateCompanionBuilder = FramesTableCompanion
     Function({
   Value<int> id,
   Value<int> projectId,
+  Value<int> stateId,
   Value<String> name,
   Value<int> duration,
   Value<int> order,
@@ -1585,6 +2302,21 @@ final class $$FramesTableTableReferences
     final manager = $$ProjectsTableTableTableManager($_db, $_db.projectsTable)
         .filter((f) => f.id($_item.projectId!));
     final item = $_typedResult.readTableOrNull(_projectIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $AnimationStateTableTable _stateIdTable(_$AppDatabase db) =>
+      db.animationStateTable.createAlias($_aliasNameGenerator(
+          db.framesTable.stateId, db.animationStateTable.id));
+
+  $$AnimationStateTableTableProcessedTableManager? get stateId {
+    if ($_item.stateId == null) return null;
+    final manager =
+        $$AnimationStateTableTableTableManager($_db, $_db.animationStateTable)
+            .filter((f) => f.id($_item.stateId!));
+    final item = $_typedResult.readTableOrNull(_stateIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
@@ -1651,6 +2383,22 @@ class $$FramesTableTableFilterComposer
     return composer;
   }
 
+  $$AnimationStateTableTableFilterComposer get stateId {
+    final $$AnimationStateTableTableFilterComposer composer =
+        $state.composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.stateId,
+            referencedTable: $state.db.animationStateTable,
+            getReferencedColumn: (t) => t.id,
+            builder: (joinBuilder, parentComposers) =>
+                $$AnimationStateTableTableFilterComposer(ComposerState(
+                    $state.db,
+                    $state.db.animationStateTable,
+                    joinBuilder,
+                    parentComposers)));
+    return composer;
+  }
+
   ComposableFilter layersTableRefs(
       ComposableFilter Function($$LayersTableTableFilterComposer f) f) {
     final $$LayersTableTableFilterComposer composer = $state.composerBuilder(
@@ -1710,6 +2458,22 @@ class $$FramesTableTableOrderingComposer
                     $state.db.projectsTable, joinBuilder, parentComposers)));
     return composer;
   }
+
+  $$AnimationStateTableTableOrderingComposer get stateId {
+    final $$AnimationStateTableTableOrderingComposer composer =
+        $state.composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.stateId,
+            referencedTable: $state.db.animationStateTable,
+            getReferencedColumn: (t) => t.id,
+            builder: (joinBuilder, parentComposers) =>
+                $$AnimationStateTableTableOrderingComposer(ComposerState(
+                    $state.db,
+                    $state.db.animationStateTable,
+                    joinBuilder,
+                    parentComposers)));
+    return composer;
+  }
 }
 
 class $$FramesTableTableTableManager extends RootTableManager<
@@ -1722,7 +2486,8 @@ class $$FramesTableTableTableManager extends RootTableManager<
     $$FramesTableTableUpdateCompanionBuilder,
     (FramesTableData, $$FramesTableTableReferences),
     FramesTableData,
-    PrefetchHooks Function({bool projectId, bool layersTableRefs})> {
+    PrefetchHooks Function(
+        {bool projectId, bool stateId, bool layersTableRefs})> {
   $$FramesTableTableTableManager(_$AppDatabase db, $FramesTableTable table)
       : super(TableManagerState(
           db: db,
@@ -1734,6 +2499,7 @@ class $$FramesTableTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
             Value<int> projectId = const Value.absent(),
+            Value<int> stateId = const Value.absent(),
             Value<String> name = const Value.absent(),
             Value<int> duration = const Value.absent(),
             Value<int> order = const Value.absent(),
@@ -1743,6 +2509,7 @@ class $$FramesTableTableTableManager extends RootTableManager<
               FramesTableCompanion(
             id: id,
             projectId: projectId,
+            stateId: stateId,
             name: name,
             duration: duration,
             order: order,
@@ -1752,6 +2519,7 @@ class $$FramesTableTableTableManager extends RootTableManager<
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
             required int projectId,
+            required int stateId,
             required String name,
             required int duration,
             required int order,
@@ -1761,6 +2529,7 @@ class $$FramesTableTableTableManager extends RootTableManager<
               FramesTableCompanion.insert(
             id: id,
             projectId: projectId,
+            stateId: stateId,
             name: name,
             duration: duration,
             order: order,
@@ -1774,7 +2543,7 @@ class $$FramesTableTableTableManager extends RootTableManager<
                   ))
               .toList(),
           prefetchHooksCallback: (
-              {projectId = false, layersTableRefs = false}) {
+              {projectId = false, stateId = false, layersTableRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [if (layersTableRefs) db.layersTable],
@@ -1798,6 +2567,16 @@ class $$FramesTableTableTableManager extends RootTableManager<
                         $$FramesTableTableReferences._projectIdTable(db),
                     referencedColumn:
                         $$FramesTableTableReferences._projectIdTable(db).id,
+                  ) as T;
+                }
+                if (stateId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.stateId,
+                    referencedTable:
+                        $$FramesTableTableReferences._stateIdTable(db),
+                    referencedColumn:
+                        $$FramesTableTableReferences._stateIdTable(db).id,
                   ) as T;
                 }
 
@@ -1834,7 +2613,8 @@ typedef $$FramesTableTableProcessedTableManager = ProcessedTableManager<
     $$FramesTableTableUpdateCompanionBuilder,
     (FramesTableData, $$FramesTableTableReferences),
     FramesTableData,
-    PrefetchHooks Function({bool projectId, bool layersTableRefs})>;
+    PrefetchHooks Function(
+        {bool projectId, bool stateId, bool layersTableRefs})>;
 typedef $$LayersTableTableCreateCompanionBuilder = LayersTableCompanion
     Function({
   Value<int> id,
@@ -2169,6 +2949,8 @@ class $AppDatabaseManager {
   $AppDatabaseManager(this._db);
   $$ProjectsTableTableTableManager get projectsTable =>
       $$ProjectsTableTableTableManager(_db, _db.projectsTable);
+  $$AnimationStateTableTableTableManager get animationStateTable =>
+      $$AnimationStateTableTableTableManager(_db, _db.animationStateTable);
   $$FramesTableTableTableManager get framesTable =>
       $$FramesTableTableTableManager(_db, _db.framesTable);
   $$LayersTableTableTableManager get layersTable =>

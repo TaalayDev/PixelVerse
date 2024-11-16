@@ -88,7 +88,9 @@ class PixelGrid extends StatefulWidget {
 
   final double zoomLevel;
   final Offset currentOffset;
-  final Function(double, Offset)? onZoom;
+  final Function(double, Offset)? onStartDrag;
+  final Function(double, Offset)? onDrag;
+  final Function(double, Offset)? onDragEnd;
   final int currentLayerIndex;
 
   const PixelGrid({
@@ -114,7 +116,9 @@ class PixelGrid extends StatefulWidget {
     this.zoomLevel = 1.0,
     this.currentOffset = Offset.zero,
     this.mirrorAxis = MirrorAxis.vertical,
-    this.onZoom,
+    this.onStartDrag,
+    this.onDrag,
+    this.onDragEnd,
     required this.currentLayerIndex,
   });
 
@@ -196,8 +200,10 @@ class _PixelGridState extends State<PixelGrid> {
         _currentScale = widget.zoomLevel;
       });
     }
-    if (widget.layers != oldWidget.layers) {
-      _updateCachedPixels();
+    if (!listEquals(widget.layers, oldWidget.layers)) {
+      _updateCachedPixels(
+        cacheAll: widget.layers.length != oldWidget.layers.length,
+      );
     }
     if (widget.currentTool != oldWidget.currentTool) {
       cursor = CursorManager.instance.getCursor(widget.currentTool) ??
@@ -210,12 +216,19 @@ class _PixelGridState extends State<PixelGrid> {
     _cachedPixels = Uint32List(widget.width * widget.height);
     for (var i = 0; i < _cachedLayers.length; i++) {
       final layer = _cachedLayers[i];
-      if (!layer.isVisible) continue;
-      _cachedPixels = _mergePixels(_cachedPixels, layer.pixels);
+      if (!layer.isVisible) {
+        _cacheController._cachedLayerImages.remove(layer.layerId);
+        _cacheController.markLayerDirty(layer.layerId);
+        continue;
+      }
+
+      final layerPixels = Uint32List.fromList(layer.pixels);
+
+      _cachedPixels = _mergePixels(_cachedPixels, layerPixels);
       if (i == widget.currentLayerIndex) {
         _cacheController._createImage(
           layer.layerId,
-          Uint32List.fromList(layer.pixels),
+          layerPixels,
           widget.width,
           widget.height,
         );
@@ -226,16 +239,17 @@ class _PixelGridState extends State<PixelGrid> {
               ? Colors.transparent.value
               : widget.currentColor.value,
         );
+        _cacheController.markLayerDirty(layer.layerId);
       } else if (cacheAll) {
         _cacheController._createImage(
           layer.layerId,
-          layer.pixels,
+          layerPixels,
           widget.width,
           widget.height,
         );
+        _cacheController.markLayerDirty(layer.layerId);
       }
     }
-    _cacheController.markLayerDirty(currentLayerId);
   }
 
   @override
@@ -249,6 +263,7 @@ class _PixelGridState extends State<PixelGrid> {
             // One finger touch
             if (widget.currentTool == PixelTool.drag) {
               _panStartPosition = details.focalPoint - _offset;
+              widget.onStartDrag?.call(_scale, _offset);
             } else {
               _handlePanStart(details.localFocalPoint);
             }
@@ -265,7 +280,7 @@ class _PixelGridState extends State<PixelGrid> {
               setState(() {
                 _offset = details.focalPoint - _panStartPosition!;
               });
-              widget.onZoom?.call(_scale, _offset);
+              widget.onDrag?.call(_scale, _offset);
             } else {
               _handlePanUpdate(details.localFocalPoint);
             }
@@ -276,13 +291,13 @@ class _PixelGridState extends State<PixelGrid> {
               _offset = details.focalPoint + _normalizedOffset * _scale;
             });
 
-            widget.onZoom?.call(_scale, _offset);
+            widget.onDrag?.call(_scale, _offset);
           }
         },
         onScaleEnd: (details) {
           if (_pointerCount == 1) {
             if (widget.currentTool == PixelTool.drag) {
-              // Do nothing
+              widget.onDragEnd?.call(_scale, _offset);
             } else {
               _handlePanEnd();
               widget.onFinishDrawing();

@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:equatable/equatable.dart';
 
 import 'animation_frame_model.dart';
-import 'layer.dart';
 
 class Project with EquatableMixin {
   final int id;
@@ -12,6 +11,7 @@ class Project with EquatableMixin {
   final int height;
   // final List<Layer> layers;
   final List<AnimationFrame> frames;
+  final List<AnimationStateModel> states;
   final Uint8List? thumbnail;
   final DateTime createdAt;
   final DateTime editedAt;
@@ -24,6 +24,7 @@ class Project with EquatableMixin {
     required this.createdAt,
     required this.editedAt,
     this.thumbnail,
+    this.states = const [],
     this.frames = const [],
   });
 
@@ -32,16 +33,19 @@ class Project with EquatableMixin {
     String? name,
     int? width,
     int? height,
+    List<AnimationStateModel>? states,
     List<AnimationFrame>? frames,
     Uint8List? thumbnail,
     DateTime? createdAt,
     DateTime? editedAt,
   }) {
+    print('copyWith');
     return Project(
       id: id ?? this.id,
       name: name ?? this.name,
       width: width ?? this.width,
       height: height ?? this.height,
+      states: states ?? this.states,
       frames: frames ?? this.frames,
       thumbnail: thumbnail ?? this.thumbnail,
       createdAt: createdAt ?? this.createdAt,
@@ -55,6 +59,7 @@ class Project with EquatableMixin {
       'name': name,
       'width': width,
       'height': height,
+      'states': states.map((state) => state.toJson()).toList(),
       'frames': frames.map((frame) => frame.toJson()).toList(),
       'thumbnail': thumbnail?.toList(),
       'createdAt': createdAt.millisecondsSinceEpoch,
@@ -68,6 +73,12 @@ class Project with EquatableMixin {
       name: json['name'] as String,
       width: json['width'] as int,
       height: json['height'] as int,
+      states: (json['states'] as List)
+          .map(
+            (state) =>
+                AnimationStateModel.fromJson(state as Map<String, dynamic>),
+          )
+          .toList(),
       frames: (json['frames'] as List)
           .map(
             (layer) => AnimationFrame.fromJson(layer as Map<String, dynamic>),
@@ -82,5 +93,6 @@ class Project with EquatableMixin {
   }
 
   @override
-  List<Object?> get props => [id, name, width, height, frames];
+  List<Object?> get props =>
+      [id, name, width, height, frames, states, thumbnail, createdAt, editedAt];
 }

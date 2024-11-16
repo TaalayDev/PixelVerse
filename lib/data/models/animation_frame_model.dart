@@ -7,6 +7,7 @@ import 'layer.dart';
 class AnimationFrame extends Equatable {
   final int id;
   final String name;
+  final int stateId;
   final int duration; // Duration in milliseconds
   final List<Layer> layers;
   final int order;
@@ -30,6 +31,7 @@ class AnimationFrame extends Equatable {
   AnimationFrame({
     required this.id,
     required this.name,
+    required this.stateId,
     required this.duration,
     required this.layers,
     this.order = 0,
@@ -41,6 +43,7 @@ class AnimationFrame extends Equatable {
   AnimationFrame copyWith({
     int? id,
     String? name,
+    int? stateId,
     int? duration,
     List<Layer>? layers,
     DateTime? editedAt,
@@ -49,6 +52,7 @@ class AnimationFrame extends Equatable {
     return AnimationFrame(
       id: id ?? this.id,
       name: name ?? this.name,
+      stateId: stateId ?? this.stateId,
       duration: duration ?? this.duration,
       layers: layers ?? this.layers,
       order: order ?? this.order,
@@ -61,6 +65,7 @@ class AnimationFrame extends Equatable {
     return {
       'id': id,
       'name': name,
+      'stateId': stateId,
       'layers': layers.map((layer) => layer.toJson()).toList(),
       'duration': duration,
       'createdAt': createdAt.millisecondsSinceEpoch,
@@ -73,6 +78,7 @@ class AnimationFrame extends Equatable {
     return AnimationFrame(
       id: json['id'] as int,
       name: json['name'] as String,
+      stateId: json['stateId'] as int,
       layers: (json['layers'] as List)
           .map((layer) => Layer.fromJson(layer as Map<String, dynamic>))
           .toList(),
@@ -85,5 +91,51 @@ class AnimationFrame extends Equatable {
 
   @override
   List<Object?> get props =>
-      [id, name, duration, layers, createdAt, editedAt, order];
+      [id, name, stateId, duration, createdAt, editedAt, order];
+}
+
+class AnimationStateModel extends Equatable {
+  final int id;
+  final String name;
+  final int frameRate;
+
+  const AnimationStateModel({
+    required this.id,
+    required this.name,
+    required this.frameRate,
+  });
+
+  AnimationStateModel copyWith({
+    int? id,
+    List<AnimationFrame>? frames,
+    int? currentFrameIndex,
+    bool? isPlaying,
+    bool? isLooping,
+    int? frameRate,
+  }) {
+    return AnimationStateModel(
+      id: id ?? this.id,
+      name: name,
+      frameRate: frameRate ?? this.frameRate,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'frameRate': frameRate,
+    };
+  }
+
+  factory AnimationStateModel.fromJson(Map<String, dynamic> json) {
+    return AnimationStateModel(
+      id: json['id'] as int,
+      name: json['name'] as String,
+      frameRate: json['frameRate'] as int,
+    );
+  }
+
+  @override
+  List<Object?> get props => [id, frameRate, name];
 }

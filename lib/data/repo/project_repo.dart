@@ -12,6 +12,12 @@ abstract class ProjectRepo {
   Future<void> updateProject(Project project);
   Future<void> renameProject(int projectId, String name);
   Future<void> deleteProject(Project project);
+  Future<AnimationStateModel> createState(
+    int projectId,
+    AnimationStateModel state,
+  );
+  Future<void> updateState(int projectId, AnimationStateModel state);
+  Future<void> deleteState(int stateId);
   Future<AnimationFrame> createFrame(int projectId, AnimationFrame frame);
   Future<void> updateFrame(int projectId, AnimationFrame frame);
   Future<void> deleteFrame(int frameId);
@@ -128,6 +134,39 @@ class ProjectLocalRepo extends ProjectRepo {
     final completer = Completer<void>();
     queueManager.add(() async {
       await db.updateFrame(projectId, frame);
+      completer.complete();
+    });
+    return completer.future;
+  }
+
+  @override
+  Future<AnimationStateModel> createState(
+    int projectId,
+    AnimationStateModel state,
+  ) {
+    final completer = Completer<AnimationStateModel>();
+    queueManager.add(() async {
+      final newState = await db.insertState(projectId, state);
+      completer.complete(newState);
+    });
+    return completer.future;
+  }
+
+  @override
+  Future<void> deleteState(int stateId) {
+    final completer = Completer<void>();
+    queueManager.add(() async {
+      await db.deleteState(stateId);
+      completer.complete();
+    });
+    return completer.future;
+  }
+
+  @override
+  Future<void> updateState(int projectId, AnimationStateModel state) {
+    final completer = Completer<void>();
+    queueManager.add(() async {
+      await db.updateState(projectId, state);
       completer.complete();
     });
     return completer.future;

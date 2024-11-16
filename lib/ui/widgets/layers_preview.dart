@@ -58,7 +58,7 @@ class _LayersPreviewState extends State<LayersPreview> {
 
   Future<void> _updateLayersPreview() async {
     final pixels = Uint32List(widget.width * widget.height);
-    for (final layer in widget.layers) {
+    for (final layer in widget.layers.where((l) => l.isVisible)) {
       for (int i = 0; i < pixels.length; i++) {
         pixels[i] = pixels[i] == 0 ? layer.pixels[i] : pixels[i];
       }
