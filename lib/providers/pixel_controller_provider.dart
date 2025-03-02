@@ -353,7 +353,7 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     _updateCurrentLayer(pixels);
   }
 
-  void _updateCurrentLayer(Uint32List pixels) {
+  void _updateCurrentLayer(Uint32List pixels) async {
     final layers = List<Layer>.from(currentFrame.layers);
     layers[state.currentLayerIndex] = currentLayer.copyWith(pixels: pixels);
 
@@ -362,9 +362,10 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
         ..[_getFrameIndex()] = currentFrame.copyWith(layers: layers),
     );
 
-    ref
+    await ref
         .watch(projectRepo)
         .updateLayer(project.id, currentFrame.id, currentLayer);
+    _updateProject();
   }
 
   void drawShape(List<Point<int>> points) {
@@ -445,7 +446,7 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
 
     // Create a new list for the updated selected pixels
     List<MapEntry<Point<int>, int>> newSelectedPixels = [];
-    final pixels = currentLayer.pixels;
+    final pixels = Uint32List.fromList(currentLayer.pixels);
 
     // Clear the pixels at the old positions
     for (final entry in _selectedPixels) {

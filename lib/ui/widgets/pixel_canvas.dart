@@ -178,7 +178,9 @@ class _PixelCanvasState extends State<PixelCanvas> {
     height: widget.height,
     size: () => context.size!,
     onSelectionChanged: widget.onSelectionChanged,
-    onMoveSelection: widget.onMoveSelection,
+    onMoveSelection: (selection) {
+      widget.onMoveSelection?.call(selection);
+    },
     update: setState,
   );
 
@@ -269,6 +271,7 @@ class _PixelCanvasState extends State<PixelCanvas> {
         cacheAll: widget.layers.length != oldWidget.layers.length,
       );
     }
+
     if (widget.currentTool != oldWidget.currentTool) {
       cursor = CursorManager.instance.getCursor(widget.currentTool) ??
           widget.currentTool.cursor;
@@ -402,8 +405,7 @@ class _PixelCanvasState extends State<PixelCanvas> {
           );
 
           if (widget.currentTool == PixelTool.fill ||
-              widget.currentTool == PixelTool.eyedropper ||
-              widget.currentTool == PixelTool.select) {
+              widget.currentTool == PixelTool.eyedropper) {
             widget.onStartDrawing();
 
             tool.onStart(drawDetails);
@@ -414,6 +416,8 @@ class _PixelCanvasState extends State<PixelCanvas> {
             }
           } else if (widget.currentTool == PixelTool.pen) {
             _handlePenTap(transformedPosition);
+          } else if (widget.currentTool == PixelTool.select) {
+            selectionTool.onStart(drawDetails);
           } else {
             widget.onStartDrawing();
             _startDrawing(transformedPosition);
@@ -425,6 +429,8 @@ class _PixelCanvasState extends State<PixelCanvas> {
               widget.currentTool != PixelTool.select) {
             _submitDrawing();
             widget.onFinishDrawing();
+          } else if (widget.currentTool == PixelTool.select) {
+            selectionTool.onEnd(drawDetails);
           }
         },
         child: MouseRegion(
