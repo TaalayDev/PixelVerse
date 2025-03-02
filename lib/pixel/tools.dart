@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../core/pixel_point.dart';
+import '../data/models/layer.dart';
+
 enum PixelTool {
   pencil,
   fill,
@@ -17,7 +20,8 @@ enum PixelTool {
   sprayPaint,
   drag,
   contour,
-  pen;
+  pen,
+  lasso;
 
   MouseCursor get cursor {
     switch (this) {
@@ -51,10 +55,123 @@ enum PixelTool {
 
 enum PixelModifier {
   none,
+  glow,
+  shadow,
   mirror;
 
   bool get isNone => this == PixelModifier.none;
   bool get isMirror => this == PixelModifier.mirror;
+  bool get isGlow => this == PixelModifier.glow;
+  bool get isShadow => this == PixelModifier.shadow;
 }
 
 enum MirrorAxis { horizontal, vertical, both }
+
+abstract class Modifier {
+  final PixelModifier type;
+
+  const Modifier(this.type);
+
+  bool get isNone => type == PixelModifier.none;
+  bool get isMirror => type == PixelModifier.mirror;
+
+  List<PixelPoint<int>> apply(PixelPoint<int> point, int width, int height);
+}
+
+abstract class Tool {
+  final PixelTool type;
+
+  Tool(this.type);
+
+  bool get isPencil => type == PixelTool.pencil;
+  bool get isFill => type == PixelTool.fill;
+  bool get isEraser => type == PixelTool.eraser;
+  bool get isLine => type == PixelTool.line;
+  bool get isRectangle => type == PixelTool.rectangle;
+  bool get isCircle => type == PixelTool.circle;
+  bool get isSelect => type == PixelTool.select;
+  bool get isEyedropper => type == PixelTool.eyedropper;
+  bool get isBrush => type == PixelTool.brush;
+  bool get isGradient => type == PixelTool.gradient;
+  bool get isRotate => type == PixelTool.rotate;
+  bool get isPixelPerfectLine => type == PixelTool.pixelPerfectLine;
+  bool get isSprayPaint => type == PixelTool.sprayPaint;
+  bool get isDrag => type == PixelTool.drag;
+  bool get isContour => type == PixelTool.contour;
+  bool get isPen => type == PixelTool.pen;
+
+  void onStart(PixelDrawDetails details);
+  void onMove(PixelDrawDetails details);
+  void onEnd(PixelDrawDetails details);
+}
+
+class PixelDrawDetails {
+  final Offset position;
+  final Size size;
+  final int width;
+  final int height;
+  final Layer currentLayer;
+  final Color color;
+  final int strokeWidth;
+  final Modifier? modifier;
+  final Function(List<PixelPoint<int>>) onPixelsUpdated;
+
+  PixelPoint<int> get pixelPosition => _getPixelCoordinates(
+        position,
+        size,
+        width,
+        height,
+      );
+
+  PixelDrawDetails({
+    required this.position,
+    required this.size,
+    required this.width,
+    required this.height,
+    required this.currentLayer,
+    required this.color,
+    this.strokeWidth = 1,
+    required this.modifier,
+    required this.onPixelsUpdated,
+  });
+
+  PixelPoint<int> _getPixelCoordinates(
+    Offset position,
+    Size size,
+    int width,
+    int height,
+  ) {
+    final pixelWidth = size.width / width;
+    final pixelHeight = size.height / height;
+
+    return PixelPoint(
+      (position.dx / pixelWidth).floor(),
+      (position.dy / pixelHeight).floor(),
+      color: color.value,
+    );
+  }
+
+  PixelDrawDetails copyWith({
+    Offset? position,
+    Size? size,
+    int? width,
+    int? height,
+    Layer? currentLayer,
+    Color? color,
+    int? strokeWidth,
+    Modifier? Function()? modifier,
+    Function(List<PixelPoint<int>>)? onPixelsUpdated,
+  }) {
+    return PixelDrawDetails(
+      position: position ?? this.position,
+      size: size ?? this.size,
+      width: width ?? this.width,
+      height: height ?? this.height,
+      currentLayer: currentLayer ?? this.currentLayer,
+      color: color ?? this.color,
+      strokeWidth: strokeWidth ?? this.strokeWidth,
+      modifier: modifier != null ? modifier() : this.modifier,
+      onPixelsUpdated: onPixelsUpdated ?? this.onPixelsUpdated,
+    );
+  }
+}

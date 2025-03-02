@@ -43,7 +43,7 @@ class LayersPanel extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       children: [
-        const Divider(),
+        const SizedBox(height: 8),
         _buildLayersPanelHeader(context),
         Divider(color: Theme.of(context).dividerColor.withOpacity(0.2)),
         Expanded(

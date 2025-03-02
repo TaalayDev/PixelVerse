@@ -11,6 +11,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 
+import '../core/pixel_point.dart';
 import '../core/utils.dart';
 import '../pixel/tools.dart';
 import '../data.dart';
@@ -301,45 +302,16 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     _updateCurrentLayer(pixels);
   }
 
-  void _applyMirror(Uint32List pixels, int x, int y) {
-    final color = currentTool == PixelTool.eraser
-        ? Colors.transparent.value
-        : currentColor.value;
-    switch (mirrorAxis) {
-      case MirrorAxis.horizontal:
-        final mirroredY = height - 1 - y;
-        if (_isWithinBounds(x, mirroredY)) {
-          pixels[mirroredY * width + x] = color;
-        }
-        break;
-      case MirrorAxis.vertical:
-        final mirroredX = width - 1 - x;
-        if (_isWithinBounds(mirroredX, y)) {
-          pixels[y * width + mirroredX] = color;
-        }
-        break;
-      case MirrorAxis.both:
-        _applyMirror(pixels, x, y);
-        _applyMirror(pixels, x, y);
-        break;
-    }
-  }
-
-  void fillPixels(List<Point<int>> pixels, PixelModifier modifier) {
+  void fillPixels(List<PixelPoint<int>> pixels, PixelModifier modifier) {
     saveState();
     final newPixels = Uint32List.fromList(currentLayer.pixels);
-    final color = currentTool == PixelTool.eraser
-        ? Colors.transparent.value
-        : currentColor.value;
 
     for (final point in pixels) {
       int index = point.y * state.width + point.x;
       if (index >= 0 && index < newPixels.length) {
-        newPixels[index] = color;
-
-        if (modifier == PixelModifier.mirror) {
-          _applyMirror(newPixels, point.x, point.y);
-        }
+        newPixels[index] = currentTool == PixelTool.eraser
+            ? Colors.transparent.value
+            : point.color;
       }
     }
 
@@ -806,7 +778,7 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
           width: width,
           height: height,
           // You can use different interpolation methods for different effects
-          interpolation: img.Interpolation.average,
+          interpolation: img.Interpolation.cubic,
         );
       } else {
         resizedImage = image;
@@ -828,7 +800,9 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
           final b = pixel.b.toInt();
 
           final colorValue = (a << 24) | (r << 16) | (g << 8) | b;
-          pixels[y * width + x] = colorValue;
+          pixels[y * width + x] = Color(colorValue).alpha != 255
+              ? Colors.transparent.value
+              : colorValue;
         }
       }
 

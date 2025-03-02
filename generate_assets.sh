@@ -6,7 +6,7 @@ DEFAULT_OUTPUT_FILE="lib/constants/app_assets.dart"
 DEFAULT_CLASS_NAME="AppAssets"
 PUBSPEC_FILE="pubspec.yaml"
 
-# Helper functions
+# Functions
 die() {
     echo "$1" >&2
     exit 1
@@ -50,16 +50,38 @@ EOL
 # Function to process assets in a directory
 process_directory() {
     local dir="$1"
+    local prefix="$2"
+    local indent="$3"
     local record_name=$(to_camel_case "$(basename "$dir")")
     
-    echo "  static const $record_name = (" >> "$OUTPUT_FILE"
+    echo "${indent} static const $record_name = (" >> "$OUTPUT_FILE"
 
     for asset in "$dir"/*; do
         if [ -f "$asset" ]; then
             local name=$(basename "$asset")
             local varname=$(to_camel_case "${name%.*}")
             varname=$(echo "$varname" | tr '-' '_')
-            echo "    $varname: '$asset'," >> "$OUTPUT_FILE"
+            echo "${indent} $varname: '${asset#./}'," >> "$OUTPUT_FILE"
+        fi
+    done
+
+    # Process subdirectories
+    for subdir in "$dir"/*; do
+        if [ -d "$subdir" ]; then
+            local subdir_name=$(to_camel_case "$(basename "$subdir")")
+            
+            echo "${indent}  $subdir_name: (" >> "$OUTPUT_FILE"
+            
+            for subasset in "$subdir"/*; do
+                if [ -f "$subasset" ]; then
+                    local name=$(basename "$subasset")
+                    local varname=$(to_camel_case "${name%.*}")
+                    varname=$(echo "$varname" | tr '-' '_')
+                    echo "${indent} $varname: '${subasset#./}'," >> "$OUTPUT_FILE"
+                fi
+            done
+            
+            echo "${indent}  )," >> "$OUTPUT_FILE"
         fi
     done
 
@@ -74,8 +96,7 @@ for dir in "$ASSETS_DIR"/*; do
     fi
 done
 
-# Close the class
-echo "}" >> "$OUTPUT_FILE"
+echo "}" >> "$OUTPUT_FILE" # Last closing brace
 
 echo "Asset records generated at $OUTPUT_FILE"
 

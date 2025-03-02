@@ -16,8 +16,10 @@ class AboutScreen extends StatelessWidget {
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(Strings.of(context).aboutTitle),
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        title: Text(
+          Strings.of(context).aboutTitle,
+        ),
+        foregroundColor: const Color.fromARGB(255, 209, 210, 213),
         backgroundColor: const Color(0xFF091126),
       ),
       body: SingleChildScrollView(

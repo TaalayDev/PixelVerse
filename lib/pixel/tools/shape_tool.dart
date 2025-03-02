@@ -1,330 +1,317 @@
 import 'dart:math';
-import 'dart:ui';
 
-class ShapeUtils {
-  final int width;
-  final int height;
+import '../../core/pixel_point.dart';
+import '../tools.dart';
 
-  ShapeUtils({
-    required this.width,
-    required this.height,
-  });
+abstract class ShapeTool extends Tool {
+  List<PixelPoint<int>> _previewPoints = [];
+  PixelPoint<int>? _startPoint;
 
-  List<Point<int>> getBrushPixels(int x, int y, int size) {
-    final pixels = <Point<int>>[];
-    if (size == 1) {
-      pixels.add(Point(x, y));
-      return pixels;
-    } else if (size == 2) {
-      pixels.add(Point(x, y));
-      pixels.add(Point(x + 1, y));
-      pixels.add(Point(x + 1, y + 1));
-      pixels.add(Point(x, y + 1));
+  ShapeTool(super.type);
 
-      return pixels;
-    }
-
-    for (int i = 0; i < size; i++) {
-      for (int j = 0; j < size; j++) {
-        final px = x + i;
-        final py = y + j;
-        if (px >= 0 && px < width && py >= 0 && py < height) {
-          pixels.add(Point(px, py));
-        }
-      }
-    }
-
-    return pixels;
+  @override
+  void onStart(PixelDrawDetails details) {
+    _startPoint = details.pixelPosition;
+    _previewPoints = [];
+    _updatePreview(details);
   }
 
-  List<Point<int>> getCirclePoints(int centerX, int centerY, int radius) {
-    final points = <Point<int>>[];
-    if (radius == 1) {
-      points.add(Point(centerX, centerY));
-      return points;
-    } else if (radius == 2) {
-      points.add(Point(centerX, centerY));
-      points.add(Point(centerX + 1, centerY));
-      points.add(Point(centerX + 1, centerY + 1));
-      points.add(Point(centerX, centerY + 1));
-
-      return points;
+  @override
+  void onMove(PixelDrawDetails details) {
+    if (_startPoint != null) {
+      _updatePreview(details);
     }
+  }
 
-    for (int y = -radius; y <= radius; y++) {
-      for (int x = -radius; x <= radius; x++) {
-        if (x * x + y * y <= radius * radius) {
-          final px = centerX + x;
-          final py = centerY + y;
-          if (px >= 0 && px < width && py >= 0 && py < height) {
-            points.add(Point(px, py));
-          }
+  @override
+  void onEnd(PixelDrawDetails details) {
+    if (_previewPoints.isNotEmpty) {
+      details.onPixelsUpdated(_previewPoints);
+    }
+    _startPoint = null;
+    _previewPoints = [];
+  }
+
+  void _updatePreview(PixelDrawDetails details) {
+    if (_startPoint != null) {
+      final currentPoint = details.pixelPosition;
+      _previewPoints = generateShapePoints(
+        _startPoint!,
+        currentPoint,
+        details.width,
+        details.height,
+      );
+
+      // Handle modifiers
+      if (details.modifier != null) {
+        final modifier = details.modifier!;
+        final modifiedPoints = <PixelPoint<int>>[];
+
+        for (final point in _previewPoints) {
+          modifiedPoints.add(point);
+          modifiedPoints
+              .addAll(modifier.apply(point, details.width, details.height));
         }
+
+        _previewPoints = modifiedPoints;
+      }
+
+      details.onPixelsUpdated(_previewPoints);
+    }
+  }
+
+  // Each shape tool must implement this to generate its specific shape points
+  List<PixelPoint<int>> generateShapePoints(
+    PixelPoint<int> start,
+    PixelPoint<int> end,
+    int width,
+    int height,
+  );
+}
+
+class LineTool extends ShapeTool {
+  LineTool() : super(PixelTool.line);
+
+  @override
+  List<PixelPoint<int>> generateShapePoints(
+    PixelPoint<int> start,
+    PixelPoint<int> end,
+    int width,
+    int height,
+  ) {
+    final points = <PixelPoint<int>>[];
+
+    int x0 = start.x;
+    int y0 = start.y;
+    int x1 = end.x;
+    int y1 = end.y;
+
+    final dx = (x1 - x0).abs();
+    final dy = (y1 - y0).abs();
+    final sx = x0 < x1 ? 1 : -1;
+    final sy = y0 < y1 ? 1 : -1;
+    var err = dx - dy;
+
+    while (true) {
+      if (_isValidPoint(Point(x0, y0), width, height)) {
+        points.add(PixelPoint(x0, y0, color: start.color));
+      }
+
+      if (x0 == x1 && y0 == y1) break;
+
+      final e2 = 2 * err;
+      if (e2 > -dy) {
+        err -= dy;
+        x0 += sx;
+      }
+      if (e2 < dx) {
+        err += dx;
+        y0 += sy;
       }
     }
 
     return points;
   }
+}
 
-  List<Point<int>> getLinePixels(int x0, int y0, int x1, int y1) {
-    final pixels = <Point<int>>[];
+class OvalTool extends ShapeTool {
+  OvalTool() : super(PixelTool.circle);
 
-    int dx = (x1 - x0).abs();
-    int dy = -(y1 - y0).abs();
-    int sx = x0 < x1 ? 1 : -1;
-    int sy = y0 < y1 ? 1 : -1;
-    int err = dx + dy;
+  @override
+  List<PixelPoint<int>> generateShapePoints(
+    PixelPoint<int> start,
+    PixelPoint<int> end,
+    int width,
+    int height,
+  ) {
+    final points = <PixelPoint<int>>[];
 
-    int x = x0;
-    int y = y0;
+    // Calculate center and radius
+    final centerX = (start.x + end.x) ~/ 2;
+    final centerY = (start.y + end.y) ~/ 2;
+    final radiusX = (end.x - start.x).abs() ~/ 2;
+    final radiusY = (end.y - start.y).abs() ~/ 2;
 
-    while (true) {
-      if (x >= 0 && x < width && y >= 0 && y < height) {
-        pixels.add(Point(x, y));
-      }
+    // Use midpoint circle algorithm modified for ellipse
+    int hh = radiusY * radiusY;
+    int ww = radiusX * radiusX;
+    int hhww = hh * ww;
+    int x0 = radiusX;
+    int dx = 0;
 
-      if (x == x1 && y == y1) break;
+    // Draw first set of points
+    for (int x = -radiusX; x <= radiusX; x++) {
+      final y = (radiusY * sqrt(1 - x * x / (radiusX * radiusX))).round();
+      final point1 = PixelPoint(centerX + x, centerY + y, color: start.color);
+      final point2 = PixelPoint(centerX + x, centerY - y, color: start.color);
 
-      int e2 = 2 * err;
-      if (e2 >= dy) {
-        err += dy;
-        x += sx;
-      }
-      if (e2 <= dx) {
-        err += dx;
-        y += sy;
-      }
+      if (_isValidPoint(point1, width, height)) points.add(point1);
+      if (_isValidPoint(point2, width, height)) points.add(point2);
     }
 
-    return pixels;
+    // Draw second set of points
+    for (int y = -radiusY; y <= radiusY; y++) {
+      final x = (radiusX * sqrt(1 - y * y / (radiusY * radiusY))).round();
+      final point1 = PixelPoint(centerX + x, centerY + y, color: start.color);
+      final point2 = PixelPoint(centerX - x, centerY + y, color: start.color);
+
+      if (_isValidPoint(point1, width, height)) points.add(point1);
+      if (_isValidPoint(point2, width, height)) points.add(point2);
+    }
+
+    return points;
   }
+}
 
-  List<Point<int>> getRectanglePixels(int x0, int y0, int x1, int y1) {
-    final pixels = <Point<int>>[];
+class RectangleTool extends ShapeTool {
+  RectangleTool() : super(PixelTool.rectangle);
 
-    int left = min(x0, x1);
-    int right = max(x0, x1);
-    int top = min(y0, y1);
-    int bottom = max(y0, y1);
+  @override
+  List<PixelPoint<int>> generateShapePoints(
+    PixelPoint<int> start,
+    PixelPoint<int> end,
+    int width,
+    int height,
+  ) {
+    final points = <PixelPoint<int>>[];
 
-    // Top and bottom edges
+    final left = min(start.x, end.x);
+    final right = max(start.x, end.x);
+    final top = min(start.y, end.y);
+    final bottom = max(start.y, end.y);
+
+    // Draw horizontal lines
     for (int x = left; x <= right; x++) {
-      if (top >= 0 && top < height) {
-        if (x >= 0 && x < width) pixels.add(Point(x, top));
+      final topPoint = PixelPoint(x, top, color: start.color);
+      final bottomPoint = PixelPoint(x, bottom, color: start.color);
+
+      if (_isValidPoint(topPoint, width, height)) {
+        points.add(topPoint);
       }
-      if (bottom >= 0 && bottom < height && top != bottom) {
-        if (x >= 0 && x < width) pixels.add(Point(x, bottom));
+      if (top != bottom && _isValidPoint(bottomPoint, width, height)) {
+        points.add(bottomPoint);
       }
     }
 
-    // Left and right edges
+    // Draw vertical lines
     for (int y = top + 1; y < bottom; y++) {
-      if (left >= 0 && left < width) {
-        if (y >= 0 && y < height) pixels.add(Point(left, y));
+      final leftPoint = PixelPoint(left, y, color: start.color);
+      final rightPoint = PixelPoint(right, y, color: start.color);
+
+      if (_isValidPoint(leftPoint, width, height)) {
+        points.add(leftPoint);
       }
-      if (right >= 0 && right < width && left != right) {
-        if (y >= 0 && y < height) pixels.add(Point(right, y));
-      }
-    }
-
-    return pixels;
-  }
-
-  List<Point<int>> getCirclePixels(int x0, int y0, int x1, int y1) {
-    final pixels = <Point<int>>[];
-
-    int dx = x1 - x0;
-    int dy = y1 - y0;
-    int radius = sqrt(dx * dx + dy * dy).round();
-
-    int f = 1 - radius;
-    int ddF_x = 0;
-    int ddF_y = -2 * radius;
-    int x = 0;
-    int y = radius;
-
-    addCirclePoints(pixels, x0, y0, x, y);
-
-    while (x < y) {
-      if (f >= 0) {
-        y--;
-        ddF_y += 2;
-        f += ddF_y;
-      }
-      x++;
-      ddF_x += 2;
-      f += ddF_x + 1;
-
-      addCirclePoints(pixels, x0, y0, x, y);
-    }
-
-    return pixels;
-  }
-
-  void addCirclePoints(List<Point<int>> pixels, int x0, int y0, int x, int y) {
-    List<Point<int>> points = [
-      Point(x0 + x, y0 + y),
-      Point(x0 - x, y0 + y),
-      Point(x0 + x, y0 - y),
-      Point(x0 - x, y0 - y),
-      Point(x0 + y, y0 + x),
-      Point(x0 - y, y0 + x),
-      Point(x0 + y, y0 - x),
-      Point(x0 - y, y0 - x),
-    ];
-
-    for (var point in points) {
-      if (point.x >= 0 && point.x < width && point.y >= 0 && point.y < height) {
-        pixels.add(point);
-      }
-    }
-  }
-
-  List<Point<int>> getPixelPerfectLinePixels(int x0, int y0, int x1, int y1) {
-    final pixels = <Point<int>>[];
-
-    int dx = x1 - x0;
-    int dy = y1 - y0;
-
-    int absDx = dx.abs();
-    int absDy = dy.abs();
-
-    int x = x0;
-    int y = y0;
-
-    int sx = dx > 0 ? 1 : -1;
-    int sy = dy > 0 ? 1 : -1;
-
-    if (absDx > absDy) {
-      int err = absDx ~/ 2;
-      for (int i = 0; i <= absDx; i++) {
-        pixels.add(Point(x, y));
-        err -= absDy;
-        if (err < 0) {
-          y += sy;
-          err += absDx;
-        }
-        x += sx;
-      }
-    } else {
-      int err = absDy ~/ 2;
-      for (int i = 0; i <= absDy; i++) {
-        pixels.add(Point(x, y));
-        err -= absDx;
-        if (err < 0) {
-          x += sx;
-          err += absDy;
-        }
-        y += sy;
-      }
-    }
-
-    // Remove diagonal steps only when the distance between points is small
-    if (absDx <= 1 && absDy <= 1) {
-      pixels.removeWhere((point) {
-        int index = pixels.indexOf(point);
-        if (index == 0) return false;
-        Point<int> prevPoint = pixels[index - 1];
-        return (point.x - prevPoint.x).abs() == 1 &&
-            (point.y - prevPoint.y).abs() == 1;
-      });
-    }
-
-    return pixels;
-  }
-
-  List<Point<int>> getPenPathPixels(
-    List<Offset> penPoints, {
-    required Size size,
-    bool close = false,
-  }) {
-    final pixels = <Point<int>>[];
-
-    if (penPoints.length < 2) return pixels;
-
-    final path = Path();
-    path.moveTo(penPoints[0].dx, penPoints[0].dy);
-
-    for (int i = 1; i < penPoints.length - 1; i++) {
-      final x0 = penPoints[i].dx;
-      final y0 = penPoints[i].dy;
-      final x1 = penPoints[i + 1].dx;
-      final y1 = penPoints[i + 1].dy;
-      path.quadraticBezierTo(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
-    }
-
-    if (close) {
-      path.close();
-    }
-
-    // Rasterize the path into pixels
-    final pathMetrics = path.computeMetrics();
-    for (final metric in pathMetrics) {
-      final extractPath = metric.extractPath(0, metric.length);
-      final pathPoints = _rasterizePath(extractPath, size);
-      pixels.addAll(pathPoints);
-    }
-
-    return pixels;
-  }
-
-  List<Point<int>> _rasterizePath(Path path, Size size) {
-    final pixels = <Point<int>>[];
-    final pathMetrics = path.computeMetrics();
-
-    final pixelWidth = size.width / width;
-    final pixelHeight = size.height / height;
-
-    for (final metric in pathMetrics) {
-      final length = metric.length;
-      final numSamples = length.toInt(); // Number of samples along the path
-
-      for (int i = 0; i <= numSamples; i++) {
-        final distance = (i / numSamples) * length;
-        final tangent = metric.getTangentForOffset(distance);
-        if (tangent != null) {
-          final position = tangent.position;
-          final ix = (position.dx / pixelWidth).floor();
-          final iy = (position.dy / pixelHeight).floor();
-          if (ix >= 0 && ix < width && iy >= 0 && iy < height) {
-            final point = Point(ix, iy);
-            if (!pixels.contains(point)) {
-              pixels.add(point);
-            }
-          }
-        }
-      }
-    }
-
-    return pixels;
-  }
-
-  List<Point<int>> getLinePoints(int x0, int y0, int x1, int y1) {
-    final points = <Point<int>>[];
-
-    int dx = (x1 - x0).abs();
-    int dy = -(y1 - y0).abs();
-    int sx = x0 < x1 ? 1 : -1;
-    int sy = y0 < y1 ? 1 : -1;
-    int err = dx + dy;
-
-    int x = x0;
-    int y = y0;
-
-    while (true) {
-      points.add(Point(x, y));
-      if (x == x1 && y == y1) break;
-      int e2 = 2 * err;
-      if (e2 >= dy) {
-        err += dy;
-        x += sx;
-      }
-      if (e2 <= dx) {
-        err += dx;
-        y += sy;
+      if (left != right && _isValidPoint(rightPoint, width, height)) {
+        points.add(rightPoint);
       }
     }
 
     return points;
   }
+}
+
+class StarTool extends ShapeTool {
+  StarTool() : super(PixelTool.contour);
+
+  @override
+  List<PixelPoint<int>> generateShapePoints(
+    PixelPoint<int> start,
+    PixelPoint<int> end,
+    int width,
+    int height,
+  ) {
+    final points = <PixelPoint<int>>[];
+
+    // Calculate center and radius
+    final centerX = (start.x + end.x) ~/ 2;
+    final centerY = (start.y + end.y) ~/ 2;
+    final radius = sqrt(pow(end.x - start.x, 2) + pow(end.y - start.y, 2)) / 2;
+
+    const numPoints = 5; // Number of points in the star
+    const innerRadiusRatio = 0.4; // Ratio of inner radius to outer radius
+
+    final angleStep = 2 * pi / numPoints;
+
+    // Generate star points
+    for (int i = 0; i < numPoints; i++) {
+      // Outer point
+      final outerAngle = -pi / 2 + i * angleStep;
+      final outerX = centerX + (radius * cos(outerAngle)).round();
+      final outerY = centerY + (radius * sin(outerAngle)).round();
+
+      // Inner point
+      final innerAngle = outerAngle + angleStep / 2;
+      final innerX =
+          centerX + (radius * innerRadiusRatio * cos(innerAngle)).round();
+      final innerY =
+          centerY + (radius * innerRadiusRatio * sin(innerAngle)).round();
+
+      // Connect points with lines
+      points.addAll(_drawLine(
+        PixelPoint(outerX, outerY, color: start.color),
+        PixelPoint(innerX, innerY, color: start.color),
+        width,
+        height,
+      ));
+
+      // Connect to next points
+      final nextOuterAngle = -pi / 2 + ((i + 1) % numPoints) * angleStep;
+      final nextOuterX = centerX + (radius * cos(nextOuterAngle)).round();
+      final nextOuterY = centerY + (radius * sin(nextOuterAngle)).round();
+
+      points.addAll(_drawLine(
+        PixelPoint(innerX, innerY, color: start.color),
+        PixelPoint(nextOuterX, nextOuterY, color: start.color),
+        width,
+        height,
+      ));
+    }
+
+    return points;
+  }
+
+  List<PixelPoint<int>> _drawLine(
+    PixelPoint<int> start,
+    PixelPoint<int> end,
+    int width,
+    int height,
+  ) {
+    final points = <PixelPoint<int>>[];
+
+    int x0 = start.x;
+    int y0 = start.y;
+    int x1 = end.x;
+    int y1 = end.y;
+
+    final dx = (x1 - x0).abs();
+    final dy = (y1 - y0).abs();
+    final sx = x0 < x1 ? 1 : -1;
+    final sy = y0 < y1 ? 1 : -1;
+    var err = dx - dy;
+
+    while (true) {
+      if (_isValidPoint(Point(x0, y0), width, height)) {
+        points.add(PixelPoint(x0, y0, color: start.color));
+      }
+
+      if (x0 == x1 && y0 == y1) break;
+
+      final e2 = 2 * err;
+      if (e2 > -dy) {
+        err -= dy;
+        x0 += sx;
+      }
+      if (e2 < dx) {
+        err += dx;
+        y0 += sy;
+      }
+    }
+
+    return points;
+  }
+}
+
+// Helper function used by all shape tools
+bool _isValidPoint(Point<int> point, int width, int height) {
+  return point.x >= 0 && point.x < width && point.y >= 0 && point.y < height;
 }
