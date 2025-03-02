@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -184,6 +185,9 @@ class SelectionUtils {
   void endDraggingSelection() {
     isDraggingSelection = false;
     lastPanPosition = null;
+
+    // Notify selection changed callback
+    onSelectionChanged?.call(selectionRect);
   }
 }
 

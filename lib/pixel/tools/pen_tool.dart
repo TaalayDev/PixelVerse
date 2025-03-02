@@ -7,7 +7,6 @@ import 'shape_util.dart';
 class PenTool extends Tool {
   List<PixelPoint<int>> _currentPixels = [];
   List<Offset> _pathPoints = [];
-  final _shapeUtils = ShapeUtils(width: 0, height: 0);
   bool _isDrawing = false;
   bool _isClosingPath = false;
   final _closeThreshold = 10.0;

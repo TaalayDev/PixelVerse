@@ -173,7 +173,7 @@ class _PixelCanvasState extends State<PixelCanvas> {
   int get currentLayerId => widget.layers[widget.currentLayerIndex].layerId;
 
   // Tool instances
-  late final SelectionUtils _selectionUtils = SelectionUtils(
+  late final _selectionUtils = SelectionUtils(
     width: widget.width,
     height: widget.height,
     size: () => context.size!,
@@ -195,7 +195,8 @@ class _PixelCanvasState extends State<PixelCanvas> {
   final circleTool = OvalTool();
   late final selectionTool = SelectionTool(_selectionUtils);
   late final eyedropperTool = EyedropperTool(
-      onColorPicked: (color) => widget.onColorPicked?.call(color));
+    onColorPicked: (color) => widget.onColorPicked?.call(color),
+  );
 
   Tool get tool {
     switch (widget.currentTool) {
@@ -328,7 +329,6 @@ class _PixelCanvasState extends State<PixelCanvas> {
               _panStartPosition = details.focalPoint - _offset;
               widget.onStartDrag?.call(_scale, _offset);
             } else {
-              // Convert local point to canvas coordinates
               final transformedPosition =
                   (details.localFocalPoint - _currentOffset) / _currentScale;
 
@@ -359,7 +359,6 @@ class _PixelCanvasState extends State<PixelCanvas> {
               });
               widget.onDrag?.call(_scale, _offset);
             } else {
-              // Convert local point to canvas coordinates
               final transformedPosition =
                   (details.localFocalPoint - _currentOffset) / _currentScale;
 
@@ -406,6 +405,7 @@ class _PixelCanvasState extends State<PixelCanvas> {
               widget.currentTool == PixelTool.eyedropper ||
               widget.currentTool == PixelTool.select) {
             widget.onStartDrawing();
+
             tool.onStart(drawDetails);
             if (widget.currentTool == PixelTool.fill ||
                 widget.currentTool == PixelTool.eyedropper) {

@@ -1,4 +1,3 @@
-// lib/pixel/tools/eyedropper_tool.dart
 import 'package:flutter/material.dart';
 import '../tools.dart';
 
