@@ -116,13 +116,30 @@ class ShapesMenuButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<PixelTool>(
-      icon: Icon(
-        currentTool.value == PixelTool.line
-            ? Icons.show_chart
-            : currentTool.value == PixelTool.rectangle
-                ? Icons.crop_square
-                : Icons.radio_button_unchecked,
-        color: _isShapeTool(currentTool.value) ? Colors.blue : null,
+      icon: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Icon(
+            currentTool.value == PixelTool.line
+                ? Icons.show_chart
+                : currentTool.value == PixelTool.rectangle
+                    ? Icons.crop_square
+                    : Icons.radio_button_unchecked,
+            color: _isShapeTool(currentTool.value) ? Colors.blue : null,
+          ),
+          Positioned(
+            right: -5,
+            bottom: -5,
+            child: Transform.rotate(
+              angle: -0.785398,
+              child: const Icon(
+                Icons.arrow_drop_down,
+                color: Colors.grey,
+                size: 16,
+              ),
+            ),
+          ),
+        ],
       ),
       onSelected: (PixelTool result) {
         onSelectTool(result);

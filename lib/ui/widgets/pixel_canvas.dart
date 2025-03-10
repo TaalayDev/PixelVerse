@@ -27,7 +27,7 @@ class _CacheModel {
 
 class _CacheController extends ChangeNotifier {
   final Map<int, _CacheModel> _cachedLayerImages;
-
+  bool _isDirtyBatch = false;
   Function()? _onCacheUpdated;
 
   _CacheController() : _cachedLayerImages = {};
@@ -46,8 +46,22 @@ class _CacheController extends ChangeNotifier {
   }
 
   void markLayerDirty(int layer) {
-    _cachedLayerImages[layer]?.isDirty = true;
-    notifyListeners();
+    // Only mark if it's not already dirty to avoid unnecessary repaints
+    if (_cachedLayerImages[layer]?.isDirty == false) {
+      _cachedLayerImages[layer]?.isDirty = true;
+
+      // If we're not in a batch operation, notify listeners immediately
+      if (!_isDirtyBatch) {
+        notifyListeners();
+      }
+    }
+  }
+
+  void batchOperation(Function() operation) {
+    _isDirtyBatch = true;
+    operation();
+    _isDirtyBatch = false;
+    notifyListeners(); // Only notify once at the end
   }
 
   void _createImage(
@@ -386,9 +400,14 @@ class _PixelCanvasState extends State<PixelCanvas> {
             if (widget.currentTool == PixelTool.drag) {
               widget.onDragEnd?.call(_scale, _offset);
             } else {
+              // Use a microtask to ensure UI updates complete before submitting
               tool.onEnd(drawDetails);
-              _submitDrawing();
-              widget.onFinishDrawing();
+
+              // Use Future.microtask to separate the state updates
+              Future.microtask(() {
+                _submitDrawing();
+                widget.onFinishDrawing();
+              });
             }
           }
           _pointerCount = 0;
@@ -427,8 +446,11 @@ class _PixelCanvasState extends State<PixelCanvas> {
           if (widget.currentTool != PixelTool.fill &&
               widget.currentTool != PixelTool.eyedropper &&
               widget.currentTool != PixelTool.select) {
-            _submitDrawing();
-            widget.onFinishDrawing();
+            // Use Future.microtask to separate the state updates
+            Future.microtask(() {
+              _submitDrawing();
+              widget.onFinishDrawing();
+            });
           } else if (widget.currentTool == PixelTool.select) {
             selectionTool.onEnd(drawDetails);
           }
@@ -467,6 +489,7 @@ class _PixelCanvasState extends State<PixelCanvas> {
   }
 
   void _submitDrawing() {
+    // Batch all state changes together to prevent multiple redraws
     if (widget.currentTool == PixelTool.line ||
         widget.currentTool == PixelTool.rectangle ||
         widget.currentTool == PixelTool.circle ||
@@ -475,18 +498,29 @@ class _PixelCanvasState extends State<PixelCanvas> {
         widget.currentTool == PixelTool.brush ||
         widget.currentTool == PixelTool.sprayPaint ||
         widget.currentTool == PixelTool.fill) {
-      widget.onDrawShape(_previewPixels);
+      // Create a copy of preview pixels before clearing
+      final pixelsToDraw = List<PixelPoint<int>>.from(_previewPixels);
+
+      // Clear variables first without triggering a redraw
+      _previousPosition = null;
+      _startPosition = null;
+      _currentPosition = null;
+      //_previewPixels = [];
+
+      // Then mark layer as dirty
+      _cacheController.markLayerDirty(currentLayerId);
+
+      // Finally submit the drawing to parent - do this last
+      widget.onDrawShape(pixelsToDraw);
+    } else {
+      // For other tools, just clear the preview pixels
+      setState(() {
+        _previewPixels = [];
+        _previousPosition = null;
+        _startPosition = null;
+        _currentPosition = null;
+      });
     }
-
-    _cacheController.markLayerDirty(currentLayerId);
-    _previousPosition = null;
-    _startPosition = null;
-    _currentPosition = null;
-
-    setState(() {
-      // Clear preview pixels
-      _previewPixels = [];
-    });
   }
 
   void _handlePenTap(Offset position) {
@@ -532,7 +566,16 @@ class _PixelCanvasState extends State<PixelCanvas> {
         close: true,
         size: context.size!,
       );
-      widget.onDrawShape(pixels);
+
+      final coloredPixels = pixels.map((point) {
+        return PixelPoint(
+          point.x,
+          point.y,
+          color: widget.currentColor.value,
+        );
+      }).toList();
+
+      widget.onDrawShape(coloredPixels);
       widget.onFinishDrawing();
     }
     setState(() {

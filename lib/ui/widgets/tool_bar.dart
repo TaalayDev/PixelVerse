@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
+import 'package:pixelverse/ui/widgets/selection_menu.dart';
 
 import '../../l10n/strings.dart';
 import '../../pixel/tools.dart';
@@ -87,16 +88,18 @@ class ToolBar extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       // zoom in and out
-                      IconButton(
-                        icon: const Icon(Feather.zoom_in),
-                        onPressed: onZoomIn,
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Feather.zoom_out),
-                        onPressed: onZoomOut,
-                      ),
-                      const SizedBox(width: 8),
+                      if (MediaQuery.of(context).size.width > 600) ...[
+                        IconButton(
+                          icon: const Icon(Feather.zoom_in),
+                          onPressed: onZoomIn,
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Feather.zoom_out),
+                          onPressed: onZoomOut,
+                        ),
+                        const SizedBox(width: 8),
+                      ],
                       if (MediaQuery.of(context).size.width > 600) ...[
                         const SizedBox(
                           height: 30,
@@ -115,12 +118,13 @@ class ToolBar extends StatelessWidget {
                         const SizedBox(width: 8),
                         if (tool == PixelTool.brush ||
                             tool == PixelTool.eraser ||
-                            tool == PixelTool.sprayPaint) ...[
+                            tool == PixelTool.sprayPaint ||
+                            tool == PixelTool.pencil) ...[
                           MenuToolValueField(
                             value: brushSize.value,
                             min: 1,
                             max: 10,
-                            icon: const Icon(Icons.brush),
+                            icon: const Icon(Icons.brush, size: 18),
                             child: Text('${brushSize.value}px'),
                             onChanged: (value) {
                               brushSize.value = value;
