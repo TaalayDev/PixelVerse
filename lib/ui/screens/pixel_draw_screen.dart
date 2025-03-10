@@ -1,7 +1,5 @@
 import 'dart:math';
 
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -15,10 +13,14 @@ import '../../pixel/animation_frame_controller.dart';
 import '../../pixel/tools.dart';
 import '../../data.dart';
 import '../widgets/animation_timeline.dart';
-import '../widgets/menu_value_field.dart';
+import '../widgets/grid_painter.dart';
+import '../widgets/pixel_canvas.dart';
 import '../widgets/shortcuts_wrapper.dart';
 import '../widgets/dialogs.dart';
 import '../widgets.dart';
+import '../widgets/tool_bar.dart';
+import '../widgets/tool_menu.dart';
+import '../widgets/tools_bottom_bar.dart';
 
 class PixelDrawScreen extends StatefulHookConsumerWidget {
   const PixelDrawScreen({
@@ -29,7 +31,7 @@ class PixelDrawScreen extends StatefulHookConsumerWidget {
   final Project project;
 
   @override
-  _PixelDrawScreenState createState() => _PixelDrawScreenState();
+  ConsumerState<PixelDrawScreen> createState() => _PixelDrawScreenState();
 }
 
 class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
@@ -126,7 +128,7 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
       onRedo: state.canRedo ? notifier.redo : () {},
       onSave: () => notifier.exportAnimation(context),
       child: Scaffold(
-        backgroundColor: Colors.grey[200],
+        backgroundColor: Theme.of(context).colorScheme.surface,
         body: SafeArea(
           child: Row(
             children: [
@@ -177,7 +179,7 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
                             if (MediaQuery.of(context).size.width > 600)
                               Container(
                                 width: 45,
-                                color: Colors.grey[200],
+                                color: Theme.of(context).colorScheme.surface,
                                 child: ToolMenu(
                                   currentTool: currentTool,
                                   onSelectTool: (tool) =>
@@ -362,7 +364,7 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
                             ),
                             if (MediaQuery.sizeOf(context).width > 600)
                               Container(
-                                color: Colors.grey[200],
+                                color: Theme.of(context).colorScheme.surface,
                                 child: SizedBox(
                                   width: 250,
                                   child: Column(
@@ -540,225 +542,6 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
   }
 }
 
-class ToolsBottomBar extends StatelessWidget {
-  const ToolsBottomBar({
-    super.key,
-    required this.currentTool,
-    required this.state,
-    required this.notifier,
-    required this.width,
-    required this.height,
-  });
-
-  final ValueNotifier<PixelTool> currentTool;
-  final PixelDrawState state;
-  final PixelDrawNotifier notifier;
-  final int width;
-  final int height;
-
-  @override
-  Widget build(BuildContext context) {
-    return BottomAppBar(
-      height: 45,
-      child: IconButtonTheme(
-        data: IconButtonThemeData(
-          style: IconButton.styleFrom(
-            padding: const EdgeInsets.all(0),
-            iconSize: 18,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () async {
-                currentTool.value = PixelTool.pencil;
-                final tool = await showModalBottomSheet<PixelTool>(
-                  context: context,
-                  builder: (context) => Container(
-                    height: 60,
-                    color: Colors.grey[200],
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            Icons.edit,
-                            color: currentTool.value == PixelTool.pencil
-                                ? Colors.blue
-                                : null,
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).pop(PixelTool.pencil);
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            Icons.brush,
-                            color: currentTool.value == PixelTool.brush
-                                ? Colors.blue
-                                : null,
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).pop(PixelTool.brush);
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            MaterialCommunityIcons.spray,
-                            color: currentTool.value == PixelTool.sprayPaint
-                                ? Colors.blue
-                                : null,
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).pop(PixelTool.sprayPaint);
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            Icons.crop_square,
-                            color: currentTool.value == PixelTool.rectangle
-                                ? Colors.blue
-                                : null,
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).pop(PixelTool.rectangle);
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            Icons.show_chart,
-                            color: currentTool.value == PixelTool.line
-                                ? Colors.blue
-                                : null,
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).pop(PixelTool.line);
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            Icons.radio_button_unchecked,
-                            color: currentTool.value == PixelTool.circle
-                                ? Colors.blue
-                                : null,
-                          ),
-                          onPressed: () {
-                            currentTool.value = PixelTool.circle;
-                            Navigator.of(context).pop(PixelTool.circle);
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            CupertinoIcons.pencil,
-                            color: currentTool.value == PixelTool.pen
-                                ? Colors.blue
-                                : null,
-                          ),
-                          onPressed: () {
-                            currentTool.value = PixelTool.pen;
-                            Navigator.of(context).pop(PixelTool.pen);
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            Icons.crop,
-                            color: currentTool.value == PixelTool.select
-                                ? Colors.blue
-                                : null,
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).pop(PixelTool.select);
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-                if (tool != null) {
-                  currentTool.value = tool;
-                }
-              },
-            ),
-            IconButton(
-              icon: const Icon(Fontisto.eraser),
-              onPressed: () {
-                currentTool.value = PixelTool.eraser;
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.format_color_fill),
-              onPressed: () {
-                currentTool.value = PixelTool.fill;
-              },
-            ),
-            IconButton(
-              icon: Icon(
-                Icons.palette,
-                color: state.currentColor,
-              ),
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  builder: (context) => ColorPalettePanel(
-                    currentColor: state.currentColor,
-                    isEyedropperSelected:
-                        currentTool.value == PixelTool.eyedropper,
-                    onSelectEyedropper: () {
-                      currentTool.value = PixelTool.eyedropper;
-                      Navigator.of(context).pop();
-                    },
-                    onColorSelected: (color) {
-                      notifier.currentColor = color;
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                );
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.layers),
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  builder: (context) => LayersPanel(
-                    width: width,
-                    height: height,
-                    layers: state.layers,
-                    activeLayerIndex: state.currentLayerIndex,
-                    onLayerAdded: (name) {
-                      notifier.addLayer(name);
-                    },
-                    onLayerVisibilityChanged: (index) {
-                      notifier.toggleLayerVisibility(index);
-                    },
-                    onLayerSelected: (index) {
-                      notifier.selectLayer(index);
-                    },
-                    onLayerDeleted: (index) {
-                      notifier.removeLayer(index);
-                    },
-                    onLayerLockedChanged: (index) {},
-                    onLayerNameChanged: (index, name) {},
-                    onLayerReordered: (oldIndex, newIndex) {
-                      notifier.reorderLayers(
-                        newIndex,
-                        oldIndex,
-                      );
-                    },
-                    onLayerOpacityChanged: (index, opacity) {},
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class PixelPainter extends HookConsumerWidget {
   const PixelPainter({
     super.key,
@@ -832,7 +615,7 @@ class PixelPainter extends HookConsumerWidget {
                 ),
               ),
           Positioned.fill(
-            child: PixelGrid(
+            child: PixelCanvas(
               width: project.width,
               height: project.height,
               layers: state.layers,
@@ -857,9 +640,6 @@ class PixelPainter extends HookConsumerWidget {
                   default:
                     break;
                 }
-              },
-              onBrushStroke: (points) {
-                notifier.fillPixels(points, currentModifier);
               },
               currentTool: currentTool,
               currentColor: currentColor,
@@ -909,438 +689,5 @@ class PixelPainter extends HookConsumerWidget {
         ],
       ),
     );
-  }
-}
-
-class ToolMenu extends StatelessWidget {
-  final ValueNotifier<PixelTool> currentTool;
-  final Function(PixelTool) onSelectTool;
-  final Function() onColorPicker;
-  final Color currentColor;
-
-  const ToolMenu({
-    super.key,
-    required this.currentTool,
-    required this.onSelectTool,
-    required this.onColorPicker,
-    required this.currentColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<PixelTool>(
-      valueListenable: currentTool,
-      builder: (context, tool, child) {
-        return IconButtonTheme(
-          data: IconButtonThemeData(
-            style: IconButton.styleFrom(
-              padding: const EdgeInsets.all(8),
-              iconSize: 18,
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              IconButton(
-                icon: Icon(
-                  Icons.edit,
-                  color: tool == PixelTool.pencil ? Colors.blue : null,
-                ),
-                onPressed: () => onSelectTool(PixelTool.pencil),
-              ),
-              IconButton(
-                icon: Icon(
-                  Icons.brush,
-                  color: tool == PixelTool.brush ? Colors.blue : null,
-                ),
-                onPressed: () => onSelectTool(PixelTool.brush),
-              ),
-              IconButton(
-                icon: Icon(
-                  Icons.format_color_fill,
-                  color: tool == PixelTool.fill ? Colors.blue : null,
-                ),
-                onPressed: () => onSelectTool(PixelTool.fill),
-              ),
-              IconButton(
-                icon: Icon(
-                  Fontisto.eraser,
-                  color: tool == PixelTool.eraser ? Colors.blue : null,
-                ),
-                onPressed: () => onSelectTool(PixelTool.eraser),
-              ),
-              // selection tool
-              IconButton(
-                icon: Icon(
-                  Icons.crop,
-                  color: tool == PixelTool.select ? Colors.blue : null,
-                ),
-                onPressed: () => onSelectTool(PixelTool.select),
-              ),
-              ShapesMenuButton(
-                currentTool: currentTool,
-                onSelectTool: onSelectTool,
-              ),
-              IconButton(
-                icon: Icon(
-                  CupertinoIcons.pencil,
-                  color: tool == PixelTool.pen ? Colors.blue : null,
-                ),
-                onPressed: () => onSelectTool(PixelTool.pen),
-              ),
-              IconButton(
-                icon: Icon(
-                  Feather.move,
-                  color: tool == PixelTool.drag ? Colors.blue : null,
-                ),
-                onPressed: () => onSelectTool(PixelTool.drag),
-              ),
-              IconButton(
-                icon: Icon(
-                  MaterialCommunityIcons.spray,
-                  color: tool == PixelTool.sprayPaint ? Colors.blue : null,
-                ),
-                onPressed: () => onSelectTool(PixelTool.sprayPaint),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class ToolBar extends StatelessWidget {
-  final ValueNotifier<PixelTool> currentTool;
-  final ValueNotifier<PixelModifier> currentModifier;
-  final ValueNotifier<int> brushSize;
-  final ValueNotifier<int> sprayIntensity;
-  final bool showPrevFrames;
-  final Function(PixelTool) onSelectTool;
-  final Function(PixelModifier) onSelectModifier;
-  final VoidCallback? onZoomIn;
-  final VoidCallback? onZoomOut;
-  final VoidCallback? onUndo;
-  final VoidCallback? onRedo;
-  final VoidCallback? import;
-  final VoidCallback? export;
-  final VoidCallback? exportAsImage;
-  final VoidCallback? onShare;
-  final Color currentColor;
-  final Function() onColorPicker;
-  final Function()? showPrevFramesOpacity;
-
-  const ToolBar({
-    super.key,
-    required this.currentTool,
-    required this.currentModifier,
-    required this.brushSize,
-    required this.sprayIntensity,
-    required this.onSelectTool,
-    required this.onSelectModifier,
-    required this.onUndo,
-    required this.onRedo,
-    this.showPrevFrames = false,
-    this.onZoomIn,
-    this.onZoomOut,
-    this.import,
-    this.export,
-    this.exportAsImage,
-    this.onShare,
-    required this.currentColor,
-    required this.onColorPicker,
-    this.showPrevFramesOpacity,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 45,
-      width: double.infinity,
-      color: Colors.grey[200],
-      child: Row(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: ValueListenableBuilder<PixelTool>(
-                valueListenable: currentTool,
-                builder: (context, tool, child) {
-                  return Row(
-                    children: [
-                      const VerticalDivider(),
-                      const SizedBox(width: 16),
-                      ValueListenableBuilder(
-                        valueListenable: currentModifier,
-                        builder: (context, modifier, child) {
-                          return IconButton(
-                            icon: Icon(
-                              MaterialIcons.border_horizontal,
-                              color: modifier == PixelModifier.mirror
-                                  ? Colors.blue
-                                  : null,
-                            ),
-                            onPressed: () {
-                              onSelectModifier(
-                                modifier == PixelModifier.mirror
-                                    ? PixelModifier.none
-                                    : PixelModifier.mirror,
-                              );
-                            },
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      // zoom in and out
-                      IconButton(
-                        icon: const Icon(Feather.zoom_in),
-                        onPressed: onZoomIn,
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Feather.zoom_out),
-                        onPressed: onZoomOut,
-                      ),
-                      const SizedBox(width: 8),
-                      if (MediaQuery.of(context).size.width > 600) ...[
-                        const SizedBox(
-                          height: 30,
-                          child: VerticalDivider(),
-                        ),
-                        const SizedBox(width: 16),
-                        IconButton.filledTonal(
-                          icon: const Icon(Icons.animation_rounded),
-                          onPressed: showPrevFramesOpacity,
-                          splashColor: Colors.transparent,
-                          style: IconButton.styleFrom(
-                            backgroundColor:
-                                showPrevFrames ? null : Colors.transparent,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        if (tool == PixelTool.brush ||
-                            tool == PixelTool.eraser ||
-                            tool == PixelTool.sprayPaint) ...[
-                          MenuToolValueField(
-                            value: brushSize.value,
-                            min: 1,
-                            max: 10,
-                            icon: const Icon(Icons.brush),
-                            child: Text('${brushSize.value}px'),
-                            onChanged: (value) {
-                              brushSize.value = value;
-                            },
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-                        if (tool == PixelTool.sprayPaint) ...[
-                          MenuToolValueField(
-                            value: sprayIntensity.value,
-                            min: 1,
-                            max: 10,
-                            icon: const Icon(MaterialCommunityIcons.spray),
-                            child: Text('${sprayIntensity.value}'),
-                            onChanged: (value) {
-                              sprayIntensity.value = value;
-                            },
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-                      ],
-                    ],
-                  );
-                },
-              ),
-            ),
-          ),
-          Row(
-            children: [
-              IconButton(
-                icon: Icon(Icons.undo,
-                    color: onUndo != null ? null : Colors.grey),
-                onPressed: onUndo,
-                tooltip: Strings.of(context).undo,
-              ),
-              IconButton(
-                icon: Icon(Icons.redo,
-                    color: onRedo != null ? null : Colors.grey),
-                onPressed: onRedo,
-                tooltip: Strings.of(context).redo,
-              ),
-              PopupMenuButton(
-                icon: const Icon(Feather.save, size: 18),
-                tooltip: Strings.of(context).save,
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'import',
-                    child: ListTile(
-                      leading: const Icon(Feather.upload),
-                      title: Text(Strings.of(context).open),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'projects',
-                    child: ListTile(
-                      leading: const Icon(Feather.list),
-                      title: Text(Strings.of(context).projects),
-                    ),
-                  ),
-                  if (kIsWeb ||
-                      defaultTargetPlatform == TargetPlatform.macOS ||
-                      defaultTargetPlatform == TargetPlatform.windows)
-                    PopupMenuItem(
-                      value: 'export',
-                      child: ListTile(
-                        leading: const Icon(Feather.save),
-                        title: Text(Strings.of(context).save),
-                      ),
-                    ),
-                  PopupMenuItem(
-                    value: 'exportAsImage',
-                    child: ListTile(
-                      leading: const Icon(Feather.image),
-                      title: Text(Strings.of(context).saveAs),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'share',
-                    child: ListTile(
-                      leading: const Icon(Feather.share),
-                      title: Text(Strings.of(context).share),
-                    ),
-                  ),
-                ],
-                onSelected: (value) {
-                  switch (value) {
-                    case 'import':
-                      import?.call();
-                      break;
-                    case 'export':
-                      export?.call();
-                      break;
-                    case 'exportAsImage':
-                      exportAsImage?.call();
-                      break;
-                    case 'projects':
-                      Navigator.of(context).pop();
-                      break;
-                    case 'share':
-                      onShare?.call();
-                      break;
-                  }
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class ShapesMenuButton extends StatelessWidget {
-  final ValueNotifier<PixelTool> currentTool;
-  final Function(PixelTool) onSelectTool;
-
-  const ShapesMenuButton({
-    super.key,
-    required this.currentTool,
-    required this.onSelectTool,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return PopupMenuButton<PixelTool>(
-      icon: Icon(
-        currentTool.value == PixelTool.line
-            ? Icons.show_chart
-            : currentTool.value == PixelTool.rectangle
-                ? Icons.crop_square
-                : Icons.radio_button_unchecked,
-        color: _isShapeTool(currentTool.value) ? Colors.blue : null,
-      ),
-      onSelected: (PixelTool result) {
-        onSelectTool(result);
-      },
-      itemBuilder: (BuildContext context) => <PopupMenuEntry<PixelTool>>[
-        PopupMenuItem<PixelTool>(
-          value: PixelTool.line,
-          child: ListTile(
-            leading: const Icon(Icons.show_chart),
-            title: Text(Strings.of(context).lineTool),
-          ),
-        ),
-        PopupMenuItem<PixelTool>(
-          value: PixelTool.rectangle,
-          child: ListTile(
-            leading: const Icon(Icons.crop_square),
-            title: Text(Strings.of(context).rectangleTool),
-          ),
-        ),
-        PopupMenuItem<PixelTool>(
-          value: PixelTool.circle,
-          child: ListTile(
-            leading: const Icon(Icons.radio_button_unchecked),
-            title: Text(Strings.of(context).circleTool),
-          ),
-        ),
-      ],
-    );
-  }
-
-  bool _isShapeTool(PixelTool tool) {
-    return tool == PixelTool.line ||
-        tool == PixelTool.rectangle ||
-        tool == PixelTool.circle;
-  }
-}
-
-class GridPainter extends CustomPainter {
-  final int width;
-  final int height;
-  final double scale;
-  final Offset offset;
-
-  GridPainter({
-    required this.width,
-    required this.height,
-    this.scale = 1.0,
-    this.offset = Offset.zero,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.save();
-    canvas.translate(offset.dx, offset.dy);
-    canvas.scale(scale);
-
-    final paint = Paint()
-      ..color = Colors.grey.withOpacity(0.2)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.5;
-
-    final cellWidth = size.width / width;
-    final cellHeight = size.height / height;
-
-    for (int i = 0; i <= width; i++) {
-      final x = i * cellWidth;
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
-    }
-
-    for (int i = 0; i <= height; i++) {
-      final y = i * cellHeight;
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-    }
-
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return oldDelegate is GridPainter &&
-        (oldDelegate.width != width ||
-            oldDelegate.height != height ||
-            oldDelegate.scale != scale ||
-            oldDelegate.offset != offset);
   }
 }

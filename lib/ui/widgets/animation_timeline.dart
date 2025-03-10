@@ -256,11 +256,12 @@ class _PlaybackControls extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        IconButton(
-          icon: const Icon(Feather.skip_back, size: 16),
-          onPressed: onPreviousFrame,
-          tooltip: 'Previous Frame',
-        ),
+        if (MediaQuery.sizeOf(context).width > 600)
+          IconButton(
+            icon: const Icon(Feather.skip_back, size: 16),
+            onPressed: onPreviousFrame,
+            tooltip: 'Previous Frame',
+          ),
         IconButton(
           icon: Icon(
             isPlaying ? Feather.pause : Feather.play,
@@ -274,11 +275,12 @@ class _PlaybackControls extends StatelessWidget {
           onPressed: onStop,
           tooltip: 'Stop',
         ),
-        IconButton(
-          icon: const Icon(Feather.skip_forward, size: 16),
-          onPressed: onNextFrame,
-          tooltip: 'Next Frame',
-        ),
+        if (MediaQuery.sizeOf(context).width > 600)
+          IconButton(
+            icon: const Icon(Feather.skip_forward, size: 16),
+            onPressed: onNextFrame,
+            tooltip: 'Next Frame',
+          ),
       ],
     );
   }

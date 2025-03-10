@@ -18,6 +18,6 @@ void main() async {
   setupLogger();
 
   runApp(const ProviderScope(
-    child: App(),
+    child: PixelVerseApp(),
   ));
 }

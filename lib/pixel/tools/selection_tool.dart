@@ -1,176 +1,230 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../../data.dart';
+import '../../data/models/selection_model.dart';
+import '../tools.dart';
 
+/// A utility class for handling selection operations in the PixelCanvas
 class SelectionUtils {
-  int width;
-  int height;
-  Size Function() size;
-  final Function(SelectionModel)? onMoveSelection;
+  final int width;
+  final int height;
+  final Size Function() size;
   final Function(SelectionModel?)? onSelectionChanged;
+  final Function(SelectionModel)? onMoveSelection;
   final Function(Function()) update;
+
+  SelectionModel? selectionRect;
+  bool isDraggingSelection = false;
+  Offset? lastPanPosition;
+  Offset? startPosition;
+  Offset? endPosition;
 
   SelectionUtils({
     required this.width,
     required this.height,
     required this.size,
-    this.onMoveSelection,
-    this.onSelectionChanged,
+    required this.onSelectionChanged,
+    required this.onMoveSelection,
     required this.update,
   });
 
-  Offset _dragOffset = Offset.zero;
-  Offset? _lastPanPosition;
-  bool _isDraggingSelection = false;
+  bool isPointInsideSelection(Offset position) {
+    if (selectionRect == null) return false;
 
-  Offset? get lastPanPosition => _lastPanPosition;
-  set lastPanPosition(Offset? value) {
-    _lastPanPosition = value;
+    final pixelWidth = size().width / width;
+    final pixelHeight = size().height / height;
+
+    final selX = selectionRect!.x;
+    final selY = selectionRect!.y;
+    final selWidth = selectionRect!.width;
+    final selHeight = selectionRect!.height;
+
+    final x = (position.dx / pixelWidth).floor();
+    final y = (position.dy / pixelHeight).floor();
+
+    return x >= selX &&
+        x < selX + selWidth &&
+        y >= selY &&
+        y < selY + selHeight;
   }
 
-  bool get isDraggingSelection => _isDraggingSelection;
-  set isDraggingSelection(bool value) {
-    _isDraggingSelection = value;
-  }
+  bool inInSelectionBounds(int x, int y) {
+    if (selectionRect == null) return true;
 
-  Rect? _selectionRect;
-  Offset? _selectionStart;
-  Offset? _selectionCurrent;
+    final selX = selectionRect!.x;
+    final selY = selectionRect!.y;
+    final selWidth = selectionRect!.width;
+    final selHeight = selectionRect!.height;
 
-  Rect? get selectionRect => _selectionRect;
-  set selectionRect(Rect? value) {
-    _selectionRect = value;
-  }
-
-  void startDraggingSelection(Offset position) {
-    update(() {
-      _isDraggingSelection = true;
-      _dragOffset = Offset.zero;
-      _lastPanPosition = position;
-    });
-  }
-
-  void updateDraggingSelection(Offset delta) {
-    final boxSize = size();
-    final pixelWidth = boxSize.width / width;
-    final pixelHeight = boxSize.height / height;
-
-    // Accumulate the delta movement
-    _dragOffset += delta;
-
-    // Calculate the integer pixel movement
-    final dx = (_dragOffset.dx / pixelWidth).round();
-    final dy = (_dragOffset.dy / pixelHeight).round();
-
-    if (dx != 0 || dy != 0) {
-      update(() {
-        _selectionRect = _selectionRect!.shift(Offset(
-          dx * pixelWidth,
-          dy * pixelHeight,
-        ));
-        _dragOffset = Offset(
-          _dragOffset.dx - dx * pixelWidth,
-          _dragOffset.dy - dy * pixelHeight,
-        );
-
-        // Create a new SelectionModel
-        final newSelectionModel = SelectionModel(
-          x: _selectionRect!.left ~/ pixelWidth,
-          y: _selectionRect!.top ~/ pixelHeight,
-          width: _selectionRect!.width ~/ pixelWidth,
-          height: _selectionRect!.height ~/ pixelHeight,
-        );
-
-        // Call the controller to move the selection
-        onMoveSelection?.call(newSelectionModel);
-      });
-    }
-  }
-
-  void endDraggingSelection() {
-    update(() {
-      _isDraggingSelection = false;
-      _dragOffset = Offset.zero;
-      _lastPanPosition = null;
-    });
+    return x >= selX &&
+        x < selX + selWidth &&
+        y >= selY &&
+        y < selY + selHeight;
   }
 
   void startSelection(Offset position) {
+    final pixelWidth = size().width / width;
+    final pixelHeight = size().height / height;
+
+    final x = (position.dx / pixelWidth).floor();
+    final y = (position.dy / pixelHeight).floor();
+
+    startPosition = position;
+    endPosition = position;
+
     update(() {
-      _selectionStart = position;
-      _selectionCurrent = position;
-      _selectionRect = Rect.fromPoints(_selectionStart!, _selectionCurrent!);
-
-      _isDraggingSelection = false;
-
-      onSelectionChanged?.call(null);
+      selectionRect = SelectionModel(
+        x: x,
+        y: y,
+        width: 1,
+        height: 1,
+      );
     });
   }
 
   void updateSelection(Offset position) {
+    if (startPosition == null) return;
+
+    final pixelWidth = size().width / width;
+    final pixelHeight = size().height / height;
+
+    final startX = (startPosition!.dx / pixelWidth).floor();
+    final startY = (startPosition!.dy / pixelHeight).floor();
+
+    final x = (position.dx / pixelWidth).floor();
+    final y = (position.dy / pixelHeight).floor();
+
+    endPosition = position;
+
+    final minX = startX < x ? startX : x;
+    final minY = startY < y ? startY : y;
+    final maxX = startX > x ? startX : x;
+    final maxY = startY > y ? startY : y;
+
+    final selectionWidth = maxX - minX + 1;
+    final selectionHeight = maxY - minY + 1;
+
     update(() {
-      _selectionCurrent = position;
-      _selectionRect = Rect.fromPoints(_selectionStart!, _selectionCurrent!);
+      selectionRect = SelectionModel(
+        x: minX,
+        y: minY,
+        width: selectionWidth,
+        height: selectionHeight,
+      );
     });
   }
 
   void endSelection() {
-    final boxSize = size();
-    final pixelWidth = boxSize.width / width;
-    final pixelHeight = boxSize.height / height;
-
-    final selectionRect = _selectionRect;
-    if (selectionRect == null) return;
-    if (selectionRect.width < pixelWidth ||
-        selectionRect.height < pixelHeight) {
-      update(() {
-        _selectionRect = null;
-      });
+    if (selectionRect != null &&
+        (selectionRect!.width <= 1 || selectionRect!.height <= 1)) {
+      // If selection is too small, clear it
+      clearSelection();
       return;
     }
 
-    int x0 = (selectionRect.left / pixelWidth).floor();
-    int y0 = (selectionRect.top / pixelHeight).floor();
-    int x1 = (selectionRect.right / pixelWidth).ceil();
-    int y1 = (selectionRect.bottom / pixelHeight).ceil();
+    startPosition = null;
+    endPosition = null;
 
-    x0 = x0.clamp(0, width - 1);
-    y0 = y0.clamp(0, height - 1);
-    x1 = x1.clamp(0, width);
-    y1 = y1.clamp(0, height);
+    // Notify selection changed callback
+    onSelectionChanged?.call(selectionRect);
+  }
+
+  void clearSelection() {
+    update(() {
+      selectionRect = null;
+      isDraggingSelection = false;
+      lastPanPosition = null;
+      startPosition = null;
+      endPosition = null;
+    });
+    onSelectionChanged?.call(null);
+  }
+
+  void startDraggingSelection(Offset position) {
+    lastPanPosition = position;
+    isDraggingSelection = true;
+  }
+
+  void updateDraggingSelection(Offset delta) {
+    if (selectionRect == null || !isDraggingSelection) return;
+
+    final pixelWidth = size().width / width;
+    final pixelHeight = size().height / height;
+
+    // Convert delta from screen coordinates to grid coordinates
+    final pixelDeltaX = (delta.dx / pixelWidth).round();
+    final pixelDeltaY = (delta.dy / pixelHeight).round();
+
+    if (pixelDeltaX == 0 && pixelDeltaY == 0) return;
+
+    // Calculate new selection position, ensuring it stays within canvas bounds
+    int newX = selectionRect!.x + pixelDeltaX;
+    int newY = selectionRect!.y + pixelDeltaY;
+
+    // Constrain selection to canvas bounds
+    newX = newX.clamp(0, width - selectionRect!.width);
+    newY = newY.clamp(0, height - selectionRect!.height);
+
+    final updatedSelection = SelectionModel(
+      x: newX,
+      y: newY,
+      width: selectionRect!.width,
+      height: selectionRect!.height,
+    );
 
     update(() {
-      _isDraggingSelection = true;
+      selectionRect = updatedSelection;
     });
 
-    onSelectionChanged?.call(SelectionModel(
-      x: x0,
-      y: y0,
-      width: x1 - x0,
-      height: y1 - y0,
-    ));
+    // Notify selection moved callback
+    onMoveSelection?.call(updatedSelection);
   }
 
-  bool isPointInsideSelection(Offset point) {
-    if (_selectionRect == null) return false;
-    return _selectionRect!.contains(point);
+  void endDraggingSelection() {
+    isDraggingSelection = false;
+    lastPanPosition = null;
+
+    // Notify selection changed callback
+    onSelectionChanged?.call(selectionRect);
+  }
+}
+
+/// Implementation of SelectionTool that conforms to the Tool interface
+class SelectionTool extends Tool {
+  final SelectionUtils utils;
+
+  SelectionTool(this.utils) : super(PixelTool.select);
+
+  @override
+  void onStart(PixelDrawDetails details) {
+    if (utils.isPointInsideSelection(details.position)) {
+      utils.startDraggingSelection(details.position);
+    } else {
+      utils.startSelection(details.position);
+    }
   }
 
-  bool inInSelectionBounds(int x, int y) {
-    final selectionRect = _selectionRect;
+  @override
+  void onMove(PixelDrawDetails details) {
+    if (utils.isDraggingSelection) {
+      if (utils.lastPanPosition != null) {
+        final delta = details.position - utils.lastPanPosition!;
+        utils.updateDraggingSelection(delta);
+        utils.lastPanPosition = details.position;
+      }
+    } else {
+      utils.updateSelection(details.position);
+    }
+  }
 
-    if (selectionRect == null) return true;
-    final boxSize = size();
-    final pixelWidth = boxSize.width / width;
-    final pixelHeight = boxSize.height / height;
-
-    final x0 = (selectionRect.left / pixelWidth).floor();
-    final y0 = (selectionRect.top / pixelHeight).floor();
-    final x1 = (selectionRect.right / pixelWidth).ceil();
-    final y1 = (selectionRect.bottom / pixelHeight).ceil();
-
-    return x >= x0 && x < x1 && y >= y0 && y < y1;
+  @override
+  void onEnd(PixelDrawDetails details) {
+    if (utils.isDraggingSelection) {
+      utils.endDraggingSelection();
+    } else {
+      utils.endSelection();
+    }
   }
 }

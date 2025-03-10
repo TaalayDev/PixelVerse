@@ -5,5 +5,6 @@ class Assets {
 
   static const images = (logo: 'assets/images/logo.png',);
 
-  static const vectors = ();
+  static const vectors =
+      (reflectSymmetry: 'assets/vectors/reflect_symmetry.svg',);
 }

@@ -6,12 +6,19 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../../core/utils/cursor_manager.dart';
+import '../../pixel/tools/fill_tool.dart';
+import '../../pixel/tools/pencil_tool.dart';
 import '../../pixel/tools/selection_tool.dart';
+import '../../pixel/tools/eyedropper_tool.dart';
+import '../../core/pixel_point.dart';
+import '../../core/utils/cursor_manager.dart';
+import '../../pixel/tools/mirror_modifier.dart';
+import '../../pixel/tools/pen_tool.dart';
 import '../../core.dart';
 import '../../pixel/tools.dart';
 import '../../data.dart';
 import '../../pixel/tools/shape_tool.dart';
+import '../../pixel/tools/shape_util.dart';
 
 class _CacheModel {
   ui.Image? image;
@@ -20,7 +27,7 @@ class _CacheModel {
 
 class _CacheController extends ChangeNotifier {
   final Map<int, _CacheModel> _cachedLayerImages;
-
+  bool _isDirtyBatch = false;
   Function()? _onCacheUpdated;
 
   _CacheController() : _cachedLayerImages = {};
@@ -39,8 +46,22 @@ class _CacheController extends ChangeNotifier {
   }
 
   void markLayerDirty(int layer) {
-    _cachedLayerImages[layer]?.isDirty = true;
-    notifyListeners();
+    // Only mark if it's not already dirty to avoid unnecessary repaints
+    if (_cachedLayerImages[layer]?.isDirty == false) {
+      _cachedLayerImages[layer]?.isDirty = true;
+
+      // If we're not in a batch operation, notify listeners immediately
+      if (!_isDirtyBatch) {
+        notifyListeners();
+      }
+    }
+  }
+
+  void batchOperation(Function() operation) {
+    _isDirtyBatch = true;
+    operation();
+    _isDirtyBatch = false;
+    notifyListeners(); // Only notify once at the end
   }
 
   void _createImage(
@@ -49,8 +70,11 @@ class _CacheController extends ChangeNotifier {
     int width,
     int height,
   ) async {
-    final image =
-        await ImageHelper.createImageFromPixels(pixels, width, height);
+    final image = await ImageHelper.createImageFromPixels(
+      pixels,
+      width,
+      height,
+    );
     updateLayerImage(layer, image);
   }
 
@@ -63,12 +87,11 @@ class _CacheController extends ChangeNotifier {
   }
 }
 
-class PixelGrid extends StatefulWidget {
+class PixelCanvas extends StatefulWidget {
   final int width;
   final int height;
   final List<Layer> layers;
   final Function(int x, int y) onTapPixel;
-  final Function(List<Point<int>>) onBrushStroke;
   final Function() onStartDrawing;
   final Function() onFinishDrawing;
 
@@ -84,7 +107,7 @@ class PixelGrid extends StatefulWidget {
   final MirrorAxis mirrorAxis;
   final PixelModifier modifier;
   final Color currentColor;
-  final Function(List<Point<int>>) onDrawShape;
+  final Function(List<PixelPoint<int>>) onDrawShape;
 
   final double zoomLevel;
   final Offset currentOffset;
@@ -93,13 +116,12 @@ class PixelGrid extends StatefulWidget {
   final Function(double, Offset)? onDragEnd;
   final int currentLayerIndex;
 
-  const PixelGrid({
+  const PixelCanvas({
     super.key,
     required this.width,
     required this.height,
     required this.layers,
     required this.onTapPixel,
-    required this.onBrushStroke,
     required this.currentTool,
     required this.currentColor,
     this.modifier = PixelModifier.none,
@@ -123,18 +145,17 @@ class PixelGrid extends StatefulWidget {
   });
 
   @override
-  _PixelGridState createState() => _PixelGridState();
+  State<PixelCanvas> createState() => _PixelCanvasState();
 }
 
-class _PixelGridState extends State<PixelGrid> {
+class _PixelCanvasState extends State<PixelCanvas> {
   final _boxKey = GlobalKey();
   final random = Random();
 
   Offset? _previousPosition;
-
   Offset? _startPosition;
   Offset? _currentPosition;
-  List<Point<int>> _previewPixels = [];
+  List<PixelPoint<int>> _previewPixels = [];
 
   List<Offset> _penPoints = [];
   bool _isDrawingPenPath = false;
@@ -165,20 +186,79 @@ class _PixelGridState extends State<PixelGrid> {
   late final _CacheController _cacheController;
   int get currentLayerId => widget.layers[widget.currentLayerIndex].layerId;
 
-  late final _selectionTool = SelectionUtils(
+  // Tool instances
+  late final _selectionUtils = SelectionUtils(
     width: widget.width,
     height: widget.height,
     size: () => context.size!,
-    onMoveSelection: widget.onMoveSelection,
     onSelectionChanged: widget.onSelectionChanged,
-    update: (_) {
-      setState(_);
+    onMoveSelection: (selection) {
+      widget.onMoveSelection?.call(selection);
     },
+    update: setState,
   );
+
   late final _shapeTool = ShapeUtils(
     width: widget.width,
     height: widget.height,
   );
+
+  final fillTool = FillTool();
+  final pencilTool = PencilTool();
+  final penTool = PenTool();
+  final lineTool = LineTool();
+  final rectangleTool = RectangleTool();
+  final circleTool = OvalTool();
+  late final selectionTool = SelectionTool(_selectionUtils);
+  late final eyedropperTool = EyedropperTool(
+    onColorPicked: (color) => widget.onColorPicked?.call(color),
+  );
+
+  Tool get tool {
+    switch (widget.currentTool) {
+      case PixelTool.pencil:
+        return pencilTool;
+      case PixelTool.pen:
+        return penTool;
+      case PixelTool.line:
+        return lineTool;
+      case PixelTool.rectangle:
+        return rectangleTool;
+      case PixelTool.circle:
+        return circleTool;
+      case PixelTool.fill:
+        return fillTool;
+      case PixelTool.select:
+        return selectionTool;
+      case PixelTool.eyedropper:
+        return eyedropperTool;
+      default:
+        return pencilTool;
+    }
+  }
+
+  late var drawDetails = PixelDrawDetails(
+    position: Offset.zero,
+    size: Size.zero, // Will be set in build
+    width: widget.width,
+    height: widget.height,
+    currentLayer: widget.layers[widget.currentLayerIndex],
+    color: widget.currentColor,
+    strokeWidth: widget.brushSize,
+    modifier: modifier,
+    onPixelsUpdated: (pixels) {
+      setState(() {
+        _previewPixels = pixels;
+      });
+    },
+  );
+
+  Modifier? get modifier {
+    if (widget.modifier == PixelModifier.mirror) {
+      return MirrorModifier(widget.mirrorAxis);
+    }
+    return null;
+  }
 
   @override
   void initState() {
@@ -193,7 +273,7 @@ class _PixelGridState extends State<PixelGrid> {
   }
 
   @override
-  void didUpdateWidget(covariant PixelGrid oldWidget) {
+  void didUpdateWidget(covariant PixelCanvas oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.zoomLevel != oldWidget.zoomLevel) {
       setState(() {
@@ -205,6 +285,7 @@ class _PixelGridState extends State<PixelGrid> {
         cacheAll: widget.layers.length != oldWidget.layers.length,
       );
     }
+
     if (widget.currentTool != oldWidget.currentTool) {
       cursor = CursorManager.instance.getCursor(widget.currentTool) ??
           widget.currentTool.cursor;
@@ -265,7 +346,20 @@ class _PixelGridState extends State<PixelGrid> {
               _panStartPosition = details.focalPoint - _offset;
               widget.onStartDrag?.call(_scale, _offset);
             } else {
-              _handlePanStart(details.localFocalPoint);
+              final transformedPosition =
+                  (details.localFocalPoint - _currentOffset) / _currentScale;
+
+              drawDetails = drawDetails.copyWith(
+                position: transformedPosition,
+                size: context.size ?? Size.zero,
+                currentLayer: widget.layers[widget.currentLayerIndex],
+                color: widget.currentColor,
+                strokeWidth: widget.brushSize,
+                modifier: () => modifier,
+              );
+
+              widget.onStartDrawing();
+              tool.onStart(drawDetails);
             }
           } else if (_pointerCount == 2) {
             // Two finger touch for zooming
@@ -282,7 +376,14 @@ class _PixelGridState extends State<PixelGrid> {
               });
               widget.onDrag?.call(_scale, _offset);
             } else {
-              _handlePanUpdate(details.localFocalPoint);
+              final transformedPosition =
+                  (details.localFocalPoint - _currentOffset) / _currentScale;
+
+              drawDetails = drawDetails.copyWith(
+                position: transformedPosition,
+                color: widget.currentColor,
+              );
+              tool.onMove(drawDetails);
             }
           } else if (_pointerCount == 2) {
             // Two finger touch for zooming and panning
@@ -299,8 +400,14 @@ class _PixelGridState extends State<PixelGrid> {
             if (widget.currentTool == PixelTool.drag) {
               widget.onDragEnd?.call(_scale, _offset);
             } else {
-              _handlePanEnd();
-              widget.onFinishDrawing();
+              // Use a microtask to ensure UI updates complete before submitting
+              tool.onEnd(drawDetails);
+
+              // Use Future.microtask to separate the state updates
+              Future.microtask(() {
+                _submitDrawing();
+                widget.onFinishDrawing();
+              });
             }
           }
           _pointerCount = 0;
@@ -308,30 +415,45 @@ class _PixelGridState extends State<PixelGrid> {
         onTapDown: (details) {
           final transformedPosition =
               (details.localPosition - _currentOffset) / _currentScale;
-          if (widget.currentTool == PixelTool.fill) {
-            widget.onTapPixel(
-              (transformedPosition.dx / renderBox.size.width * widget.width)
-                  .floor(),
-              (transformedPosition.dy / renderBox.size.height * widget.height)
-                  .floor(),
-            );
-          } else if (widget.currentTool == PixelTool.eyedropper) {
-            _handleEyedropper(transformedPosition);
-          } else if (widget.currentTool == PixelTool.select) {
-            if (!_selectionTool.isPointInsideSelection(transformedPosition)) {
-              _selectionTool.startSelection(transformedPosition);
-              _selectionTool.endSelection();
+
+          drawDetails = drawDetails.copyWith(
+            position: transformedPosition,
+            size: context.size ?? Size.zero,
+            currentLayer: widget.layers[widget.currentLayerIndex],
+            color: widget.currentColor,
+          );
+
+          if (widget.currentTool == PixelTool.fill ||
+              widget.currentTool == PixelTool.eyedropper) {
+            widget.onStartDrawing();
+
+            tool.onStart(drawDetails);
+            if (widget.currentTool == PixelTool.fill ||
+                widget.currentTool == PixelTool.eyedropper) {
+              _submitDrawing();
+              widget.onFinishDrawing();
             }
           } else if (widget.currentTool == PixelTool.pen) {
             _handlePenTap(transformedPosition);
+          } else if (widget.currentTool == PixelTool.select) {
+            selectionTool.onStart(drawDetails);
           } else {
             widget.onStartDrawing();
             _startDrawing(transformedPosition);
           }
         },
         onTapUp: (details) {
-          _endDrawing();
-          widget.onFinishDrawing();
+          if (widget.currentTool != PixelTool.fill &&
+              widget.currentTool != PixelTool.eyedropper &&
+              widget.currentTool != PixelTool.select) {
+            // Use Future.microtask to separate the state updates
+            Future.microtask(() {
+              _submitDrawing();
+              widget.onFinishDrawing();
+            });
+          } else if (widget.currentTool == PixelTool.select) {
+            selectionTool.onEnd(drawDetails);
+          }
         },
         child: MouseRegion(
           cursor: cursor,
@@ -345,7 +467,7 @@ class _PixelGridState extends State<PixelGrid> {
                   ? Colors.white
                   : widget.currentColor,
               previewModifier: widget.modifier,
-              selectionRect: _selectionTool.selectionRect,
+              selectionRect: _selectionUtils.selectionRect,
               gradientStart: _gradientStart,
               gradientEnd: _gradientEnd,
               scale: _currentScale,
@@ -366,77 +488,38 @@ class _PixelGridState extends State<PixelGrid> {
     );
   }
 
-  void _handlePanStart(Offset position) {
-    // Adjust for scale and offset
-    final transformedPosition = (position - _currentOffset) / _currentScale;
-    if (widget.currentTool == PixelTool.select) {
-      if (_selectionTool.isPointInsideSelection(transformedPosition)) {
-        _selectionTool.startDraggingSelection(transformedPosition);
-      } else {
-        _selectionTool.startSelection(transformedPosition);
-      }
-    } else if (widget.currentTool == PixelTool.eyedropper) {
-      _handleEyedropper(transformedPosition);
-    } else if (widget.currentTool == PixelTool.pen) {
-      widget.onStartDrawing();
-      _handlePenTap(transformedPosition);
+  void _submitDrawing() {
+    // Batch all state changes together to prevent multiple redraws
+    if (widget.currentTool == PixelTool.line ||
+        widget.currentTool == PixelTool.rectangle ||
+        widget.currentTool == PixelTool.circle ||
+        widget.currentTool == PixelTool.pencil ||
+        widget.currentTool == PixelTool.eraser ||
+        widget.currentTool == PixelTool.brush ||
+        widget.currentTool == PixelTool.sprayPaint ||
+        widget.currentTool == PixelTool.fill) {
+      // Create a copy of preview pixels before clearing
+      final pixelsToDraw = List<PixelPoint<int>>.from(_previewPixels);
+
+      // Clear variables first without triggering a redraw
+      _previousPosition = null;
+      _startPosition = null;
+      _currentPosition = null;
+      //_previewPixels = [];
+
+      // Then mark layer as dirty
+      _cacheController.markLayerDirty(currentLayerId);
+
+      // Finally submit the drawing to parent - do this last
+      widget.onDrawShape(pixelsToDraw);
     } else {
-      // widget.onStartDrawing();
-      // _startDrawing(transformedPosition);
-    }
-  }
-
-  void _handlePanUpdate(Offset position) {
-    // Adjust for scale and offset
-    final transformedPosition = (position - _currentOffset) / _currentScale;
-    if (widget.currentTool == PixelTool.select) {
-      if (_selectionTool.isDraggingSelection) {
-        final delta = transformedPosition - _selectionTool.lastPanPosition!;
-        _selectionTool.updateDraggingSelection(delta);
-        _selectionTool.lastPanPosition = transformedPosition;
-      } else {
-        _selectionTool.updateSelection(transformedPosition);
-      }
-    } else if (widget.currentTool == PixelTool.eyedropper) {
-      _handleEyedropper(transformedPosition);
-    } else if (widget.currentTool == PixelTool.pen && _isDrawingPenPath) {
-      _handlePenDrag(transformedPosition);
-    } else {
-      _updateDrawing(transformedPosition);
-    }
-  }
-
-  void _handlePanEnd() {
-    if (widget.currentTool == PixelTool.select) {
-      if (_selectionTool.isDraggingSelection) {
-        _selectionTool.endDraggingSelection();
-      } else {
-        _selectionTool.endSelection();
-      }
-    } else if (widget.currentTool == PixelTool.pen) {
-      if (_isClosingPath) {
-        // Close and finalize the path
-        _penPoints.add(_penPoints[0]);
-        _finalizePenPath();
-      } else {
-        // Continue drawing
-        _handlePenPanEnd();
-      }
-    } else {
-      _endDrawing();
-    }
-  }
-
-  void _handleEyedropper(Offset position) {
-    final pixelWidth = renderBox.size.width / widget.width;
-    final pixelHeight = renderBox.size.height / widget.height;
-
-    final x = (position.dx / pixelWidth).floor();
-    final y = (position.dy / pixelHeight).floor();
-
-    if (x >= 0 && x < widget.width && y >= 0 && y < widget.height) {
-      final pickedColor = _cachedPixels[y * widget.width + x];
-      widget.onColorPicked?.call(Color(pickedColor));
+      // For other tools, just clear the preview pixels
+      setState(() {
+        _previewPixels = [];
+        _previousPosition = null;
+        _startPosition = null;
+        _currentPosition = null;
+      });
     }
   }
 
@@ -475,22 +558,6 @@ class _PixelGridState extends State<PixelGrid> {
     });
   }
 
-  void _handlePenPanEnd() {
-    if (_penPoints.length > 1) {
-      // Convert the path into pixels and draw it
-      final pixels = _shapeTool.getPenPathPixels(
-        _penPoints,
-        size: context.size!,
-      );
-      widget.onDrawShape(pixels);
-      widget.onFinishDrawing();
-      setState(() {
-        _penPoints.clear();
-        _isDrawingPenPath = false;
-      });
-    }
-  }
-
   void _finalizePenPath() {
     if (_penPoints.length > 1) {
       // Convert the path into pixels and draw it
@@ -499,7 +566,16 @@ class _PixelGridState extends State<PixelGrid> {
         close: true,
         size: context.size!,
       );
-      widget.onDrawShape(pixels);
+
+      final coloredPixels = pixels.map((point) {
+        return PixelPoint(
+          point.x,
+          point.y,
+          color: widget.currentColor.value,
+        );
+      }).toList();
+
+      widget.onDrawShape(coloredPixels);
       widget.onFinishDrawing();
     }
     setState(() {
@@ -514,43 +590,10 @@ class _PixelGridState extends State<PixelGrid> {
     _handleDrawing(position);
   }
 
-  void _updateDrawing(Offset position) {
-    _currentPosition = position;
-    _handleDrawing(position);
-  }
-
-  void _endDrawing() {
-    if (widget.currentTool == PixelTool.line ||
-        widget.currentTool == PixelTool.rectangle ||
-        widget.currentTool == PixelTool.circle ||
-        widget.currentTool == PixelTool.pencil ||
-        widget.currentTool == PixelTool.eraser ||
-        widget.currentTool == PixelTool.brush ||
-        widget.currentTool == PixelTool.sprayPaint) {
-      widget.onDrawShape(_previewPixels);
-    }
-    _cacheController.markLayerDirty(currentLayerId);
-    // _previewPixels.clear();
-    _previousPosition = null;
-    _startPosition = null;
-    _currentPosition = null;
-    setState(() {});
-  }
-
-  bool _inInSelectionBounds(int x, int y) {
-    return _selectionTool.inInSelectionBounds(x, y);
-  }
-
-  void _onTapPixel(int x, int y) {
-    if (!_inInSelectionBounds(x, y)) return;
-    _previewPixels.add(Point(x, y));
-  }
-
-  List<Point<int>> _filterPoints(List<Point<int>> pixels) {
-    final selectionRect = _selectionTool.selectionRect;
-    if (selectionRect == null) return pixels;
+  List<PixelPoint<int>> _filterPoints(List<PixelPoint<int>> pixels) {
+    if (_selectionUtils.selectionRect == null) return pixels;
     return pixels.where((point) {
-      return _inInSelectionBounds(point.x, point.y);
+      return _selectionUtils.inInSelectionBounds(point.x, point.y);
     }).toList();
   }
 
@@ -602,7 +645,7 @@ class _PixelGridState extends State<PixelGrid> {
       } else if (widget.currentTool == PixelTool.brush ||
           widget.currentTool == PixelTool.eraser) {
         final brushSize = widget.brushSize;
-        final pixelsToUpdate = <Point<int>>[];
+        final pixelsToUpdate = <PixelPoint<int>>[];
 
         if (_previousPosition != null) {
           final previousX = (_previousPosition!.dx / pixelWidth).floor();
@@ -630,29 +673,10 @@ class _PixelGridState extends State<PixelGrid> {
         _previousPosition = position;
         _previewPixels.addAll(_filterPoints(pixelsToUpdate));
         setState(() {});
-      } else if (widget.currentTool == PixelTool.pixelPerfectLine) {
-        if (_previousPosition != null) {
-          final previousX = (_previousPosition!.dx / pixelWidth).floor();
-          final previousY = (_previousPosition!.dy / pixelHeight).floor();
-
-          final linePixels = _shapeTool.getPixelPerfectLinePixels(
-            previousX,
-            previousY,
-            x,
-            y,
-          );
-          for (final point in linePixels) {
-            _onTapPixel(point.x, point.y);
-          }
-        } else {
-          _onTapPixel(x, y);
-        }
-        _previousPosition = position;
-        setState(() {});
       } else if (widget.currentTool == PixelTool.sprayPaint) {
         final intensity = widget.sprayIntensity;
         final brushSize = widget.brushSize;
-        final pixelsToUpdate = <Point<int>>[];
+        final pixelsToUpdate = <PixelPoint<int>>[];
 
         if (_previousPosition != null) {
           final previousX = (_previousPosition!.dx / pixelWidth).floor();
@@ -674,12 +698,20 @@ class _PixelGridState extends State<PixelGrid> {
                   px < widget.width &&
                   py >= 0 &&
                   py < widget.height) {
-                pixelsToUpdate.add(Point(px, py));
+                pixelsToUpdate.add(PixelPoint(
+                  px,
+                  py,
+                  color: widget.currentColor.value,
+                ));
               }
             }
           }
         } else {
-          pixelsToUpdate.add(Point(x, y));
+          pixelsToUpdate.add(PixelPoint(
+            x,
+            y,
+            color: widget.currentColor.value,
+          ));
         }
 
         _previousPosition = position;
@@ -689,43 +721,9 @@ class _PixelGridState extends State<PixelGrid> {
     }
   }
 
-  void _drawMirror(
-    Offset position,
-    int x,
-    int y,
-    double pixelWidth,
-    double pixelHeight,
-  ) {
-    if (_previousPosition != null) {
-      final previousX = (_previousPosition!.dx / pixelWidth).floor();
-      final previousY = (_previousPosition!.dy / pixelHeight).floor();
-      _drawLine(previousX, previousY, x, y);
-
-      switch (widget.mirrorAxis) {
-        case MirrorAxis.horizontal:
-          final mirrorY = widget.height - 1 - y;
-          _drawLine(previousX, previousY, x, mirrorY);
-          break;
-        case MirrorAxis.vertical:
-          final mirrorX = widget.width - 1 - x;
-          _drawLine(widget.width - 1 - previousX, previousY, mirrorX, y);
-          break;
-        case MirrorAxis.both:
-          final mirrorX = widget.width - 1 - x;
-          final mirrorY = widget.height - 1 - y;
-          _drawLine(widget.width - 1 - previousX, previousY, mirrorX, y);
-          _drawLine(previousX, previousY, x, mirrorY);
-          _drawLine(widget.width - 1 - previousX, previousY, mirrorX, mirrorY);
-
-          break;
-      }
-    } else {
-      _onTapPixel(x, y);
-      final mirrorX = widget.width - 1 - x;
-      _onTapPixel(mirrorX, y);
-    }
-    _previousPosition = position;
-    setState(() {});
+  void _onTapPixel(int x, int y) {
+    if (!_selectionUtils.inInSelectionBounds(x, y)) return;
+    _previewPixels.add(PixelPoint(x, y, color: widget.currentColor.value));
   }
 
   void _drawLine(int x0, int y0, int x1, int y1) {
@@ -759,35 +757,34 @@ class _PixelGridState extends State<PixelGrid> {
         mergedPixels[i] = pixels2[i];
       }
     }
-
     return mergedPixels;
   }
 
   Uint32List _mergePixelsWithPoint(
     Uint32List pixels,
-    List<Point<int>> points,
+    List<PixelPoint<int>> points,
     int color,
   ) {
     final mergedPixels = Uint32List.fromList(pixels);
     for (final point in points) {
       final index = point.y * widget.width + point.x;
       if (index >= 0 && index < pixels.length) {
-        mergedPixels[index] = color;
+        mergedPixels[index] = point.color != 0 ? point.color : color;
       }
     }
-
     return mergedPixels;
   }
 }
 
+/// CustomPainter for rendering the pixel grid and pixel data
 class _PixelGridPainter extends CustomPainter {
   final int width;
   final int height;
   final Uint32List pixels;
-  final List<Point<int>> previewPixels;
+  final List<PixelPoint<int>> previewPixels;
   final PixelModifier previewModifier;
   final Color previewColor;
-  final Rect? selectionRect;
+  final SelectionModel? selectionRect;
   final Offset? gradientStart;
   final Offset? gradientEnd;
 
@@ -830,6 +827,9 @@ class _PixelGridPainter extends CustomPainter {
     final pixelWidth = size.width / width;
     final pixelHeight = size.height / height;
 
+    // Draw grid background
+    _drawGridBackground(canvas, size, pixelWidth, pixelHeight);
+
     // Draw layers pixels
     Rect? imageRect;
     final canvasRect = Offset.zero & size;
@@ -852,6 +852,7 @@ class _PixelGridPainter extends CustomPainter {
             Paint(),
           );
         }
+        // Draw the preview pixels on the current layer
         if (i == currentLayerIndex) {
           _drawPreviewPixels(canvas, size, pixelWidth, pixelHeight);
         }
@@ -861,140 +862,48 @@ class _PixelGridPainter extends CustomPainter {
       _drawPixels(canvas, size, pixelWidth, pixelHeight);
     }
 
+    // Draw selection rectangle if active
     if (selectionRect != null &&
         selectionRect!.width > 0 &&
         selectionRect!.height > 0) {
-      final rect = Rect.fromLTWH(
-        selectionRect!.left,
-        selectionRect!.top,
-        selectionRect!.width,
-        selectionRect!.height,
-      );
-      canvas.drawRect(
-        rect,
-        Paint()
-          ..color = Colors.blueAccent.withOpacity(0.3)
-          ..style = PaintingStyle.fill,
-      );
-      canvas.drawRect(
-        rect,
-        Paint()
-          ..color = Colors.blue
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1,
-      );
-
-      const handleSize = 8.0;
-      final handlePaint = Paint()..color = Colors.blue;
-
-      final handleTopLeft = Rect.fromLTWH(
-        selectionRect!.left - handleSize / 2,
-        selectionRect!.top - handleSize / 2,
-        handleSize,
-        handleSize,
-      );
-      canvas.drawRect(handleTopLeft, handlePaint);
-
-      final handleTopRight = Rect.fromLTWH(
-        selectionRect!.right - handleSize / 2,
-        selectionRect!.top - handleSize / 2,
-        handleSize,
-        handleSize,
-      );
-
-      canvas.drawRect(handleTopRight, handlePaint);
-
-      final handleBottomLeft = Rect.fromLTWH(
-        selectionRect!.left - handleSize / 2,
-        selectionRect!.bottom - handleSize / 2,
-        handleSize,
-        handleSize,
-      );
-
-      canvas.drawRect(handleBottomLeft, handlePaint);
-
-      final handleBottomRight = Rect.fromLTWH(
-        selectionRect!.right - handleSize / 2,
-        selectionRect!.bottom - handleSize / 2,
-        handleSize,
-        handleSize,
-      );
-
-      canvas.drawRect(handleBottomRight, handlePaint);
+      _drawSelectionRect(canvas, pixelWidth, pixelHeight);
     }
 
+    // Draw gradient if active
     if (gradientStart != null && gradientEnd != null) {
-      final gradientPaint = Paint()
-        ..shader = LinearGradient(
-          begin: Alignment(
-            gradientStart!.dx / size.width,
-            gradientStart!.dy / size.height,
-          ),
-          end: Alignment(
-            gradientEnd!.dx / size.width,
-            gradientEnd!.dy / size.height,
-          ),
-          colors: [Colors.black, Colors.transparent],
-        ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
-
-      canvas.drawRect(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-        gradientPaint,
-      );
+      _drawGradient(canvas, size);
     }
 
-    // Draw the pen path preview
+    // Draw pen path preview if active
     if (isDrawingPenPath && penPoints.isNotEmpty) {
-      final penPaint = Paint()
-        ..color = Colors.red
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.0 / scale; // Adjust for scale
-
-      final path = Path();
-      path.moveTo(penPoints[0].dx, penPoints[0].dy);
-
-      if (penPoints.length == 1) {
-        canvas.drawCircle(
-          penPoints[0],
-          2.0 / scale,
-          penPaint..style = PaintingStyle.fill,
-        );
-      } else if (penPoints.length == 2) {
-        path.lineTo(penPoints[1].dx, penPoints[1].dy);
-      } else if (penPoints.length == 3) {
-        path.quadraticBezierTo(
-          penPoints[1].dx,
-          penPoints[1].dy,
-          penPoints[2].dx,
-          penPoints[2].dy,
-        );
-      } else if (penPoints.length == 4) {
-        path.cubicTo(
-          penPoints[1].dx,
-          penPoints[1].dy,
-          penPoints[2].dx,
-          penPoints[2].dy,
-          penPoints[3].dx,
-          penPoints[3].dy,
-        );
-      } else {
-        for (int i = 1; i < penPoints.length - 2; i++) {
-          final xc = (penPoints[i].dx + penPoints[i + 1].dx) / 2;
-          final yc = (penPoints[i].dy + penPoints[i + 1].dy) / 2;
-          path.quadraticBezierTo(penPoints[i].dx, penPoints[i].dy, xc, yc);
-        }
-        path.quadraticBezierTo(
-          penPoints[penPoints.length - 2].dx,
-          penPoints[penPoints.length - 2].dy,
-          penPoints[penPoints.length - 1].dx,
-          penPoints[penPoints.length - 1].dy,
-        );
-      }
-
-      canvas.drawPath(path, penPaint);
+      _drawPenPathPreview(canvas);
     }
 
     canvas.restore();
+  }
+
+  void _drawGridBackground(
+      Canvas canvas, Size size, double pixelWidth, double pixelHeight) {
+    final paint = Paint()
+      ..color = Colors.grey.withOpacity(0.1)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.5 / scale;
+
+    for (int x = 0; x <= width; x++) {
+      canvas.drawLine(
+        Offset(x * pixelWidth, 0),
+        Offset(x * pixelWidth, size.height),
+        paint,
+      );
+    }
+
+    for (int y = 0; y <= height; y++) {
+      canvas.drawLine(
+        Offset(0, y * pixelHeight),
+        Offset(size.width, y * pixelHeight),
+        paint,
+      );
+    }
   }
 
   void _drawPixels(
@@ -1036,7 +945,7 @@ class _PixelGridPainter extends CustomPainter {
     for (final point in previewPixels) {
       final x = point.x;
       final y = point.y;
-      final color = previewColor;
+      final color = Color(point.color != 0 ? point.color : previewColor.value);
       if (color.alpha == 0) continue;
 
       final double left = x * pixelWidth;
@@ -1066,57 +975,145 @@ class _PixelGridPainter extends CustomPainter {
       indices.add(vertexIndex + 3);
 
       vertexIndex += 4;
+    }
 
-      // Handle mirror modifier if applicable
-      if (previewModifier == PixelModifier.mirror) {
-        final mirrorX = width - 1 - x;
-        final mirrorLeft = mirrorX * pixelWidth;
-        final mirrorRight = mirrorLeft + pixelWidth;
+    if (positions.isNotEmpty) {
+      final vertices = Vertices(
+        VertexMode.triangles,
+        positions,
+        colors: colors,
+        indices: indices,
+      );
 
-        positions.add(Offset(mirrorLeft, top));
-        positions.add(Offset(mirrorRight, top));
-        positions.add(Offset(mirrorRight, bottom));
-        positions.add(Offset(mirrorLeft, bottom));
+      final paint = Paint()..blendMode = blendMode;
+      canvas.drawVertices(vertices, BlendMode.srcOver, paint);
+    }
+  }
 
-        colors.add(color);
-        colors.add(color);
-        colors.add(color);
-        colors.add(color);
+  void _drawSelectionRect(
+      Canvas canvas, double pixelWidth, double pixelHeight) {
+    final rect = Rect.fromLTWH(
+      selectionRect!.x * pixelWidth,
+      selectionRect!.y * pixelHeight,
+      selectionRect!.width * pixelWidth,
+      selectionRect!.height * pixelHeight,
+    );
 
-        indices.add(vertexIndex);
-        indices.add(vertexIndex + 1);
-        indices.add(vertexIndex + 2);
+    // Draw fill with semi-transparent blue
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..color = Colors.blueAccent.withOpacity(0.2)
+        ..style = PaintingStyle.fill,
+    );
 
-        indices.add(vertexIndex);
-        indices.add(vertexIndex + 2);
-        indices.add(vertexIndex + 3);
+    // Draw border with solid blue
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..color = Colors.blue
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0 / scale,
+    );
 
-        vertexIndex += 4;
+    // Draw handles at corners
+    const handleSize = 6.0;
+    final handlePaint = Paint()..color = Colors.blue;
+
+    final handles = [
+      Rect.fromCenter(
+        center: rect.topLeft,
+        width: handleSize / scale,
+        height: handleSize / scale,
+      ),
+      Rect.fromCenter(
+        center: rect.topRight,
+        width: handleSize / scale,
+        height: handleSize / scale,
+      ),
+      Rect.fromCenter(
+        center: rect.bottomLeft,
+        width: handleSize / scale,
+        height: handleSize / scale,
+      ),
+      Rect.fromCenter(
+        center: rect.bottomRight,
+        width: handleSize / scale,
+        height: handleSize / scale,
+      ),
+    ];
+
+    for (final handle in handles) {
+      canvas.drawRect(handle, handlePaint);
+    }
+  }
+
+  void _drawGradient(Canvas canvas, Size size) {
+    final gradientPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment(
+          gradientStart!.dx / size.width,
+          gradientStart!.dy / size.height,
+        ),
+        end: Alignment(
+          gradientEnd!.dx / size.width,
+          gradientEnd!.dy / size.height,
+        ),
+        colors: [Colors.black, Colors.transparent],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      gradientPaint,
+    );
+  }
+
+  void _drawPenPathPreview(Canvas canvas) {
+    final penPaint = Paint()
+      ..color = Colors.red
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5 / scale;
+
+    final path = Path();
+
+    if (penPoints.isEmpty) return;
+
+    path.moveTo(penPoints.first.dx, penPoints.first.dy);
+
+    if (penPoints.length == 1) {
+      // For single point, draw a small circle
+      canvas.drawCircle(
+        penPoints.first,
+        2.0 / scale,
+        penPaint..style = PaintingStyle.fill,
+      );
+    } else {
+      // For multiple points, draw connected lines
+      for (int i = 1; i < penPoints.length; i++) {
+        path.lineTo(penPoints[i].dx, penPoints[i].dy);
+      }
+
+      // If we're close to the start point, show a dashed line to indicate closing
+      if (penPoints.length > 2 &&
+          (penPoints.last - penPoints.first).distance <= 15) {
+        final dashPaint = Paint()
+          ..color = Colors.green
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5 / scale;
+
+        canvas.drawLine(
+          penPoints.last,
+          penPoints.first,
+          dashPaint,
+        );
       }
     }
 
-    final vertices = Vertices(
-      VertexMode.triangles,
-      positions,
-      colors: colors,
-      indices: indices,
-    );
-
-    final paint = Paint()..blendMode = blendMode;
-    canvas.drawVertices(vertices, BlendMode.srcOver, paint);
+    canvas.drawPath(path, penPaint);
   }
 
   @override
   bool shouldRepaint(covariant _PixelGridPainter oldDelegate) {
-    return listEquals(pixels, oldDelegate.pixels) ||
-        listEquals(previewPixels, oldDelegate.previewPixels) ||
-        previewColor != oldDelegate.previewColor ||
-        selectionRect != oldDelegate.selectionRect ||
-        gradientStart != oldDelegate.gradientStart ||
-        gradientEnd != oldDelegate.gradientEnd ||
-        scale != oldDelegate.scale ||
-        offset != oldDelegate.offset ||
-        listEquals(penPoints, oldDelegate.penPoints) ||
-        isDrawingPenPath != oldDelegate.isDrawingPenPath;
+    return true; // Always repaint to ensure smooth updates
   }
 }

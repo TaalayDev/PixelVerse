@@ -1,51 +1,131 @@
-import 'dart:math';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../config/assets.dart';
+import '../../core/theme/theme.dart';
 import '../../core/utils/cursor_manager.dart';
 import 'projects_screen.dart';
 
-class SplashScreen extends StatefulWidget {
+import '../widgets/theme_selector.dart';
+
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  final List<Pixel> _pixels = [];
-  double _progress = 0.0;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _rotationAnimation;
+  final List<PixelSquare> _squares = [];
+  final List<PixelDot> _dots = [];
+  final int _gridSize = 10;
+  final math.Random _random = math.Random();
+  bool _navigating = false;
 
   @override
   void initState() {
     super.initState();
+
+    // Initialize the animation controller
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
-    )..addListener(() {
-        setState(() {});
-      });
+      duration: const Duration(milliseconds: 3000),
+    );
 
+    // Setup animations
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeIn,
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.7, curve: Curves.elasticOut),
+      ),
+    );
+
+    _rotationAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.5, 1.0, curve: Curves.easeOutBack),
+      ),
+    );
+
+    // Create animated squares for the grid effect
+    _createSquares();
+    _createDots();
+
+    // Start the animation
     _controller.forward();
 
+    // Start initialization process
     _init();
   }
 
-  void _init() async {
+  void _createSquares() {
+    for (int i = 0; i < 40; i++) {
+      _squares.add(PixelSquare(
+        position: Offset(
+          _random.nextDouble() * _gridSize * 2 - _gridSize,
+          _random.nextDouble() * _gridSize * 2 - _gridSize,
+        ),
+        size: 0.2 + _random.nextDouble() * 0.2,
+        animationDelay: _random.nextDouble() * 0.5,
+        rotationSpeed: _random.nextDouble() * 0.3,
+      ));
+    }
+  }
+
+  void _createDots() {
+    for (int i = 0; i < 100; i++) {
+      _dots.add(PixelDot(
+        position: Offset(
+          _random.nextDouble() * _gridSize * 4 - _gridSize * 2,
+          _random.nextDouble() * _gridSize * 4 - _gridSize * 2,
+        ),
+        size: 0.05 + _random.nextDouble() * 0.05,
+        animationDelay: _random.nextDouble() * 0.5,
+        speed: 0.01 + _random.nextDouble() * 0.05,
+      ));
+    }
+  }
+
+  Future<void> _init() async {
     await CursorManager.instance.init();
 
-    // Simulate loading progress
-    for (int i = 0; i < 100; i++) {
-      await Future.delayed(const Duration(milliseconds: 20));
-      setState(() {
-        _progress = i / 100;
-      });
-    }
+    // Wait for animation to complete
+    await Future.delayed(const Duration(milliseconds: 3000));
 
-    Future.delayed(const Duration(milliseconds: 500), _navigateToNextScreen);
+    // Simulate loading for a smoother experience
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    if (!mounted || _navigating) return;
+
+    setState(() {
+      _navigating = true;
+    });
+
+    // Navigate to next screen
+    if (context.mounted) {
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (_, __, ___) => const ProjectsScreen(),
+          transitionDuration: const Duration(milliseconds: 600),
+          transitionsBuilder: (_, animation, __, child) {
+            return FadeTransition(
+              opacity: animation,
+              child: child,
+            );
+          },
+        ),
+      );
+    }
   }
 
   @override
@@ -54,117 +134,313 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
-  void _navigateToNextScreen() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => const ProjectsScreen(),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final theme = ref.watch(themeProvider).theme;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF091126),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 200,
-              height: 200,
-              child: Image.asset(Assets.images.logo),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'PixelVerse',
-              style: GoogleFonts.pixelifySans(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                letterSpacing: 2,
-                shadows: [
-                  Shadow(
-                    blurRadius: 10.0,
-                    color: Colors.white.withOpacity(0.7),
-                    offset: const Offset(0, 0),
-                  ),
-                ],
+      backgroundColor: theme.background,
+      body: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Stack(
+            children: [
+              // Background with animated dots
+
+              // Center content
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Animated Pixel Art Logo
+
+                    // Animated app name
+                    AnimatedOpacity(
+                      opacity: _fadeAnimation.value,
+                      duration: const Duration(milliseconds: 500),
+                      child: Text(
+                        'PIXELVERSE',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 4,
+                          color: theme.textPrimary,
+                          shadows: [
+                            Shadow(
+                              blurRadius: 10.0,
+                              color: theme.primaryColor.withOpacity(0.6),
+                              offset: const Offset(0, 0),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Animated tagline
+                    AnimatedOpacity(
+                      opacity: _fadeAnimation.value,
+                      duration: const Duration(milliseconds: 500),
+                      child: Text(
+                        'CREATE • ANIMATE • PIXELATE',
+                        style: TextStyle(
+                          fontSize: 12,
+                          letterSpacing: 2,
+                          color: theme.textSecondary,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 60),
+
+                    // Loading indicator
+                    AnimatedOpacity(
+                      opacity: _fadeAnimation.value,
+                      duration: const Duration(milliseconds: 500),
+                      child: SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(theme.primaryColor),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
+
+              // Version text at bottom
+              Positioned(
+                bottom: 20,
+                left: 0,
+                right: 0,
+                child: AnimatedOpacity(
+                  opacity: _fadeAnimation.value,
+                  duration: const Duration(milliseconds: 500),
+                  child: Center(
+                    child: Text(
+                      'v1.1.0',
+                      style: TextStyle(
+                        color: theme.textSecondary.withOpacity(0.5),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 }
 
-class Pixel {
-  final double x;
-  final double y;
-  final Color color;
+class PixelSquare {
+  final Offset position;
   final double size;
+  final double animationDelay;
+  final double rotationSpeed;
 
-  Pixel(this.x, this.y, this.color, this.size);
+  PixelSquare({
+    required this.position,
+    required this.size,
+    required this.animationDelay,
+    required this.rotationSpeed,
+  });
 }
 
-class PixelArtPainter extends CustomPainter {
-  final List<Pixel> pixels;
-  final double animationValue;
+class PixelDot {
+  final Offset position;
+  final double size;
+  final double animationDelay;
+  final double speed;
 
-  PixelArtPainter(this.pixels, this.animationValue) {
-    if (pixels.isEmpty) {
-      _generatePixels();
-    }
-  }
+  PixelDot({
+    required this.position,
+    required this.size,
+    required this.animationDelay,
+    required this.speed,
+  });
+}
 
-  void _generatePixels() {
-    final random = Random();
-    for (int i = 0; i < 500; i++) {
-      pixels.add(Pixel(
-        random.nextDouble() * 200,
-        random.nextDouble() * 200,
-        Color.fromRGBO(
-          random.nextInt(256),
-          random.nextInt(256),
-          random.nextInt(256),
-          1,
-        ),
-        random.nextDouble() * 4 + 1,
-      ));
-    }
-  }
+class PixelLogoPainter extends CustomPainter {
+  final double animation;
+  final List<PixelSquare> squares;
+  final Color primaryColor;
+  final Color secondaryColor;
+  final bool brightBackground;
+
+  PixelLogoPainter({
+    required this.animation,
+    required this.squares,
+    required this.primaryColor,
+    required this.secondaryColor,
+    required this.brightBackground,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (var pixel in pixels) {
-      final paint = Paint()..color = pixel.color.withOpacity(animationValue);
-      canvas.drawRect(
-        Rect.fromLTWH(pixel.x, pixel.y, pixel.size, pixel.size),
-        paint,
-      );
+    final centerX = size.width / 2;
+    final centerY = size.height / 2;
+    final gridSize = size.width / 10;
+
+    // Draw pixel art logo
+    final logoPixels = [
+      // P
+      [1, 1, 1, 1, 0],
+      [1, 0, 0, 1, 0],
+      [1, 0, 0, 1, 0],
+      [1, 1, 1, 1, 0],
+      [1, 0, 0, 0, 0],
+      [1, 0, 0, 0, 0],
+
+      // V
+      [0, 1, 0, 0, 0, 1, 0],
+      [0, 1, 0, 0, 0, 1, 0],
+      [0, 1, 0, 0, 0, 1, 0],
+      [0, 0, 1, 0, 1, 0, 0],
+      [0, 0, 1, 0, 1, 0, 0],
+      [0, 0, 0, 1, 0, 0, 0],
+    ];
+
+    final paint = Paint();
+
+    // Calculate the starting position for the logo
+    final startX = centerX - (logoPixels[0].length * gridSize) / 2;
+    final startY = centerY - (logoPixels.length * gridSize) / 2;
+
+    for (int y = 0; y < logoPixels.length; y++) {
+      for (int x = 0; x < logoPixels[y].length; x++) {
+        if (logoPixels[y][x] == 1) {
+          final delayFactor =
+              0.7 + (x + y) / (logoPixels.length + logoPixels[0].length) * 0.3;
+          final animationProgress =
+              math.max(0, math.min(1, (animation - 0.3) / delayFactor));
+
+          // Determine pixel color with alternating pattern
+          final isEven = (x + y) % 2 == 0;
+          paint.color = isEven
+              ? primaryColor.withOpacity(animationProgress.toDouble())
+              : secondaryColor.withOpacity(animationProgress.toDouble());
+
+          // Calculate pixel position
+          final pixelX = startX + x * gridSize;
+          final pixelY = startY + y * gridSize;
+
+          // Draw pixel with slight scaling effect
+          final scale = 0.9 + animationProgress * 0.1;
+          final pixelSize = gridSize * scale;
+          final offset = (gridSize - pixelSize) / 2;
+
+          canvas.drawRect(
+            Rect.fromLTWH(
+                pixelX + offset, pixelY + offset, pixelSize, pixelSize),
+            paint,
+          );
+        }
+      }
     }
 
-    // Draw a simple pixel art logo
-    _drawPixelArtLogo(canvas, size);
-  }
+    // Draw animated squares
+    for (final square in squares) {
+      final squareAnimation =
+          math.max(0, math.min(1, animation - square.animationDelay));
 
-  void _drawPixelArtLogo(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.white.withOpacity(animationValue);
-    final pixelSize = 10.0;
+      if (squareAnimation > 0) {
+        final squareOpacity = math.sin(squareAnimation * math.pi) * 0.6;
 
-    // Draw a simple "P" shape
-    for (int i = 0; i < 5; i++) {
-      canvas.drawRect(
-        Rect.fromLTWH(50, 50 + i * pixelSize, pixelSize, pixelSize),
-        paint,
-      );
+        paint.color = primaryColor.withOpacity(squareOpacity * 0.3);
+
+        // Calculate square position with rotation around the center
+        final angle = square.rotationSpeed * animation * math.pi * 2;
+        final distance =
+            square.position.distance * gridSize * 3 * squareAnimation;
+
+        final dx = math.cos(angle) * distance;
+        final dy = math.sin(angle) * distance;
+
+        final squareX = centerX + dx;
+        final squareY = centerY + dy;
+        final squareSize = gridSize * square.size;
+
+        canvas.drawRect(
+          Rect.fromLTWH(squareX, squareY, squareSize, squareSize),
+          paint,
+        );
+      }
     }
-    canvas.drawRect(Rect.fromLTWH(60, 50, pixelSize, pixelSize), paint);
-    canvas.drawRect(Rect.fromLTWH(70, 60, pixelSize, pixelSize), paint);
-    canvas.drawRect(Rect.fromLTWH(60, 70, pixelSize, pixelSize), paint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(PixelLogoPainter oldDelegate) {
+    return animation != oldDelegate.animation;
+  }
+}
+
+class PixelBackgroundPainter extends CustomPainter {
+  final List<PixelDot> dots;
+  final double animation;
+  final Color color;
+
+  PixelBackgroundPainter({
+    required this.dots,
+    required this.animation,
+    required this.color,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final centerX = size.width / 2;
+    final centerY = size.height / 2;
+
+    final paint = Paint()..color = color;
+
+    for (final dot in dots) {
+      final dotAnimation =
+          math.max(0, math.min(1, animation - dot.animationDelay));
+
+      if (dotAnimation > 0) {
+        // Pulsating effect
+        final pulse =
+            (math.sin(animation * 3 + dot.animationDelay * 10) + 1) / 2;
+        final dotOpacity = 0.3 + pulse * 0.7;
+
+        paint.color = color.withOpacity(dotOpacity * 0.5);
+
+        // Moving outward
+        final angle = dot.position.direction;
+        final distance =
+            dot.position.distance * size.width / 4 * (0.2 + dotAnimation * 0.8);
+        final speed = dot.speed * animation * 100;
+
+        final dx = math.cos(angle) * (distance + speed);
+        final dy = math.sin(angle) * (distance + speed);
+
+        final dotX = centerX + dx;
+        final dotY = centerY + dy;
+        final dotSize = size.width * dot.size * (0.5 + pulse * 0.5);
+
+        // Only draw dots within the screen
+        if (dotX > -dotSize &&
+            dotX < size.width + dotSize &&
+            dotY > -dotSize &&
+            dotY < size.height + dotSize) {
+          canvas.drawCircle(
+            Offset(dotX, dotY),
+            dotSize,
+            paint,
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(PixelBackgroundPainter oldDelegate) {
+    return animation != oldDelegate.animation;
+  }
 }

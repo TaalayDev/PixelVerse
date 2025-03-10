@@ -215,7 +215,9 @@ class ColorPalettePanel extends HookWidget {
           const SizedBox(height: 16),
           Text(
             Strings.of(context).currentColor,
-            style: Theme.of(context).textTheme.titleSmall,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
           ),
           const SizedBox(height: 8),
           InkWell(

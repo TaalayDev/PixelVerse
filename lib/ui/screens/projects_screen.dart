@@ -15,6 +15,7 @@ import '../../core.dart';
 import '../../pixel/image_painter.dart';
 import '../../providers/projects_provider.dart';
 import '../widgets.dart';
+import '../widgets/theme_selector.dart';
 import 'about_screen.dart';
 import 'pixel_draw_screen.dart';
 
@@ -23,6 +24,7 @@ class ProjectsScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = ref.watch(themeProvider).theme;
     final projects = ref.watch(projectsProvider);
     final overlayLoader = useState<OverlayEntry?>(null);
 
@@ -67,19 +69,28 @@ class ProjectsScreen extends HookConsumerWidget {
               icon: const Icon(Feather.info),
               label: Text(Strings.of(context).about),
               onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => Dialog(
-                    child: ClipRRect(
-                      clipBehavior: Clip.antiAlias,
-                      borderRadius: BorderRadius.circular(16),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 600),
-                        child: const AboutScreen(),
+                if (kIsWeb || Platform.isMacOS || Platform.isWindows) {
+                  showDialog(
+                    context: context,
+                    builder: (context) => Dialog(
+                      child: ClipRRect(
+                        clipBehavior: Clip.antiAlias,
+                        borderRadius: BorderRadius.circular(16),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 600),
+                          child: const AboutScreen(),
+                        ),
                       ),
                     ),
-                  ),
-                );
+                  );
+                  return;
+                } else {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const AboutScreen(),
+                    ),
+                  );
+                }
               },
               style: TextButton.styleFrom(
                 backgroundColor:
@@ -90,6 +101,7 @@ class ProjectsScreen extends HookConsumerWidget {
         ),
         leadingWidth: 290,
         actions: [
+          const ThemeSelector(),
           IconButton(
             icon: const Icon(Feather.plus),
             onPressed: () => _navigateToNewProject(context, ref),
@@ -264,7 +276,7 @@ class AdaptiveProjectGrid extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        final crossAxisCount = width < 600 ? 2 : (width < 1200 ? 3 : 4);
+        final crossAxisCount = width < 600 ? 2 : (width < 1200 ? 3 : 5);
 
         return MasonryGridView.count(
           crossAxisCount: crossAxisCount,
@@ -333,6 +345,9 @@ class ProjectCard extends StatelessWidget {
                               Theme.of(context).textTheme.titleMedium,
                           ScreenSize.xl: Theme.of(context).textTheme.titleLarge,
                         },
+                      )?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
@@ -544,11 +559,27 @@ class _ProjectThumbnailWidgetState extends State<ProjectThumbnailWidget> {
         color: Colors.grey[200],
         borderRadius: BorderRadius.circular(8),
       ),
-      child: _image != null && context.mounted
-          ? CustomPaint(painter: ImagePainter(_image!))
-          : const Center(
-              child: Icon(Feather.image, size: 48),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            CustomPaint(
+              painter: CheckerboardPainter(
+                cellSize: 8,
+                color1: Colors.grey.shade100,
+                color2: Colors.grey.shade50,
+              ),
             ),
+            if (_image != null)
+              CustomPaint(painter: ImagePainter(_image!))
+            else
+              const Center(
+                child: Icon(Feather.image, size: 48),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -569,6 +600,45 @@ class _ProjectThumbnailWidgetState extends State<ProjectThumbnailWidget> {
       });
     }
   }
+}
+
+class CheckerboardPainter extends CustomPainter {
+  final double cellSize;
+  final Color color1;
+  final Color color2;
+
+  CheckerboardPainter({
+    required this.cellSize,
+    required this.color1,
+    required this.color2,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint();
+    final rows = (size.height / cellSize).ceil();
+    final cols = (size.width / cellSize).ceil();
+
+    for (var row = 0; row < rows; row++) {
+      for (var col = 0; col < cols; col++) {
+        final color = (row + col) % 2 == 0 ? color1 : color2;
+        paint.color = color;
+
+        canvas.drawRect(
+          Rect.fromLTWH(
+            col * cellSize,
+            row * cellSize,
+            cellSize,
+            cellSize,
+          ),
+          paint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class RenameProjectDialog extends HookWidget {
