@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
+import 'package:pixelverse/config/assets.dart';
 import 'package:pixelverse/ui/widgets/selection_menu.dart';
 
 import '../../l10n/strings.dart';
@@ -70,11 +72,13 @@ class ToolBar extends StatelessWidget {
                         valueListenable: currentModifier,
                         builder: (context, modifier, child) {
                           return IconButton(
-                            icon: Icon(
-                              MaterialIcons.border_horizontal,
+                            icon: SvgPicture.asset(
+                              Assets.vectors.reflectSymmetry,
                               color: modifier == PixelModifier.mirror
-                                  ? Colors.blue
-                                  : null,
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).colorScheme.onSurface,
+                              width: 24,
+                              height: 24,
                             ),
                             onPressed: () {
                               onSelectModifier(
@@ -100,21 +104,21 @@ class ToolBar extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                       ],
+                      const SizedBox(
+                        height: 30,
+                        child: VerticalDivider(width: 0),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton.filledTonal(
+                        icon: const Icon(Icons.animation_rounded),
+                        onPressed: showPrevFramesOpacity,
+                        splashColor: Colors.transparent,
+                        style: IconButton.styleFrom(
+                          backgroundColor:
+                              showPrevFrames ? null : Colors.transparent,
+                        ),
+                      ),
                       if (MediaQuery.of(context).size.width > 600) ...[
-                        const SizedBox(
-                          height: 30,
-                          child: VerticalDivider(),
-                        ),
-                        const SizedBox(width: 16),
-                        IconButton.filledTonal(
-                          icon: const Icon(Icons.animation_rounded),
-                          onPressed: showPrevFramesOpacity,
-                          splashColor: Colors.transparent,
-                          style: IconButton.styleFrom(
-                            backgroundColor:
-                                showPrevFrames ? null : Colors.transparent,
-                          ),
-                        ),
                         const SizedBox(width: 8),
                         if (tool == PixelTool.brush ||
                             tool == PixelTool.eraser ||

@@ -19,8 +19,8 @@ class AboutScreen extends StatelessWidget {
         title: Text(
           Strings.of(context).aboutTitle,
         ),
-        foregroundColor: const Color.fromARGB(255, 209, 210, 213),
-        backgroundColor: const Color(0xFF091126),
+        foregroundColor: const Color.fromARGB(255, 222, 222, 224),
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -44,8 +44,8 @@ class AboutScreen extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            const Color(0xFF091126),
-            const Color(0xFF091126).withOpacity(0.8),
+            Theme.of(context).colorScheme.primary,
+            Theme.of(context).colorScheme.primary.withOpacity(0.8),
           ],
         ),
       ),

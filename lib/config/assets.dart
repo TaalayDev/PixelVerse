@@ -3,10 +3,8 @@
 class Assets {
   const Assets._();
 
-  static const images = (
-    logo: 'assets/images/logo.png',
-    tutorials: (logo: 'assets/images/tutorials/logo.png',),
-  );
+  static const images = (logo: 'assets/images/logo.png',);
 
-  static const vectors = ();
+  static const vectors =
+      (reflectSymmetry: 'assets/vectors/reflect_symmetry.svg',);
 }
