@@ -76,7 +76,7 @@ class ToolBar extends StatelessWidget {
                               Assets.vectors.reflectSymmetry,
                               color: modifier == PixelModifier.mirror
                                   ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.onSurface,
+                                  : IconTheme.of(context).color,
                               width: 24,
                               height: 24,
                             ),
