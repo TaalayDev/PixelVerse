@@ -6,6 +6,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../pixel/effects/effects.dart';
 import '../../pixel/tools/fill_tool.dart';
 import '../../pixel/tools/pencil_tool.dart';
 import '../../pixel/tools/selection_tool.dart';
@@ -295,6 +296,7 @@ class _PixelCanvasState extends State<PixelCanvas> {
   void _updateCachedPixels({bool cacheAll = false}) {
     _cachedLayers = List<Layer>.from(widget.layers);
     _cachedPixels = Uint32List(widget.width * widget.height);
+
     for (var i = 0; i < _cachedLayers.length; i++) {
       final layer = _cachedLayers[i];
       if (!layer.isVisible) {
@@ -303,13 +305,19 @@ class _PixelCanvasState extends State<PixelCanvas> {
         continue;
       }
 
-      final layerPixels = Uint32List.fromList(layer.pixels);
+      // Apply effects processing to the layer pixels
+      final processedPixels = _getLayerProcessedPixels(
+        widget.width,
+        widget.height,
+        layer,
+      );
 
-      _cachedPixels = _mergePixels(_cachedPixels, layerPixels);
+      _cachedPixels = _mergePixels(_cachedPixels, processedPixels);
+
       if (i == widget.currentLayerIndex) {
         _cacheController._createImage(
           layer.layerId,
-          layerPixels,
+          processedPixels,
           widget.width,
           widget.height,
         );
@@ -324,13 +332,26 @@ class _PixelCanvasState extends State<PixelCanvas> {
       } else if (cacheAll) {
         _cacheController._createImage(
           layer.layerId,
-          layerPixels,
+          processedPixels,
           widget.width,
           widget.height,
         );
         _cacheController.markLayerDirty(layer.layerId);
       }
     }
+  }
+
+  Uint32List _getLayerProcessedPixels(int width, int height, Layer layer) {
+    if (layer.effects.isEmpty) {
+      return layer.pixels;
+    }
+
+    return EffectsManager.applyMultipleEffects(
+      layer.pixels,
+      width,
+      height,
+      layer.effects,
+    );
   }
 
   @override

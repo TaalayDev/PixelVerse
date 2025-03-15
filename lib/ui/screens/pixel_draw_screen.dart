@@ -13,6 +13,7 @@ import '../../pixel/animation_frame_controller.dart';
 import '../../pixel/tools.dart';
 import '../../data.dart';
 import '../widgets/animation_timeline.dart';
+import '../widgets/effects/effects_panel.dart';
 import '../widgets/grid_painter.dart';
 import '../widgets/pixel_canvas.dart';
 import '../widgets/shortcuts_wrapper.dart';
@@ -172,6 +173,10 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
                         showPrevFramesOpacity: () {
                           showPrevFrames.value = !showPrevFrames.value;
                         },
+                        // Add these properties for effects support
+                        onEffects: () => handleEffects(context, notifier),
+                        currentLayerHasEffects:
+                            notifier.getCurrentLayer().effects.isNotEmpty,
                       ),
                       Expanded(
                         child: Row(
@@ -363,64 +368,12 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
                               ),
                             ),
                             if (MediaQuery.sizeOf(context).width > 600)
-                              Container(
-                                color: Theme.of(context).colorScheme.surface,
-                                child: SizedBox(
-                                  width: 250,
-                                  child: Column(
-                                    children: [
-                                      Expanded(
-                                        child: LayersPanel(
-                                          width: width,
-                                          height: height,
-                                          layers: state.currentFrame.layers,
-                                          activeLayerIndex:
-                                              state.currentLayerIndex,
-                                          onLayerAdded: (name) {
-                                            notifier.addLayer(name);
-                                          },
-                                          onLayerVisibilityChanged: (index) {
-                                            notifier
-                                                .toggleLayerVisibility(index);
-                                          },
-                                          onLayerSelected: (index) {
-                                            notifier.selectLayer(index);
-                                          },
-                                          onLayerDeleted: (index) {
-                                            notifier.removeLayer(index);
-                                          },
-                                          onLayerLockedChanged: (index) {},
-                                          onLayerNameChanged: (index, name) {},
-                                          onLayerReordered:
-                                              (oldIndex, newIndex) {
-                                            notifier.reorderLayers(
-                                              newIndex,
-                                              oldIndex,
-                                            );
-                                          },
-                                          onLayerOpacityChanged:
-                                              (index, opacity) {},
-                                        ),
-                                      ),
-                                      const Divider(),
-                                      Expanded(
-                                        child: ColorPalettePanel(
-                                          currentColor: state.currentColor,
-                                          isEyedropperSelected:
-                                              currentTool.value ==
-                                                  PixelTool.eyedropper,
-                                          onSelectEyedropper: () {
-                                            currentTool.value =
-                                                PixelTool.eyedropper;
-                                          },
-                                          onColorSelected: (color) {
-                                            notifier.currentColor = color;
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                              _DesktopSidePanel(
+                                width: width,
+                                height: height,
+                                state: state,
+                                notifier: notifier,
+                                currentTool: currentTool,
                               ),
                           ],
                         ),
@@ -511,6 +464,23 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
     );
   }
 
+  void handleEffects(
+    BuildContext context,
+    PixelDrawNotifier notifier,
+  ) {
+    final currentLayer = notifier.getCurrentLayer();
+
+    showDialog(
+      context: context,
+      builder: (context) => EffectsDialog(
+        layer: currentLayer,
+        onLayerUpdated: (updatedLayer) {
+          notifier.updateLayer(updatedLayer);
+        },
+      ),
+    );
+  }
+
   void showColorPicker(
     BuildContext context,
     PixelDrawNotifier controller,
@@ -537,6 +507,83 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
             },
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DesktopSidePanel extends StatelessWidget {
+  const _DesktopSidePanel({
+    super.key,
+    required this.width,
+    required this.height,
+    required this.state,
+    required this.notifier,
+    required this.currentTool,
+  });
+
+  final int width;
+  final int height;
+  final PixelDrawState state;
+  final PixelDrawNotifier notifier;
+  final ValueNotifier<PixelTool> currentTool;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Theme.of(context).colorScheme.surface,
+      child: SizedBox(
+        width: 250,
+        child: Column(
+          children: [
+            Expanded(
+              child: LayersPanel(
+                width: width,
+                height: height,
+                layers: state.currentFrame.layers,
+                activeLayerIndex: state.currentLayerIndex,
+                onLayerAdded: (name) {
+                  notifier.addLayer(name);
+                },
+                onLayerVisibilityChanged: (index) {
+                  notifier.toggleLayerVisibility(index);
+                },
+                onLayerSelected: (index) {
+                  notifier.selectLayer(index);
+                },
+                onLayerDeleted: (index) {
+                  notifier.removeLayer(index);
+                },
+                onLayerLockedChanged: (index) {},
+                onLayerNameChanged: (index, name) {},
+                onLayerReordered: (oldIndex, newIndex) {
+                  notifier.reorderLayers(
+                    newIndex,
+                    oldIndex,
+                  );
+                },
+                onLayerOpacityChanged: (index, opacity) {},
+                // Add this parameter
+                onLayerEffectsChanged: (updatedLayer) {
+                  notifier.updateLayer(updatedLayer);
+                },
+              ),
+            ),
+            const Divider(),
+            Expanded(
+              child: ColorPalettePanel(
+                currentColor: state.currentColor,
+                isEyedropperSelected: currentTool.value == PixelTool.eyedropper,
+                onSelectEyedropper: () {
+                  currentTool.value = PixelTool.eyedropper;
+                },
+                onColorSelected: (color) {
+                  notifier.currentColor = color;
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

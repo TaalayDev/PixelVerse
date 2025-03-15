@@ -25,9 +25,11 @@ class ToolBar extends StatelessWidget {
   final VoidCallback? export;
   final VoidCallback? exportAsImage;
   final VoidCallback? onShare;
+  final VoidCallback? onEffects; // Added effects callback
   final Color currentColor;
   final Function() onColorPicker;
   final Function()? showPrevFramesOpacity;
+  final bool currentLayerHasEffects; // Added flag to show if layer has effects
 
   const ToolBar({
     super.key,
@@ -46,9 +48,11 @@ class ToolBar extends StatelessWidget {
     this.export,
     this.exportAsImage,
     this.onShare,
+    this.onEffects,
     required this.currentColor,
     required this.onColorPicker,
     this.showPrevFramesOpacity,
+    this.currentLayerHasEffects = false,
   });
 
   @override
@@ -89,6 +93,31 @@ class ToolBar extends StatelessWidget {
                             },
                           );
                         },
+                      ),
+                      const SizedBox(width: 8),
+                      // effects button
+                      IconButton(
+                        icon: Stack(
+                          children: [
+                            const Icon(Icons.auto_fix_high),
+                            if (currentLayerHasEffects)
+                              Positioned(
+                                right: 0,
+                                top: 0,
+                                child: Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        tooltip: 'Layer Effects',
+                        onPressed: onEffects,
                       ),
                       const SizedBox(width: 8),
                       // zoom in and out

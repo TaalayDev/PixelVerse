@@ -13,6 +13,7 @@ import 'package:uuid/uuid.dart';
 
 import '../core/pixel_point.dart';
 import '../core/utils.dart';
+import '../pixel/effects/effects.dart';
 import '../pixel/tools.dart';
 import '../data.dart';
 import 'providers.dart';
@@ -231,6 +232,23 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     );
 
     _updateProject();
+  }
+
+  // Get current layer
+  Layer getCurrentLayer() {
+    return currentFrame.layers[state.currentLayerIndex];
+  }
+
+  void updateLayer(Layer layer) {
+    final layers = List<Layer>.from(currentFrame.layers)
+      ..[state.currentLayerIndex] = layer;
+
+    final frames = List<AnimationFrame>.from(state.frames)
+      ..[_getFrameIndex()] = currentFrame.copyWith(layers: layers);
+
+    state = state.copyWith(frames: frames);
+
+    ref.watch(projectRepo).updateLayer(project.id, currentFrame.id, layer);
   }
 
   void undo() {
@@ -758,6 +776,104 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
 
     ref.read(projectRepo).deleteFrame(frame.id);
   }
+
+  // --- Layer Effects ---
+
+  // Add a layer effect
+  void addLayerEffect(Effect effect) async {
+    saveState();
+
+    final layers = List<Layer>.from(currentFrame.layers);
+    final currentLayer = layers[state.currentLayerIndex];
+
+    // Add the effect to the layer
+    final updatedEffects = List<Effect>.from(currentLayer.effects)..add(effect);
+    layers[state.currentLayerIndex] =
+        currentLayer.copyWith(effects: updatedEffects);
+
+    // Update frame layers
+    final frames = List<AnimationFrame>.from(state.frames);
+    final updatedFrame = currentFrame.copyWith(layers: layers);
+    frames[_getFrameIndex()] = updatedFrame;
+
+    state = state.copyWith(frames: frames);
+
+    _updateCurrentLayer(currentLayer.pixels);
+    _updateProject();
+  }
+
+  // Update a layer effect
+  void updateLayerEffect(int effectIndex, Effect updatedEffect) async {
+    saveState();
+
+    final layers = List<Layer>.from(currentFrame.layers);
+    final currentLayer = layers[state.currentLayerIndex];
+
+    // Replace the effect at the specified index
+    final updatedEffects = List<Effect>.from(currentLayer.effects);
+    updatedEffects[effectIndex] = updatedEffect;
+
+    layers[state.currentLayerIndex] =
+        currentLayer.copyWith(effects: updatedEffects);
+
+    // Update frame layers
+    final frames = List<AnimationFrame>.from(state.frames);
+    final updatedFrame = currentFrame.copyWith(layers: layers);
+    frames[_getFrameIndex()] = updatedFrame;
+
+    state = state.copyWith(frames: frames);
+
+    _updateCurrentLayer(currentLayer.pixels);
+    _updateProject();
+  }
+
+  // Remove a layer effect
+  void removeLayerEffect(int effectIndex) async {
+    saveState();
+
+    final layers = List<Layer>.from(currentFrame.layers);
+    final currentLayer = layers[state.currentLayerIndex];
+
+    // Remove the effect at the specified index
+    final updatedEffects = List<Effect>.from(currentLayer.effects);
+    updatedEffects.removeAt(effectIndex);
+
+    layers[state.currentLayerIndex] =
+        currentLayer.copyWith(effects: updatedEffects);
+
+    // Update frame layers
+    final frames = List<AnimationFrame>.from(state.frames);
+    final updatedFrame = currentFrame.copyWith(layers: layers);
+    frames[_getFrameIndex()] = updatedFrame;
+
+    state = state.copyWith(frames: frames);
+
+    _updateCurrentLayer(currentLayer.pixels);
+    _updateProject();
+  }
+
+  // Clear all effects from the current layer
+  void clearLayerEffects() async {
+    saveState();
+
+    final layers = List<Layer>.from(currentFrame.layers);
+    final currentLayer = layers[state.currentLayerIndex];
+
+    // Clear all effects
+    layers[state.currentLayerIndex] = currentLayer.copyWith(effects: []);
+
+    // Update frame layers
+    final frames = List<AnimationFrame>.from(state.frames);
+    final updatedFrame = currentFrame.copyWith(layers: layers);
+    frames[_getFrameIndex()] = updatedFrame;
+
+    state = state.copyWith(frames: frames);
+
+    _updateCurrentLayer(currentLayer.pixels);
+    _updateProject();
+  }
+
+  // --- End Layer Effects ---
 
   void exportJson(BuildContext context) {
     ref.read(analyticsProvider).logEvent(name: 'export_json');
