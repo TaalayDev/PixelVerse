@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../data.dart';
+import '../../pixel/effects/effects.dart';
 
 part 'project_database.g.dart';
 
@@ -36,6 +39,8 @@ class LayersTable extends Table {
   BoolColumn get isLocked => boolean().withDefault(const Constant(false))();
   RealColumn get opacity => real().withDefault(const Constant(1.0))();
   IntColumn get order => integer()();
+  // version 4
+  TextColumn get effects => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -75,7 +80,7 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase() => instance;
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration {
@@ -94,6 +99,12 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 3) {
           await _from2To3(migrator);
+        }
+        if (from < 4) {
+          await migrator.alterTable(TableMigration(
+            layersTable,
+            newColumns: [layersTable.effects],
+          ));
         }
       },
     );
@@ -256,6 +267,8 @@ class AppDatabase extends _$AppDatabase {
               isVisible: layerRow.isVisible,
               isLocked: layerRow.isLocked,
               opacity: layerRow.opacity,
+              effects: _decodeEffects(layerRow.effects),
+              order: layerRow.order,
             );
             frame.layers.add(layer);
           }
@@ -356,6 +369,8 @@ class AppDatabase extends _$AppDatabase {
                 isVisible: layer.isVisible,
                 isLocked: layer.isLocked,
                 opacity: layer.opacity,
+                order: layer.order,
+                effects: _decodeEffects(layer.effects),
               ));
         }
       }
@@ -412,6 +427,7 @@ class AppDatabase extends _$AppDatabase {
           isLocked: Value(layer.isLocked),
           opacity: Value(layer.opacity),
           order: Value(layer.order),
+          effects: Value(_encodeEffects(layer.effects)),
         ));
         layers.add(layer.copyWith(layerId: layerId));
       }
@@ -475,6 +491,8 @@ class AppDatabase extends _$AppDatabase {
             isVisible: Value(layer.isVisible),
             isLocked: Value(layer.isLocked),
             opacity: Value(layer.opacity),
+            order: Value(layer.order),
+            effects: Value(_encodeEffects(layer.effects)),
           ));
         }
       } else {
@@ -514,6 +532,7 @@ class AppDatabase extends _$AppDatabase {
               isLocked: Value(layer.isLocked),
               opacity: Value(layer.opacity),
               order: Value(layer.order),
+              effects: Value(_encodeEffects(layer.effects)),
             ));
           }
         }
@@ -602,6 +621,7 @@ class AppDatabase extends _$AppDatabase {
         isLocked: Value(layer.isLocked),
         opacity: Value(layer.opacity),
         order: Value(layer.order),
+        effects: Value(_encodeEffects(layer.effects)),
       ));
       layers.add(layer.copyWith(layerId: layerId));
     }
@@ -633,6 +653,7 @@ class AppDatabase extends _$AppDatabase {
           isLocked: Value(layer.isLocked),
           opacity: Value(layer.opacity),
           order: Value(layer.order),
+          effects: Value(_encodeEffects(layer.effects)),
         ));
       } else {
         await update(layersTable).replace(LayersTableCompanion(
@@ -646,6 +667,7 @@ class AppDatabase extends _$AppDatabase {
           isLocked: Value(layer.isLocked),
           opacity: Value(layer.opacity),
           order: Value(layer.order),
+          effects: Value(_encodeEffects(layer.effects)),
         ));
       }
     }
@@ -668,6 +690,7 @@ class AppDatabase extends _$AppDatabase {
       isLocked: Value(layer.isLocked),
       opacity: Value(layer.opacity),
       order: Value(layer.order),
+      effects: Value(_encodeEffects(layer.effects)),
     ));
 
     return layer.copyWith(layerId: layerId);
@@ -685,10 +708,36 @@ class AppDatabase extends _$AppDatabase {
       isLocked: Value(layer.isLocked),
       opacity: Value(layer.opacity),
       order: Value(layer.order),
+      effects: Value(_encodeEffects(layer.effects)),
     ));
   }
 
   Future<void> deleteLayer(int layerId) async {
     await (delete(layersTable)..where((tbl) => tbl.id.equals(layerId))).go();
+  }
+
+  List<Effect> _decodeEffects(String? effects) {
+    if (effects == null) return [];
+    try {
+      final decoded = jsonDecode(effects) as List;
+      return decoded
+          .map((e) {
+            return EffectsManager.effectFromJson(e);
+          })
+          .whereType<Effect>()
+          .toList();
+    } catch (e) {
+      debugPrint('Error decoding effects: $e');
+      return [];
+    }
+  }
+
+  String _encodeEffects(List<Effect> effects) {
+    return jsonEncode(effects.map((e) {
+      return {
+        'type': e.type.name,
+        'parameters': e.parameters,
+      };
+    }).toList());
   }
 }

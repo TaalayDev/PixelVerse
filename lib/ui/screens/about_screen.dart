@@ -4,6 +4,7 @@ import 'package:pixelverse/l10n/strings.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import '../../config/assets.dart';
+import '../../config/constants.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -20,7 +21,7 @@ class AboutScreen extends StatelessWidget {
           Strings.of(context).aboutTitle,
         ),
         foregroundColor: const Color.fromARGB(255, 222, 222, 224),
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        backgroundColor: const Color(0xFF2e2131), //Theme.of(context).colorScheme.primary,
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -37,6 +38,7 @@ class AboutScreen extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
+    const headerColor = Color(0xFF2e2131);
     return Container(
       height: 200,
       decoration: BoxDecoration(
@@ -44,8 +46,8 @@ class AboutScreen extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Theme.of(context).colorScheme.primary,
-            Theme.of(context).colorScheme.primary.withOpacity(0.8),
+            headerColor,
+            headerColor.withOpacity(0.99),
           ],
         ),
       ),
@@ -104,12 +106,8 @@ class AboutScreen extends StatelessWidget {
   }
 
   Widget _buildFeaturesList(BuildContext context) {
-    final features = Strings.of(context)
-        .features
-        .split('\n')
-        .map((line) => line.trim())
-        .where((line) => line.isNotEmpty)
-        .toList();
+    final features =
+        Strings.of(context).features.split('\n').map((line) => line.trim()).where((line) => line.isNotEmpty).toList();
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -130,9 +128,7 @@ class AboutScreen extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(child: Text(entry.value)),
                 ],
-              )
-                  .animate()
-                  .fadeIn(delay: (300 + entry.key * 100).ms, duration: 600.ms),
+              ).animate().fadeIn(delay: (300 + entry.key * 100).ms, duration: 600.ms),
             );
           }),
         ],
@@ -163,6 +159,45 @@ class AboutScreen extends StatelessWidget {
               ),
             ),
           ).animate().fadeIn(delay: 600.ms, duration: 600.ms),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              InkWell(
+                onTap: () {
+                  // Launch terms of service URL
+                  launchUrlString(Constants.termsOfServiceUrl);
+                },
+                child: Text(
+                  'Terms of Service',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              Text(
+                ' • ',
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
+                  fontSize: 12,
+                ),
+              ),
+              InkWell(
+                onTap: () {
+                  // Launch privacy policy URL
+                  launchUrlString(Constants.privacyPolicyUrl);
+                },
+                child: Text(
+                  'Privacy Policy',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ).animate().fadeIn(delay: 1000.ms, duration: 600.ms),
     );

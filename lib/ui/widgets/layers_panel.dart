@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:animated_reorderable_list/animated_reorderable_list.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:pixelverse/data/models/subscription_model.dart';
+import 'package:pixelverse/providers/subscription_provider.dart';
+import 'package:pixelverse/ui/widgets/subscription/feature_gate.dart';
 
 import '../../pixel/image_painter.dart';
 import '../../l10n/strings.dart';
@@ -23,7 +26,8 @@ class LayersPanel extends HookConsumerWidget {
   final Function(int, String) onLayerNameChanged;
   final Function(int oldIndex, int newIndex) onLayerReordered;
   final Function(int, double) onLayerOpacityChanged;
-  final Function(Layer)? onLayerEffectsChanged; // Added callback for effects
+  final Function(Layer)? onLayerEffectsChanged;
+  final ScrollController? scrollController;
 
   const LayersPanel({
     super.key,
@@ -40,10 +44,13 @@ class LayersPanel extends HookConsumerWidget {
     required this.onLayerReordered,
     required this.onLayerOpacityChanged,
     this.onLayerEffectsChanged,
+    this.scrollController,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final subscription = ref.watch(subscriptionStateProvider);
+
     return Column(
       children: [
         const SizedBox(height: 8),
@@ -52,6 +59,7 @@ class LayersPanel extends HookConsumerWidget {
         Expanded(
           child: AnimatedReorderableListView(
             items: layers,
+            controller: scrollController,
             onReorder: (oldIndex, newIndex) {
               onLayerReordered(newIndex, oldIndex);
             },
@@ -61,6 +69,7 @@ class LayersPanel extends HookConsumerWidget {
                 context,
                 layer,
                 index,
+                subscription,
               );
             },
             enterTransition: [FlipInX(), ScaleIn()],
@@ -96,13 +105,19 @@ class LayersPanel extends HookConsumerWidget {
     );
   }
 
-  Widget _buildLayerTile(BuildContext context, Layer layer, int index) {
-    final contentColor =
-        index == activeLayerIndex ? Colors.white : Colors.black;
+  Widget _buildLayerTile(
+    BuildContext context,
+    Layer layer,
+    int index,
+    UserSubscription subscription,
+  ) {
+    final contentColor = index == activeLayerIndex ? Colors.white : Colors.black;
+
     return Card(
       key: ValueKey(layer.id),
       color: index == activeLayerIndex ? Colors.blue.withOpacity(0.5) : null,
       child: ListTile(
+        contentPadding: const EdgeInsets.only(left: 8, right: 8),
         leading: Stack(
           children: [
             ClipRRect(
@@ -141,42 +156,52 @@ class LayersPanel extends HookConsumerWidget {
           children: [
             // Effects button
             if (onLayerEffectsChanged != null)
-              InkWell(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Icon(
-                    Icons.auto_fix_high,
-                    color: contentColor,
-                    size: 15,
+              ProBadge(
+                show: !subscription.isPro,
+                padding: const EdgeInsets.all(4),
+                child: InkWell(
+                  onTap: !subscription.isPro ? null : () => _showEffectsDialog(context, layer),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Icon(
+                      Icons.auto_fix_high,
+                      color: contentColor,
+                      size: 15,
+                    ),
                   ),
                 ),
-                onTap: () => _showEffectsDialog(context, layer),
               ),
-            InkWell(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Icon(
-                  layer.isVisible ? Icons.visibility : Icons.visibility_off,
-                  color: contentColor,
-                  size: 15,
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                InkWell(
+                  child: Padding(
+                    padding: const EdgeInsets.all(4.0),
+                    child: Icon(
+                      layer.isVisible ? Icons.visibility : Icons.visibility_off,
+                      color: contentColor,
+                      size: 15,
+                    ),
+                  ),
+                  onTap: () {
+                    onLayerVisibilityChanged(index);
+                  },
                 ),
-              ),
-              onTap: () {
-                onLayerVisibilityChanged(index);
-              },
-            ),
-            InkWell(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Icon(
-                  Icons.delete,
-                  color: contentColor,
-                  size: 15,
+                InkWell(
+                  child: Padding(
+                    padding: const EdgeInsets.all(4.0),
+                    child: Icon(
+                      Icons.delete,
+                      color: contentColor,
+                      size: 15,
+                    ),
+                  ),
+                  onTap: () => _showDeleteConfirmation(context, index),
                 ),
-              ),
-              onTap: () => _showDeleteConfirmation(context, index),
+              ],
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 30),
           ],
         ),
         onTap: () {
@@ -200,9 +225,7 @@ class LayersPanel extends HookConsumerWidget {
         height: height,
         layers: [layer],
         builder: (context, image) {
-          return image != null
-              ? CustomPaint(painter: ImagePainter(image))
-              : const ColoredBox(color: Colors.white);
+          return image != null ? CustomPaint(painter: ImagePainter(image)) : const ColoredBox(color: Colors.white);
         },
       ),
     );

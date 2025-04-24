@@ -44,7 +44,7 @@ enum ThemeType {
 }
 
 class AppTheme {
-  static const defaultType = ThemeType.forest;
+  static const defaultType = ThemeType.lightMode;
   static final defaultTheme = AppTheme.fromType(defaultType);
 
   final ThemeType type;

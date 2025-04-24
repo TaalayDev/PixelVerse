@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -20,7 +21,6 @@ part 'dithering_effect.dart';
 part 'outline_effect.dart';
 part 'palette_reduction_effect.dart';
 
-/// Enum defining the available effect types
 enum EffectType {
   brightness,
   contrast,
@@ -63,13 +63,21 @@ abstract class Effect {
 class EffectsManager {
   /// Apply a single effect to pixels
   static Uint32List applyEffect(
-      Uint32List pixels, int width, int height, Effect effect) {
+    Uint32List pixels,
+    int width,
+    int height,
+    Effect effect,
+  ) {
     return effect.apply(pixels, width, height);
   }
 
   /// Apply multiple effects in sequence
   static Uint32List applyMultipleEffects(
-      Uint32List pixels, int width, int height, List<Effect> effects) {
+    Uint32List pixels,
+    int width,
+    int height,
+    List<Effect> effects,
+  ) {
     Uint32List result = Uint32List.fromList(pixels);
 
     for (final effect in effects) {
@@ -114,6 +122,18 @@ class EffectsManager {
         return OutlineEffect(params);
       case EffectType.paletteReduction:
         return PaletteReductionEffect(params);
+    }
+  }
+
+  static Effect? effectFromJson(Map<String, dynamic> json) {
+    try {
+      final type = EffectType.values.firstWhere(
+        (type) => type.name == json['type'],
+        orElse: () => EffectType.brightness,
+      );
+      return createEffect(type, Map<String, dynamic>.from(json['parameters']));
+    } catch (e) {
+      return null;
     }
   }
 }

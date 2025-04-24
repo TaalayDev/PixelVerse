@@ -141,5 +141,8 @@
     "importImage": "Импортировать изображение",
     "fileNotSupported": "Формат файла не поддерживается",
     "successfullySaved": "Успешно сохранено",
-    "successfullyExported": "Успешно экспортировано"
+    "successfullyExported": "Успешно экспортировано",
+
+    "upgradeToPro": "Обновить до Pro",
+    "restore": "Восстановить"
 }

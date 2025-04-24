@@ -9,13 +9,20 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
+import '../../data/models/subscription_model.dart';
 import '../../l10n/strings.dart';
 import '../../data.dart';
 import '../../core.dart';
 import '../../pixel/image_painter.dart';
 import '../../providers/projects_provider.dart';
+import '../../providers/providers.dart';
+import '../../providers/subscription_provider.dart';
 import '../widgets.dart';
+import '../widgets/animated_pro_button.dart';
+import '../widgets/subscription/feature_gate.dart';
+import '../widgets/subscription/subscription_menu.dart';
 import '../widgets/theme_selector.dart';
+import 'subscription_screen.dart';
 import 'about_screen.dart';
 import 'pixel_draw_screen.dart';
 
@@ -28,7 +35,16 @@ class ProjectsScreen extends HookConsumerWidget {
     final projects = ref.watch(projectsProvider);
     final overlayLoader = useState<OverlayEntry?>(null);
 
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
+    final showBadge = useState(false);
+
+    final subscription = ref.watch(subscriptionStateProvider);
+
     useEffect(() {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        checkAndShowReviewDialog(context, ref);
+      });
+
       return () {
         if (overlayLoader.value?.mounted == true) {
           overlayLoader.value?.remove();
@@ -42,8 +58,7 @@ class ProjectsScreen extends HookConsumerWidget {
           children: [
             const SizedBox(width: 16),
             TextButton.icon(
-              icon: const Icon(Feather.upload),
-              label: Text(Strings.of(context).open),
+              label: const Icon(Feather.file),
               onPressed: () async {
                 final error = await ref
                     .read(projectsProvider.notifier)
@@ -66,8 +81,7 @@ class ProjectsScreen extends HookConsumerWidget {
             ),
             const SizedBox(width: 16),
             TextButton.icon(
-              icon: const Icon(Feather.info),
-              label: Text(Strings.of(context).about),
+              label: const Icon(Feather.info),
               onPressed: () {
                 if (kIsWeb || Platform.isMacOS || Platform.isWindows) {
                   showDialog(
@@ -101,20 +115,38 @@ class ProjectsScreen extends HookConsumerWidget {
         ),
         leadingWidth: 290,
         actions: [
+          if (!subscription.isPro && !showBadge.value) ...[
+            AnimatedProButton(
+              onTap: () => _showSubscriptionScreen(context),
+              theme: theme,
+            ),
+            const SizedBox(width: 8),
+          ],
           const ThemeSelector(),
           IconButton(
             icon: const Icon(Feather.plus),
-            onPressed: () => _navigateToNewProject(context, ref),
+            onPressed: () => _navigateToNewProject(context, ref, subscription),
           ),
         ],
       ),
       body: Column(
         children: [
+          if (!subscription.isPro && showBadge.value) ...[
+            SubscriptionPromoBanner(
+              onDismiss: () {
+                showBadge.value = false;
+              },
+            ),
+          ],
           Expanded(
             child: projects.when(
               data: (projects) => AdaptiveProjectGrid(
                 projects: projects,
-                onCreateNew: () => _navigateToNewProject(context, ref),
+                onCreateNew: () => _navigateToNewProject(
+                  context,
+                  ref,
+                  subscription,
+                ),
                 onTapProject: (project) {
                   _openProject(context, ref, project.id, overlayLoader);
                 },
@@ -170,10 +202,20 @@ class ProjectsScreen extends HookConsumerWidget {
     );
   }
 
-  void _navigateToNewProject(BuildContext context, WidgetRef ref) async {
+  void _showSubscriptionScreen(BuildContext context) {
+    SubscriptionOfferScreen.show(context);
+  }
+
+  void _navigateToNewProject(
+    BuildContext context,
+    WidgetRef ref,
+    UserSubscription subscription,
+  ) async {
     final result = await showDialog<({String name, int width, int height})>(
       context: context,
-      builder: (BuildContext context) => const NewProjectDialog(),
+      builder: (BuildContext context) => NewProjectDialog(
+        subscription: subscription,
+      ),
     );
 
     if (result != null && context.mounted) {
@@ -230,6 +272,23 @@ class ProjectsScreen extends HookConsumerWidget {
 
     loader.value?.remove();
   }
+
+  Future<void> checkAndShowReviewDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final reviewService = ref.read(inAppReviewProvider);
+    final shouldRequest = await reviewService.shouldRequestReview();
+
+    if (shouldRequest && context.mounted) {
+      // Delay slightly to let the current screen finish loading
+      Future.delayed(const Duration(seconds: 1), () {
+        if (context.mounted) {
+          reviewService.requestReview();
+        }
+      });
+    }
+  }
 }
 
 class AdaptiveProjectGrid extends StatelessWidget {
@@ -264,7 +323,10 @@ class AdaptiveProjectGrid extends StatelessWidget {
             ),
             const SizedBox(height: 32),
             ElevatedButton.icon(
-              icon: const Icon(Feather.plus),
+              icon: Icon(
+                Feather.plus,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
               label: Text(Strings.of(context).createNewProject),
               onPressed: onCreateNew,
             ),
@@ -280,8 +342,8 @@ class AdaptiveProjectGrid extends StatelessWidget {
 
         return MasonryGridView.count(
           crossAxisCount: crossAxisCount,
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
           padding: const EdgeInsets.all(16),
           itemCount: projects.length,
           itemBuilder: (context, index) {

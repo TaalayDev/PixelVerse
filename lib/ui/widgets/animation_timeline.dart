@@ -148,8 +148,7 @@ class AnimationTimeline extends HookWidget {
                 onChanged: (value) {
                   final duration = int.tryParse(value);
                   if (duration != null) {
-                    final index =
-                        frames.indexWhere((e) => e.id == selectedFrameId);
+                    final index = frames.indexWhere((e) => e.id == selectedFrameId);
                     onDurationChanged(index, duration);
                   }
                 },
@@ -162,8 +161,7 @@ class AnimationTimeline extends HookWidget {
               children: [
                 IconButton(
                   icon: const Icon(Feather.copy, size: 16),
-                  onPressed:
-                      isExpanded ? () => copyFrame(selectedFrameId) : null,
+                  onPressed: isExpanded ? () => copyFrame(selectedFrameId) : null,
                   tooltip: 'Copy Frame',
                 ),
                 IconButton(
@@ -179,8 +177,7 @@ class AnimationTimeline extends HookWidget {
                   ),
                   onPressed: isExpanded
                       ? () {
-                          final index =
-                              frames.indexWhere((e) => e.id == selectedFrameId);
+                          final index = frames.indexWhere((e) => e.id == selectedFrameId);
                           onDeleteFrame(index);
                         }
                       : null,
@@ -192,9 +189,7 @@ class AnimationTimeline extends HookWidget {
             // Expand/collapse button
             IconButton(
               icon: Icon(
-                isExpanded
-                    ? Icons.keyboard_arrow_down
-                    : Icons.keyboard_arrow_up,
+                isExpanded ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
                 size: 16,
               ),
               onPressed: onExpandChanged,
@@ -330,9 +325,7 @@ class _StatesPanel extends StatelessWidget {
               return Container(
                 key: ValueKey(state.id),
                 height: 40,
-                color: state.id == selectedStateId
-                    ? Theme.of(context).primaryColor.withOpacity(0.1)
-                    : null,
+                color: state.id == selectedStateId ? Theme.of(context).primaryColor.withOpacity(0.1) : null,
                 child: Row(
                   children: [
                     SizedBox(
@@ -359,8 +352,7 @@ class _StatesPanel extends StatelessWidget {
                           },
                         ),
                         onTap: () => onSelectedStateChanged(state.id),
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 5),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 5),
                       ),
                     ),
                     VerticalDivider(
@@ -511,36 +503,35 @@ class _FramesGrid extends StatelessWidget {
   }
 }
 
-Future<void> showAnimationPreviewDialog(
-  BuildContext context, {
-  required List<AnimationFrame> frames,
-  required int width,
-  required int height,
-}) {
-  return showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        content: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimationPreview(
-              frames: frames,
-              width: width,
-              height: height,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(Strings.of(context).close),
-          ),
-        ],
-      );
-    },
-  );
-}
+// Future<void> showAnimationPreviewDialog(
+//   BuildContext context, {
+//   required List<AnimationFrame> frames,
+//   required int width,
+//   required int height,
+// }) {
+//   return showDialog(
+//     context: context,
+//     builder: (context) {
+//       return AlertDialog(
+//         content: Stack(
+//           children: [
+//             AnimationPreview(
+//               frames: frames,
+//               width: width,
+//               height: height,
+//             ),
+//           ],
+//         ),
+//         actions: [
+//           TextButton(
+//             onPressed: () => Navigator.of(context).pop(),
+//             child: Text(Strings.of(context).close),
+//           ),
+//         ],
+//       );
+//     },
+//   );
+// }
 
 class AnimationPreview extends StatefulWidget {
   const AnimationPreview({

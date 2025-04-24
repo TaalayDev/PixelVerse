@@ -4,12 +4,13 @@ part of 'effects.dart';
 class PaletteReductionEffect extends Effect {
   PaletteReductionEffect([Map<String, dynamic>? params])
       : super(
-            EffectType.paletteReduction,
-            params ??
-                {
-                  'colors': 8,
-                  'dithering': 0.0,
-                });
+          EffectType.paletteReduction,
+          params ??
+              {
+                'colors': 8,
+                'dithering': 0.0,
+              },
+        );
 
   @override
   Uint32List apply(Uint32List pixels, int width, int height) {

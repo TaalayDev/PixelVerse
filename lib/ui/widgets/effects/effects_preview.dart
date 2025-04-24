@@ -198,13 +198,13 @@ class BeforeAfterEffectPreview extends StatelessWidget {
   final int height;
 
   const BeforeAfterEffectPreview({
-    Key? key,
+    super.key,
     required this.layer,
     this.effect,
     this.effects,
     required this.width,
     required this.height,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

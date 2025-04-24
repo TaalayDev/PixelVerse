@@ -2,14 +2,17 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
+import '../../data/models/subscription_model.dart';
 import '../../l10n/strings.dart';
 import '../../pixel/tools.dart';
+import 'subscription/feature_gate.dart';
 
 class ToolMenu extends StatelessWidget {
   final ValueNotifier<PixelTool> currentTool;
   final Function(PixelTool) onSelectTool;
   final Function() onColorPicker;
   final Color currentColor;
+  final UserSubscription subscription;
 
   const ToolMenu({
     super.key,
@@ -17,6 +20,7 @@ class ToolMenu extends StatelessWidget {
     required this.onSelectTool,
     required this.onColorPicker,
     required this.currentColor,
+    required this.subscription,
   });
 
   @override
@@ -62,31 +66,46 @@ class ToolMenu extends StatelessWidget {
                 ),
                 onPressed: () => onSelectTool(PixelTool.eraser),
               ),
-              // selection tool
-              IconButton(
-                icon: Icon(
-                  Icons.crop,
-                  color: tool == PixelTool.select ? Colors.blue : null,
-                ),
-                onPressed: () => onSelectTool(PixelTool.select),
-              ),
               ShapesMenuButton(
                 currentTool: currentTool,
                 onSelectTool: onSelectTool,
               ),
-              IconButton(
-                icon: Icon(
-                  CupertinoIcons.pencil,
-                  color: tool == PixelTool.pen ? Colors.blue : null,
+              // selection tool
+              ProBadge(
+                show: !subscription.isPro,
+                child: IconButton(
+                  icon: Icon(
+                    Icons.crop,
+                    color: tool == PixelTool.select ? Colors.blue : null,
+                  ),
+                  onPressed: !subscription.isPro
+                      ? null
+                      : () => onSelectTool(PixelTool.select),
                 ),
-                onPressed: () => onSelectTool(PixelTool.pen),
               ),
-              IconButton(
-                icon: Icon(
-                  Feather.move,
-                  color: tool == PixelTool.drag ? Colors.blue : null,
+              ProBadge(
+                show: !subscription.isPro,
+                child: IconButton(
+                  icon: Icon(
+                    CupertinoIcons.pencil,
+                    color: tool == PixelTool.pen ? Colors.blue : null,
+                  ),
+                  onPressed: !subscription.isPro
+                      ? null
+                      : () => onSelectTool(PixelTool.pen),
                 ),
-                onPressed: () => onSelectTool(PixelTool.drag),
+              ),
+              ProBadge(
+                show: !subscription.isPro,
+                child: IconButton(
+                  icon: Icon(
+                    Feather.move,
+                    color: tool == PixelTool.drag ? Colors.blue : null,
+                  ),
+                  onPressed: !subscription.isPro
+                      ? null
+                      : () => onSelectTool(PixelTool.drag),
+                ),
               ),
               IconButton(
                 icon: Icon(

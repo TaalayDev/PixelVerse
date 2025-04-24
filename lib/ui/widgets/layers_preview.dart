@@ -4,6 +4,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:pixelverse/core/utils/pixel_utils.dart';
+import 'package:pixelverse/pixel/effects/effects.dart';
 
 import '../../core.dart';
 import '../../data.dart';
@@ -57,12 +59,11 @@ class _LayersPreviewState extends State<LayersPreview> {
   }
 
   Future<void> _updateLayersPreview() async {
-    final pixels = Uint32List(widget.width * widget.height);
-    for (final layer in widget.layers.where((l) => l.isVisible)) {
-      for (int i = 0; i < pixels.length; i++) {
-        pixels[i] = pixels[i] == 0 ? layer.pixels[i] : pixels[i];
-      }
-    }
+    final pixels = PixelUtils.mergeLayersPixels(
+      width: widget.width,
+      height: widget.height,
+      layers: widget.layers,
+    );
 
     final image = await ImageHelper.createImageFromPixels(
       pixels,

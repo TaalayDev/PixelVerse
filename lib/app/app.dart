@@ -3,17 +3,53 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../core/theme/theme.dart';
 import '../core/utils/locale_manager.dart';
+import '../providers/providers.dart';
 import '../l10n/strings.dart';
+import '../providers/subscription_provider.dart';
 import '../ui/screens.dart';
 import '../ui/widgets/theme_selector.dart';
 
-class PixelVerseApp extends ConsumerWidget {
+class PixelVerseApp extends ConsumerStatefulWidget {
   const PixelVerseApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PixelVerseApp> createState() => _PixelVerseAppState();
+}
+
+class _PixelVerseAppState extends ConsumerState<PixelVerseApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    _incrementSessionCount();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _incrementSessionCount();
+    }
+  }
+
+  void _incrementSessionCount() async {
+    final reviewService = ref.read(inAppReviewProvider);
+    await reviewService.incrementSessionCount();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final themeManager = ref.watch(themeProvider);
     final appTheme = themeManager.theme;
+
+    final subscriptionState = ref.watch(subscriptionStateProvider);
 
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),

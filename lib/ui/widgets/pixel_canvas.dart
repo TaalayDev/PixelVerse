@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../pixel/effects/effects.dart';
@@ -72,7 +73,7 @@ class _CacheController extends ChangeNotifier {
     int height,
   ) async {
     final image = await ImageHelper.createImageFromPixels(
-      pixels,
+      Uint32List.fromList(pixels),
       width,
       height,
     );
@@ -161,6 +162,7 @@ class _PixelCanvasState extends State<PixelCanvas> {
   List<Offset> _penPoints = [];
   bool _isDrawingPenPath = false;
   bool _isClosingPath = false;
+  bool _isDrawingActive = false;
 
   Offset? _gradientStart;
   Offset? _gradientEnd;
@@ -359,6 +361,7 @@ class _PixelCanvasState extends State<PixelCanvas> {
     return RepaintBoundary(
       key: _boxKey,
       child: GestureDetector(
+        dragStartBehavior: DragStartBehavior.down,
         onScaleStart: (details) {
           _pointerCount = details.pointerCount;
           if (_pointerCount == 1) {
@@ -381,6 +384,13 @@ class _PixelCanvasState extends State<PixelCanvas> {
 
               widget.onStartDrawing();
               tool.onStart(drawDetails);
+
+              if (widget.currentTool == PixelTool.pencil ||
+                  widget.currentTool == PixelTool.brush ||
+                  widget.currentTool == PixelTool.eraser ||
+                  widget.currentTool == PixelTool.sprayPaint) {
+                _handleDrawing(transformedPosition);
+              }
             }
           } else if (_pointerCount == 2) {
             // Two finger touch for zooming
@@ -442,6 +452,8 @@ class _PixelCanvasState extends State<PixelCanvas> {
             size: context.size ?? Size.zero,
             currentLayer: widget.layers[widget.currentLayerIndex],
             color: widget.currentColor,
+            strokeWidth: widget.brushSize,
+            modifier: () => modifier,
           );
 
           if (widget.currentTool == PixelTool.fill ||
@@ -459,8 +471,8 @@ class _PixelCanvasState extends State<PixelCanvas> {
           } else if (widget.currentTool == PixelTool.select) {
             selectionTool.onStart(drawDetails);
           } else {
-            widget.onStartDrawing();
             _startDrawing(transformedPosition);
+            widget.onStartDrawing();
           }
         },
         onTapUp: (details) {
@@ -608,7 +620,9 @@ class _PixelCanvasState extends State<PixelCanvas> {
 
   void _startDrawing(Offset position) {
     _startPosition = position;
-    _handleDrawing(position);
+    _previousPosition = null; // Set to null first
+    _handleDrawing(position); // This will call _onTapPixel for the first point
+    _previousPosition = position;
   }
 
   List<PixelPoint<int>> _filterPoints(List<PixelPoint<int>> pixels) {
@@ -626,13 +640,20 @@ class _PixelCanvasState extends State<PixelCanvas> {
     final y = (position.dy / pixelHeight).floor();
 
     if (x >= 0 && x < widget.width && y >= 0 && y < widget.height) {
-      if (widget.currentTool == PixelTool.pencil) {
+      if (widget.currentTool == PixelTool.pencil ||
+          widget.currentTool == PixelTool.eraser ||
+          widget.currentTool == PixelTool.brush) {
+        // Always draw a pixel at the current position
+        _onTapPixel(x, y);
+
+        // Then connect to previous position if it exists
         if (_previousPosition != null) {
           final previousX = (_previousPosition!.dx / pixelWidth).floor();
           final previousY = (_previousPosition!.dy / pixelHeight).floor();
-          _drawLine(previousX, previousY, x, y);
-        } else {
-          _onTapPixel(x, y);
+
+          if (previousX != x || previousY != y) {
+            _drawLine(previousX, previousY, x, y);
+          }
         }
         _previousPosition = position;
         setState(() {});

@@ -4,13 +4,14 @@ part of 'effects.dart';
 class ColorBalanceEffect extends Effect {
   ColorBalanceEffect([Map<String, dynamic>? params])
       : super(
-            EffectType.colorBalance,
-            params ??
-                {
-                  'red': 0.0,
-                  'green': 0.0,
-                  'blue': 0.0,
-                });
+          EffectType.colorBalance,
+          params ??
+              {
+                'red': 0.0,
+                'green': 0.0,
+                'blue': 0.0,
+              },
+        );
 
   @override
   Uint32List apply(Uint32List pixels, int width, int height) {

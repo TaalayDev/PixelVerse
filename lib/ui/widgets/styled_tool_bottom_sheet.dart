@@ -2,9 +2,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:pixelverse/data/models/subscription_model.dart';
+import 'package:pixelverse/ui/widgets/subscription/feature_gate.dart';
 
 import '../../core/theme/theme.dart';
 import '../../pixel/tools.dart';
+import '../../providers/subscription_provider.dart';
 import 'theme_selector.dart';
 
 class StyledToolBottomSheet extends HookConsumerWidget {
@@ -18,6 +21,10 @@ class StyledToolBottomSheet extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(themeProvider).theme;
+    final subscription = ref.watch(subscriptionStateProvider);
+    final hasProFeature = subscription.hasFeatureAccess(
+      SubscriptionFeature.advancedTools,
+    );
 
     // Define all tools with their icons and labels
     final tools = [
@@ -74,12 +81,14 @@ class StyledToolBottomSheet extends HookConsumerWidget {
         CupertinoIcons.pencil,
         'Pen',
         'Freehand drawing tool',
+        isPro: !hasProFeature,
       ),
       _ToolItem(
         PixelTool.select,
         Icons.crop,
         'Select',
         'Select an area',
+        isPro: !hasProFeature,
       ),
     ];
 
@@ -124,8 +133,10 @@ class StyledToolBottomSheet extends HookConsumerWidget {
 
           // Grid of tools
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
             child: GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -158,10 +169,12 @@ class StyledToolBottomSheet extends HookConsumerWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
-            currentTool.value = tool.tool;
-            Navigator.of(context).pop(tool.tool);
-          },
+          onTap: tool.isPro
+              ? null
+              : () {
+                  currentTool.value = tool.tool;
+                  Navigator.of(context).pop(tool.tool);
+                },
           borderRadius: BorderRadius.circular(12),
           child: Container(
             decoration: BoxDecoration(
@@ -173,26 +186,34 @@ class StyledToolBottomSheet extends HookConsumerWidget {
                   ? Border.all(color: theme.primaryColor, width: 2)
                   : Border.all(color: theme.divider, width: 1),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  tool.icon,
-                  color: isSelected ? theme.primaryColor : theme.inactiveIcon,
-                  size: 24,
+            child: ProBadge(
+              show: tool.isPro,
+              child: Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      tool.icon,
+                      color:
+                          isSelected ? theme.primaryColor : theme.inactiveIcon,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      tool.label,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isSelected
+                            ? theme.primaryColor
+                            : theme.textSecondary,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  tool.label,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color:
-                        isSelected ? theme.primaryColor : theme.textSecondary,
-                    fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.normal,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -206,6 +227,13 @@ class _ToolItem {
   final IconData icon;
   final String label;
   final String tooltip;
+  final bool isPro;
 
-  _ToolItem(this.tool, this.icon, this.label, this.tooltip);
+  _ToolItem(
+    this.tool,
+    this.icon,
+    this.label,
+    this.tooltip, {
+    this.isPro = false,
+  });
 }

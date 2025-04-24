@@ -181,9 +181,10 @@ class DitheringEffect extends Effect {
   @override
   Map<String, dynamic> getDefaultParameters() {
     return {
-      'pattern':
-          0, // 0: Bayer 2x2, 1: Bayer 4x4, 2: Bayer 8x8, 3: Floyd-Steinberg
-      'intensity': 0.5, // Range: 0.0 to 1.0
+      // 0: Bayer 2x2, 1: Bayer 4x4, 2: Bayer 8x8, 3: Floyd-Steinberg
+      'pattern': 0,
+      // Range: 0.0 to 1.0
+      'intensity': 0.5,
     };
   }
 }

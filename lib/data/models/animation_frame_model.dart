@@ -17,10 +17,11 @@ class AnimationFrame extends Equatable {
   Uint32List get pixels {
     return Uint32List.fromList(
       layers.where((l) => l.isVisible).fold<List<int>>(
-        List.filled(layers.first.pixels.length, 0),
+        List.filled(layers.first.processedPixels.length, 0),
         (pixels, layer) {
+          final processedPixels = layer.processedPixels;
           for (int i = 0; i < pixels.length; i++) {
-            pixels[i] = pixels[i] == 0 ? layer.pixels[i] : pixels[i];
+            pixels[i] = pixels[i] == 0 ? processedPixels[i] : pixels[i];
           }
           return pixels;
         },

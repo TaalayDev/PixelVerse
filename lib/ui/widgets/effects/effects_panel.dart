@@ -138,11 +138,14 @@ class _EffectsPanelState extends State<EffectsPanel> {
     final pixelCount = _previewPixels!.length;
     final width = sqrt(pixelCount).toInt();
 
-    return CustomPaint(
-      painter: PixelPreviewPainter(
-        pixels: _previewPixels!,
-        width: width,
-        height: width, // Assuming square image
+    return ColoredBox(
+      color: Colors.white,
+      child: CustomPaint(
+        painter: PixelPreviewPainter(
+          pixels: _previewPixels!,
+          width: width,
+          height: width, // Assuming square image
+        ),
       ),
     );
   }
@@ -233,11 +236,11 @@ class EffectListItem extends StatelessWidget {
   final VoidCallback onRemove;
 
   const EffectListItem({
-    Key? key,
+    super.key,
     required this.effect,
     required this.onEdit,
     required this.onRemove,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -270,8 +273,7 @@ class EffectListItem extends StatelessWidget {
     final buffer = StringBuffer();
     params.forEach((key, value) {
       if (buffer.length > 0) buffer.write(', ');
-      buffer
-          .write('$key: ${value is double ? value.toStringAsFixed(2) : value}');
+      buffer.write('$key: ${value is double ? value.toStringAsFixed(2) : value}');
     });
     return buffer.toString();
   }
@@ -364,10 +366,10 @@ class EffectEditorDialog extends StatefulWidget {
   final Function(Effect) onEffectUpdated;
 
   const EffectEditorDialog({
-    Key? key,
+    super.key,
     required this.effect,
     required this.onEffectUpdated,
-  }) : super(key: key);
+  });
 
   @override
   State<EffectEditorDialog> createState() => _EffectEditorDialogState();
@@ -466,9 +468,10 @@ class _EffectEditorDialogState extends State<EffectEditorDialog> {
   }
 
   double _getMinValue(String paramName, EffectType type) {
-    if (paramName == 'value' &&
-        (type == EffectType.brightness || type == EffectType.contrast)) {
+    if (paramName == 'value' && (type == EffectType.brightness || type == EffectType.contrast)) {
       return -1.0;
+    } else if (paramName == 'colors' && type == EffectType.paletteReduction) {
+      return 2.0;
     }
     return 0.0;
   }
@@ -483,6 +486,8 @@ class _EffectEditorDialogState extends State<EffectEditorDialog> {
         return 5.0;
       case 'direction':
         return 7.0;
+      case 'colors':
+        return type == EffectType.paletteReduction ? 64 : 1.0;
       default:
         return 1.0;
     }
@@ -490,8 +495,7 @@ class _EffectEditorDialogState extends State<EffectEditorDialog> {
 
   void _applyChanges() {
     // Create a new effect with updated parameters
-    final updatedEffect =
-        EffectsManager.createEffect(widget.effect.type, _parameters);
+    final updatedEffect = EffectsManager.createEffect(widget.effect.type, _parameters);
 
     widget.onEffectUpdated(updatedEffect);
     Navigator.of(context).pop();

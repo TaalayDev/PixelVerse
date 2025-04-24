@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:pixelverse/config/assets.dart';
+import 'package:pixelverse/data/models/subscription_model.dart';
 import 'package:pixelverse/ui/widgets/selection_menu.dart';
+import 'package:pixelverse/ui/widgets/subscription/feature_gate.dart';
 
 import '../../l10n/strings.dart';
 import '../../pixel/tools.dart';
@@ -30,6 +32,7 @@ class ToolBar extends StatelessWidget {
   final Function() onColorPicker;
   final Function()? showPrevFramesOpacity;
   final bool currentLayerHasEffects; // Added flag to show if layer has effects
+  final UserSubscription subscription;
 
   const ToolBar({
     super.key,
@@ -53,10 +56,15 @@ class ToolBar extends StatelessWidget {
     required this.onColorPicker,
     this.showPrevFramesOpacity,
     this.currentLayerHasEffects = false,
+    required this.subscription,
   });
 
   @override
   Widget build(BuildContext context) {
+    final canUseEffects = subscription.hasFeatureAccess(
+      SubscriptionFeature.advancedTools,
+    );
+
     return Container(
       height: 45,
       width: double.infinity,
@@ -96,28 +104,31 @@ class ToolBar extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       // effects button
-                      IconButton(
-                        icon: Stack(
-                          children: [
-                            const Icon(Icons.auto_fix_high),
-                            if (currentLayerHasEffects)
-                              Positioned(
-                                right: 0,
-                                top: 0,
-                                child: Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    shape: BoxShape.circle,
+                      ProBadge(
+                        show: !canUseEffects,
+                        child: IconButton(
+                          icon: Stack(
+                            children: [
+                              const Icon(Icons.auto_fix_high),
+                              if (currentLayerHasEffects)
+                                Positioned(
+                                  right: 0,
+                                  top: 0,
+                                  child: Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                      shape: BoxShape.circle,
+                                    ),
                                   ),
                                 ),
-                              ),
-                          ],
+                            ],
+                          ),
+                          tooltip: 'Layer Effects',
+                          onPressed: canUseEffects ? onEffects : null,
                         ),
-                        tooltip: 'Layer Effects',
-                        onPressed: onEffects,
                       ),
                       const SizedBox(width: 8),
                       // zoom in and out
