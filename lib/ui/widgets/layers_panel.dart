@@ -55,7 +55,7 @@ class LayersPanel extends HookConsumerWidget {
       children: [
         const SizedBox(height: 8),
         _buildLayersPanelHeader(context),
-        Divider(color: Theme.of(context).dividerColor.withOpacity(0.2)),
+        Divider(color: Theme.of(context).dividerColor.withOpacity(0.2), height: 0),
         Expanded(
           child: AnimatedReorderableListView(
             items: layers,

@@ -4,6 +4,7 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter/material.dart';
@@ -896,65 +897,60 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   void importImage(BuildContext context) async {
     ref.read(analyticsProvider).logEvent(name: 'import_image');
 
-    final image = await FileUtils(context).pickImageFile();
-    if (image != null) {
-      img.Image resizedImage;
-      if (image.width != width || image.height != height) {
-        resizedImage = img.copyResize(
-          image,
-          width: width,
-          height: height,
-          // You can use different interpolation methods for different effects
-          interpolation: img.Interpolation.cubic,
-        );
-      } else {
-        resizedImage = image;
-      }
+    // Let user pick an image file and decode it to img.Image
+    final img.Image? picked = await FileUtils(context).pickImageFile();
+    if (picked == null) return;
 
-      // Optionally, reduce the color palette to create a pixel art effect
-      img.Image pixelArtImage = resizedImage;
-
-      // Convert the image pixels to Uint32List
-      final pixels = Uint32List(width * height);
-      for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-          final pixel = pixelArtImage.getPixel(x, y);
-
-          // Convert the pixel to ARGB format expected by Flutter
-          final a = pixel.a.toInt();
-          final r = pixel.r.toInt();
-          final g = pixel.g.toInt();
-          final b = pixel.b.toInt();
-
-          final colorValue = (a << 24) | (r << 16) | (g << 8) | b;
-          pixels[y * width + x] = Color(colorValue).alpha != 255 ? Colors.transparent.value : colorValue;
-        }
-      }
-
-      // Create a new layer with the imported image pixels
-      final newLayer = Layer(
-        layerId: 0,
-        id: const Uuid().v4(),
-        name: 'Imported Image',
-        pixels: pixels,
-        isVisible: true,
+    // Resize to canvas size if needed
+    img.Image resized = picked;
+    if (picked.width != width || picked.height != height) {
+      resized = img.copyResize(
+        picked,
+        width: width,
+        height: height,
+        interpolation: img.Interpolation.cubic,
       );
-
-      final layer = await ref.watch(projectRepo).createLayer(project.id, currentFrame.id, newLayer);
-
-      state = state.copyWith(
-        frames: state.frames.map((frame) {
-          if (frame.id == currentFrame.id) {
-            return frame.copyWith(layers: [...frame.layers, layer]);
-          }
-          return frame;
-        }).toList(),
-        currentLayerIndex: currentFrame.layers.length,
-      );
-
-      // Update the project repository
-      _updateProject();
     }
+
+    // Convert to pixel art layer
+    final pixels = Uint32List(width * height);
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        final p = resized.getPixel(x, y);
+
+        final a = p.a.toInt();
+        final r = p.r.toInt();
+        final g = p.g.toInt();
+        final b = p.b.toInt();
+        final colorVal = (a << 24) | (r << 16) | (g << 8) | b;
+        // Treat non-opaque pixels as transparent
+        pixels[y * width + x] = (a == 255) ? colorVal : Colors.transparent.value;
+      }
+    }
+
+    // Create a new layer with imported pixels
+    final newLayer = Layer(
+      layerId: 0,
+      id: const Uuid().v4(),
+      name: 'Imported Image',
+      pixels: pixels,
+      isVisible: true,
+    );
+    final layer = await ref.watch(projectRepo).createLayer(project.id, currentFrame.id, newLayer);
+
+    // Add layer to state and select it
+    state = state.copyWith(
+      frames: state.frames.map((frame) {
+        if (frame.id == currentFrame.id) {
+          return frame.copyWith(layers: [...frame.layers, layer]);
+        }
+        return frame;
+      }).toList(),
+      currentLayerIndex: currentFrame.layers.length,
+    );
+
+    // Persist project update
+    _updateProject();
   }
 
   Future<void> share(BuildContext context) async {

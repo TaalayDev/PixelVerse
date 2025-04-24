@@ -3,6 +3,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
+import '../../core/colors.dart';
 import '../../l10n/strings.dart';
 
 /// Utility class to generate different types of color palettes
@@ -155,32 +156,6 @@ class ColorPalettePanel extends HookWidget {
     final selectedTab = useState(0);
 
     // Basic colors palette
-    final basicColors = [
-      Colors.black,
-      Colors.white,
-      Colors.grey.shade800,
-      Colors.grey.shade600,
-      Colors.grey.shade400,
-      Colors.grey.shade200,
-      const Color(0xFFFF0000), // Red
-      const Color(0xFFFF4500), // Orange Red
-      const Color(0xFFFFA500), // Orange
-      const Color(0xFFFFD700), // Gold
-      const Color(0xFFFFFF00), // Yellow
-      const Color(0xFF9ACD32), // Yellow Green
-      const Color(0xFF00FF00), // Green
-      const Color(0xFF008000), // Dark Green
-      const Color(0xFF00FFFF), // Cyan
-      const Color(0xFF0000FF), // Blue
-      const Color(0xFF4B0082), // Indigo
-      const Color(0xFF800080), // Purple
-      const Color(0xFFFF00FF), // Magenta
-      const Color(0xFFC71585), // Medium Violet Red
-      const Color(0xFFA52A2A), // Brown
-      const Color(0xFFD2691E), // Chocolate
-      const Color(0xFFCD853F), // Peru
-      const Color(0xFFF4A460), // Sandy Brown
-    ];
 
     // Define tabs with icons
     final tabs = [
@@ -197,7 +172,7 @@ class ColorPalettePanel extends HookWidget {
     List<Color> getTabColors() {
       switch (selectedTab.value) {
         case 0:
-          return basicColors;
+          return kBasicColors;
         case 1:
           return ColorPaletteGenerator.generateShades(currentColor, 10);
         case 2:
@@ -211,7 +186,7 @@ class ColorPalettePanel extends HookWidget {
         case 6:
           return customColors.value;
         default:
-          return basicColors;
+          return kBasicColors;
       }
     }
 

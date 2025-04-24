@@ -8,11 +8,13 @@ import '../../../../pixel/effects/effects.dart';
 class EffectsPanel extends StatefulWidget {
   final Layer layer;
   final Function(Layer) onLayerUpdated;
+  final bool isDialog;
 
   const EffectsPanel({
     super.key,
     required this.layer,
     required this.onLayerUpdated,
+    this.isDialog = false,
   });
 
   @override
@@ -118,7 +120,9 @@ class _EffectsPanelState extends State<EffectsPanel> {
                 onPressed: () {
                   final updatedLayer = widget.layer.copyWith(effects: _effects);
                   widget.onLayerUpdated(updatedLayer);
-                  Navigator.of(context).pop();
+                  if (widget.isDialog) {
+                    Navigator.of(context).pop();
+                  }
                 },
                 child: const Text('Apply'),
               ),
@@ -248,7 +252,8 @@ class EffectListItem extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 4),
       child: ListTile(
         title: Text(effect.name.capitalize()),
-        subtitle: Text(_formatParameters(effect.parameters)),
+        // subtitle: Text(_formatParameters(effect.parameters)),
+        contentPadding: const EdgeInsets.only(left: 8),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -272,7 +277,7 @@ class EffectListItem extends StatelessWidget {
   String _formatParameters(Map<String, dynamic> params) {
     final buffer = StringBuffer();
     params.forEach((key, value) {
-      if (buffer.length > 0) buffer.write(', ');
+      if (buffer.length > 0) buffer.write('\n');
       buffer.write('$key: ${value is double ? value.toStringAsFixed(2) : value}');
     });
     return buffer.toString();

@@ -1,11 +1,8 @@
 import 'dart:async';
 import 'dart:ui' as ui;
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:pixelverse/core/utils/pixel_utils.dart';
-import 'package:pixelverse/pixel/effects/effects.dart';
 
 import '../../core.dart';
 import '../../data.dart';

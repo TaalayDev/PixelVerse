@@ -11,8 +11,12 @@ class PixelUtils {
     required List<Layer> layers,
   }) {
     final pixels = Uint32List(width * height);
-    final layersPixels =
-        layers.where((l) => l.isVisible).map((l) => l.processedPixels).toList();
+    final layersPixels = layers.reversed
+        .where((l) => l.isVisible)
+        .map(
+          (l) => l.processedPixels,
+        )
+        .toList();
 
     for (final processedPixels in layersPixels) {
       for (int i = 0; i < pixels.length; i++) {

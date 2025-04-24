@@ -237,6 +237,13 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
                                           border: Border.all(
                                             color: Colors.grey,
                                           ),
+                                          // image: const DecorationImage(
+                                          //   image: AssetImage(
+                                          //     'assets/images/girl.png',
+                                          //   ),
+                                          //   opacity: 0.6,
+                                          //   fit: BoxFit.cover,
+                                          // ),
                                         ),
                                         child: PixelPainter(
                                           project: project,
@@ -560,7 +567,7 @@ class _DesktopSidePanelState extends State<_DesktopSidePanel> with SingleTickerP
               unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
               indicatorColor: Theme.of(context).colorScheme.primary,
             ),
-            const Divider(height: 1),
+            const Divider(height: 0),
 
             // Tab content
             Expanded(
@@ -568,58 +575,56 @@ class _DesktopSidePanelState extends State<_DesktopSidePanel> with SingleTickerP
                 controller: _tabController,
                 children: [
                   // Layers Tab
-                  Expanded(
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: LayersPanel(
-                            width: widget.width,
-                            height: widget.height,
-                            layers: widget.state.currentFrame.layers,
-                            activeLayerIndex: widget.state.currentLayerIndex,
-                            onLayerAdded: (name) {
-                              widget.notifier.addLayer(name);
-                            },
-                            onLayerVisibilityChanged: (index) {
-                              widget.notifier.toggleLayerVisibility(index);
-                            },
-                            onLayerSelected: (index) {
-                              widget.notifier.selectLayer(index);
-                            },
-                            onLayerDeleted: (index) {
-                              widget.notifier.removeLayer(index);
-                            },
-                            onLayerLockedChanged: (index) {},
-                            onLayerNameChanged: (index, name) {},
-                            onLayerReordered: (oldIndex, newIndex) {
-                              widget.notifier.reorderLayers(
-                                newIndex,
-                                oldIndex,
-                              );
-                            },
-                            onLayerOpacityChanged: (index, opacity) {},
-                            onLayerEffectsChanged: (updatedLayer) {
-                              widget.notifier.updateLayer(updatedLayer);
-                            },
-                          ),
+                  Column(
+                    children: [
+                      Expanded(
+                        child: LayersPanel(
+                          width: widget.width,
+                          height: widget.height,
+                          layers: widget.state.currentFrame.layers,
+                          activeLayerIndex: widget.state.currentLayerIndex,
+                          onLayerAdded: (name) {
+                            widget.notifier.addLayer(name);
+                          },
+                          onLayerVisibilityChanged: (index) {
+                            widget.notifier.toggleLayerVisibility(index);
+                          },
+                          onLayerSelected: (index) {
+                            widget.notifier.selectLayer(index);
+                          },
+                          onLayerDeleted: (index) {
+                            widget.notifier.removeLayer(index);
+                          },
+                          onLayerLockedChanged: (index) {},
+                          onLayerNameChanged: (index, name) {},
+                          onLayerReordered: (oldIndex, newIndex) {
+                            widget.notifier.reorderLayers(
+                              newIndex,
+                              oldIndex,
+                            );
+                          },
+                          onLayerOpacityChanged: (index, opacity) {},
+                          onLayerEffectsChanged: (updatedLayer) {
+                            widget.notifier.updateLayer(updatedLayer);
+                          },
                         ),
-                        const Divider(),
+                      ),
+                      const Divider(height: 0, color: Colors.grey),
 
-                        // Color palette
-                        Expanded(
-                          child: ColorPalettePanel(
-                            currentColor: widget.state.currentColor,
-                            isEyedropperSelected: widget.currentTool.value == PixelTool.eyedropper,
-                            onSelectEyedropper: () {
-                              widget.currentTool.value = PixelTool.eyedropper;
-                            },
-                            onColorSelected: (color) {
-                              widget.notifier.currentColor = color;
-                            },
-                          ),
+                      // Color palette
+                      Expanded(
+                        child: ColorPalettePanel(
+                          currentColor: widget.state.currentColor,
+                          isEyedropperSelected: widget.currentTool.value == PixelTool.eyedropper,
+                          onSelectEyedropper: () {
+                            widget.currentTool.value = PixelTool.eyedropper;
+                          },
+                          onColorSelected: (color) {
+                            widget.notifier.currentColor = color;
+                          },
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
 
                   // Effects Tab
