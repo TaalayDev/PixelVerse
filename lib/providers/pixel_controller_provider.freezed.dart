@@ -250,7 +250,8 @@ class __$$PixelDrawStateImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$PixelDrawStateImpl extends _PixelDrawState {
+class _$PixelDrawStateImpl extends _PixelDrawState
+    with DiagnosticableTreeMixin {
   const _$PixelDrawStateImpl(
       {required this.width,
       required this.height,
@@ -314,8 +315,29 @@ class _$PixelDrawStateImpl extends _PixelDrawState {
   final bool canRedo;
 
   @override
-  String toString() {
+  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
     return 'PixelDrawState(width: $width, height: $height, animationStates: $animationStates, frames: $frames, currentAnimationStateIndex: $currentAnimationStateIndex, currentFrameIndex: $currentFrameIndex, currentLayerIndex: $currentLayerIndex, currentColor: $currentColor, currentTool: $currentTool, mirrorAxis: $mirrorAxis, selectionRect: $selectionRect, canUndo: $canUndo, canRedo: $canRedo)';
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty('type', 'PixelDrawState'))
+      ..add(DiagnosticsProperty('width', width))
+      ..add(DiagnosticsProperty('height', height))
+      ..add(DiagnosticsProperty('animationStates', animationStates))
+      ..add(DiagnosticsProperty('frames', frames))
+      ..add(DiagnosticsProperty(
+          'currentAnimationStateIndex', currentAnimationStateIndex))
+      ..add(DiagnosticsProperty('currentFrameIndex', currentFrameIndex))
+      ..add(DiagnosticsProperty('currentLayerIndex', currentLayerIndex))
+      ..add(DiagnosticsProperty('currentColor', currentColor))
+      ..add(DiagnosticsProperty('currentTool', currentTool))
+      ..add(DiagnosticsProperty('mirrorAxis', mirrorAxis))
+      ..add(DiagnosticsProperty('selectionRect', selectionRect))
+      ..add(DiagnosticsProperty('canUndo', canUndo))
+      ..add(DiagnosticsProperty('canRedo', canRedo));
   }
 
   @override

@@ -1,0 +1,2 @@
+/Users/admin/dev/flutter/PixelVerse/android/app/.cxx/RelWithDebInfo/5jo3q6t5/x86_64/CMakeFiles/edit_cache.dir
+/Users/admin/dev/flutter/PixelVerse/android/app/.cxx/RelWithDebInfo/5jo3q6t5/x86_64/CMakeFiles/rebuild_cache.dir

@@ -40,7 +40,7 @@ dependencies:
   url_launcher: ^6.0.3
   image_cropper: ^8.0.2
   image_picker: ^1.1.2
-  image_gallery_saver_plus: ^3.0.5
+  image_gallery_saver_plus: ^4.0.1
   universal_html: ^2.2.4
   file_picker: ^8.1.2
   image: ^4.2.0

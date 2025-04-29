@@ -54,6 +54,7 @@ class SubscriptionService {
       final isAvailable = await _inAppPurchase.isAvailable();
       if (!isAvailable) {
         _errorController.add('In-app purchases are not available on this device.');
+
         return;
       }
 

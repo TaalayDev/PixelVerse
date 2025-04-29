@@ -39,6 +39,7 @@ class ProjectsScreen extends HookConsumerWidget {
     final showBadge = useState(false);
 
     final subscription = ref.watch(subscriptionStateProvider);
+    print('Subscription: ${subscription.isActive}');
 
     useEffect(() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -60,9 +61,7 @@ class ProjectsScreen extends HookConsumerWidget {
             TextButton.icon(
               label: const Icon(Feather.file),
               onPressed: () async {
-                final error = await ref
-                    .read(projectsProvider.notifier)
-                    .importProject(context);
+                final error = await ref.read(projectsProvider.notifier).importProject(context);
                 if (error != null) {
                   switch (error) {
                     default:
@@ -75,8 +74,7 @@ class ProjectsScreen extends HookConsumerWidget {
                 }
               },
               style: TextButton.styleFrom(
-                backgroundColor:
-                    Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
               ),
             ),
             const SizedBox(width: 16),
@@ -107,8 +105,7 @@ class ProjectsScreen extends HookConsumerWidget {
                 }
               },
               style: TextButton.styleFrom(
-                backgroundColor:
-                    Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
               ),
             ),
           ],
@@ -154,9 +151,7 @@ class ProjectsScreen extends HookConsumerWidget {
                   ref.read(projectsProvider.notifier).deleteProject(project);
                 },
                 onEditProject: (project) {
-                  ref
-                      .read(projectsProvider.notifier)
-                      .renameProject(project.id, project.name);
+                  ref.read(projectsProvider.notifier).renameProject(project.id, project.name);
                 },
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -232,8 +227,7 @@ class ProjectsScreen extends HookConsumerWidget {
         context,
         loadingText: Strings.of(context).creatingProject,
       );
-      final newProject =
-          await ref.read(projectsProvider.notifier).addProject(project);
+      final newProject = await ref.read(projectsProvider.notifier).addProject(project);
 
       if (context.mounted) {
         loader.remove();
@@ -257,8 +251,7 @@ class ProjectsScreen extends HookConsumerWidget {
       loadingText: Strings.of(context).openingProject,
     );
 
-    final project =
-        await ref.read(projectsProvider.notifier).getProject(projectId);
+    final project = await ref.read(projectsProvider.notifier).getProject(projectId);
 
     if (project != null && context.mounted) {
       Navigator.of(context).push(
@@ -401,10 +394,8 @@ class ProjectCard extends StatelessWidget {
                       style: MediaQuery.sizeOf(context).adaptiveValue(
                         Theme.of(context).textTheme.titleSmall,
                         {
-                          ScreenSize.md:
-                              Theme.of(context).textTheme.titleMedium,
-                          ScreenSize.lg:
-                              Theme.of(context).textTheme.titleMedium,
+                          ScreenSize.md: Theme.of(context).textTheme.titleMedium,
+                          ScreenSize.lg: Theme.of(context).textTheme.titleMedium,
                           ScreenSize.xl: Theme.of(context).textTheme.titleLarge,
                         },
                       )?.copyWith(
@@ -559,10 +550,7 @@ class ProjectCard extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: color, fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color, fontWeight: FontWeight.bold),
           ),
         ],
       ),

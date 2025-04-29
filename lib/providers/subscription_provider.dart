@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -21,6 +24,16 @@ final subscriptionServiceProvider = Provider<SubscriptionService>((ref) {
 class SubscriptionState extends _$SubscriptionState {
   @override
   UserSubscription build() {
+    if (kIsWeb || Platform.isAndroid || Platform.isWindows) {
+      return UserSubscription(
+        plan: SubscriptionPlan.proYearly,
+        status: SubscriptionStatus.active,
+        expiryDate: DateTime.now().add(const Duration(days: 30)),
+        purchaseId: '123456',
+        purchaseDate: DateTime.now(),
+      );
+    }
+
     final service = ref.watch(subscriptionServiceProvider);
 
     // Initialize service if needed
@@ -148,9 +161,7 @@ bool isFeatureLocked(IsFeatureLockedRef ref, SubscriptionFeature feature) {
     case SubscriptionFeature.cloudBackup:
     case SubscriptionFeature.noWatermark:
     case SubscriptionFeature.prioritySupport:
-      return !ref
-          .read(subscriptionStateProvider.notifier)
-          .hasFeatureAccess(feature);
+      return !ref.read(subscriptionStateProvider.notifier).hasFeatureAccess(feature);
     case SubscriptionFeature.maxProjects:
     case SubscriptionFeature.maxCanvasSize:
     case SubscriptionFeature.exportFormats:
@@ -174,12 +185,7 @@ List<SubscriptionOffer> subscriptionOffers(SubscriptionOffersRef ref) {
       description: 'Basic pixel art creation',
       price: 'Free',
       period: 'Forever',
-      features: [
-        '3 projects',
-        'Basic tools',
-        'Canvas up to 64x64 pixels',
-        'PNG & JPEG export'
-      ],
+      features: ['3 projects', 'Basic tools', 'Canvas up to 64x64 pixels', 'PNG & JPEG export'],
     ),
   ];
 

@@ -78,9 +78,7 @@ class InAppReviewService {
 
       // If not enough days have passed AND not enough new sessions, don't request
       if (daysSinceLastRequest < _minIntervalBetweenRequests &&
-          (sessionCount - _sessionsBeforeFirstRequest) %
-                  _sessionsBeforeReminder !=
-              0) {
+          (sessionCount - _sessionsBeforeFirstRequest) % _sessionsBeforeReminder != 0) {
         return false;
       }
     }
@@ -100,7 +98,7 @@ class InAppReviewService {
         await _inAppReview.requestReview();
       } else {
         // For other platforms, open the store page directly
-        await _inAppReview.openStoreListing(appStoreId: '123456789');
+        await _inAppReview.openStoreListing(appStoreId: '6736886514');
       }
 
       // Update the last request time
