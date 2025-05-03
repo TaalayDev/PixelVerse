@@ -1,15 +1,144 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
+import '../../core/colors.dart';
 import '../../l10n/strings.dart';
 
+/// Utility class to generate different types of color palettes
+class ColorPaletteGenerator {
+  /// Generate shades and tints of a color
+  static List<Color> generateShades(Color baseColor, int count) {
+    final List<Color> colors = [];
+    final HSLColor hslColor = HSLColor.fromColor(baseColor);
+
+    // Add darker shades (decreasing lightness)
+    for (int i = count ~/ 2; i > 0; i--) {
+      final double lightness = (hslColor.lightness - (i * 0.1)).clamp(0.0, 1.0);
+      colors.add(hslColor.withLightness(lightness).toColor());
+    }
+
+    // Add the base color
+    colors.add(baseColor);
+
+    // Add lighter tints (increasing lightness)
+    for (int i = 1; i <= count ~/ 2; i++) {
+      final double lightness = (hslColor.lightness + (i * 0.1)).clamp(0.0, 1.0);
+      colors.add(hslColor.withLightness(lightness).toColor());
+    }
+
+    return colors;
+  }
+
+  /// Generate complementary colors (colors opposite on the color wheel)
+  static List<Color> generateComplementary(Color baseColor) {
+    final HSLColor hslColor = HSLColor.fromColor(baseColor);
+    final double complementaryHue = (hslColor.hue + 180) % 360;
+
+    final complementaryColor = HSLColor.fromAHSL(
+      hslColor.alpha,
+      complementaryHue,
+      hslColor.saturation,
+      hslColor.lightness,
+    ).toColor();
+
+    return [
+      baseColor,
+      complementaryColor,
+      // Add shades of complementary color
+      HSLColor.fromAHSL(
+        hslColor.alpha,
+        complementaryHue,
+        hslColor.saturation,
+        (hslColor.lightness - 0.2).clamp(0.0, 1.0),
+      ).toColor(),
+      HSLColor.fromAHSL(
+        hslColor.alpha,
+        complementaryHue,
+        hslColor.saturation,
+        (hslColor.lightness + 0.2).clamp(0.0, 1.0),
+      ).toColor(),
+    ];
+  }
+
+  /// Generate analogous colors (colors adjacent on the color wheel)
+  static List<Color> generateAnalogous(Color baseColor, int count) {
+    final List<Color> colors = [];
+    final HSLColor hslColor = HSLColor.fromColor(baseColor);
+
+    final double hueStep = 30; // 30 degrees on the color wheel
+
+    for (int i = -count ~/ 2; i <= count ~/ 2; i++) {
+      final double hue = (hslColor.hue + (i * hueStep)) % 360;
+      colors.add(HSLColor.fromAHSL(
+        hslColor.alpha,
+        hue,
+        hslColor.saturation,
+        hslColor.lightness,
+      ).toColor());
+    }
+
+    return colors;
+  }
+
+  /// Generate triadic colors (three colors equally spaced on the color wheel)
+  static List<Color> generateTriadic(Color baseColor) {
+    final HSLColor hslColor = HSLColor.fromColor(baseColor);
+
+    final List<Color> colors = [
+      baseColor,
+      HSLColor.fromAHSL(
+        hslColor.alpha,
+        (hslColor.hue + 120) % 360,
+        hslColor.saturation,
+        hslColor.lightness,
+      ).toColor(),
+      HSLColor.fromAHSL(
+        hslColor.alpha,
+        (hslColor.hue + 240) % 360,
+        hslColor.saturation,
+        hslColor.lightness,
+      ).toColor(),
+    ];
+
+    return colors;
+  }
+
+  /// Generate a monochromatic palette (same hue, different saturation/lightness)
+  static List<Color> generateMonochromatic(Color baseColor, int count) {
+    final List<Color> colors = [];
+    final HSLColor hslColor = HSLColor.fromColor(baseColor);
+
+    // Vary saturation and lightness while keeping the same hue
+    for (int i = 0; i < count; i++) {
+      final double saturation = 0.1 + (i / count * 0.9);
+      final double lightness = 0.1 + (i / count * 0.8);
+
+      colors.add(HSLColor.fromAHSL(
+        hslColor.alpha,
+        hslColor.hue,
+        saturation,
+        lightness,
+      ).toColor());
+    }
+
+    // Add the base color if it's not already in the list
+    if (!colors.contains(baseColor)) {
+      colors.add(baseColor);
+    }
+
+    return colors;
+  }
+}
+
+/// An enhanced color palette panel with palette generation features
 class ColorPalettePanel extends HookWidget {
   final Color currentColor;
   final Function(Color) onColorSelected;
   final Function() onSelectEyedropper;
   final bool isEyedropperSelected;
+  final ScrollController? scrollController;
 
   const ColorPalettePanel({
     super.key,
@@ -17,154 +146,49 @@ class ColorPalettePanel extends HookWidget {
     required this.onColorSelected,
     required this.onSelectEyedropper,
     required this.isEyedropperSelected,
+    this.scrollController,
   });
 
   @override
   Widget build(BuildContext context) {
+    // State for custom colors and selected tab
     final customColors = useState<List<Color>>([]);
+    final selectedTab = useState(0);
 
-    final Set<Color> _predefinedColors = {
-      Colors.white,
-      Colors.black,
-      const Color(0xFF333333),
-      const Color(0xFF666666),
-      const Color(0xFF999999),
-      const Color(0xFFCCCCCC),
-      const Color(0xFFEEEEEE),
-      Colors.red,
-      Colors.red.shade900,
-      Colors.red.shade800,
-      Colors.red.shade600,
-      Colors.red.shade400,
-      Colors.red.shade200,
-      Colors.red.shade100,
-      Colors.pink,
-      Colors.pink.shade900,
-      Colors.pink.shade800,
-      Colors.pink.shade600,
-      Colors.pink.shade400,
-      Colors.pink.shade200,
-      Colors.pink.shade100,
-      Colors.purple,
-      Colors.purple.shade900,
-      Colors.purple.shade800,
-      Colors.purple.shade600,
-      Colors.purple.shade400,
-      Colors.purple.shade200,
-      Colors.purple.shade100,
-      Colors.deepPurple,
-      Colors.deepPurple.shade900,
-      Colors.deepPurple.shade800,
-      Colors.deepPurple.shade600,
-      Colors.deepPurple.shade400,
-      Colors.deepPurple.shade200,
-      Colors.deepPurple.shade100,
-      Colors.indigo,
-      Colors.indigo.shade900,
-      Colors.indigo.shade800,
-      Colors.indigo.shade600,
-      Colors.indigo.shade400,
-      Colors.indigo.shade200,
-      Colors.indigo.shade100,
-      Colors.blue,
-      Colors.blue.shade900,
-      Colors.blue.shade800,
-      Colors.blue.shade600,
-      Colors.blue.shade400,
-      Colors.blue.shade200,
-      Colors.blue.shade100,
-      Colors.lightBlue,
-      Colors.lightBlue.shade900,
-      Colors.lightBlue.shade800,
-      Colors.lightBlue.shade600,
-      Colors.lightBlue.shade400,
-      Colors.lightBlue.shade200,
-      Colors.lightBlue.shade100,
-      Colors.cyan,
-      Colors.cyan.shade900,
-      Colors.cyan.shade800,
-      Colors.cyan.shade600,
-      Colors.cyan.shade400,
-      Colors.cyan.shade200,
-      Colors.cyan.shade100,
-      Colors.teal,
-      Colors.teal.shade900,
-      Colors.teal.shade800,
-      Colors.teal.shade600,
-      Colors.teal.shade400,
-      Colors.teal.shade200,
-      Colors.teal.shade100,
-      Colors.green,
-      Colors.green.shade900,
-      Colors.green.shade800,
-      Colors.green.shade600,
-      Colors.green.shade400,
-      Colors.green.shade200,
-      Colors.green.shade100,
-      Colors.lightGreen,
-      Colors.lightGreen.shade900,
-      Colors.lightGreen.shade800,
-      Colors.lightGreen.shade600,
-      Colors.lightGreen.shade400,
-      Colors.lightGreen.shade200,
-      Colors.lightGreen.shade100,
-      Colors.lime,
-      Colors.lime.shade900,
-      Colors.lime.shade800,
-      Colors.lime.shade600,
-      Colors.lime.shade400,
-      Colors.lime.shade200,
-      Colors.lime.shade100,
-      Colors.yellow,
-      Colors.yellow.shade900,
-      Colors.yellow.shade800,
-      Colors.yellow.shade600,
-      Colors.yellow.shade400,
-      Colors.yellow.shade200,
-      Colors.yellow.shade100,
-      Colors.amber,
-      Colors.amber.shade900,
-      Colors.amber.shade800,
-      Colors.amber.shade600,
-      Colors.amber.shade400,
-      Colors.amber.shade200,
-      Colors.amber.shade100,
-      Colors.orange,
-      Colors.orange.shade900,
-      Colors.orange.shade800,
-      Colors.orange.shade600,
-      Colors.orange.shade400,
-      Colors.orange.shade200,
-      Colors.orange.shade100,
-      Colors.deepOrange,
-      Colors.deepOrange.shade900,
-      Colors.deepOrange.shade800,
-      Colors.deepOrange.shade600,
-      Colors.deepOrange.shade400,
-      Colors.deepOrange.shade200,
-      Colors.deepOrange.shade100,
-      Colors.brown,
-      Colors.brown.shade900,
-      Colors.brown.shade800,
-      Colors.brown.shade600,
-      Colors.brown.shade400,
-      Colors.brown.shade200,
-      Colors.brown.shade100,
-      Colors.grey,
-      Colors.grey.shade900,
-      Colors.grey.shade800,
-      Colors.grey.shade600,
-      Colors.grey.shade400,
-      Colors.grey.shade200,
-      Colors.grey.shade100,
-      Colors.blueGrey,
-      Colors.blueGrey.shade900,
-      Colors.blueGrey.shade800,
-      Colors.blueGrey.shade600,
-      Colors.blueGrey.shade400,
-      Colors.blueGrey.shade200,
-      Colors.blueGrey.shade100,
-    };
+    // Basic colors palette
+
+    // Define tabs with icons
+    final tabs = [
+      const _PaletteTab(icon: Icons.palette, label: 'Basic'),
+      const _PaletteTab(icon: Icons.tonality, label: 'Shades'),
+      const _PaletteTab(icon: Icons.flip, label: 'Complementary'),
+      const _PaletteTab(icon: Icons.compare_arrows, label: 'Analogous'),
+      const _PaletteTab(icon: Icons.change_history, label: 'Triadic'),
+      const _PaletteTab(icon: Icons.gradient, label: 'Monochromatic'),
+      const _PaletteTab(icon: Icons.bookmark, label: 'Custom'),
+    ];
+
+    // Get colors for the selected tab
+    List<Color> getTabColors() {
+      switch (selectedTab.value) {
+        case 0:
+          return kBasicColors;
+        case 1:
+          return ColorPaletteGenerator.generateShades(currentColor, 10);
+        case 2:
+          return ColorPaletteGenerator.generateComplementary(currentColor);
+        case 3:
+          return ColorPaletteGenerator.generateAnalogous(currentColor, 5);
+        case 4:
+          return ColorPaletteGenerator.generateTriadic(currentColor);
+        case 5:
+          return ColorPaletteGenerator.generateMonochromatic(currentColor, 10);
+        case 6:
+          return customColors.value;
+        default:
+          return kBasicColors;
+      }
+    }
 
     return Container(
       padding: const EdgeInsets.all(8),
@@ -178,51 +202,37 @@ class ColorPalettePanel extends HookWidget {
                 Strings.of(context).colorPalette,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
-              IconButton(
-                icon: Icon(
-                  MaterialCommunityIcons.eyedropper,
-                  color: isEyedropperSelected ? Colors.blue : null,
-                  size: 18,
-                ),
-                onPressed: () => onSelectEyedropper(),
+              Row(
+                children: [
+                  // Add current color to custom palette
+                  IconButton(
+                    icon: const Icon(Icons.add_circle_outline, size: 18),
+                    tooltip: 'Add to custom palette',
+                    onPressed: () {
+                      if (!customColors.value.contains(currentColor)) {
+                        customColors.value = [...customColors.value, currentColor];
+                      }
+                    },
+                  ),
+                  // Eyedropper tool
+                  IconButton(
+                    icon: Icon(
+                      MaterialCommunityIcons.eyedropper,
+                      color: isEyedropperSelected ? Colors.blue : null,
+                      size: 18,
+                    ),
+                    onPressed: onSelectEyedropper,
+                  ),
+                ],
               ),
             ],
           ),
+
           const SizedBox(height: 8),
-          Expanded(
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 8,
-                crossAxisSpacing: 2,
-                mainAxisSpacing: 2,
-              ),
-              itemCount:
-                  _predefinedColors.length + customColors.value.length + 1,
-              itemBuilder: (context, index) {
-                if (index < _predefinedColors.length) {
-                  return _buildColorItem(_predefinedColors.elementAt(index));
-                } else if (index <
-                    _predefinedColors.length + customColors.value.length) {
-                  return _buildColorItem(
-                    customColors.value[index - _predefinedColors.length],
-                  );
-                } else {
-                  return _buildAddColorButton(context, customColors);
-                }
-              },
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            Strings.of(context).currentColor,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-          ),
-          const SizedBox(height: 8),
+
+          // Current color display with hex value
           InkWell(
             onTap: () => _showColorPicker(context, customColors),
-            borderRadius: BorderRadius.circular(4),
             child: Container(
               width: double.infinity,
               height: 40,
@@ -231,20 +241,141 @@ class ColorPalettePanel extends HookWidget {
                 border: Border.all(color: Colors.grey),
                 borderRadius: BorderRadius.circular(4),
               ),
+              child: Center(
+                child: Text(
+                  '#${currentColor.value.toRadixString(16).toUpperCase().substring(2)}',
+                  style: TextStyle(
+                    color: currentColor.computeLuminance() > 0.5 ? Colors.black : Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Tabs for different palette types
+          SizedBox(
+            height: 40,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: tabs.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: ChoiceChip(
+                    avatar: Icon(
+                      tabs[index].icon,
+                      size: 16,
+                      color: selectedTab.value == index
+                          ? Theme.of(context).colorScheme.onPrimary
+                          : Theme.of(context).iconTheme.color,
+                    ),
+                    label: Text(
+                      tabs[index].label,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: selectedTab.value == index ? Theme.of(context).colorScheme.onPrimary : null,
+                      ),
+                    ),
+                    selected: selectedTab.value == index,
+                    showCheckmark: false,
+                    onSelected: (selected) {
+                      if (selected) {
+                        selectedTab.value = index;
+                      }
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Color palette grid
+          Expanded(
+            child: selectedTab.value == 6 && customColors.value.isEmpty
+                ? Center(
+                    child: Text(
+                      'No custom colors added yet.\nAdd colors using the + button above.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                    ),
+                  )
+                : GridView.builder(
+                    controller: scrollController,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 6,
+                      crossAxisSpacing: 4,
+                      mainAxisSpacing: 4,
+                      childAspectRatio: 1.0,
+                    ),
+                    itemCount: getTabColors().length + (selectedTab.value == 6 ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      final colors = getTabColors();
+                      if (selectedTab.value == 6 && index == colors.length) {
+                        return _buildAddColorButton(context, customColors);
+                      } else if (index < colors.length) {
+                        return _buildColorItem(
+                          colors[index],
+                          customColors,
+                          selectedTab.value == 6,
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildColorItem(Color color) {
-    return GestureDetector(
+  Widget _buildColorItem(
+    Color color,
+    ValueNotifier<List<Color>> customColors,
+    bool showDeleteOption,
+  ) {
+    return InkWell(
       onTap: () => onColorSelected(color),
-      child: Container(
-        decoration: BoxDecoration(
-          color: color,
-        ),
+      borderRadius: BorderRadius.circular(4),
+      child: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: color == currentColor ? Colors.blue : Colors.grey.withOpacity(0.3),
+                width: color == currentColor ? 2 : 1,
+              ),
+            ),
+          ),
+          if (showDeleteOption && customColors.value.contains(color))
+            Positioned(
+              top: 1,
+              right: 1,
+              child: GestureDetector(
+                onTap: () {
+                  final newList = List<Color>.from(customColors.value);
+                  newList.remove(color);
+                  customColors.value = newList;
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.7),
+                    shape: BoxShape.circle,
+                  ),
+                  padding: const EdgeInsets.all(2),
+                  child: const Icon(Icons.close, size: 10, color: Colors.red),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -253,13 +384,14 @@ class ColorPalettePanel extends HookWidget {
     BuildContext context,
     ValueNotifier<List<Color>> customColors,
   ) {
-    return GestureDetector(
+    return InkWell(
       onTap: () => _showColorPicker(context, customColors),
       child: Container(
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey),
+          borderRadius: BorderRadius.circular(4),
         ),
-        child: const Icon(Icons.add, color: Colors.grey),
+        child: const Icon(Icons.add, size: 16),
       ),
     );
   }
@@ -268,10 +400,10 @@ class ColorPalettePanel extends HookWidget {
     BuildContext context,
     ValueNotifier<List<Color>> customColors,
   ) {
+    Color pickerColor = currentColor;
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        Color pickerColor = Colors.blue;
         return AlertDialog(
           title: Text(Strings.of(context).pickAColor),
           content: SingleChildScrollView(
@@ -281,6 +413,10 @@ class ColorPalettePanel extends HookWidget {
                 pickerColor = color;
               },
               pickerAreaHeightPercent: 0.8,
+              enableAlpha: true,
+              displayThumbColor: true,
+              showLabel: true,
+              paletteType: PaletteType.hsv,
             ),
           ),
           actions: <Widget>[
@@ -291,9 +427,18 @@ class ColorPalettePanel extends HookWidget {
               },
             ),
             TextButton(
-              child: Text(Strings.of(context).add),
+              child: const Text('Save to Palette'),
               onPressed: () {
-                customColors.value = [...customColors.value, pickerColor];
+                if (!customColors.value.contains(pickerColor)) {
+                  customColors.value = [...customColors.value, pickerColor];
+                }
+                onColorSelected(pickerColor);
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text(Strings.of(context).gotIt),
+              onPressed: () {
                 onColorSelected(pickerColor);
                 Navigator.of(context).pop();
               },
@@ -303,4 +448,15 @@ class ColorPalettePanel extends HookWidget {
       },
     );
   }
+}
+
+/// Helper class for palette tabs
+class _PaletteTab {
+  final IconData icon;
+  final String label;
+
+  const _PaletteTab({
+    required this.icon,
+    required this.label,
+  });
 }

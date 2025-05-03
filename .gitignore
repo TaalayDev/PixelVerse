@@ -65,3 +65,6 @@ android/app/release.keystore
 android/keystore.properties
 ios/Runner.ipa
 ios/Runner.app.dSYM.zip
+
+# firebase
+lib/firebase_options.dart

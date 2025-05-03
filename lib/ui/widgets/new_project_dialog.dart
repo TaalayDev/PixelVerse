@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
-import 'package:pixelverse/l10n/strings.dart';
+
+import '../../data/models/subscription_model.dart';
+import '../../l10n/strings.dart';
 
 const kMaxPixelWidth = 5024;
 const kMaxPixelHeight = 5024;
@@ -19,10 +21,12 @@ class ProjectTemplate {
 }
 
 class NewProjectDialog extends StatefulWidget {
-  const NewProjectDialog({super.key});
+  const NewProjectDialog({super.key, required this.subscription});
+
+  final UserSubscription subscription;
 
   @override
-  _NewProjectDialogState createState() => _NewProjectDialogState();
+  State<NewProjectDialog> createState() => _NewProjectDialogState();
 }
 
 class _NewProjectDialogState extends State<NewProjectDialog> {
@@ -41,12 +45,23 @@ class _NewProjectDialogState extends State<NewProjectDialog> {
 
   int _selectedTemplateIndex = 0;
 
+  String _getTemplateName(ProjectTemplate template) {
+    if (template.name == 'Custom') {
+      return template.name;
+    }
+    return '${template.name} (${template.width}x${template.height})';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final maxCanvasSize = SubscriptionFeatureConfig.maxCanvasSize[widget.subscription.plan] ?? 64;
+
     return AlertDialog(
       title: Text(
         Strings.of(context).newProject,
-        style: Theme.of(context).textTheme.headlineSmall,
+        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+            ),
       ),
       content: Form(
         key: _formKey,
@@ -81,11 +96,18 @@ class _NewProjectDialogState extends State<NewProjectDialog> {
                   final template = _templates[index];
                   return DropdownMenuItem(
                     value: index,
-                    child: Text(
-                      '${template.name} (${template.width}x${template.height})',
-                    ),
+                    child: Text(_getTemplateName(template)),
                   );
                 }),
+                validator: (value) {
+                  if (value == null) {
+                    return 'Please select a template';
+                  }
+                  if (value != _templates.length - 1 && (_width > maxCanvasSize || _height > maxCanvasSize)) {
+                    return 'Your plan is limited to $maxCanvasSize pixels';
+                  }
+                  return null;
+                },
                 onChanged: (value) {
                   setState(() {
                     _selectedTemplateIndex = value!;
@@ -108,18 +130,14 @@ class _NewProjectDialogState extends State<NewProjectDialog> {
                           prefixIcon: const Icon(Icons.width_normal),
                         ),
                         keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly
-                        ],
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                         initialValue: _width.toString(),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Enter width';
                           }
                           int? width = int.tryParse(value);
-                          if (width == null ||
-                              width < 1 ||
-                              width > kMaxPixelWidth) {
+                          if (width == null || width < 1 || width > kMaxPixelWidth) {
                             return 'Width: 1-$kMaxPixelWidth';
                           }
                           return null;
@@ -136,18 +154,14 @@ class _NewProjectDialogState extends State<NewProjectDialog> {
                           prefixIcon: const Icon(Icons.height),
                         ),
                         keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly
-                        ],
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                         initialValue: _height.toString(),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Enter height';
                           }
                           int? height = int.tryParse(value);
-                          if (height == null ||
-                              height < 1 ||
-                              height > kMaxPixelHeight) {
+                          if (height == null || height < 1 || height > kMaxPixelHeight) {
                             return 'Height: 1-$kMaxPixelHeight';
                           }
                           return null;

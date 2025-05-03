@@ -1231,6 +1231,12 @@ class $LayersTableTable extends LayersTable
   late final GeneratedColumn<int> order = GeneratedColumn<int>(
       'order', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _effectsMeta =
+      const VerificationMeta('effects');
+  @override
+  late final GeneratedColumn<String> effects = GeneratedColumn<String>(
+      'effects', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -1242,7 +1248,8 @@ class $LayersTableTable extends LayersTable
         isVisible,
         isLocked,
         opacity,
-        order
+        order,
+        effects
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1305,6 +1312,10 @@ class $LayersTableTable extends LayersTable
     } else if (isInserting) {
       context.missing(_orderMeta);
     }
+    if (data.containsKey('effects')) {
+      context.handle(_effectsMeta,
+          effects.isAcceptableOrUnknown(data['effects']!, _effectsMeta));
+    }
     return context;
   }
 
@@ -1334,6 +1345,8 @@ class $LayersTableTable extends LayersTable
           .read(DriftSqlType.double, data['${effectivePrefix}opacity'])!,
       order: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}order'])!,
+      effects: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}effects']),
     );
   }
 
@@ -1354,6 +1367,7 @@ class LayersTableData extends DataClass implements Insertable<LayersTableData> {
   final bool isLocked;
   final double opacity;
   final int order;
+  final String? effects;
   const LayersTableData(
       {required this.id,
       required this.projectId,
@@ -1364,7 +1378,8 @@ class LayersTableData extends DataClass implements Insertable<LayersTableData> {
       required this.isVisible,
       required this.isLocked,
       required this.opacity,
-      required this.order});
+      required this.order,
+      this.effects});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1378,6 +1393,9 @@ class LayersTableData extends DataClass implements Insertable<LayersTableData> {
     map['is_locked'] = Variable<bool>(isLocked);
     map['opacity'] = Variable<double>(opacity);
     map['order'] = Variable<int>(order);
+    if (!nullToAbsent || effects != null) {
+      map['effects'] = Variable<String>(effects);
+    }
     return map;
   }
 
@@ -1393,6 +1411,9 @@ class LayersTableData extends DataClass implements Insertable<LayersTableData> {
       isLocked: Value(isLocked),
       opacity: Value(opacity),
       order: Value(order),
+      effects: effects == null && nullToAbsent
+          ? const Value.absent()
+          : Value(effects),
     );
   }
 
@@ -1410,6 +1431,7 @@ class LayersTableData extends DataClass implements Insertable<LayersTableData> {
       isLocked: serializer.fromJson<bool>(json['isLocked']),
       opacity: serializer.fromJson<double>(json['opacity']),
       order: serializer.fromJson<int>(json['order']),
+      effects: serializer.fromJson<String?>(json['effects']),
     );
   }
   @override
@@ -1426,6 +1448,7 @@ class LayersTableData extends DataClass implements Insertable<LayersTableData> {
       'isLocked': serializer.toJson<bool>(isLocked),
       'opacity': serializer.toJson<double>(opacity),
       'order': serializer.toJson<int>(order),
+      'effects': serializer.toJson<String?>(effects),
     };
   }
 
@@ -1439,7 +1462,8 @@ class LayersTableData extends DataClass implements Insertable<LayersTableData> {
           bool? isVisible,
           bool? isLocked,
           double? opacity,
-          int? order}) =>
+          int? order,
+          Value<String?> effects = const Value.absent()}) =>
       LayersTableData(
         id: id ?? this.id,
         projectId: projectId ?? this.projectId,
@@ -1451,6 +1475,7 @@ class LayersTableData extends DataClass implements Insertable<LayersTableData> {
         isLocked: isLocked ?? this.isLocked,
         opacity: opacity ?? this.opacity,
         order: order ?? this.order,
+        effects: effects.present ? effects.value : this.effects,
       );
   LayersTableData copyWithCompanion(LayersTableCompanion data) {
     return LayersTableData(
@@ -1464,6 +1489,7 @@ class LayersTableData extends DataClass implements Insertable<LayersTableData> {
       isLocked: data.isLocked.present ? data.isLocked.value : this.isLocked,
       opacity: data.opacity.present ? data.opacity.value : this.opacity,
       order: data.order.present ? data.order.value : this.order,
+      effects: data.effects.present ? data.effects.value : this.effects,
     );
   }
 
@@ -1479,14 +1505,25 @@ class LayersTableData extends DataClass implements Insertable<LayersTableData> {
           ..write('isVisible: $isVisible, ')
           ..write('isLocked: $isLocked, ')
           ..write('opacity: $opacity, ')
-          ..write('order: $order')
+          ..write('order: $order, ')
+          ..write('effects: $effects')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, projectId, frameId, layerId, name,
-      $driftBlobEquality.hash(pixels), isVisible, isLocked, opacity, order);
+  int get hashCode => Object.hash(
+      id,
+      projectId,
+      frameId,
+      layerId,
+      name,
+      $driftBlobEquality.hash(pixels),
+      isVisible,
+      isLocked,
+      opacity,
+      order,
+      effects);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1500,7 +1537,8 @@ class LayersTableData extends DataClass implements Insertable<LayersTableData> {
           other.isVisible == this.isVisible &&
           other.isLocked == this.isLocked &&
           other.opacity == this.opacity &&
-          other.order == this.order);
+          other.order == this.order &&
+          other.effects == this.effects);
 }
 
 class LayersTableCompanion extends UpdateCompanion<LayersTableData> {
@@ -1514,6 +1552,7 @@ class LayersTableCompanion extends UpdateCompanion<LayersTableData> {
   final Value<bool> isLocked;
   final Value<double> opacity;
   final Value<int> order;
+  final Value<String?> effects;
   const LayersTableCompanion({
     this.id = const Value.absent(),
     this.projectId = const Value.absent(),
@@ -1525,6 +1564,7 @@ class LayersTableCompanion extends UpdateCompanion<LayersTableData> {
     this.isLocked = const Value.absent(),
     this.opacity = const Value.absent(),
     this.order = const Value.absent(),
+    this.effects = const Value.absent(),
   });
   LayersTableCompanion.insert({
     this.id = const Value.absent(),
@@ -1537,6 +1577,7 @@ class LayersTableCompanion extends UpdateCompanion<LayersTableData> {
     this.isLocked = const Value.absent(),
     this.opacity = const Value.absent(),
     required int order,
+    this.effects = const Value.absent(),
   })  : projectId = Value(projectId),
         frameId = Value(frameId),
         layerId = Value(layerId),
@@ -1554,6 +1595,7 @@ class LayersTableCompanion extends UpdateCompanion<LayersTableData> {
     Expression<bool>? isLocked,
     Expression<double>? opacity,
     Expression<int>? order,
+    Expression<String>? effects,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1566,6 +1608,7 @@ class LayersTableCompanion extends UpdateCompanion<LayersTableData> {
       if (isLocked != null) 'is_locked': isLocked,
       if (opacity != null) 'opacity': opacity,
       if (order != null) 'order': order,
+      if (effects != null) 'effects': effects,
     });
   }
 
@@ -1579,7 +1622,8 @@ class LayersTableCompanion extends UpdateCompanion<LayersTableData> {
       Value<bool>? isVisible,
       Value<bool>? isLocked,
       Value<double>? opacity,
-      Value<int>? order}) {
+      Value<int>? order,
+      Value<String?>? effects}) {
     return LayersTableCompanion(
       id: id ?? this.id,
       projectId: projectId ?? this.projectId,
@@ -1591,6 +1635,7 @@ class LayersTableCompanion extends UpdateCompanion<LayersTableData> {
       isLocked: isLocked ?? this.isLocked,
       opacity: opacity ?? this.opacity,
       order: order ?? this.order,
+      effects: effects ?? this.effects,
     );
   }
 
@@ -1627,6 +1672,9 @@ class LayersTableCompanion extends UpdateCompanion<LayersTableData> {
     if (order.present) {
       map['order'] = Variable<int>(order.value);
     }
+    if (effects.present) {
+      map['effects'] = Variable<String>(effects.value);
+    }
     return map;
   }
 
@@ -1642,7 +1690,8 @@ class LayersTableCompanion extends UpdateCompanion<LayersTableData> {
           ..write('isVisible: $isVisible, ')
           ..write('isLocked: $isLocked, ')
           ..write('opacity: $opacity, ')
-          ..write('order: $order')
+          ..write('order: $order, ')
+          ..write('effects: $effects')
           ..write(')'))
         .toString();
   }
@@ -2627,6 +2676,7 @@ typedef $$LayersTableTableCreateCompanionBuilder = LayersTableCompanion
   Value<bool> isLocked,
   Value<double> opacity,
   required int order,
+  Value<String?> effects,
 });
 typedef $$LayersTableTableUpdateCompanionBuilder = LayersTableCompanion
     Function({
@@ -2640,6 +2690,7 @@ typedef $$LayersTableTableUpdateCompanionBuilder = LayersTableCompanion
   Value<bool> isLocked,
   Value<double> opacity,
   Value<int> order,
+  Value<String?> effects,
 });
 
 final class $$LayersTableTableReferences
@@ -2718,6 +2769,11 @@ class $$LayersTableTableFilterComposer
       builder: (column, joinBuilders) =>
           ColumnFilters(column, joinBuilders: joinBuilders));
 
+  ColumnFilters<String> get effects => $state.composableBuilder(
+      column: $state.table.effects,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
   $$ProjectsTableTableFilterComposer get projectId {
     final $$ProjectsTableTableFilterComposer composer = $state.composerBuilder(
         composer: this,
@@ -2786,6 +2842,11 @@ class $$LayersTableTableOrderingComposer
       builder: (column, joinBuilders) =>
           ColumnOrderings(column, joinBuilders: joinBuilders));
 
+  ColumnOrderings<String> get effects => $state.composableBuilder(
+      column: $state.table.effects,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
   $$ProjectsTableTableOrderingComposer get projectId {
     final $$ProjectsTableTableOrderingComposer composer =
         $state.composerBuilder(
@@ -2842,6 +2903,7 @@ class $$LayersTableTableTableManager extends RootTableManager<
             Value<bool> isLocked = const Value.absent(),
             Value<double> opacity = const Value.absent(),
             Value<int> order = const Value.absent(),
+            Value<String?> effects = const Value.absent(),
           }) =>
               LayersTableCompanion(
             id: id,
@@ -2854,6 +2916,7 @@ class $$LayersTableTableTableManager extends RootTableManager<
             isLocked: isLocked,
             opacity: opacity,
             order: order,
+            effects: effects,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -2866,6 +2929,7 @@ class $$LayersTableTableTableManager extends RootTableManager<
             Value<bool> isLocked = const Value.absent(),
             Value<double> opacity = const Value.absent(),
             required int order,
+            Value<String?> effects = const Value.absent(),
           }) =>
               LayersTableCompanion.insert(
             id: id,
@@ -2878,6 +2942,7 @@ class $$LayersTableTableTableManager extends RootTableManager<
             isLocked: isLocked,
             opacity: opacity,
             order: order,
+            effects: effects,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (

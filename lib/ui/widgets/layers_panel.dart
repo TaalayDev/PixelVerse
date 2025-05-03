@@ -3,11 +3,15 @@ import 'dart:async';
 import 'package:animated_reorderable_list/animated_reorderable_list.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:pixelverse/data/models/subscription_model.dart';
+import 'package:pixelverse/providers/subscription_provider.dart';
+import 'package:pixelverse/ui/widgets/subscription/feature_gate.dart';
 
 import '../../pixel/image_painter.dart';
 import '../../l10n/strings.dart';
 import '../../data.dart';
 import 'layers_preview.dart';
+import 'effects/effects_panel.dart';
 
 class LayersPanel extends HookConsumerWidget {
   final int width;
@@ -22,6 +26,8 @@ class LayersPanel extends HookConsumerWidget {
   final Function(int, String) onLayerNameChanged;
   final Function(int oldIndex, int newIndex) onLayerReordered;
   final Function(int, double) onLayerOpacityChanged;
+  final Function(Layer)? onLayerEffectsChanged;
+  final ScrollController? scrollController;
 
   const LayersPanel({
     super.key,
@@ -37,18 +43,23 @@ class LayersPanel extends HookConsumerWidget {
     required this.onLayerNameChanged,
     required this.onLayerReordered,
     required this.onLayerOpacityChanged,
+    this.onLayerEffectsChanged,
+    this.scrollController,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final subscription = ref.watch(subscriptionStateProvider);
+
     return Column(
       children: [
         const SizedBox(height: 8),
         _buildLayersPanelHeader(context),
-        Divider(color: Theme.of(context).dividerColor.withOpacity(0.2)),
+        Divider(color: Theme.of(context).dividerColor.withOpacity(0.2), height: 0),
         Expanded(
           child: AnimatedReorderableListView(
             items: layers,
+            controller: scrollController,
             onReorder: (oldIndex, newIndex) {
               onLayerReordered(newIndex, oldIndex);
             },
@@ -58,6 +69,7 @@ class LayersPanel extends HookConsumerWidget {
                 context,
                 layer,
                 index,
+                subscription,
               );
             },
             enterTransition: [FlipInX(), ScaleIn()],
@@ -93,16 +105,44 @@ class LayersPanel extends HookConsumerWidget {
     );
   }
 
-  Widget _buildLayerTile(BuildContext context, Layer layer, int index) {
-    final contentColor =
-        index == activeLayerIndex ? Colors.white : Colors.black;
+  Widget _buildLayerTile(
+    BuildContext context,
+    Layer layer,
+    int index,
+    UserSubscription subscription,
+  ) {
+    final contentColor = index == activeLayerIndex ? Colors.white : Colors.black;
+
     return Card(
       key: ValueKey(layer.id),
       color: index == activeLayerIndex ? Colors.blue.withOpacity(0.5) : null,
       child: ListTile(
-        leading: ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: _buildLayerPreview(layer, width, height),
+        contentPadding: const EdgeInsets.only(left: 8, right: 8),
+        leading: Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: _buildLayerPreview(layer, width, height),
+            ),
+            // Show indicator if the layer has effects
+            if (layer.effects.isNotEmpty)
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.purple.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  padding: const EdgeInsets.all(2),
+                  child: const Icon(
+                    Icons.auto_fix_high,
+                    color: Colors.white,
+                    size: 12,
+                  ),
+                ),
+              ),
+          ],
         ),
         title: Text(
           layer.name,
@@ -114,31 +154,54 @@ class LayersPanel extends HookConsumerWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            InkWell(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Icon(
-                  layer.isVisible ? Icons.visibility : Icons.visibility_off,
-                  color: contentColor,
-                  size: 15,
+            // Effects button
+            if (onLayerEffectsChanged != null)
+              ProBadge(
+                show: !subscription.isPro,
+                padding: const EdgeInsets.all(4),
+                child: InkWell(
+                  onTap: !subscription.isPro ? null : () => _showEffectsDialog(context, layer),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Icon(
+                      Icons.auto_fix_high,
+                      color: contentColor,
+                      size: 15,
+                    ),
+                  ),
                 ),
               ),
-              onTap: () {
-                onLayerVisibilityChanged(index);
-              },
-            ),
-            InkWell(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Icon(
-                  Icons.delete,
-                  color: contentColor,
-                  size: 15,
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                InkWell(
+                  child: Padding(
+                    padding: const EdgeInsets.all(4.0),
+                    child: Icon(
+                      layer.isVisible ? Icons.visibility : Icons.visibility_off,
+                      color: contentColor,
+                      size: 15,
+                    ),
+                  ),
+                  onTap: () {
+                    onLayerVisibilityChanged(index);
+                  },
                 ),
-              ),
-              onTap: () => _showDeleteConfirmation(context, index),
+                InkWell(
+                  child: Padding(
+                    padding: const EdgeInsets.all(4.0),
+                    child: Icon(
+                      Icons.delete,
+                      color: contentColor,
+                      size: 15,
+                    ),
+                  ),
+                  onTap: () => _showDeleteConfirmation(context, index),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 30),
           ],
         ),
         onTap: () {
@@ -162,9 +225,7 @@ class LayersPanel extends HookConsumerWidget {
         height: height,
         layers: [layer],
         builder: (context, image) {
-          return image != null
-              ? CustomPaint(painter: ImagePainter(image))
-              : const ColoredBox(color: Colors.white);
+          return image != null ? CustomPaint(painter: ImagePainter(image)) : const ColoredBox(color: Colors.white);
         },
       ),
     );
@@ -194,6 +255,21 @@ class LayersPanel extends HookConsumerWidget {
           ],
         );
       },
+    );
+  }
+
+  // Show effects dialog for the selected layer
+  void _showEffectsDialog(BuildContext context, Layer layer) {
+    showDialog(
+      context: context,
+      builder: (context) => EffectsDialog(
+        layer: layer,
+        onLayerUpdated: (updatedLayer) {
+          if (onLayerEffectsChanged != null) {
+            onLayerEffectsChanged!(updatedLayer);
+          }
+        },
+      ),
     );
   }
 
