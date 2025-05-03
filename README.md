@@ -48,11 +48,9 @@ Do not commit this file to version control
 
 ## Screenshots
 
-Mobile | Desktop
+Draw | Manage
 --- | ---
-![Mobile Home](screenshots/mobile_home.png) | ![Desktop Home](screenshots/desktop_home.png)
-![Mobile Drawing](screenshots/mobile_drawing.png) | ![Desktop Drawing](screenshots/desktop_drawing.png)
-![Mobile Layers](screenshots/mobile_layers.png) |
+![Project](https://is2-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/38/31/39/383139bc-269f-7f28-7abe-b3645e912cc2/Screenshot_2025-04-25_at_01.04.06.png/0x0ss.png) | ![Projects](https://is2-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/b0/f8/2f/b0f82fde-12a4-1274-4566-9f250deb690c/Screenshot_2025-04-25_at_01.29.12.png/0x0ss.png)
 
 ## Usage
 
