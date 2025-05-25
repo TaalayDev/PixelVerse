@@ -8,11 +8,11 @@ import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter/material.dart';
-import 'package:pixelverse/core/extensions.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/extensions.dart';
 import '../../core/pixel_point.dart';
 import '../../core/utils.dart';
 import '../effects/effects.dart';
