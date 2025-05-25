@@ -10,13 +10,15 @@ enum ThemeType {
   sunset,
   ocean,
   monochrome,
-  neon;
+  neon,
+  cosmic;
 
   bool get isDark => [
         ThemeType.darkMode,
         ThemeType.midnight,
         ThemeType.monochrome,
         ThemeType.neon,
+        ThemeType.cosmic,
       ].contains(this);
 
   bool get isLight => !isDark;
@@ -39,6 +41,8 @@ enum ThemeType {
         return 'Monochrome';
       case ThemeType.neon:
         return 'Neon';
+      case ThemeType.cosmic:
+        return 'Cosmic';
     }
   }
 }
@@ -141,7 +145,67 @@ class AppTheme {
         return _buildMonochromeTheme();
       case ThemeType.neon:
         return _buildNeonTheme();
+      case ThemeType.cosmic:
+        return _buildCosmicTheme();
     }
+  }
+
+  static AppTheme _buildCosmicTheme() {
+    final baseTextTheme = GoogleFonts.sourceCodeProTextTheme();
+
+    return AppTheme(
+      type: ThemeType.cosmic,
+      isDark: true,
+      // Primary colors - vibrant orange like in the image
+      primaryColor: const Color(0xFFFF6B35), // Bright orange from the UI
+      primaryVariant: const Color(0xFFE55A2B),
+      onPrimary: Colors.white,
+      // Secondary colors - cyan accent
+      accentColor: const Color(0xFF00D9FF), // Bright cyan
+      onAccent: Colors.black,
+      // Background colors - deep space purple/blue gradient feel
+      background: const Color(0xFF1A1B3A), // Deep cosmic purple
+      surface: const Color(0xFF252653), // Lighter cosmic purple for surfaces
+      surfaceVariant: const Color(0xFF2D2E5F), // Even lighter for variants
+      // Text colors - bright and cosmic
+      textPrimary: const Color(0xFFE8E9FF), // Almost white with purple tint
+      textSecondary: const Color(0xFFB8BADF), // Muted purple-white
+      textDisabled: const Color(0xFF7A7BA0), // Darker purple-gray
+      // UI colors
+      divider: const Color(0xFF3A3C6B),
+      toolbarColor: const Color(0xFF252653),
+      error: const Color(0xFFFF4757), // Bright red
+      success: const Color(0xFF5CE65C), // Bright green
+      warning: const Color(0xFFFFA726), // Bright amber
+      // Grid colors
+      gridLine: const Color(0xFF3A3C6B),
+      gridBackground: const Color(0xFF252653),
+      // Canvas colors
+      canvasBackground: const Color(0xFF1A1B3A),
+      selectionOutline: const Color(0xFF00D9FF), // Cyan selection
+      selectionFill: const Color(0x3000D9FF),
+      // Icon colors
+      activeIcon: const Color(0xFFFF6B35), // Orange for active
+      inactiveIcon: const Color(0xFFB8BADF), // Muted for inactive
+      // Typography
+      textTheme: baseTextTheme.copyWith(
+        titleLarge: baseTextTheme.titleLarge!.copyWith(
+          color: const Color(0xFFE8E9FF),
+          fontWeight: FontWeight.w600,
+        ),
+        titleMedium: baseTextTheme.titleMedium!.copyWith(
+          color: const Color(0xFFE8E9FF),
+          fontWeight: FontWeight.w500,
+        ),
+        bodyLarge: baseTextTheme.bodyLarge!.copyWith(
+          color: const Color(0xFFE8E9FF),
+        ),
+        bodyMedium: baseTextTheme.bodyMedium!.copyWith(
+          color: const Color(0xFFB8BADF),
+        ),
+      ),
+      primaryFontWeight: FontWeight.w500,
+    );
   }
 
   static AppTheme _buildLightTheme() {

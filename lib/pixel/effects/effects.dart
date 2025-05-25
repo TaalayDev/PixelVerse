@@ -20,6 +20,11 @@ part 'color_balance_effect.dart';
 part 'dithering_effect.dart';
 part 'outline_effect.dart';
 part 'palette_reduction_effect.dart';
+part 'watercolor_effect.dart';
+part 'halftone_effect.dart';
+part 'glow_effect.dart';
+part 'oil_paint_effect.dart';
+part 'gradient_effect.dart';
 
 enum EffectType {
   brightness,
@@ -38,6 +43,11 @@ enum EffectType {
   dithering,
   outline,
   paletteReduction,
+  watercolor,
+  halftone,
+  glow,
+  oilPaint,
+  gradient,
 }
 
 /// Base abstract class for all effects
@@ -122,6 +132,16 @@ class EffectsManager {
         return OutlineEffect(params);
       case EffectType.paletteReduction:
         return PaletteReductionEffect(params);
+      case EffectType.watercolor:
+        return WatercolorEffect(params);
+      case EffectType.halftone:
+        return HalftoneEffect(params);
+      case EffectType.glow:
+        return GlowEffect(params);
+      case EffectType.oilPaint:
+        return OilPaintEffect(params);
+      case EffectType.gradient:
+        return GradientEffect(params);
     }
   }
 

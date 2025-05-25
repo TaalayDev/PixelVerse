@@ -1,14 +1,17 @@
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:pixelverse/ui/widgets/animated_background.dart';
 
 import '../../l10n/strings.dart';
 import '../../pixel/image_painter.dart';
-import '../../providers/pixel_controller_provider.dart';
+import '../../providers/background_image_provider.dart';
+import '../../pixel/providers/pixel_notifier_provider.dart';
 import '../../pixel/animation_frame_controller.dart';
 import '../../pixel/tools.dart';
 import '../../data.dart';
@@ -21,6 +24,7 @@ import '../widgets/pixel_canvas.dart';
 import '../widgets/shortcuts_wrapper.dart';
 import '../widgets/dialogs.dart';
 import '../widgets.dart';
+import '../widgets/theme_selector.dart';
 import '../widgets/tool_bar.dart';
 import '../widgets/tool_menu.dart';
 import '../widgets/tools_bottom_bar.dart';
@@ -98,6 +102,128 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
     );
   }
 
+  Future<bool?> showImportDialog(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.file_upload, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 12),
+            Text(
+              'Import Image',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+          ],
+        ),
+        content: Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Select how you want to import your image:',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 24),
+
+              // Option 1: Import as new layer
+              _buildImportOption(
+                context,
+                icon: Icons.layers,
+                title: 'Convert to Pixel Art',
+                description: 'Import and automatically convert the image to pixel art style on a new layer.',
+                onTap: () => Navigator.of(context).pop(false),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Option 2: Import as background
+              _buildImportOption(
+                context,
+                icon: Icons.image,
+                title: 'Import as Background',
+                description: 'Import the image as-is and use it as a reference background layer.',
+                onTap: () => Navigator.of(context).pop(true),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(null),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImportOption(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String description,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Theme.of(context).dividerColor),
+          borderRadius: BorderRadius.circular(8),
+          color: Theme.of(context).colorScheme.surface,
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                size: 28,
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentTool = useState(PixelTool.pencil);
@@ -128,8 +254,6 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
 
     final subscription = ref.watch(subscriptionStateProvider);
 
-    print(MediaQuery.of(context).size.width);
-
     return ShortcutsWrapper(
       onUndo: state.canUndo ? notifier.undo : () {},
       onRedo: state.canRedo ? notifier.redo : () {},
@@ -137,8 +261,8 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         body: SafeArea(
-          child: ColoredBox(
-            color: Theme.of(context).scaffoldBackgroundColor,
+          child: AnimatedBackground(
+            enableAnimation: false,
             child: Column(
               children: [
                 ToolBar(
@@ -160,7 +284,12 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
                   onColorPicker: () {
                     showColorPicker(context, notifier);
                   },
-                  import: () => notifier.importImage(context),
+                  import: () async {
+                    final result = await showImportDialog(context);
+                    if (result != null) {
+                      notifier.importImage(context, background: result);
+                    }
+                  },
                   currentModifier: currentModifier,
                   onSelectModifier: (modifier) {
                     currentModifier.value = modifier;
@@ -378,14 +507,13 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
   ) {
     final currentLayer = notifier.getCurrentLayer();
 
-    showDialog(
-      context: context,
-      builder: (context) => EffectsDialog(
-        layer: currentLayer,
-        onLayerUpdated: (updatedLayer) {
-          notifier.updateLayer(updatedLayer);
-        },
-      ),
+    context.showEffectsPanel(
+      layer: currentLayer,
+      width: project.width,
+      height: project.height,
+      onLayerUpdated: (updatedLayer) {
+        notifier.updateLayer(updatedLayer);
+      },
     );
   }
 
@@ -521,33 +649,19 @@ class _DesktopSidePanel extends StatefulWidget {
   final ValueNotifier<PixelTool> currentTool;
 
   const _DesktopSidePanel({
-    Key? key,
+    super.key,
     required this.width,
     required this.height,
     required this.state,
     required this.notifier,
     required this.currentTool,
-  }) : super(key: key);
+  });
 
   @override
   State<_DesktopSidePanel> createState() => _DesktopSidePanelState();
 }
 
 class _DesktopSidePanelState extends State<_DesktopSidePanel> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -556,103 +670,63 @@ class _DesktopSidePanelState extends State<_DesktopSidePanel> with SingleTickerP
         width: 250,
         child: Column(
           children: [
-            // Tab bar
-            TabBar(
-              controller: _tabController,
-              tabs: const [
-                Tab(text: 'General'),
-                Tab(text: 'Effects'),
-              ],
-              labelColor: Theme.of(context).colorScheme.primary,
-              unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-              indicatorColor: Theme.of(context).colorScheme.primary,
-            ),
-            const Divider(height: 0),
-
             // Tab content
             Expanded(
-              child: TabBarView(
-                controller: _tabController,
+              child: Column(
                 children: [
-                  // Layers Tab
-                  Column(
-                    children: [
-                      Expanded(
-                        child: LayersPanel(
-                          width: widget.width,
-                          height: widget.height,
-                          layers: widget.state.currentFrame.layers,
-                          activeLayerIndex: widget.state.currentLayerIndex,
-                          onLayerAdded: (name) {
-                            widget.notifier.addLayer(name);
-                          },
-                          onLayerVisibilityChanged: (index) {
-                            widget.notifier.toggleLayerVisibility(index);
-                          },
-                          onLayerSelected: (index) {
-                            widget.notifier.selectLayer(index);
-                          },
-                          onLayerDeleted: (index) {
-                            widget.notifier.removeLayer(index);
-                          },
-                          onLayerLockedChanged: (index) {},
-                          onLayerNameChanged: (index, name) {},
-                          onLayerReordered: (oldIndex, newIndex) {
-                            widget.notifier.reorderLayers(
-                              newIndex,
-                              oldIndex,
-                            );
-                          },
-                          onLayerOpacityChanged: (index, opacity) {},
-                          onLayerEffectsChanged: (updatedLayer) {
-                            widget.notifier.updateLayer(updatedLayer);
-                          },
-                        ),
-                      ),
-                      const Divider(height: 0, color: Colors.grey),
-
-                      // Color palette
-                      Expanded(
-                        child: ColorPalettePanel(
-                          currentColor: widget.state.currentColor,
-                          isEyedropperSelected: widget.currentTool.value == PixelTool.eyedropper,
-                          onSelectEyedropper: () {
-                            widget.currentTool.value = PixelTool.eyedropper;
-                          },
-                          onColorSelected: (color) {
-                            widget.notifier.currentColor = color;
-                          },
-                        ),
-                      ),
-                    ],
+                  Expanded(
+                    child: LayersPanel(
+                      width: widget.width,
+                      height: widget.height,
+                      layers: widget.state.currentFrame.layers,
+                      activeLayerIndex: widget.state.currentLayerIndex,
+                      onLayerAdded: (name) {
+                        widget.notifier.addLayer(name);
+                      },
+                      onLayerVisibilityChanged: (index) {
+                        widget.notifier.toggleLayerVisibility(index);
+                      },
+                      onLayerSelected: (index) {
+                        widget.notifier.selectLayer(index);
+                      },
+                      onLayerDeleted: (index) {
+                        widget.notifier.removeLayer(index);
+                      },
+                      onLayerLockedChanged: (index) {},
+                      onLayerNameChanged: (index, name) {},
+                      onLayerReordered: (oldIndex, newIndex) {
+                        widget.notifier.reorderLayers(
+                          newIndex,
+                          oldIndex,
+                        );
+                      },
+                      onLayerOpacityChanged: (index, opacity) {},
+                      onLayerEffectsChanged: (updatedLayer) {
+                        widget.notifier.updateLayer(updatedLayer);
+                      },
+                    ),
                   ),
+                  const Divider(height: 0, color: Colors.grey),
 
-                  // Effects Tab
-                  _buildEffectsPanel(),
+                  // Color palette
+                  Expanded(
+                    child: ColorPalettePanel(
+                      currentColor: widget.state.currentColor,
+                      isEyedropperSelected: widget.currentTool.value == PixelTool.eyedropper,
+                      onSelectEyedropper: () {
+                        widget.currentTool.value = PixelTool.eyedropper;
+                      },
+                      onColorSelected: (color) {
+                        widget.notifier.currentColor = color;
+                      },
+                    ),
+                  ),
                 ],
               ),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildEffectsPanel() {
-    // If there are no layers or the current layer index is invalid, show a message
-    if (widget.state.layers.isEmpty || widget.state.currentLayerIndex >= widget.state.layers.length) {
-      return const Center(
-        child: Text('No layer selected'),
-      );
-    }
-
-    final currentLayer = widget.state.currentLayer;
-
-    return EffectsPanel(
-      layer: currentLayer,
-      onLayerUpdated: (updatedLayer) {
-        widget.notifier.updateLayer(updatedLayer);
-      },
     );
   }
 }
@@ -700,6 +774,8 @@ class PixelPainter extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final backgroundImage = ref.watch(backgroundImageProvider);
+
     return CustomPaint(
       painter: GridPainter(
         width: min(project.width, 64),
@@ -709,6 +785,16 @@ class PixelPainter extends HookConsumerWidget {
       ),
       child: Stack(
         children: [
+          if (backgroundImage.image != null)
+            Positioned.fill(
+              child: Opacity(
+                opacity: backgroundImage.opacity,
+                child: Image.memory(
+                  backgroundImage.image!,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
           if (showPrevFrames)
             for (var i = 0; i < state.currentFrameIndex; i++)
               Positioned.fill(

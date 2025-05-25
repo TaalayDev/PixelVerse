@@ -21,6 +21,12 @@ extension ListIntX on List<int> {
   }
 }
 
+extension ListX<T> on List<T> {
+  List<T> mapIndexed(T Function(int index, T item) f) {
+    return asMap().entries.map((e) => f(e.key, e.value)).toList();
+  }
+}
+
 extension Uint32ListX on Uint32List {
   /// Creates a deep copy of the Uint32List
   Uint32List copy() {
@@ -45,10 +51,7 @@ extension Uint32ListX on Uint32List {
         final destIndex = (destY + y) * destWidth + (destX + x);
 
         // Check bounds for both source and destination
-        if (srcIndex >= 0 &&
-            srcIndex < source.length &&
-            destIndex >= 0 &&
-            destIndex < this.length) {
+        if (srcIndex >= 0 && srcIndex < source.length && destIndex >= 0 && destIndex < this.length) {
           this[destIndex] = source[srcIndex];
         }
       }
@@ -75,20 +78,13 @@ extension Uint32ListX on Uint32List {
 
   /// Extract pixels in a selection area into a separate Uint32List
   Uint32List extractArea(
-      {required int canvasWidth,
-      required int x,
-      required int y,
-      required int width,
-      required int height}) {
+      {required int canvasWidth, required int x, required int y, required int width, required int height}) {
     final result = Uint32List(width * height);
     for (int iy = 0; iy < height; iy++) {
       for (int ix = 0; ix < width; ix++) {
         final sourceIndex = (y + iy) * canvasWidth + (x + ix);
         final targetIndex = iy * width + ix;
-        if (sourceIndex >= 0 &&
-            sourceIndex < this.length &&
-            targetIndex >= 0 &&
-            targetIndex < result.length) {
+        if (sourceIndex >= 0 && sourceIndex < this.length && targetIndex >= 0 && targetIndex < result.length) {
           result[targetIndex] = this[sourceIndex];
         }
       }
@@ -100,10 +96,7 @@ extension Uint32ListX on Uint32List {
 extension PointX on Point<int> {
   /// Checks if this point is inside the given rectangle
   bool isInRect(int x, int y, int width, int height) {
-    return this.x >= x &&
-        this.x < x + width &&
-        this.y >= y &&
-        this.y < y + height;
+    return this.x >= x && this.x < x + width && this.y >= y && this.y < y + height;
   }
 
   /// Offsets a point by given delta
@@ -116,10 +109,7 @@ extension PointX on Point<int> {
 extension SelectionOps on SelectionModel {
   /// Check if the selection contains a point
   bool containsPoint(int x, int y) {
-    return x >= this.x &&
-        x < this.x + this.width &&
-        y >= this.y &&
-        y < this.y + this.height;
+    return x >= this.x && x < this.x + this.width && y >= this.y && y < this.y + this.height;
   }
 
   /// Creates a new selection model offset by dx, dy
@@ -185,19 +175,14 @@ extension SelectionOps on SelectionModel {
     final bottomDiff = (myRect.bottom - otherRect.top).abs();
 
     // Find the closest edge
-    if (leftDiff < snapDistance &&
-        leftDiff < rightDiff &&
-        leftDiff < topDiff &&
-        leftDiff < bottomDiff) {
+    if (leftDiff < snapDistance && leftDiff < rightDiff && leftDiff < topDiff && leftDiff < bottomDiff) {
       return SelectionModel(
         x: otherRect.right.toInt(),
         y: this.y,
         width: this.width,
         height: this.height,
       );
-    } else if (rightDiff < snapDistance &&
-        rightDiff < topDiff &&
-        rightDiff < bottomDiff) {
+    } else if (rightDiff < snapDistance && rightDiff < topDiff && rightDiff < bottomDiff) {
       return SelectionModel(
         x: otherRect.left.toInt() - this.width,
         y: this.y,

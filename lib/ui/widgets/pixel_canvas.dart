@@ -116,6 +116,7 @@ class PixelCanvas extends StatefulWidget {
   final Function(double, Offset)? onStartDrag;
   final Function(double, Offset)? onDrag;
   final Function(double, Offset)? onDragEnd;
+  final Function()? onUndo;
   final int currentLayerIndex;
 
   const PixelCanvas({
@@ -143,6 +144,7 @@ class PixelCanvas extends StatefulWidget {
     this.onStartDrag,
     this.onDrag,
     this.onDragEnd,
+    this.onUndo,
     required this.currentLayerIndex,
   });
 
@@ -179,13 +181,17 @@ class _PixelCanvasState extends State<PixelCanvas> {
   int _pointerCount = 0;
   final _closeThreshold = 10.0;
 
+  Offset? _twoFingerStartFocalPoint;
+  int? _twoFingerStartTimeMs;
+  double? _initialTwoFingerScale; // Store the scale at the beginning of a 2-finger gesture.
+  bool _isTwoFingerPotentiallyUndo = false;
+
   late Uint32List _cachedPixels;
   late List<Layer> _cachedLayers;
 
   MouseCursor cursor = SystemMouseCursors.basic;
 
-  RenderBox get renderBox =>
-      _boxKey.currentContext!.findRenderObject() as RenderBox;
+  RenderBox get renderBox => _boxKey.currentContext!.findRenderObject() as RenderBox;
   late final _CacheController _cacheController;
   int get currentLayerId => widget.layers[widget.currentLayerIndex].layerId;
 
@@ -268,11 +274,10 @@ class _PixelCanvasState extends State<PixelCanvas> {
     super.initState();
     _cacheController = _CacheController();
     _cacheController._onCacheUpdated = () {
-      _previewPixels.clear();
+      // _previewPixels.clear();
     };
     _updateCachedPixels(cacheAll: true);
-    cursor = CursorManager.instance.getCursor(widget.currentTool) ??
-        widget.currentTool.cursor;
+    cursor = CursorManager.instance.getCursor(widget.currentTool) ?? widget.currentTool.cursor;
   }
 
   @override
@@ -287,11 +292,28 @@ class _PixelCanvasState extends State<PixelCanvas> {
       _updateCachedPixels(
         cacheAll: widget.layers.length != oldWidget.layers.length,
       );
+
+      setState(() {
+        _previewPixels = [];
+      });
     }
 
     if (widget.currentTool != oldWidget.currentTool) {
-      cursor = CursorManager.instance.getCursor(widget.currentTool) ??
-          widget.currentTool.cursor;
+      cursor = CursorManager.instance.getCursor(widget.currentTool) ?? widget.currentTool.cursor;
+      _previewPixels = [];
+      setState(() {
+        _cachedLayers = List<Layer>.from(widget.layers);
+      });
+    }
+    if (widget.currentOffset != oldWidget.currentOffset) {
+      setState(() {
+        _currentOffset = widget.currentOffset;
+      });
+    }
+    if (widget.currentLayerIndex != oldWidget.currentLayerIndex) {
+      setState(() {
+        _cachedLayers = List<Layer>.from(widget.layers);
+      });
     }
   }
 
@@ -326,9 +348,7 @@ class _PixelCanvasState extends State<PixelCanvas> {
         _cachedPixels = _mergePixelsWithPoint(
           _cachedPixels,
           _previewPixels,
-          widget.currentTool == PixelTool.eraser
-              ? Colors.transparent.value
-              : widget.currentColor.value,
+          widget.currentTool == PixelTool.eraser ? Colors.transparent.value : widget.currentColor.value,
         );
         _cacheController.markLayerDirty(layer.layerId);
       } else if (cacheAll) {
@@ -370,8 +390,7 @@ class _PixelCanvasState extends State<PixelCanvas> {
               _panStartPosition = details.focalPoint - _offset;
               widget.onStartDrag?.call(_scale, _offset);
             } else {
-              final transformedPosition =
-                  (details.localFocalPoint - _currentOffset) / _currentScale;
+              final transformedPosition = (details.localFocalPoint - _currentOffset) / _currentScale;
 
               drawDetails = drawDetails.copyWith(
                 position: transformedPosition,
@@ -393,6 +412,11 @@ class _PixelCanvasState extends State<PixelCanvas> {
               }
             }
           } else if (_pointerCount == 2) {
+            _twoFingerStartFocalPoint = details.focalPoint;
+            _twoFingerStartTimeMs = DateTime.now().millisecondsSinceEpoch;
+            _initialTwoFingerScale = _scale; // Capture current scale for accurate tap detection
+            _isTwoFingerPotentiallyUndo = true;
+
             // Two finger touch for zooming
             _normalizedOffset = (_offset - details.focalPoint) / _scale;
           }
@@ -407,8 +431,7 @@ class _PixelCanvasState extends State<PixelCanvas> {
               });
               widget.onDrag?.call(_scale, _offset);
             } else {
-              final transformedPosition =
-                  (details.localFocalPoint - _currentOffset) / _currentScale;
+              final transformedPosition = (details.localFocalPoint - _currentOffset) / _currentScale;
 
               drawDetails = drawDetails.copyWith(
                 position: transformedPosition,
@@ -416,6 +439,22 @@ class _PixelCanvasState extends State<PixelCanvas> {
               );
               tool.onMove(drawDetails);
             }
+          } else if (_isTwoFingerPotentiallyUndo && details.pointerCount == 2) {
+            // This gesture started with two fingers. Check if it's turning into a scale/pan.
+            final distanceMoved = (details.focalPoint - _twoFingerStartFocalPoint!).distance;
+            // `details.scale` is the relative scale change since the last event.
+            // If it deviates significantly from 1.0, actual scaling is happening.
+            if (distanceMoved > 20.0 || (details.scale - 1.0).abs() > 0.05) {
+              // Thresholds
+              _isTwoFingerPotentiallyUndo = false; // It's a zoom/pan, not an undo tap
+            }
+
+            // Always update for scaling/panning visual feedback
+            setState(() {
+              _scale = (_scale * details.scale).clamp(0.5, 10.0);
+              _offset = details.focalPoint + _normalizedOffset * _scale;
+            });
+            widget.onDrag?.call(_scale, _offset);
           } else if (_pointerCount == 2) {
             // Two finger touch for zooming and panning
             setState(() {
@@ -427,6 +466,34 @@ class _PixelCanvasState extends State<PixelCanvas> {
           }
         },
         onScaleEnd: (details) {
+          bool wasUndoAttempt = _isTwoFingerPotentiallyUndo;
+          int? startTimeForUndo = _twoFingerStartTimeMs;
+          int currentPointerCountAtEnd = _pointerCount; // Capture the pointer count for this gesture sequence
+
+          // Reset two-finger tap specific flags immediately for the next gesture
+          _isTwoFingerPotentiallyUndo = false;
+          _twoFingerStartFocalPoint = null;
+          _twoFingerStartTimeMs = null;
+          _initialTwoFingerScale = null;
+
+          if (wasUndoAttempt && startTimeForUndo != null && currentPointerCountAtEnd == 2) {
+            final endTimeMs = DateTime.now().millisecondsSinceEpoch;
+            final durationMs = endTimeMs - startTimeForUndo;
+
+            // If _isTwoFingerPotentiallyUndo is still true, it means the movement/scale thresholds
+            // in onScaleUpdate were not crossed.
+            if (durationMs < 350) {
+              // Tap duration threshold
+              debugPrint("PixelCanvas: Two-finger tap for UNDO detected. Duration: $durationMs ms");
+              widget.onUndo?.call();
+              _pointerCount = 0; // Reset global pointer count as gesture is handled
+              _isDrawingActive = false;
+              return; // Undo tap handled, exit
+            } else {
+              debugPrint("PixelCanvas: Two-finger gesture was too long for UNDO. Duration: $durationMs ms");
+            }
+          }
+
           if (_pointerCount == 1) {
             if (widget.currentTool == PixelTool.drag) {
               widget.onDragEnd?.call(_scale, _offset);
@@ -444,8 +511,7 @@ class _PixelCanvasState extends State<PixelCanvas> {
           _pointerCount = 0;
         },
         onTapDown: (details) {
-          final transformedPosition =
-              (details.localPosition - _currentOffset) / _currentScale;
+          final transformedPosition = (details.localPosition - _currentOffset) / _currentScale;
 
           drawDetails = drawDetails.copyWith(
             position: transformedPosition,
@@ -456,13 +522,11 @@ class _PixelCanvasState extends State<PixelCanvas> {
             modifier: () => modifier,
           );
 
-          if (widget.currentTool == PixelTool.fill ||
-              widget.currentTool == PixelTool.eyedropper) {
+          if (widget.currentTool == PixelTool.fill || widget.currentTool == PixelTool.eyedropper) {
             widget.onStartDrawing();
 
             tool.onStart(drawDetails);
-            if (widget.currentTool == PixelTool.fill ||
-                widget.currentTool == PixelTool.eyedropper) {
+            if (widget.currentTool == PixelTool.fill || widget.currentTool == PixelTool.eyedropper) {
               _submitDrawing();
               widget.onFinishDrawing();
             }
@@ -496,9 +560,7 @@ class _PixelCanvasState extends State<PixelCanvas> {
               height: widget.height,
               pixels: _cachedPixels,
               previewPixels: _previewPixels,
-              previewColor: widget.currentTool == PixelTool.eraser
-                  ? Colors.white
-                  : widget.currentColor,
+              previewColor: widget.currentTool == PixelTool.eraser ? Colors.white : widget.currentColor,
               previewModifier: widget.modifier,
               selectionRect: _selectionUtils.selectionRect,
               gradientStart: _gradientStart,
@@ -507,9 +569,7 @@ class _PixelCanvasState extends State<PixelCanvas> {
               offset: _currentOffset,
               penPoints: _penPoints,
               isDrawingPenPath: _isDrawingPenPath,
-              blendMode: widget.currentTool == PixelTool.eraser
-                  ? BlendMode.clear
-                  : BlendMode.srcOver,
+              blendMode: widget.currentTool == PixelTool.eraser ? BlendMode.clear : BlendMode.srcOver,
               cacheController: _cacheController,
               currentLayerIndex: widget.currentLayerIndex,
               layers: _cachedLayers,
@@ -684,8 +744,7 @@ class _PixelCanvasState extends State<PixelCanvas> {
           );
           setState(() {});
         }
-      } else if (widget.currentTool == PixelTool.brush ||
-          widget.currentTool == PixelTool.eraser) {
+      } else if (widget.currentTool == PixelTool.brush || widget.currentTool == PixelTool.eraser) {
         final brushSize = widget.brushSize;
         final pixelsToUpdate = <PixelPoint<int>>[];
 
@@ -736,10 +795,7 @@ class _PixelCanvasState extends State<PixelCanvas> {
               final offsetY = random.nextInt(brushSize * 2) - brushSize;
               final px = point.x + offsetX;
               final py = point.y + offsetY;
-              if (px >= 0 &&
-                  px < widget.width &&
-                  py >= 0 &&
-                  py < widget.height) {
+              if (px >= 0 && px < widget.width && py >= 0 && py < widget.height) {
                 pixelsToUpdate.add(PixelPoint(
                   px,
                   py,
@@ -905,9 +961,7 @@ class _PixelGridPainter extends CustomPainter {
     }
 
     // Draw selection rectangle if active
-    if (selectionRect != null &&
-        selectionRect!.width > 0 &&
-        selectionRect!.height > 0) {
+    if (selectionRect != null && selectionRect!.width > 0 && selectionRect!.height > 0) {
       _drawSelectionRect(canvas, pixelWidth, pixelHeight);
     }
 
@@ -924,8 +978,7 @@ class _PixelGridPainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _drawGridBackground(
-      Canvas canvas, Size size, double pixelWidth, double pixelHeight) {
+  void _drawGridBackground(Canvas canvas, Size size, double pixelWidth, double pixelHeight) {
     final paint = Paint()
       ..color = Colors.grey.withOpacity(0.1)
       ..style = PaintingStyle.stroke
@@ -1032,8 +1085,7 @@ class _PixelGridPainter extends CustomPainter {
     }
   }
 
-  void _drawSelectionRect(
-      Canvas canvas, double pixelWidth, double pixelHeight) {
+  void _drawSelectionRect(Canvas canvas, double pixelWidth, double pixelHeight) {
     final rect = Rect.fromLTWH(
       selectionRect!.x * pixelWidth,
       selectionRect!.y * pixelHeight,
@@ -1136,8 +1188,7 @@ class _PixelGridPainter extends CustomPainter {
       }
 
       // If we're close to the start point, show a dashed line to indicate closing
-      if (penPoints.length > 2 &&
-          (penPoints.last - penPoints.first).distance <= 15) {
+      if (penPoints.length > 2 && (penPoints.last - penPoints.first).distance <= 15) {
         final dashPaint = Paint()
           ..color = Colors.green
           ..style = PaintingStyle.stroke

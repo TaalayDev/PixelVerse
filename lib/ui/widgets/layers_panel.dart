@@ -1,6 +1,8 @@
+import 'dart:ui' as ui;
 import 'dart:async';
 
 import 'package:animated_reorderable_list/animated_reorderable_list.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:pixelverse/data/models/subscription_model.dart';
@@ -10,6 +12,8 @@ import 'package:pixelverse/ui/widgets/subscription/feature_gate.dart';
 import '../../pixel/image_painter.dart';
 import '../../l10n/strings.dart';
 import '../../data.dart';
+import '../../providers/background_image_provider.dart';
+import '../../pixel/providers/pixel_notifier_provider.dart';
 import 'layers_preview.dart';
 import 'effects/effects_panel.dart';
 
@@ -50,6 +54,7 @@ class LayersPanel extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final subscription = ref.watch(subscriptionStateProvider);
+    final backgroundImage = ref.watch(backgroundImageProvider);
 
     return Column(
       children: [
@@ -79,7 +84,162 @@ class LayersPanel extends HookConsumerWidget {
             isSameItem: (a, b) => a.id == b.id,
           ),
         ),
+        if (backgroundImage.image != null) _buildBackgroundImageTile(context, ref, backgroundImage),
+        const SizedBox(height: 8),
       ],
+    );
+  }
+
+  Widget _buildBackgroundImageTile(BuildContext context, WidgetRef ref, BackgroundImageState backgroundImage) {
+    return Card(
+      elevation: 1,
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: Colors.amber.withOpacity(0.5),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                // Background preview
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      color: Colors.white,
+                    ),
+                    child: Image.memory(
+                      backgroundImage.image!,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                // Title and badge
+                Expanded(
+                  child: Row(
+                    children: [
+                      const Text(
+                        'BG',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'Reference',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.amber.shade800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Delete button
+                IconButton(
+                  icon: Icon(Icons.delete_outline, size: 15, color: Colors.red.shade400),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () => _showBackgroundDeleteConfirmation(context, ref),
+                  tooltip: 'Remove background image',
+                ),
+              ],
+            ),
+
+            // Opacity slider
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.opacity, size: 14, color: Colors.grey.shade600),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 4,
+                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                      activeTrackColor: Colors.amber.shade300,
+                      inactiveTrackColor: Colors.grey.shade300,
+                      thumbColor: Colors.amber.shade500,
+                    ),
+                    child: Slider(
+                      value: backgroundImage.opacity,
+                      min: 0.0,
+                      max: 1.0,
+                      divisions: 10,
+                      onChanged: (value) {
+                        ref.read(backgroundImageProvider.notifier).update((state) => state.copyWith(opacity: value));
+                      },
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 32,
+                  child: Text(
+                    '${(backgroundImage.opacity * 100).toInt()}%',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showBackgroundDeleteConfirmation(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Remove Background Image'),
+          content: const Text('Are you sure you want to remove the background image?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text(Strings.of(context).cancel),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
+              child: const Text('Remove'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Call function to remove background
+                ref.read(backgroundImageProvider.notifier).update((state) => state.copyWith(image: null));
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -111,7 +271,7 @@ class LayersPanel extends HookConsumerWidget {
     int index,
     UserSubscription subscription,
   ) {
-    final contentColor = index == activeLayerIndex ? Colors.white : Colors.black;
+    final contentColor = index == activeLayerIndex ? Colors.white : Theme.of(context).colorScheme.onSurface;
 
     return Card(
       key: ValueKey(layer.id),
@@ -260,16 +420,15 @@ class LayersPanel extends HookConsumerWidget {
 
   // Show effects dialog for the selected layer
   void _showEffectsDialog(BuildContext context, Layer layer) {
-    showDialog(
-      context: context,
-      builder: (context) => EffectsDialog(
-        layer: layer,
-        onLayerUpdated: (updatedLayer) {
-          if (onLayerEffectsChanged != null) {
-            onLayerEffectsChanged!(updatedLayer);
-          }
-        },
-      ),
+    context.showEffectsPanel(
+      layer: layer,
+      width: width,
+      height: height,
+      onLayerUpdated: (updatedLayer) {
+        if (onLayerEffectsChanged != null) {
+          onLayerEffectsChanged!(updatedLayer);
+        }
+      },
     );
   }
 

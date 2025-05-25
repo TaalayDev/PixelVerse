@@ -21,6 +21,8 @@ class ProjectsTable extends Table {
   IntColumn get width => integer()();
   IntColumn get height => integer()();
   BlobColumn get thumbnail => blob().nullable()();
+  BoolColumn get isCloudSynced => boolean().withDefault(const Constant(false))();
+  IntColumn get remoteId => integer().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get editedAt => dateTime()();
 
@@ -80,7 +82,7 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase() => instance;
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration {
@@ -104,6 +106,12 @@ class AppDatabase extends _$AppDatabase {
           await migrator.alterTable(TableMigration(
             layersTable,
             newColumns: [layersTable.effects],
+          ));
+        }
+        if (from < 5) {
+          await migrator.alterTable(TableMigration(
+            projectsTable,
+            newColumns: [projectsTable.isCloudSynced, projectsTable.remoteId],
           ));
         }
       },
@@ -154,9 +162,7 @@ class AppDatabase extends _$AppDatabase {
     ''');
 
     for (final project in projectStates.entries) {
-      final frames = await (select(framesTable)
-            ..where((tbl) => tbl.projectId.equals(project.key)))
-          .get();
+      final frames = await (select(framesTable)..where((tbl) => tbl.projectId.equals(project.key))).get();
       for (final frame in frames) {
         await update(framesTable).replace(FramesTableCompanion(
           id: Value(frame.id),
@@ -221,6 +227,8 @@ class AppDatabase extends _$AppDatabase {
             width: projectRow.width,
             height: projectRow.height,
             thumbnail: projectRow.thumbnail,
+            isCloudSynced: projectRow.isCloudSynced,
+            remoteId: projectRow.remoteId,
             createdAt: projectRow.createdAt,
             editedAt: projectRow.editedAt,
             frames: [],
@@ -329,6 +337,8 @@ class AppDatabase extends _$AppDatabase {
           thumbnail: project.thumbnail,
           createdAt: project.createdAt,
           editedAt: project.editedAt,
+          isCloudSynced: project.isCloudSynced,
+          remoteId: project.remoteId,
           states: [],
           frames: [],
         );
@@ -357,9 +367,7 @@ class AppDatabase extends _$AppDatabase {
           projectMap[project.id]!.frames.add(frameMap[frame.id]!);
         }
 
-        final containsLayer = frameMap[frame.id]!
-            .layers
-            .any((element) => element.layerId == layer?.id);
+        final containsLayer = frameMap[frame.id]!.layers.any((element) => element.layerId == layer?.id);
         if (layer != null && layer.frameId == frame.id && !containsLayer) {
           frameMap[frame.id]!.layers.add(Layer(
                 layerId: layer.id,
@@ -379,6 +387,27 @@ class AppDatabase extends _$AppDatabase {
     return projectMap[projectId];
   }
 
+  Future<Project> getProjectByRemoteId(int remoteId) async {
+    final query = select(projectsTable)..where((tbl) => tbl.remoteId.equals(remoteId));
+
+    final projectRow = await query.getSingleOrNull();
+    if (projectRow == null) {
+      throw Exception('Project with remote ID $remoteId not found');
+    }
+
+    return Project(
+      id: projectRow.id,
+      name: projectRow.name,
+      width: projectRow.width,
+      height: projectRow.height,
+      thumbnail: projectRow.thumbnail,
+      createdAt: projectRow.createdAt,
+      editedAt: projectRow.editedAt,
+      isCloudSynced: projectRow.isCloudSynced,
+      remoteId: projectRow.remoteId,
+    );
+  }
+
   Future<Project> insertProject(Project project) async {
     final projectId = await into(projectsTable).insert(ProjectsTableCompanion(
       name: Value(project.name),
@@ -387,6 +416,8 @@ class AppDatabase extends _$AppDatabase {
       thumbnail: Value(project.thumbnail),
       createdAt: Value(project.createdAt),
       editedAt: Value(project.editedAt),
+      isCloudSynced: Value(project.isCloudSynced),
+      remoteId: Value(project.remoteId),
     ));
 
     final states = <AnimationStateModel>[];
@@ -447,6 +478,8 @@ class AppDatabase extends _$AppDatabase {
       thumbnail: Value(project.thumbnail),
       createdAt: Value(project.createdAt),
       editedAt: Value(project.editedAt),
+      isCloudSynced: Value(project.isCloudSynced),
+      remoteId: Value(project.remoteId),
     ));
 
     for (final state in project.states) {
@@ -541,21 +574,30 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> deleteProject(int projectId) async {
-    await (delete(projectsTable)..where((tbl) => tbl.id.equals(projectId)))
-        .go();
-    await (delete(animationStateTable)
-          ..where((tbl) => tbl.projectId.equals(projectId)))
-        .go();
-    await (delete(framesTable)..where((tbl) => tbl.projectId.equals(projectId)))
-        .go();
-    await (delete(layersTable)..where((tbl) => tbl.projectId.equals(projectId)))
-        .go();
+    await (delete(projectsTable)..where((tbl) => tbl.id.equals(projectId))).go();
+    await (delete(animationStateTable)..where((tbl) => tbl.projectId.equals(projectId))).go();
+    await (delete(framesTable)..where((tbl) => tbl.projectId.equals(projectId))).go();
+    await (delete(layersTable)..where((tbl) => tbl.projectId.equals(projectId))).go();
   }
 
   Future<void> renameProject(int projectId, String name) async {
     (update(projectsTable)
       ..where((tbl) => tbl.id.equals(projectId))
       ..write(ProjectsTableCompanion(name: Value(name))));
+  }
+
+  Future<void> markProjectAsSynced(int projectId, int? remoteProjectId) async {
+    await (update(projectsTable)..where((tbl) => tbl.id.equals(projectId))).write(ProjectsTableCompanion(
+      isCloudSynced: const Value(true),
+      remoteId: Value(remoteProjectId),
+    ));
+  }
+
+  Future<void> markProjectAsUnsynced(int projectId) async {
+    await (update(projectsTable)..where((tbl) => tbl.id.equals(projectId))).write(const ProjectsTableCompanion(
+      isCloudSynced: Value(false),
+      remoteId: Value(null),
+    ));
   }
 
   Future<AnimationStateModel> insertState(
@@ -589,10 +631,8 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> deleteState(int stateId) async {
-    await (delete(animationStateTable)..where((tbl) => tbl.id.equals(stateId)))
-        .go();
-    await (delete(framesTable)..where((tbl) => tbl.stateId.equals(stateId)))
-        .go();
+    await (delete(animationStateTable)..where((tbl) => tbl.id.equals(stateId))).go();
+    await (delete(framesTable)..where((tbl) => tbl.stateId.equals(stateId))).go();
   }
 
   Future<AnimationFrame> insertFrame(
@@ -675,8 +715,7 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteFrame(int frameId) async {
     await (delete(framesTable)..where((tbl) => tbl.id.equals(frameId))).go();
-    await (delete(layersTable)..where((tbl) => tbl.frameId.equals(frameId)))
-        .go();
+    await (delete(layersTable)..where((tbl) => tbl.frameId.equals(frameId))).go();
   }
 
   Future<Layer> insertLayer(int projectId, int frameId, Layer layer) async {

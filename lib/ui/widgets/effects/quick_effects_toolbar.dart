@@ -7,9 +7,9 @@ class QuickEffectsToolbar extends StatelessWidget {
   final Function(Effect) onApplyEffect;
 
   const QuickEffectsToolbar({
-    Key? key,
+    super.key,
     required this.onApplyEffect,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +40,30 @@ class QuickEffectsToolbar extends StatelessWidget {
             'Sepia',
             Icons.filter_vintage,
             () => onApplyEffect(SepiaEffect()),
+          ),
+          _buildEffectButton(
+            context,
+            'Watercolor', // New watercolor effect button
+            Icons.water_drop, // Using water_drop icon for watercolor
+            () => onApplyEffect(WatercolorEffect()),
+          ),
+          _buildEffectButton(
+            context,
+            'Halftone', // New halftone effect button
+            Icons.grid_3x3, // Using grid_3x3 icon for halftone
+            () => onApplyEffect(HalftoneEffect()),
+          ),
+          _buildEffectButton(
+            context,
+            'Glow', // New glow effect button
+            Icons.light_mode, // Using light_mode icon for glow
+            () => onApplyEffect(GlowEffect()),
+          ),
+          _buildEffectButton(
+            context,
+            'Oil Paint', // New glow effect button
+            Icons.brush, // Using brush icon for oil paint
+            () => onApplyEffect(OilPaintEffect()),
           ),
           _buildEffectButton(
             context,
@@ -160,8 +184,7 @@ class EnhancedEffectsDialog extends StatelessWidget {
             // Quick effects toolbar
             QuickEffectsToolbar(
               onApplyEffect: (effect) {
-                final updatedEffects = List<Effect>.from(layer.effects)
-                  ..add(effect);
+                final updatedEffects = List<Effect>.from(layer.effects)..add(effect);
                 final updatedLayer = layer.copyWith(effects: updatedEffects);
                 onLayerUpdated(updatedLayer);
                 Navigator.of(context).pop();
@@ -174,6 +197,8 @@ class EnhancedEffectsDialog extends StatelessWidget {
               child: EffectsPanel(
                 layer: layer,
                 onLayerUpdated: onLayerUpdated,
+                width: width,
+                height: height,
               ),
             ),
           ],

@@ -241,7 +241,7 @@ final subscriptionOffersProvider =
 );
 
 typedef SubscriptionOffersRef = AutoDisposeProviderRef<List<SubscriptionOffer>>;
-String _$subscriptionStateHash() => r'670dede2b3083524447ca8297aa66873332e37e8';
+String _$subscriptionStateHash() => r'c181df7836c89144878343880de8437a5366b9d6';
 
 /// See also [SubscriptionState].
 @ProviderFor(SubscriptionState)

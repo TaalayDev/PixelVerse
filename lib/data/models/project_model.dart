@@ -13,6 +13,8 @@ class Project with EquatableMixin {
   final List<AnimationFrame> frames;
   final List<AnimationStateModel> states;
   final Uint8List? thumbnail;
+  final bool isCloudSynced;
+  final int? remoteId;
   final DateTime createdAt;
   final DateTime editedAt;
 
@@ -24,6 +26,8 @@ class Project with EquatableMixin {
     required this.createdAt,
     required this.editedAt,
     this.thumbnail,
+    this.isCloudSynced = false,
+    this.remoteId,
     this.states = const [],
     this.frames = const [],
   });
@@ -36,6 +40,8 @@ class Project with EquatableMixin {
     List<AnimationStateModel>? states,
     List<AnimationFrame>? frames,
     Uint8List? thumbnail,
+    bool? isCloudSynced,
+    int? remoteId,
     DateTime? createdAt,
     DateTime? editedAt,
   }) {
@@ -46,6 +52,8 @@ class Project with EquatableMixin {
       height: height ?? this.height,
       states: states ?? this.states,
       frames: frames ?? this.frames,
+      isCloudSynced: isCloudSynced ?? this.isCloudSynced,
+      remoteId: remoteId ?? this.remoteId,
       thumbnail: thumbnail ?? this.thumbnail,
       createdAt: createdAt ?? this.createdAt,
       editedAt: editedAt ?? this.editedAt,
@@ -61,6 +69,8 @@ class Project with EquatableMixin {
       'states': states.map((state) => state.toJson()).toList(),
       'frames': frames.map((frame) => frame.toJson()).toList(),
       'thumbnail': thumbnail?.toList(),
+      'isCloudSynced': isCloudSynced,
+      'remoteId': remoteId,
       'createdAt': createdAt.millisecondsSinceEpoch,
       'editedAt': editedAt.millisecondsSinceEpoch,
     };
@@ -74,8 +84,7 @@ class Project with EquatableMixin {
       height: json['height'] as int,
       states: (json['states'] as List)
           .map(
-            (state) =>
-                AnimationStateModel.fromJson(state as Map<String, dynamic>),
+            (state) => AnimationStateModel.fromJson(state as Map<String, dynamic>),
           )
           .toList(),
       frames: (json['frames'] as List)
@@ -83,9 +92,9 @@ class Project with EquatableMixin {
             (layer) => AnimationFrame.fromJson(layer as Map<String, dynamic>),
           )
           .toList(),
-      thumbnail: json['thumbnail'] != null
-          ? Uint8List.fromList(json['thumbnail'].cast<int>())
-          : null,
+      isCloudSynced: json['isCloudSynced'] as bool? ?? false,
+      remoteId: json['remoteId'] as int?,
+      thumbnail: json['thumbnail'] != null ? Uint8List.fromList(json['thumbnail'].cast<int>()) : null,
       createdAt: DateTime.fromMillisecondsSinceEpoch(json['createdAt'] as int),
       editedAt: DateTime.fromMillisecondsSinceEpoch(json['editedAt'] as int),
     );
@@ -93,5 +102,5 @@ class Project with EquatableMixin {
 
   @override
   List<Object?> get props =>
-      [id, name, width, height, frames, states, thumbnail, createdAt, editedAt];
+      [id, name, width, height, frames, states, thumbnail, createdAt, editedAt, isCloudSynced, remoteId];
 }

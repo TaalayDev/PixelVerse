@@ -5,7 +5,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../../core/utils.dart';
 import '../../data/models/subscription_model.dart';
 import '../../pixel/image_painter.dart';
-import '../../providers/pixel_controller_provider.dart';
+import '../../pixel/providers/pixel_notifier_provider.dart';
 import '../../data.dart';
 import '../widgets.dart';
 import 'animation_timeline.dart';
@@ -85,8 +85,7 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
   }
 
   void _savePreviewImage() async {
-    final boundary =
-        previewKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+    final boundary = previewKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
     final image = await boundary.toImage();
 
     await FileUtils(context).saveUIImage(
@@ -167,9 +166,7 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                           ),
                     value: 'gif',
                     groupValue: format,
-                    onChanged: subscription.isPro
-                        ? (String? value) => setState(() => format = value!)
-                        : null,
+                    onChanged: subscription.isPro ? (String? value) => setState(() => format = value!) : null,
                     contentPadding: EdgeInsets.zero,
                   ),
                   RadioListTile(
@@ -227,8 +224,7 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                                 child: Text('$value'),
                               );
                             }).toList(),
-                            onChanged: (value) =>
-                                setState(() => spriteSheetColumns = value!),
+                            onChanged: (value) => setState(() => spriteSheetColumns = value!),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -239,8 +235,7 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                             ),
                             initialValue: spriteSheetSpacing.toString(),
                             keyboardType: TextInputType.number,
-                            onChanged: (value) => setState(() =>
-                                spriteSheetSpacing = int.tryParse(value) ?? 0),
+                            onChanged: (value) => setState(() => spriteSheetSpacing = int.tryParse(value) ?? 0),
                           ),
                         ),
                       ],
@@ -266,11 +261,9 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                           keyboardType: TextInputType.number,
                           onChanged: (value) {
                             setState(() {
-                              width = double.tryParse(value) ??
-                                  widget.state.width.toDouble();
+                              width = double.tryParse(value) ?? widget.state.width.toDouble();
 
-                              double originalRatio =
-                                  widget.state.width / widget.state.height;
+                              double originalRatio = widget.state.width / widget.state.height;
                               height = width / originalRatio;
 
                               heightController.text = height.toString();
@@ -288,10 +281,8 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                           keyboardType: TextInputType.number,
                           onChanged: (value) {
                             setState(() {
-                              height = double.tryParse(value) ??
-                                  widget.state.height.toDouble();
-                              double originalRatio =
-                                  widget.state.width / widget.state.height;
+                              height = double.tryParse(value) ?? widget.state.height.toDouble();
+                              double originalRatio = widget.state.width / widget.state.height;
                               width = height / originalRatio;
 
                               widthController.text = width.toString();
@@ -309,8 +300,7 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                       child: () {
                         if (format == 'png') {
                           return AspectRatio(
-                            aspectRatio:
-                                widget.state.width / widget.state.height,
+                            aspectRatio: widget.state.width / widget.state.height,
                             child: LayersPreview(
                               width: widget.state.width,
                               height: widget.state.height,
@@ -429,9 +419,7 @@ class SpriteSheetPreview extends StatelessWidget {
           height: height,
           layers: frame.layers,
           builder: (context, image) {
-            return image != null
-                ? CustomPaint(painter: ImagePainter(image))
-                : const ColoredBox(color: Colors.white);
+            return image != null ? CustomPaint(painter: ImagePainter(image)) : const ColoredBox(color: Colors.white);
           },
         );
       },

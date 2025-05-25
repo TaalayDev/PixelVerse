@@ -82,6 +82,23 @@ class Projects extends _$Projects {
     return ref.read(projectRepo).deleteProject(project);
   }
 
+  Future<void> markProjectAsSynced(int projectId, int remoteProjectId) async {
+    ref.read(analyticsProvider).logEvent(name: 'project_marked_synced', parameters: {
+      'project_id': projectId,
+      'remote_project_id': remoteProjectId,
+    });
+
+    return ref.read(projectRepo).markProjectAsSynced(projectId, remoteProjectId);
+  }
+
+  Future<void> markProjectAsUnsynced(int projectId) async {
+    ref.read(analyticsProvider).logEvent(name: 'project_marked_unsynced', parameters: {
+      'project_id': projectId,
+    });
+
+    return ref.read(projectRepo).markProjectAsUnsynced(projectId);
+  }
+
   Future<String?> importProject(BuildContext context) async {
     try {
       final contents = await FileUtils(context).readProjectFileContents();
@@ -96,3 +113,32 @@ class Projects extends _$Projects {
     }
   }
 }
+
+final downloadedProjectsProvider = StreamProvider<Set<int>>((ref) {
+  return ref.read(projectRepo).fetchProjects().map((projects) {
+    // Extract remote IDs of all locally synced projects
+    return projects
+        .where((project) => project.isCloudSynced && project.remoteId != null)
+        .map((project) => project.remoteId!)
+        .toSet();
+  });
+});
+
+final isProjectDownloadedProvider = Provider.family<bool, int>((ref, remoteId) {
+  final downloadedProjects = ref.watch(downloadedProjectsProvider);
+  return downloadedProjects.when(
+    data: (downloadedIds) => downloadedIds.contains(remoteId),
+    loading: () => false,
+    error: (_, __) => false,
+  );
+});
+
+final localProjectByRemoteIdProvider = Provider.family<Project?, int>((ref, remoteId) {
+  final projects = ref.read(projectsProvider);
+  return projects.when(
+    data: (projectsList) =>
+        projectsList.where((project) => project.isCloudSynced && project.remoteId == remoteId).firstOrNull,
+    loading: () => null,
+    error: (_, __) => null,
+  );
+});

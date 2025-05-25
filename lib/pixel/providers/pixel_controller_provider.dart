@@ -1,0 +1,564 @@
+import 'dart:typed_data';
+import 'package:flutter/material.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../core/pixel_point.dart';
+import '../../data.dart';
+import '../../providers/providers.dart';
+import '../services/animation_service.dart';
+import '../services/drawing_service.dart';
+import '../services/frame_service.dart';
+import '../services/import_export_service.dart';
+import '../services/layer_service.dart';
+import '../services/selection_service.dart';
+import '../services/undo_redo_service.dart';
+import '../pixel_draw_state.dart';
+import '../tools.dart';
+
+part 'pixel_controller_provider.g.dart';
+
+@riverpod
+class PixelDrawController extends _$PixelDrawController {
+  // Services
+  late final LayerService _layerService;
+  late final FrameService _frameService;
+  late final AnimationService _animationService;
+  late final DrawingService _drawingService;
+  late final SelectionService _selectionService;
+  late final UndoRedoService _undoRedoService;
+  late final ImportExportService _importExportService;
+
+  // Current project reference
+  late Project _project;
+
+  @override
+  PixelDrawState build(Project project) {
+    _project = project;
+
+    // Initialize services
+    _layerService = LayerService(ref.read(projectRepo));
+    _frameService = FrameService(ref.read(projectRepo));
+    _animationService = AnimationService(ref.read(projectRepo));
+    _drawingService = DrawingService();
+    _selectionService = SelectionService();
+    _undoRedoService = UndoRedoService();
+    _importExportService = ImportExportService();
+
+    return PixelDrawState(
+      width: project.width,
+      height: project.height,
+      animationStates: List<AnimationStateModel>.from(project.states),
+      frames: project.frames.isNotEmpty ? List<AnimationFrame>.from(project.frames) : _createDefaultFrame(),
+      currentColor: Colors.black,
+      currentTool: PixelTool.pencil,
+      mirrorAxis: MirrorAxis.vertical,
+      selectionRect: null,
+      canUndo: _undoRedoService.canUndo,
+      canRedo: _undoRedoService.canRedo,
+    );
+  }
+
+  List<AnimationFrame> _createDefaultFrame() {
+    return [
+      AnimationFrame(
+        id: 0,
+        stateId: 0,
+        name: 'Frame 1',
+        duration: 100,
+        layers: [
+          Layer(
+            layerId: 0,
+            id: 'default-layer',
+            name: 'Layer 1',
+            pixels: Uint32List(_project.width * _project.height),
+            order: 0,
+          ),
+        ],
+      ),
+    ];
+  }
+
+  // Getters
+  Project get project => _project;
+  AnimationFrame get currentFrame => state.currentFrame;
+  Layer get currentLayer => state.currentLayer;
+  bool get canUndo => _undoRedoService.canUndo;
+  bool get canRedo => _undoRedoService.canRedo;
+
+  // State management
+  void _saveState() {
+    _undoRedoService.saveState(state);
+    state = state.copyWith(canUndo: canUndo, canRedo: canRedo);
+  }
+
+  void _updateProject() {
+    ref.read(projectRepo).updateProject(
+          _project.copyWith(
+            frames: state.frames,
+            states: state.animationStates,
+            editedAt: DateTime.now(),
+          ),
+        );
+  }
+
+  // Drawing operations
+  void setPixel(int x, int y) {
+    _saveState();
+
+    final modifier = _drawingService.createModifier(
+      PixelModifier.none,
+      state.mirrorAxis,
+    );
+
+    final newPixels = _drawingService.setPixel(
+      pixels: currentLayer.pixels,
+      x: x,
+      y: y,
+      width: state.width,
+      height: state.height,
+      color: state.currentColor,
+      selection: state.selectionRect,
+      modifier: modifier,
+    );
+
+    _updateCurrentLayerPixels(newPixels);
+  }
+
+  void fillPixels(List<PixelPoint<int>> points, PixelModifier modifier) {
+    _saveState();
+
+    final newPixels = _drawingService.fillPixels(
+      pixels: currentLayer.pixels,
+      points: points,
+      width: state.width,
+      color: state.currentColor,
+      selection: state.selectionRect,
+    );
+
+    _updateCurrentLayerPixels(newPixels);
+  }
+
+  void floodFill(int x, int y) {
+    _saveState();
+
+    final newPixels = _drawingService.floodFill(
+      pixels: currentLayer.pixels,
+      x: x,
+      y: y,
+      width: state.width,
+      height: state.height,
+      fillColor: state.currentColor,
+      selection: state.selectionRect,
+    );
+
+    _updateCurrentLayerPixels(newPixels);
+  }
+
+  void clearCanvas() {
+    _saveState();
+
+    final newPixels = _drawingService.clearPixels(state.width, state.height);
+    _updateCurrentLayerPixels(newPixels);
+  }
+
+  Color getPixelColor(int x, int y) {
+    return _drawingService.getPixelColor(
+      pixels: currentLayer.pixels,
+      x: x,
+      y: y,
+      width: state.width,
+      height: state.height,
+    );
+  }
+
+  // Layer operations
+  Future<void> addLayer(String name) async {
+    final order = _layerService.calculateNextLayerOrder(currentFrame.layers);
+
+    final newLayer = await _layerService.createLayer(
+      projectId: _project.id,
+      frameId: currentFrame.id,
+      name: name,
+      width: state.width,
+      height: state.height,
+      order: order,
+    );
+
+    final updatedLayers = [...currentFrame.layers, newLayer]..sort((a, b) => a.order.compareTo(b.order));
+
+    final updatedFrame = currentFrame.copyWith(layers: updatedLayers);
+    _updateCurrentFrame(updatedFrame);
+
+    state = state.copyWith(currentLayerIndex: updatedLayers.length - 1);
+  }
+
+  Future<void> removeLayer(int index) async {
+    if (currentFrame.layers.length <= 1) return;
+
+    final layerToRemove = currentFrame.layers[index];
+    await _layerService.deleteLayer(layerToRemove.layerId);
+
+    final updatedLayers = List<Layer>.from(currentFrame.layers)..removeAt(index);
+
+    // Reorder remaining layers
+    final reorderedLayers = updatedLayers.indexed.map((indexed) {
+      final (i, layer) = indexed;
+      return layer.copyWith(order: i);
+    }).toList();
+
+    final updatedFrame = currentFrame.copyWith(layers: reorderedLayers);
+    _updateCurrentFrame(updatedFrame);
+
+    // Adjust current layer index
+    final newLayerIndex = index >= reorderedLayers.length ? reorderedLayers.length - 1 : index;
+
+    state = state.copyWith(currentLayerIndex: newLayerIndex);
+  }
+
+  void selectLayer(int index) {
+    if (index < 0 || index >= currentFrame.layers.length) return;
+    state = state.copyWith(currentLayerIndex: index);
+  }
+
+  Future<void> toggleLayerVisibility(int index) async {
+    final layer = currentFrame.layers[index];
+    final updatedLayer = _layerService.toggleLayerVisibility(layer);
+
+    await _updateLayerAndFrame(index, updatedLayer);
+  }
+
+  Future<void> reorderLayers(int oldIndex, int newIndex) async {
+    final reorderedLayers = _layerService.reorderLayers(
+      currentFrame.layers,
+      oldIndex,
+      newIndex,
+    );
+
+    final updatedFrame = currentFrame.copyWith(layers: reorderedLayers);
+    _updateCurrentFrame(updatedFrame);
+
+    final newCurrentIndex = oldIndex == state.currentLayerIndex ? newIndex : state.currentLayerIndex;
+
+    state = state.copyWith(currentLayerIndex: newCurrentIndex);
+    _updateProject();
+  }
+
+  void updateLayer(Layer updatedLayer) {
+    final layerIndex = currentFrame.layers.indexWhere(
+      (layer) => layer.layerId == updatedLayer.layerId,
+    );
+
+    if (layerIndex != -1) {
+      final updatedLayers = List<Layer>.from(currentFrame.layers);
+      updatedLayers[layerIndex] = updatedLayer;
+
+      final updatedFrame = currentFrame.copyWith(layers: updatedLayers);
+      _updateCurrentFrame(updatedFrame);
+      _updateProject();
+    }
+  }
+
+  // Frame operations
+  Future<void> addFrame(String name, {int? copyFrameId, int? stateId}) async {
+    final copyFrame = copyFrameId != null ? state.frames.firstWhere((f) => f.id == copyFrameId) : null;
+
+    final order = _frameService.calculateNextFrameOrder(state.frames);
+
+    final newFrame = await _frameService.createFrame(
+      projectId: _project.id,
+      name: name,
+      stateId: stateId ?? state.currentAnimationState.id,
+      width: state.width,
+      height: state.height,
+      copyFromFrame: copyFrame,
+      order: order,
+    );
+
+    final updatedFrames = [...state.frames, newFrame];
+    state = state.copyWith(
+      frames: updatedFrames,
+      currentFrameIndex: state.currentFrames.length,
+      currentLayerIndex: 0,
+    );
+  }
+
+  Future<void> removeFrame(int index) async {
+    if (state.frames.length <= 1) return;
+
+    final frameToRemove = state.frames[index];
+    await _frameService.deleteFrame(frameToRemove.id);
+
+    final updatedFrames = List<AnimationFrame>.from(state.frames)..removeAt(index);
+
+    final newFrameIndex = _frameService.calculateSafeFrameIndex(
+      updatedFrames,
+      state.currentFrameIndex,
+      index,
+    );
+
+    // Filter frames for current state
+    final currentStateFrames = _animationService.removeFramesForState(
+      updatedFrames,
+      state.currentAnimationState.id,
+    );
+
+    final adjustedFrameIndex =
+        newFrameIndex >= currentStateFrames.length ? currentStateFrames.length - 1 : newFrameIndex;
+
+    state = state.copyWith(
+      frames: updatedFrames,
+      currentFrameIndex: adjustedFrameIndex.clamp(0, currentStateFrames.length - 1),
+      currentLayerIndex: 0,
+    );
+  }
+
+  void selectFrame(int frameId) {
+    final index = state.currentFrames.indexWhere((frame) => frame.id == frameId);
+    if (index >= 0) {
+      state = state.copyWith(
+        currentFrameIndex: index,
+        currentLayerIndex: 0,
+      );
+    }
+  }
+
+  void nextFrame() {
+    final nextIndex = (state.currentFrameIndex + 1) % state.currentFrames.length;
+    state = state.copyWith(
+      currentFrameIndex: nextIndex,
+      currentLayerIndex: 0,
+    );
+  }
+
+  void previousFrame() {
+    final prevIndex = (state.currentFrameIndex - 1 + state.currentFrames.length) % state.currentFrames.length;
+    state = state.copyWith(
+      currentFrameIndex: prevIndex,
+      currentLayerIndex: 0,
+    );
+  }
+
+  // Animation state operations
+  Future<void> addAnimationState(String name, int frameRate) async {
+    final newState = await _animationService.createAnimationState(
+      projectId: _project.id,
+      name: name,
+      frameRate: frameRate,
+    );
+
+    state = state.copyWith(
+      animationStates: [...state.animationStates, newState],
+      currentAnimationStateIndex: state.animationStates.length,
+      currentFrameIndex: 0,
+      currentLayerIndex: 0,
+    );
+  }
+
+  Future<void> removeAnimationState(int stateId) async {
+    if (!_animationService.canDeleteState(state.animationStates)) return;
+
+    final stateIndex = _animationService.findStateIndex(state.animationStates, stateId);
+    if (stateIndex < 0) return;
+
+    await _animationService.deleteAnimationState(stateId);
+
+    final updatedStates = List<AnimationStateModel>.from(state.animationStates)..removeAt(stateIndex);
+
+    final updatedFrames = _animationService.removeFramesForState(
+      state.frames,
+      stateId,
+    );
+
+    final newStateIndex = _animationService.calculateSafeStateIndex(
+      updatedStates,
+      state.currentAnimationStateIndex,
+      stateIndex,
+    );
+
+    state = state.copyWith(
+      animationStates: updatedStates,
+      frames: updatedFrames,
+      currentAnimationStateIndex: newStateIndex,
+      currentFrameIndex: 0,
+      currentLayerIndex: 0,
+    );
+  }
+
+  void selectAnimationState(int stateId) {
+    final index = _animationService.findStateIndex(state.animationStates, stateId);
+    if (index >= 0) {
+      state = state.copyWith(
+        currentAnimationStateIndex: index,
+        currentFrameIndex: 0,
+        currentLayerIndex: 0,
+      );
+    }
+  }
+
+  // Selection operations
+  void setSelection(SelectionModel? selection) {
+    _selectionService.setSelection(selection, currentLayer.pixels);
+    state = state.copyWith(selectionRect: selection);
+  }
+
+  void moveSelection(SelectionModel newSelection) {
+    _saveState();
+
+    final newPixels = _selectionService.moveSelection(
+      newSelection: newSelection,
+      currentPixels: currentLayer.pixels,
+      width: state.width,
+      height: state.height,
+    );
+
+    _updateCurrentLayerPixels(newPixels);
+    state = state.copyWith(selectionRect: newSelection);
+  }
+
+  void clearSelection() {
+    _selectionService.clearSelection();
+    state = state.copyWith(selectionRect: null);
+  }
+
+  // Undo/Redo operations
+  void undo() {
+    final previousState = _undoRedoService.undo(state);
+    if (previousState != null) {
+      state = previousState;
+      if (previousState.selectionRect != null) {
+        _selectionService.setSelection(
+          previousState.selectionRect,
+          currentLayer.pixels,
+        );
+      }
+      _updateProject();
+    }
+  }
+
+  void redo() {
+    final nextState = _undoRedoService.redo(state);
+    if (nextState != null) {
+      state = nextState;
+      if (nextState.selectionRect != null) {
+        _selectionService.setSelection(
+          nextState.selectionRect,
+          currentLayer.pixels,
+        );
+      }
+      _updateProject();
+    }
+  }
+
+  // Tool and color operations
+  void setCurrentTool(PixelTool tool) {
+    state = state.copyWith(currentTool: tool);
+  }
+
+  void setCurrentColor(Color color) {
+    state = state.copyWith(currentColor: color);
+  }
+
+  // Import/Export operations
+  Future<void> exportProjectAsJson(BuildContext context) async {
+    await _importExportService.exportProjectAsJson(
+      context: context,
+      project: _project,
+    );
+  }
+
+  Future<void> exportImage({
+    required BuildContext context,
+    bool withBackground = false,
+    double? exportWidth,
+    double? exportHeight,
+  }) async {
+    await _importExportService.exportImage(
+      context: context,
+      project: _project,
+      layers: currentFrame.layers,
+      withBackground: withBackground,
+      exportWidth: exportWidth,
+      exportHeight: exportHeight,
+    );
+  }
+
+  Future<void> shareProject(BuildContext context) async {
+    await _importExportService.shareProject(
+      context: context,
+      project: _project,
+      layers: currentFrame.layers,
+    );
+  }
+
+  Future<void> importImageAsLayer(BuildContext context) async {
+    final newLayer = await _importExportService.importImageAsLayer(
+      context: context,
+      width: state.width,
+      height: state.height,
+      layerName: 'Imported Image',
+    );
+
+    if (newLayer != null) {
+      final createdLayer = await _layerService.createLayer(
+        projectId: _project.id,
+        frameId: currentFrame.id,
+        name: newLayer.name,
+        width: state.width,
+        height: state.height,
+        order: _layerService.calculateNextLayerOrder(currentFrame.layers),
+      );
+
+      final layerWithPixels = createdLayer.copyWith(pixels: newLayer.pixels);
+
+      final updatedLayers = [...currentFrame.layers, layerWithPixels];
+      final updatedFrame = currentFrame.copyWith(layers: updatedLayers);
+      _updateCurrentFrame(updatedFrame);
+
+      state = state.copyWith(currentLayerIndex: updatedLayers.length - 1);
+      _updateProject();
+    }
+  }
+
+  // Helper methods
+  void _updateCurrentLayerPixels(Uint32List newPixels) {
+    final updatedLayer = currentLayer.copyWith(pixels: newPixels);
+    final updatedLayers = List<Layer>.from(currentFrame.layers);
+    updatedLayers[state.currentLayerIndex] = updatedLayer;
+
+    final updatedFrame = currentFrame.copyWith(layers: updatedLayers);
+    _updateCurrentFrame(updatedFrame);
+
+    _layerService.updateLayer(
+      projectId: _project.id,
+      frameId: currentFrame.id,
+      layer: updatedLayer,
+    );
+    _updateProject();
+  }
+
+  Future<void> _updateLayerAndFrame(int layerIndex, Layer updatedLayer) async {
+    final updatedLayers = List<Layer>.from(currentFrame.layers);
+    updatedLayers[layerIndex] = updatedLayer;
+
+    final updatedFrame = currentFrame.copyWith(layers: updatedLayers);
+    _updateCurrentFrame(updatedFrame);
+
+    await _layerService.updateLayer(
+      projectId: _project.id,
+      frameId: currentFrame.id,
+      layer: updatedLayer,
+    );
+  }
+
+  void _updateCurrentFrame(AnimationFrame updatedFrame) {
+    final frameIndex = state.frames.indexWhere(
+      (frame) => frame.id == currentFrame.id,
+    );
+
+    if (frameIndex != -1) {
+      final updatedFrames = List<AnimationFrame>.from(state.frames);
+      updatedFrames[frameIndex] = updatedFrame;
+      state = state.copyWith(frames: updatedFrames);
+    }
+  }
+}

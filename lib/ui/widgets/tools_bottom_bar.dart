@@ -4,7 +4,7 @@ import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
 import '../../data/models/subscription_model.dart';
 import '../../pixel/tools.dart';
-import '../../providers/pixel_controller_provider.dart';
+import '../../pixel/providers/pixel_notifier_provider.dart';
 import 'color_palette_panel.dart';
 import 'layers_panel.dart';
 import 'styled_tool_bottom_sheet.dart';

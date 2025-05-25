@@ -78,6 +78,13 @@ class _LayersPreviewState extends State<LayersPreview> {
   void dispose() {
     _debounceTimer?.cancel();
     _debounceTimer = null;
+    if (_image != null) {
+      _image!.dispose();
+      _image = null;
+    }
+    if (_future != null) {
+      _future = null;
+    }
     super.dispose();
   }
 

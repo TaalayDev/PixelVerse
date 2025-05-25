@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'pixel_controller_provider.dart';
+part of 'pixel_draw_state.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -24,7 +24,7 @@ mixin _$PixelDrawState {
   int get currentAnimationStateIndex => throw _privateConstructorUsedError;
   int get currentFrameIndex => throw _privateConstructorUsedError;
   int get currentLayerIndex => throw _privateConstructorUsedError;
-  ui.Color get currentColor => throw _privateConstructorUsedError;
+  Color get currentColor => throw _privateConstructorUsedError;
   PixelTool get currentTool => throw _privateConstructorUsedError;
   MirrorAxis get mirrorAxis => throw _privateConstructorUsedError;
   SelectionModel? get selectionRect => throw _privateConstructorUsedError;
@@ -50,7 +50,7 @@ abstract class $PixelDrawStateCopyWith<$Res> {
       int currentAnimationStateIndex,
       int currentFrameIndex,
       int currentLayerIndex,
-      ui.Color currentColor,
+      Color currentColor,
       PixelTool currentTool,
       MirrorAxis mirrorAxis,
       SelectionModel? selectionRect,
@@ -117,7 +117,7 @@ class _$PixelDrawStateCopyWithImpl<$Res, $Val extends PixelDrawState>
       currentColor: null == currentColor
           ? _value.currentColor
           : currentColor // ignore: cast_nullable_to_non_nullable
-              as ui.Color,
+              as Color,
       currentTool: null == currentTool
           ? _value.currentTool
           : currentTool // ignore: cast_nullable_to_non_nullable
@@ -158,7 +158,7 @@ abstract class _$$PixelDrawStateImplCopyWith<$Res>
       int currentAnimationStateIndex,
       int currentFrameIndex,
       int currentLayerIndex,
-      ui.Color currentColor,
+      Color currentColor,
       PixelTool currentTool,
       MirrorAxis mirrorAxis,
       SelectionModel? selectionRect,
@@ -223,7 +223,7 @@ class __$$PixelDrawStateImplCopyWithImpl<$Res>
       currentColor: null == currentColor
           ? _value.currentColor
           : currentColor // ignore: cast_nullable_to_non_nullable
-              as ui.Color,
+              as Color,
       currentTool: null == currentTool
           ? _value.currentTool
           : currentTool // ignore: cast_nullable_to_non_nullable
@@ -250,8 +250,7 @@ class __$$PixelDrawStateImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$PixelDrawStateImpl extends _PixelDrawState
-    with DiagnosticableTreeMixin {
+class _$PixelDrawStateImpl extends _PixelDrawState {
   const _$PixelDrawStateImpl(
       {required this.width,
       required this.height,
@@ -300,7 +299,7 @@ class _$PixelDrawStateImpl extends _PixelDrawState
   @JsonKey()
   final int currentLayerIndex;
   @override
-  final ui.Color currentColor;
+  final Color currentColor;
   @override
   final PixelTool currentTool;
   @override
@@ -315,29 +314,8 @@ class _$PixelDrawStateImpl extends _PixelDrawState
   final bool canRedo;
 
   @override
-  String toString({DiagnosticLevel minLevel = DiagnosticLevel.info}) {
+  String toString() {
     return 'PixelDrawState(width: $width, height: $height, animationStates: $animationStates, frames: $frames, currentAnimationStateIndex: $currentAnimationStateIndex, currentFrameIndex: $currentFrameIndex, currentLayerIndex: $currentLayerIndex, currentColor: $currentColor, currentTool: $currentTool, mirrorAxis: $mirrorAxis, selectionRect: $selectionRect, canUndo: $canUndo, canRedo: $canRedo)';
-  }
-
-  @override
-  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    super.debugFillProperties(properties);
-    properties
-      ..add(DiagnosticsProperty('type', 'PixelDrawState'))
-      ..add(DiagnosticsProperty('width', width))
-      ..add(DiagnosticsProperty('height', height))
-      ..add(DiagnosticsProperty('animationStates', animationStates))
-      ..add(DiagnosticsProperty('frames', frames))
-      ..add(DiagnosticsProperty(
-          'currentAnimationStateIndex', currentAnimationStateIndex))
-      ..add(DiagnosticsProperty('currentFrameIndex', currentFrameIndex))
-      ..add(DiagnosticsProperty('currentLayerIndex', currentLayerIndex))
-      ..add(DiagnosticsProperty('currentColor', currentColor))
-      ..add(DiagnosticsProperty('currentTool', currentTool))
-      ..add(DiagnosticsProperty('mirrorAxis', mirrorAxis))
-      ..add(DiagnosticsProperty('selectionRect', selectionRect))
-      ..add(DiagnosticsProperty('canUndo', canUndo))
-      ..add(DiagnosticsProperty('canRedo', canRedo));
   }
 
   @override
@@ -404,7 +382,7 @@ abstract class _PixelDrawState extends PixelDrawState {
       final int currentAnimationStateIndex,
       final int currentFrameIndex,
       final int currentLayerIndex,
-      required final ui.Color currentColor,
+      required final Color currentColor,
       required final PixelTool currentTool,
       required final MirrorAxis mirrorAxis,
       final SelectionModel? selectionRect,
@@ -427,7 +405,7 @@ abstract class _PixelDrawState extends PixelDrawState {
   @override
   int get currentLayerIndex;
   @override
-  ui.Color get currentColor;
+  Color get currentColor;
   @override
   PixelTool get currentTool;
   @override
@@ -442,4 +420,146 @@ abstract class _PixelDrawState extends PixelDrawState {
   @JsonKey(ignore: true)
   _$$PixelDrawStateImplCopyWith<_$PixelDrawStateImpl> get copyWith =>
       throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+mixin _$BackgroundImageState {
+  Uint8List? get image => throw _privateConstructorUsedError;
+  double get opacity => throw _privateConstructorUsedError;
+
+  @JsonKey(ignore: true)
+  $BackgroundImageStateCopyWith<BackgroundImageState> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $BackgroundImageStateCopyWith<$Res> {
+  factory $BackgroundImageStateCopyWith(BackgroundImageState value,
+          $Res Function(BackgroundImageState) then) =
+      _$BackgroundImageStateCopyWithImpl<$Res, BackgroundImageState>;
+  @useResult
+  $Res call({Uint8List? image, double opacity});
+}
+
+/// @nodoc
+class _$BackgroundImageStateCopyWithImpl<$Res,
+        $Val extends BackgroundImageState>
+    implements $BackgroundImageStateCopyWith<$Res> {
+  _$BackgroundImageStateCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? image = freezed,
+    Object? opacity = null,
+  }) {
+    return _then(_value.copyWith(
+      image: freezed == image
+          ? _value.image
+          : image // ignore: cast_nullable_to_non_nullable
+              as Uint8List?,
+      opacity: null == opacity
+          ? _value.opacity
+          : opacity // ignore: cast_nullable_to_non_nullable
+              as double,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$BackgroundImageStateImplCopyWith<$Res>
+    implements $BackgroundImageStateCopyWith<$Res> {
+  factory _$$BackgroundImageStateImplCopyWith(_$BackgroundImageStateImpl value,
+          $Res Function(_$BackgroundImageStateImpl) then) =
+      __$$BackgroundImageStateImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({Uint8List? image, double opacity});
+}
+
+/// @nodoc
+class __$$BackgroundImageStateImplCopyWithImpl<$Res>
+    extends _$BackgroundImageStateCopyWithImpl<$Res, _$BackgroundImageStateImpl>
+    implements _$$BackgroundImageStateImplCopyWith<$Res> {
+  __$$BackgroundImageStateImplCopyWithImpl(_$BackgroundImageStateImpl _value,
+      $Res Function(_$BackgroundImageStateImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? image = freezed,
+    Object? opacity = null,
+  }) {
+    return _then(_$BackgroundImageStateImpl(
+      image: freezed == image
+          ? _value.image
+          : image // ignore: cast_nullable_to_non_nullable
+              as Uint8List?,
+      opacity: null == opacity
+          ? _value.opacity
+          : opacity // ignore: cast_nullable_to_non_nullable
+              as double,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$BackgroundImageStateImpl extends _BackgroundImageState {
+  const _$BackgroundImageStateImpl({this.image, this.opacity = 0.3})
+      : super._();
+
+  @override
+  final Uint8List? image;
+  @override
+  @JsonKey()
+  final double opacity;
+
+  @override
+  String toString() {
+    return 'BackgroundImageState(image: $image, opacity: $opacity)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$BackgroundImageStateImpl &&
+            const DeepCollectionEquality().equals(other.image, image) &&
+            (identical(other.opacity, opacity) || other.opacity == opacity));
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      runtimeType, const DeepCollectionEquality().hash(image), opacity);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$BackgroundImageStateImplCopyWith<_$BackgroundImageStateImpl>
+      get copyWith =>
+          __$$BackgroundImageStateImplCopyWithImpl<_$BackgroundImageStateImpl>(
+              this, _$identity);
+}
+
+abstract class _BackgroundImageState extends BackgroundImageState {
+  const factory _BackgroundImageState(
+      {final Uint8List? image,
+      final double opacity}) = _$BackgroundImageStateImpl;
+  const _BackgroundImageState._() : super._();
+
+  @override
+  Uint8List? get image;
+  @override
+  double get opacity;
+  @override
+  @JsonKey(ignore: true)
+  _$$BackgroundImageStateImplCopyWith<_$BackgroundImageStateImpl>
+      get copyWith => throw _privateConstructorUsedError;
 }

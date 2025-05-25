@@ -8,25 +8,21 @@ import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter/material.dart';
+import 'package:pixelverse/core/extensions.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 
-import '../core/pixel_point.dart';
-import '../core/utils.dart';
-import '../pixel/effects/effects.dart';
-import '../pixel/tools.dart';
-import '../data.dart';
-import 'providers.dart';
+import '../../core/pixel_point.dart';
+import '../../core/utils.dart';
+import '../effects/effects.dart';
+import '../tools.dart';
+import '../../data.dart';
+import '../../providers/background_image_provider.dart';
+import '../../providers/providers.dart';
 
-part 'pixel_controller_provider.freezed.dart';
-part 'pixel_controller_provider.g.dart';
-
-extension ListX<T> on List<T> {
-  List<T> mapIndexed(T Function(int index, T item) f) {
-    return asMap().entries.map((e) => f(e.key, e.value)).toList();
-  }
-}
+part 'pixel_notifier_provider.freezed.dart';
+part 'pixel_notifier_provider.g.dart';
 
 @freezed
 class PixelDrawState with _$PixelDrawState {
@@ -596,8 +592,6 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
 
     final animationState = await ref.read(projectRepo).createState(project.id, newState);
 
-    addFrame('Frame 1', stateId: animationState.id);
-
     state = state.copyWith(
       animationStates: [...state.animationStates, animationState],
       currentAnimationStateIndex: state.animationStates.length,
@@ -894,12 +888,21 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     FileUtils(context).save('${project.name}.pxv', jsonString);
   }
 
-  void importImage(BuildContext context) async {
+  void importImage(BuildContext context, {bool background = false}) async {
     ref.read(analyticsProvider).logEvent(name: 'import_image');
 
     // Let user pick an image file and decode it to img.Image
     final img.Image? picked = await FileUtils(context).pickImageFile();
     if (picked == null) return;
+
+    if (background) {
+      ref.read(backgroundImageProvider.notifier).update((state) {
+        return state.copyWith(
+          image: Uint8List.fromList(img.encodePng(picked)),
+        );
+      });
+      return;
+    }
 
     // Resize to canvas size if needed
     img.Image resized = picked;

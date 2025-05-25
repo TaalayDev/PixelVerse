@@ -9,7 +9,7 @@ import 'package:pixelverse/pixel/tools/pencil_tool.dart';
 import '../../core/pixel_point.dart';
 import '../../pixel/tools.dart';
 import '../../data.dart';
-import '../../providers/pixel_controller_provider.dart';
+import '../../pixel/providers/pixel_notifier_provider.dart';
 import '../widgets/grid_painter.dart';
 import '../widgets/pixel_canvas.dart';
 
@@ -53,8 +53,7 @@ final tutorialProvider = Provider<DrawingTutorial>((ref) {
     steps: [
       DrawingStep(
         title: 'Draw the Trunk',
-        description:
-            'Start by drawing a simple brown trunk using the pencil tool.',
+        description: 'Start by drawing a simple brown trunk using the pencil tool.',
         imageAsset: 'assets/tutorials/tree/trunk.png',
         expectedPixels: [
           PixelPoint(10, 15, color: Colors.brown.value),
@@ -194,10 +193,7 @@ class DrawingTutorialScreen extends HookConsumerWidget {
                           left: 16,
                           right: 16,
                           child: Card(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surface
-                                .withOpacity(0.9),
+                            color: Theme.of(context).colorScheme.surface.withOpacity(0.9),
                             child: Padding(
                               padding: const EdgeInsets.all(16),
                               child: Text(
@@ -257,8 +253,7 @@ class DrawingTutorialScreen extends HookConsumerWidget {
           Text(
             'Step ${currentPage + 1} of $totalPages',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                 ),
           ),
         ],
@@ -268,25 +263,19 @@ class DrawingTutorialScreen extends HookConsumerWidget {
         IconButton(
           icon: const Icon(Entypo.brush),
           onPressed: onBrushTap,
-          color: currentTool.isPencil || currentTool.isBrush
-              ? Theme.of(context).colorScheme.primary
-              : null,
+          color: currentTool.isPencil || currentTool.isBrush ? Theme.of(context).colorScheme.primary : null,
         ),
         IconButton(
           icon: const Icon(Feather.square),
           onPressed: onShapeTap,
-          color: currentTool.isCircle ||
-                  currentTool.isRectangle ||
-                  currentTool.isLine
+          color: currentTool.isCircle || currentTool.isRectangle || currentTool.isLine
               ? Theme.of(context).colorScheme.primary
               : null,
         ),
         IconButton(
           icon: const Icon(Fontisto.eraser),
           onPressed: () {},
-          color: currentTool.isEraser
-              ? Theme.of(context).colorScheme.primary
-              : null,
+          color: currentTool.isEraser ? Theme.of(context).colorScheme.primary : null,
         ),
       ],
     );
@@ -491,9 +480,8 @@ class LessonStepCard extends StatelessWidget {
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: isCompleted
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.surfaceVariant,
+                backgroundColor:
+                    isCompleted ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.surfaceVariant,
                 child: isCompleted
                     ? Icon(
                         Icons.check,

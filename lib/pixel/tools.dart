@@ -99,6 +99,7 @@ abstract class Tool {
   bool get isDrag => type == PixelTool.drag;
   bool get isContour => type == PixelTool.contour;
   bool get isPen => type == PixelTool.pen;
+  bool get isLasso => type == PixelTool.lasso;
 
   void onStart(PixelDrawDetails details);
   void onMove(PixelDrawDetails details);

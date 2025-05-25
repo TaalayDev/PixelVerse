@@ -308,8 +308,8 @@ class ColorPalettePanel extends HookWidget {
                   )
                 : GridView.builder(
                     controller: scrollController,
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 6,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: MediaQuery.of(context).size.width > 600 ? 8 : 12,
                       crossAxisSpacing: 4,
                       mainAxisSpacing: 4,
                       childAspectRatio: 1.0,

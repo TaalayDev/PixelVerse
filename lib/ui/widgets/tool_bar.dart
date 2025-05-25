@@ -79,24 +79,88 @@ class ToolBar extends StatelessWidget {
                 builder: (context, tool, child) {
                   return Row(
                     children: [
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 4),
+                      PopupMenuButton(
+                        icon: const Icon(Feather.save, size: 18),
+                        tooltip: Strings.of(context).save,
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: 'import',
+                            child: ListTile(
+                              leading: const Icon(Feather.upload),
+                              title: Text(Strings.of(context).open),
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'projects',
+                            child: ListTile(
+                              leading: const Icon(Feather.list),
+                              title: Text(Strings.of(context).projects),
+                            ),
+                          ),
+                          if (kIsWeb ||
+                              defaultTargetPlatform == TargetPlatform.macOS ||
+                              defaultTargetPlatform == TargetPlatform.windows)
+                            PopupMenuItem(
+                              value: 'export',
+                              child: ListTile(
+                                leading: const Icon(Feather.save),
+                                title: Text(Strings.of(context).save),
+                              ),
+                            ),
+                          PopupMenuItem(
+                            value: 'exportAsImage',
+                            child: ListTile(
+                              leading: const Icon(Feather.image),
+                              title: Text(Strings.of(context).saveAs),
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'share',
+                            child: ListTile(
+                              leading: const Icon(Feather.share),
+                              title: Text(Strings.of(context).share),
+                            ),
+                          ),
+                        ],
+                        onSelected: (value) {
+                          switch (value) {
+                            case 'import':
+                              import?.call();
+                              break;
+                            case 'export':
+                              export?.call();
+                              break;
+                            case 'exportAsImage':
+                              exportAsImage?.call();
+                              break;
+                            case 'projects':
+                              Navigator.of(context).pop();
+                              break;
+                            case 'share':
+                              onShare?.call();
+                              break;
+                          }
+                        },
+                      ),
+                      VerticalDivider(
+                        width: 0,
+                        color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+                      ),
+                      const SizedBox(width: 8),
                       ValueListenableBuilder(
                         valueListenable: currentModifier,
                         builder: (context, modifier, child) {
                           return IconButton(
                             icon: SvgPicture.asset(
                               Assets.vectors.reflectSymmetry,
-                              color: modifier == PixelModifier.mirror
-                                  ? Theme.of(context).colorScheme.primary
-                                  : IconTheme.of(context).color,
+                              color: modifier == PixelModifier.mirror ? Colors.blue : IconTheme.of(context).color,
                               width: 24,
                               height: 24,
                             ),
                             onPressed: () {
                               onSelectModifier(
-                                modifier == PixelModifier.mirror
-                                    ? PixelModifier.none
-                                    : PixelModifier.mirror,
+                                modifier == PixelModifier.mirror ? PixelModifier.none : PixelModifier.mirror,
                               );
                             },
                           );
@@ -118,8 +182,7 @@ class ToolBar extends StatelessWidget {
                                     width: 8,
                                     height: 8,
                                     decoration: BoxDecoration(
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
+                                      color: Theme.of(context).colorScheme.primary,
                                       shape: BoxShape.circle,
                                     ),
                                   ),
@@ -144,9 +207,9 @@ class ToolBar extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                       ],
-                      const SizedBox(
+                      SizedBox(
                         height: 30,
-                        child: VerticalDivider(width: 0),
+                        child: VerticalDivider(width: 0, color: Theme.of(context).colorScheme.outline.withOpacity(0.3)),
                       ),
                       const SizedBox(width: 8),
                       IconButton.filledTonal(
@@ -154,8 +217,7 @@ class ToolBar extends StatelessWidget {
                         onPressed: showPrevFramesOpacity,
                         splashColor: Colors.transparent,
                         style: IconButton.styleFrom(
-                          backgroundColor:
-                              showPrevFrames ? null : Colors.transparent,
+                          backgroundColor: showPrevFrames ? null : Colors.transparent,
                         ),
                       ),
                       if (MediaQuery.of(context).size.width > 600) ...[
@@ -199,79 +261,14 @@ class ToolBar extends StatelessWidget {
           Row(
             children: [
               IconButton(
-                icon: Icon(Icons.undo,
-                    color: onUndo != null ? null : Colors.grey),
+                icon: Icon(Icons.undo, color: onUndo != null ? null : Colors.grey),
                 onPressed: onUndo,
                 tooltip: Strings.of(context).undo,
               ),
               IconButton(
-                icon: Icon(Icons.redo,
-                    color: onRedo != null ? null : Colors.grey),
+                icon: Icon(Icons.redo, color: onRedo != null ? null : Colors.grey),
                 onPressed: onRedo,
                 tooltip: Strings.of(context).redo,
-              ),
-              PopupMenuButton(
-                icon: const Icon(Feather.save, size: 18),
-                tooltip: Strings.of(context).save,
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'import',
-                    child: ListTile(
-                      leading: const Icon(Feather.upload),
-                      title: Text(Strings.of(context).open),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'projects',
-                    child: ListTile(
-                      leading: const Icon(Feather.list),
-                      title: Text(Strings.of(context).projects),
-                    ),
-                  ),
-                  if (kIsWeb ||
-                      defaultTargetPlatform == TargetPlatform.macOS ||
-                      defaultTargetPlatform == TargetPlatform.windows)
-                    PopupMenuItem(
-                      value: 'export',
-                      child: ListTile(
-                        leading: const Icon(Feather.save),
-                        title: Text(Strings.of(context).save),
-                      ),
-                    ),
-                  PopupMenuItem(
-                    value: 'exportAsImage',
-                    child: ListTile(
-                      leading: const Icon(Feather.image),
-                      title: Text(Strings.of(context).saveAs),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'share',
-                    child: ListTile(
-                      leading: const Icon(Feather.share),
-                      title: Text(Strings.of(context).share),
-                    ),
-                  ),
-                ],
-                onSelected: (value) {
-                  switch (value) {
-                    case 'import':
-                      import?.call();
-                      break;
-                    case 'export':
-                      export?.call();
-                      break;
-                    case 'exportAsImage':
-                      exportAsImage?.call();
-                      break;
-                    case 'projects':
-                      Navigator.of(context).pop();
-                      break;
-                    case 'share':
-                      onShare?.call();
-                      break;
-                  }
-                },
               ),
             ],
           ),

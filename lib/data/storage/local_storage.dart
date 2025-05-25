@@ -59,10 +59,8 @@ abstract class LocalStorage {
   void addListener<T>(StorageKey key, Function(dynamic value) listener);
   void removeListener(StorageKey key);
 
-  bool get notificationsEnabled =>
-      getBool(StorageKey.notificationsEnabled.name) ?? true;
-  set notificationsEnabled(bool val) =>
-      setBool(StorageKey.notificationsEnabled.name, val);
+  bool get notificationsEnabled => getBool(StorageKey.notificationsEnabled.name) ?? true;
+  set notificationsEnabled(bool val) => setBool(StorageKey.notificationsEnabled.name, val);
 
   int? get deviceId => getInt(StorageKey.deviceId.name);
   set deviceId(int? id) => setInt(StorageKey.deviceId.name, id ?? -1);
@@ -96,6 +94,18 @@ abstract class LocalStorage {
 
   bool get hasBioAuth => getBool(StorageKey.hasBioAuth.name) ?? false;
   set hasBioAuth(bool val) => setBool(StorageKey.hasBioAuth.name, val);
+
+  String? get token => getString(StorageKey.token.name);
+  set token(String? token) => setString(StorageKey.token.name, token ?? '');
+
+  void clearToken() => setString(StorageKey.token.name, '');
+  void setToken(String? token) {
+    if (token != null) {
+      setString(StorageKey.token.name, token);
+    } else {
+      setString(StorageKey.token.name, '');
+    }
+  }
 }
 
 class SharedPrefLocalStorageImpl extends LocalStorage {

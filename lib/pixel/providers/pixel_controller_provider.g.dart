@@ -6,7 +6,8 @@ part of 'pixel_controller_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$pixelDrawNotifierHash() => r'e2c5ca28af79796e7d8026b876be0f30bffc205c';
+String _$pixelDrawControllerHash() =>
+    r'c1c28e982e1298130f57f82abd4027b064147ffd';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -29,7 +30,7 @@ class _SystemHash {
   }
 }
 
-abstract class _$PixelDrawNotifier
+abstract class _$PixelDrawController
     extends BuildlessAutoDisposeNotifier<PixelDrawState> {
   late final Project project;
 
@@ -38,27 +39,27 @@ abstract class _$PixelDrawNotifier
   );
 }
 
-/// See also [PixelDrawNotifier].
-@ProviderFor(PixelDrawNotifier)
-const pixelDrawNotifierProvider = PixelDrawNotifierFamily();
+/// See also [PixelDrawController].
+@ProviderFor(PixelDrawController)
+const pixelDrawControllerProvider = PixelDrawControllerFamily();
 
-/// See also [PixelDrawNotifier].
-class PixelDrawNotifierFamily extends Family<PixelDrawState> {
-  /// See also [PixelDrawNotifier].
-  const PixelDrawNotifierFamily();
+/// See also [PixelDrawController].
+class PixelDrawControllerFamily extends Family<PixelDrawState> {
+  /// See also [PixelDrawController].
+  const PixelDrawControllerFamily();
 
-  /// See also [PixelDrawNotifier].
-  PixelDrawNotifierProvider call(
+  /// See also [PixelDrawController].
+  PixelDrawControllerProvider call(
     Project project,
   ) {
-    return PixelDrawNotifierProvider(
+    return PixelDrawControllerProvider(
       project,
     );
   }
 
   @override
-  PixelDrawNotifierProvider getProviderOverride(
-    covariant PixelDrawNotifierProvider provider,
+  PixelDrawControllerProvider getProviderOverride(
+    covariant PixelDrawControllerProvider provider,
   ) {
     return call(
       provider.project,
@@ -77,30 +78,30 @@ class PixelDrawNotifierFamily extends Family<PixelDrawState> {
       _allTransitiveDependencies;
 
   @override
-  String? get name => r'pixelDrawNotifierProvider';
+  String? get name => r'pixelDrawControllerProvider';
 }
 
-/// See also [PixelDrawNotifier].
-class PixelDrawNotifierProvider
-    extends AutoDisposeNotifierProviderImpl<PixelDrawNotifier, PixelDrawState> {
-  /// See also [PixelDrawNotifier].
-  PixelDrawNotifierProvider(
+/// See also [PixelDrawController].
+class PixelDrawControllerProvider extends AutoDisposeNotifierProviderImpl<
+    PixelDrawController, PixelDrawState> {
+  /// See also [PixelDrawController].
+  PixelDrawControllerProvider(
     Project project,
   ) : this._internal(
-          () => PixelDrawNotifier()..project = project,
-          from: pixelDrawNotifierProvider,
-          name: r'pixelDrawNotifierProvider',
+          () => PixelDrawController()..project = project,
+          from: pixelDrawControllerProvider,
+          name: r'pixelDrawControllerProvider',
           debugGetCreateSourceHash:
               const bool.fromEnvironment('dart.vm.product')
                   ? null
-                  : _$pixelDrawNotifierHash,
-          dependencies: PixelDrawNotifierFamily._dependencies,
+                  : _$pixelDrawControllerHash,
+          dependencies: PixelDrawControllerFamily._dependencies,
           allTransitiveDependencies:
-              PixelDrawNotifierFamily._allTransitiveDependencies,
+              PixelDrawControllerFamily._allTransitiveDependencies,
           project: project,
         );
 
-  PixelDrawNotifierProvider._internal(
+  PixelDrawControllerProvider._internal(
     super._createNotifier, {
     required super.name,
     required super.dependencies,
@@ -114,7 +115,7 @@ class PixelDrawNotifierProvider
 
   @override
   PixelDrawState runNotifierBuild(
-    covariant PixelDrawNotifier notifier,
+    covariant PixelDrawController notifier,
   ) {
     return notifier.build(
       project,
@@ -122,10 +123,10 @@ class PixelDrawNotifierProvider
   }
 
   @override
-  Override overrideWith(PixelDrawNotifier Function() create) {
+  Override overrideWith(PixelDrawController Function() create) {
     return ProviderOverride(
       origin: this,
-      override: PixelDrawNotifierProvider._internal(
+      override: PixelDrawControllerProvider._internal(
         () => create()..project = project,
         from: from,
         name: null,
@@ -138,14 +139,14 @@ class PixelDrawNotifierProvider
   }
 
   @override
-  AutoDisposeNotifierProviderElement<PixelDrawNotifier, PixelDrawState>
+  AutoDisposeNotifierProviderElement<PixelDrawController, PixelDrawState>
       createElement() {
-    return _PixelDrawNotifierProviderElement(this);
+    return _PixelDrawControllerProviderElement(this);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is PixelDrawNotifierProvider && other.project == project;
+    return other is PixelDrawControllerProvider && other.project == project;
   }
 
   @override
@@ -157,18 +158,18 @@ class PixelDrawNotifierProvider
   }
 }
 
-mixin PixelDrawNotifierRef on AutoDisposeNotifierProviderRef<PixelDrawState> {
+mixin PixelDrawControllerRef on AutoDisposeNotifierProviderRef<PixelDrawState> {
   /// The parameter `project` of this provider.
   Project get project;
 }
 
-class _PixelDrawNotifierProviderElement
-    extends AutoDisposeNotifierProviderElement<PixelDrawNotifier,
-        PixelDrawState> with PixelDrawNotifierRef {
-  _PixelDrawNotifierProviderElement(super.provider);
+class _PixelDrawControllerProviderElement
+    extends AutoDisposeNotifierProviderElement<PixelDrawController,
+        PixelDrawState> with PixelDrawControllerRef {
+  _PixelDrawControllerProviderElement(super.provider);
 
   @override
-  Project get project => (origin as PixelDrawNotifierProvider).project;
+  Project get project => (origin as PixelDrawControllerProvider).project;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

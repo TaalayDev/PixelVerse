@@ -1,17 +1,18 @@
 import 'dart:async';
-import 'dart:typed_data';
 
+import '../../core/utils.dart';
 import '../../data.dart';
-import '../../core/utils/image_helper.dart';
-import '../../core/utils/queue_manager.dart';
 
 abstract class ProjectRepo {
   Stream<List<Project>> fetchProjects();
   Future<Project?> fetchProject(int projectId);
+  Future<Project?> fetchProjectByRemoteId(int remoteId);
   Future<Project> createProject(Project project);
   Future<void> updateProject(Project project);
   Future<void> renameProject(int projectId, String name);
   Future<void> deleteProject(Project project);
+  Future<void> markProjectAsSynced(int projectId, int? remoteProjectId);
+  Future<void> markProjectAsUnsynced(int projectId);
   Future<AnimationStateModel> createState(
     int projectId,
     AnimationStateModel state,
@@ -42,14 +43,11 @@ class ProjectLocalRepo extends ProjectRepo {
   Future<void> updateProject(Project project) async {
     final completer = Completer<void>();
     queueManager.add(() async {
-      final pixels = Uint32List(project.width * project.height);
-      for (final layer in project.frames.first.layers.reversed.where(
-        (layer) => layer.isVisible,
-      )) {
-        for (int i = 0; i < pixels.length; i++) {
-          pixels[i] = pixels[i] == 0 ? layer.pixels[i] : pixels[i];
-        }
-      }
+      final pixels = PixelUtils.mergeLayersPixels(
+        width: project.width,
+        height: project.height,
+        layers: project.frames.first.layers,
+      );
 
       await db.updateProject(
         project.copyWith(thumbnail: ImageHelper.convertToBytes(pixels)),
@@ -64,6 +62,26 @@ class ProjectLocalRepo extends ProjectRepo {
     final completer = Completer<void>();
     queueManager.add(() async {
       await db.renameProject(projectId, name);
+      completer.complete();
+    });
+    return completer.future;
+  }
+
+  @override
+  Future<void> markProjectAsSynced(int projectId, int? remoteProjectId) async {
+    final completer = Completer<void>();
+    queueManager.add(() async {
+      await db.markProjectAsSynced(projectId, remoteProjectId);
+      completer.complete();
+    });
+    return completer.future;
+  }
+
+  @override
+  Future<void> markProjectAsUnsynced(int projectId) async {
+    final completer = Completer<void>();
+    queueManager.add(() async {
+      await db.markProjectAsUnsynced(projectId);
       completer.complete();
     });
     return completer.future;
@@ -168,6 +186,20 @@ class ProjectLocalRepo extends ProjectRepo {
     queueManager.add(() async {
       await db.updateState(projectId, state);
       completer.complete();
+    });
+    return completer.future;
+  }
+
+  @override
+  Future<Project?> fetchProjectByRemoteId(int remoteId) {
+    final completer = Completer<Project?>();
+    queueManager.add(() async {
+      try {
+        final project = await db.getProjectByRemoteId(remoteId);
+        completer.complete(project);
+      } catch (e) {
+        completer.complete(null);
+      }
     });
     return completer.future;
   }

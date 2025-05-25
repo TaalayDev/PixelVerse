@@ -36,7 +36,7 @@ class ToolMenu extends StatelessWidget {
             ),
           ),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            spacing: 15,
             children: [
               IconButton(
                 icon: Icon(
@@ -78,9 +78,7 @@ class ToolMenu extends StatelessWidget {
                     Icons.crop,
                     color: tool == PixelTool.select ? Colors.blue : null,
                   ),
-                  onPressed: !subscription.isPro
-                      ? null
-                      : () => onSelectTool(PixelTool.select),
+                  onPressed: !subscription.isPro ? null : () => onSelectTool(PixelTool.select),
                 ),
               ),
               ProBadge(
@@ -90,9 +88,7 @@ class ToolMenu extends StatelessWidget {
                     CupertinoIcons.pencil,
                     color: tool == PixelTool.pen ? Colors.blue : null,
                   ),
-                  onPressed: !subscription.isPro
-                      ? null
-                      : () => onSelectTool(PixelTool.pen),
+                  onPressed: !subscription.isPro ? null : () => onSelectTool(PixelTool.pen),
                 ),
               ),
               ProBadge(
@@ -102,9 +98,7 @@ class ToolMenu extends StatelessWidget {
                     Feather.move,
                     color: tool == PixelTool.drag ? Colors.blue : null,
                   ),
-                  onPressed: !subscription.isPro
-                      ? null
-                      : () => onSelectTool(PixelTool.drag),
+                  onPressed: !subscription.isPro ? null : () => onSelectTool(PixelTool.drag),
                 ),
               ),
               IconButton(
@@ -190,8 +184,6 @@ class ShapesMenuButton extends StatelessWidget {
   }
 
   bool _isShapeTool(PixelTool tool) {
-    return tool == PixelTool.line ||
-        tool == PixelTool.rectangle ||
-        tool == PixelTool.circle;
+    return tool == PixelTool.line || tool == PixelTool.rectangle || tool == PixelTool.circle;
   }
 }

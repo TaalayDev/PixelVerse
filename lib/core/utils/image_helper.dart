@@ -77,4 +77,22 @@ class ImageHelper {
 
     return image;
   }
+
+  static Future<ui.Image> convertImageToFlutterUi(
+    img.Image image,
+  ) async {
+    final uiImage = await createImageFrom(
+      image.getBytes(),
+      image.width,
+      image.height,
+    );
+    return uiImage;
+  }
+
+  static Uint8List convertImageToBytes(
+    img.Image image,
+  ) {
+    final bytes = Uint8List.fromList(img.encodePng(image));
+    return bytes;
+  }
 }

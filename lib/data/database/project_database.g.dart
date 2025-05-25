@@ -42,6 +42,22 @@ class $ProjectsTableTable extends ProjectsTable
   late final GeneratedColumn<Uint8List> thumbnail = GeneratedColumn<Uint8List>(
       'thumbnail', aliasedName, true,
       type: DriftSqlType.blob, requiredDuringInsert: false);
+  static const VerificationMeta _isCloudSyncedMeta =
+      const VerificationMeta('isCloudSynced');
+  @override
+  late final GeneratedColumn<bool> isCloudSynced = GeneratedColumn<bool>(
+      'is_cloud_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_cloud_synced" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _remoteIdMeta =
+      const VerificationMeta('remoteId');
+  @override
+  late final GeneratedColumn<int> remoteId = GeneratedColumn<int>(
+      'remote_id', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -55,8 +71,17 @@ class $ProjectsTableTable extends ProjectsTable
       'edited_at', aliasedName, false,
       type: DriftSqlType.dateTime, requiredDuringInsert: true);
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, name, width, height, thumbnail, createdAt, editedAt];
+  List<GeneratedColumn> get $columns => [
+        id,
+        name,
+        width,
+        height,
+        thumbnail,
+        isCloudSynced,
+        remoteId,
+        createdAt,
+        editedAt
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -92,6 +117,16 @@ class $ProjectsTableTable extends ProjectsTable
       context.handle(_thumbnailMeta,
           thumbnail.isAcceptableOrUnknown(data['thumbnail']!, _thumbnailMeta));
     }
+    if (data.containsKey('is_cloud_synced')) {
+      context.handle(
+          _isCloudSyncedMeta,
+          isCloudSynced.isAcceptableOrUnknown(
+              data['is_cloud_synced']!, _isCloudSyncedMeta));
+    }
+    if (data.containsKey('remote_id')) {
+      context.handle(_remoteIdMeta,
+          remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -123,6 +158,10 @@ class $ProjectsTableTable extends ProjectsTable
           .read(DriftSqlType.int, data['${effectivePrefix}height'])!,
       thumbnail: attachedDatabase.typeMapping
           .read(DriftSqlType.blob, data['${effectivePrefix}thumbnail']),
+      isCloudSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_cloud_synced'])!,
+      remoteId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}remote_id']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       editedAt: attachedDatabase.typeMapping
@@ -143,6 +182,8 @@ class ProjectsTableData extends DataClass
   final int width;
   final int height;
   final Uint8List? thumbnail;
+  final bool isCloudSynced;
+  final int? remoteId;
   final DateTime createdAt;
   final DateTime editedAt;
   const ProjectsTableData(
@@ -151,6 +192,8 @@ class ProjectsTableData extends DataClass
       required this.width,
       required this.height,
       this.thumbnail,
+      required this.isCloudSynced,
+      this.remoteId,
       required this.createdAt,
       required this.editedAt});
   @override
@@ -162,6 +205,10 @@ class ProjectsTableData extends DataClass
     map['height'] = Variable<int>(height);
     if (!nullToAbsent || thumbnail != null) {
       map['thumbnail'] = Variable<Uint8List>(thumbnail);
+    }
+    map['is_cloud_synced'] = Variable<bool>(isCloudSynced);
+    if (!nullToAbsent || remoteId != null) {
+      map['remote_id'] = Variable<int>(remoteId);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['edited_at'] = Variable<DateTime>(editedAt);
@@ -177,6 +224,10 @@ class ProjectsTableData extends DataClass
       thumbnail: thumbnail == null && nullToAbsent
           ? const Value.absent()
           : Value(thumbnail),
+      isCloudSynced: Value(isCloudSynced),
+      remoteId: remoteId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remoteId),
       createdAt: Value(createdAt),
       editedAt: Value(editedAt),
     );
@@ -191,6 +242,8 @@ class ProjectsTableData extends DataClass
       width: serializer.fromJson<int>(json['width']),
       height: serializer.fromJson<int>(json['height']),
       thumbnail: serializer.fromJson<Uint8List?>(json['thumbnail']),
+      isCloudSynced: serializer.fromJson<bool>(json['isCloudSynced']),
+      remoteId: serializer.fromJson<int?>(json['remoteId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       editedAt: serializer.fromJson<DateTime>(json['editedAt']),
     );
@@ -204,6 +257,8 @@ class ProjectsTableData extends DataClass
       'width': serializer.toJson<int>(width),
       'height': serializer.toJson<int>(height),
       'thumbnail': serializer.toJson<Uint8List?>(thumbnail),
+      'isCloudSynced': serializer.toJson<bool>(isCloudSynced),
+      'remoteId': serializer.toJson<int?>(remoteId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'editedAt': serializer.toJson<DateTime>(editedAt),
     };
@@ -215,6 +270,8 @@ class ProjectsTableData extends DataClass
           int? width,
           int? height,
           Value<Uint8List?> thumbnail = const Value.absent(),
+          bool? isCloudSynced,
+          Value<int?> remoteId = const Value.absent(),
           DateTime? createdAt,
           DateTime? editedAt}) =>
       ProjectsTableData(
@@ -223,6 +280,8 @@ class ProjectsTableData extends DataClass
         width: width ?? this.width,
         height: height ?? this.height,
         thumbnail: thumbnail.present ? thumbnail.value : this.thumbnail,
+        isCloudSynced: isCloudSynced ?? this.isCloudSynced,
+        remoteId: remoteId.present ? remoteId.value : this.remoteId,
         createdAt: createdAt ?? this.createdAt,
         editedAt: editedAt ?? this.editedAt,
       );
@@ -233,6 +292,10 @@ class ProjectsTableData extends DataClass
       width: data.width.present ? data.width.value : this.width,
       height: data.height.present ? data.height.value : this.height,
       thumbnail: data.thumbnail.present ? data.thumbnail.value : this.thumbnail,
+      isCloudSynced: data.isCloudSynced.present
+          ? data.isCloudSynced.value
+          : this.isCloudSynced,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       editedAt: data.editedAt.present ? data.editedAt.value : this.editedAt,
     );
@@ -246,6 +309,8 @@ class ProjectsTableData extends DataClass
           ..write('width: $width, ')
           ..write('height: $height, ')
           ..write('thumbnail: $thumbnail, ')
+          ..write('isCloudSynced: $isCloudSynced, ')
+          ..write('remoteId: $remoteId, ')
           ..write('createdAt: $createdAt, ')
           ..write('editedAt: $editedAt')
           ..write(')'))
@@ -253,8 +318,16 @@ class ProjectsTableData extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(id, name, width, height,
-      $driftBlobEquality.hash(thumbnail), createdAt, editedAt);
+  int get hashCode => Object.hash(
+      id,
+      name,
+      width,
+      height,
+      $driftBlobEquality.hash(thumbnail),
+      isCloudSynced,
+      remoteId,
+      createdAt,
+      editedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -264,6 +337,8 @@ class ProjectsTableData extends DataClass
           other.width == this.width &&
           other.height == this.height &&
           $driftBlobEquality.equals(other.thumbnail, this.thumbnail) &&
+          other.isCloudSynced == this.isCloudSynced &&
+          other.remoteId == this.remoteId &&
           other.createdAt == this.createdAt &&
           other.editedAt == this.editedAt);
 }
@@ -274,6 +349,8 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectsTableData> {
   final Value<int> width;
   final Value<int> height;
   final Value<Uint8List?> thumbnail;
+  final Value<bool> isCloudSynced;
+  final Value<int?> remoteId;
   final Value<DateTime> createdAt;
   final Value<DateTime> editedAt;
   const ProjectsTableCompanion({
@@ -282,6 +359,8 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectsTableData> {
     this.width = const Value.absent(),
     this.height = const Value.absent(),
     this.thumbnail = const Value.absent(),
+    this.isCloudSynced = const Value.absent(),
+    this.remoteId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.editedAt = const Value.absent(),
   });
@@ -291,6 +370,8 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectsTableData> {
     required int width,
     required int height,
     this.thumbnail = const Value.absent(),
+    this.isCloudSynced = const Value.absent(),
+    this.remoteId = const Value.absent(),
     required DateTime createdAt,
     required DateTime editedAt,
   })  : name = Value(name),
@@ -304,6 +385,8 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectsTableData> {
     Expression<int>? width,
     Expression<int>? height,
     Expression<Uint8List>? thumbnail,
+    Expression<bool>? isCloudSynced,
+    Expression<int>? remoteId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? editedAt,
   }) {
@@ -313,6 +396,8 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectsTableData> {
       if (width != null) 'width': width,
       if (height != null) 'height': height,
       if (thumbnail != null) 'thumbnail': thumbnail,
+      if (isCloudSynced != null) 'is_cloud_synced': isCloudSynced,
+      if (remoteId != null) 'remote_id': remoteId,
       if (createdAt != null) 'created_at': createdAt,
       if (editedAt != null) 'edited_at': editedAt,
     });
@@ -324,6 +409,8 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectsTableData> {
       Value<int>? width,
       Value<int>? height,
       Value<Uint8List?>? thumbnail,
+      Value<bool>? isCloudSynced,
+      Value<int?>? remoteId,
       Value<DateTime>? createdAt,
       Value<DateTime>? editedAt}) {
     return ProjectsTableCompanion(
@@ -332,6 +419,8 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectsTableData> {
       width: width ?? this.width,
       height: height ?? this.height,
       thumbnail: thumbnail ?? this.thumbnail,
+      isCloudSynced: isCloudSynced ?? this.isCloudSynced,
+      remoteId: remoteId ?? this.remoteId,
       createdAt: createdAt ?? this.createdAt,
       editedAt: editedAt ?? this.editedAt,
     );
@@ -355,6 +444,12 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectsTableData> {
     if (thumbnail.present) {
       map['thumbnail'] = Variable<Uint8List>(thumbnail.value);
     }
+    if (isCloudSynced.present) {
+      map['is_cloud_synced'] = Variable<bool>(isCloudSynced.value);
+    }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<int>(remoteId.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -372,6 +467,8 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectsTableData> {
           ..write('width: $width, ')
           ..write('height: $height, ')
           ..write('thumbnail: $thumbnail, ')
+          ..write('isCloudSynced: $isCloudSynced, ')
+          ..write('remoteId: $remoteId, ')
           ..write('createdAt: $createdAt, ')
           ..write('editedAt: $editedAt')
           ..write(')'))
@@ -1720,6 +1817,8 @@ typedef $$ProjectsTableTableCreateCompanionBuilder = ProjectsTableCompanion
   required int width,
   required int height,
   Value<Uint8List?> thumbnail,
+  Value<bool> isCloudSynced,
+  Value<int?> remoteId,
   required DateTime createdAt,
   required DateTime editedAt,
 });
@@ -1730,6 +1829,8 @@ typedef $$ProjectsTableTableUpdateCompanionBuilder = ProjectsTableCompanion
   Value<int> width,
   Value<int> height,
   Value<Uint8List?> thumbnail,
+  Value<bool> isCloudSynced,
+  Value<int?> remoteId,
   Value<DateTime> createdAt,
   Value<DateTime> editedAt,
 });
@@ -1816,6 +1917,16 @@ class $$ProjectsTableTableFilterComposer
       builder: (column, joinBuilders) =>
           ColumnFilters(column, joinBuilders: joinBuilders));
 
+  ColumnFilters<bool> get isCloudSynced => $state.composableBuilder(
+      column: $state.table.isCloudSynced,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
+  ColumnFilters<int> get remoteId => $state.composableBuilder(
+      column: $state.table.remoteId,
+      builder: (column, joinBuilders) =>
+          ColumnFilters(column, joinBuilders: joinBuilders));
+
   ColumnFilters<DateTime> get createdAt => $state.composableBuilder(
       column: $state.table.createdAt,
       builder: (column, joinBuilders) =>
@@ -1898,6 +2009,16 @@ class $$ProjectsTableTableOrderingComposer
       builder: (column, joinBuilders) =>
           ColumnOrderings(column, joinBuilders: joinBuilders));
 
+  ColumnOrderings<bool> get isCloudSynced => $state.composableBuilder(
+      column: $state.table.isCloudSynced,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
+  ColumnOrderings<int> get remoteId => $state.composableBuilder(
+      column: $state.table.remoteId,
+      builder: (column, joinBuilders) =>
+          ColumnOrderings(column, joinBuilders: joinBuilders));
+
   ColumnOrderings<DateTime> get createdAt => $state.composableBuilder(
       column: $state.table.createdAt,
       builder: (column, joinBuilders) =>
@@ -1937,6 +2058,8 @@ class $$ProjectsTableTableTableManager extends RootTableManager<
             Value<int> width = const Value.absent(),
             Value<int> height = const Value.absent(),
             Value<Uint8List?> thumbnail = const Value.absent(),
+            Value<bool> isCloudSynced = const Value.absent(),
+            Value<int?> remoteId = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> editedAt = const Value.absent(),
           }) =>
@@ -1946,6 +2069,8 @@ class $$ProjectsTableTableTableManager extends RootTableManager<
             width: width,
             height: height,
             thumbnail: thumbnail,
+            isCloudSynced: isCloudSynced,
+            remoteId: remoteId,
             createdAt: createdAt,
             editedAt: editedAt,
           ),
@@ -1955,6 +2080,8 @@ class $$ProjectsTableTableTableManager extends RootTableManager<
             required int width,
             required int height,
             Value<Uint8List?> thumbnail = const Value.absent(),
+            Value<bool> isCloudSynced = const Value.absent(),
+            Value<int?> remoteId = const Value.absent(),
             required DateTime createdAt,
             required DateTime editedAt,
           }) =>
@@ -1964,6 +2091,8 @@ class $$ProjectsTableTableTableManager extends RootTableManager<
             width: width,
             height: height,
             thumbnail: thumbnail,
+            isCloudSynced: isCloudSynced,
+            remoteId: remoteId,
             createdAt: createdAt,
             editedAt: editedAt,
           ),
