@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import '../../data/models/layer.dart';
+import '../data/models/layer.dart';
 
 class PixelUtils {
   const PixelUtils._();

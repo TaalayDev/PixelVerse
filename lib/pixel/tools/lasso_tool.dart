@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../../core/pixel_point.dart';
+import '../pixel_point.dart';
 import '../tools.dart';
 
 class LassoTool extends Tool {
@@ -26,8 +26,7 @@ class LassoTool extends Tool {
   void onMove(PixelDrawDetails details) {
     if (_isDrawing) {
       final startPoint = _points.first;
-      if ((details.position - startPoint).distance <= _closeThreshold &&
-          _points.length > 2) {
+      if ((details.position - startPoint).distance <= _closeThreshold && _points.length > 2) {
         // Close the path if near the start point
         _points.add(startPoint);
         _finalizeLasso(details);

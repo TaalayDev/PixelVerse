@@ -101,6 +101,15 @@ class Project with EquatableMixin {
   }
 
   @override
-  List<Object?> get props =>
-      [id, name, width, height, frames, states, thumbnail, createdAt, editedAt, isCloudSynced, remoteId];
+  List<Object?> get props => [
+        id,
+        name,
+        width,
+        height,
+        frames,
+        states,
+        thumbnail,
+        createdAt,
+        editedAt,
+      ];
 }

@@ -2,7 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../core/pixel_point.dart';
+import '../pixel_point.dart';
 import '../../data.dart';
 import '../../providers/providers.dart';
 import '../services/animation_service.dart';
@@ -29,12 +29,9 @@ class PixelDrawController extends _$PixelDrawController {
   late final ImportExportService _importExportService;
 
   // Current project reference
-  late Project _project;
 
   @override
   PixelDrawState build(Project project) {
-    _project = project;
-
     // Initialize services
     _layerService = LayerService(ref.read(projectRepo));
     _frameService = FrameService(ref.read(projectRepo));
@@ -70,7 +67,7 @@ class PixelDrawController extends _$PixelDrawController {
             layerId: 0,
             id: 'default-layer',
             name: 'Layer 1',
-            pixels: Uint32List(_project.width * _project.height),
+            pixels: Uint32List(project.width * project.height),
             order: 0,
           ),
         ],
@@ -78,8 +75,6 @@ class PixelDrawController extends _$PixelDrawController {
     ];
   }
 
-  // Getters
-  Project get project => _project;
   AnimationFrame get currentFrame => state.currentFrame;
   Layer get currentLayer => state.currentLayer;
   bool get canUndo => _undoRedoService.canUndo;
@@ -93,7 +88,7 @@ class PixelDrawController extends _$PixelDrawController {
 
   void _updateProject() {
     ref.read(projectRepo).updateProject(
-          _project.copyWith(
+          project.copyWith(
             frames: state.frames,
             states: state.animationStates,
             editedAt: DateTime.now(),
@@ -106,7 +101,7 @@ class PixelDrawController extends _$PixelDrawController {
     _saveState();
 
     final modifier = _drawingService.createModifier(
-      PixelModifier.none,
+      state.currentModifier,
       state.mirrorAxis,
     );
 
@@ -116,7 +111,7 @@ class PixelDrawController extends _$PixelDrawController {
       y: y,
       width: state.width,
       height: state.height,
-      color: state.currentColor,
+      color: _getDrawingColor(),
       selection: state.selectionRect,
       modifier: modifier,
     );
@@ -124,14 +119,14 @@ class PixelDrawController extends _$PixelDrawController {
     _updateCurrentLayerPixels(newPixels);
   }
 
-  void fillPixels(List<PixelPoint<int>> points, PixelModifier modifier) {
+  void fillPixels(List<PixelPoint<int>> points) {
     _saveState();
 
     final newPixels = _drawingService.fillPixels(
       pixels: currentLayer.pixels,
       points: points,
       width: state.width,
-      color: state.currentColor,
+      color: _getDrawingColor(),
       selection: state.selectionRect,
     );
 
@@ -147,7 +142,7 @@ class PixelDrawController extends _$PixelDrawController {
       y: y,
       width: state.width,
       height: state.height,
-      fillColor: state.currentColor,
+      fillColor: _getDrawingColor(),
       selection: state.selectionRect,
     );
 
@@ -171,12 +166,61 @@ class PixelDrawController extends _$PixelDrawController {
     );
   }
 
+  void applyGradient(List<Color> gradientColors) {
+    _saveState();
+
+    final newPixels = _drawingService.applyGradient(
+      pixels: currentLayer.pixels,
+      gradientColors: gradientColors,
+    );
+
+    _updateCurrentLayerPixels(newPixels);
+  }
+
+  // Drag operations
+  Offset? _dragStartOffset;
+  Uint32List? _originalPixels;
+
+  void startDrag() {
+    _saveState();
+    _dragStartOffset = null;
+    _originalPixels = null;
+  }
+
+  void dragPixels(double scale, Offset offset) {
+    if (_dragStartOffset == null) {
+      // First time, store the starting offset and original pixels
+      _dragStartOffset = offset;
+      _originalPixels = Uint32List.fromList(currentLayer.pixels);
+      return;
+    }
+
+    // Calculate the delta offset from the starting offset
+    final delta = offset - _dragStartOffset!;
+
+    // Use the drawing service to drag pixels
+    final newPixels = _drawingService.dragPixels(
+      originalPixels: _originalPixels!,
+      currentPixels: currentLayer.pixels,
+      width: state.width,
+      height: state.height,
+      deltaOffset: delta,
+    );
+
+    _updateCurrentLayerPixels(newPixels);
+  }
+
+  void endDrag() {
+    _dragStartOffset = null;
+    _originalPixels = null;
+  }
+
   // Layer operations
   Future<void> addLayer(String name) async {
     final order = _layerService.calculateNextLayerOrder(currentFrame.layers);
 
     final newLayer = await _layerService.createLayer(
-      projectId: _project.id,
+      projectId: project.id,
       frameId: currentFrame.id,
       name: name,
       width: state.width,
@@ -265,7 +309,7 @@ class PixelDrawController extends _$PixelDrawController {
     final order = _frameService.calculateNextFrameOrder(state.frames);
 
     final newFrame = await _frameService.createFrame(
-      projectId: _project.id,
+      projectId: project.id,
       name: name,
       stateId: stateId ?? state.currentAnimationState.id,
       width: state.width,
@@ -341,7 +385,7 @@ class PixelDrawController extends _$PixelDrawController {
   // Animation state operations
   Future<void> addAnimationState(String name, int frameRate) async {
     final newState = await _animationService.createAnimationState(
-      projectId: _project.id,
+      projectId: project.id,
       name: name,
       frameRate: frameRate,
     );
@@ -393,6 +437,34 @@ class PixelDrawController extends _$PixelDrawController {
         currentLayerIndex: 0,
       );
     }
+  }
+
+  Future<void> updateFrame(int index, AnimationFrame frame) async {
+    await _frameService.updateFrame(
+      projectId: project.id,
+      frame: frame,
+    );
+
+    final updatedFrames = List<AnimationFrame>.from(state.frames);
+    updatedFrames[index] = frame;
+
+    state = state.copyWith(frames: updatedFrames);
+    _updateProject();
+  }
+
+  Future<void> reorderFrames(int oldIndex, int newIndex) async {
+    final reorderedFrames = _frameService.reorderFrames(
+      state.frames,
+      oldIndex,
+      newIndex,
+    );
+
+    state = state.copyWith(
+      frames: reorderedFrames,
+      currentFrameIndex: oldIndex == state.currentFrameIndex ? newIndex : state.currentFrameIndex,
+    );
+
+    _updateProject();
   }
 
   // Selection operations
@@ -458,11 +530,15 @@ class PixelDrawController extends _$PixelDrawController {
     state = state.copyWith(currentColor: color);
   }
 
+  void setCurrentModifier(PixelModifier modifier) {
+    state = state.copyWith(currentModifier: modifier);
+  }
+
   // Import/Export operations
   Future<void> exportProjectAsJson(BuildContext context) async {
     await _importExportService.exportProjectAsJson(
       context: context,
-      project: _project,
+      project: project,
     );
   }
 
@@ -474,7 +550,7 @@ class PixelDrawController extends _$PixelDrawController {
   }) async {
     await _importExportService.exportImage(
       context: context,
-      project: _project,
+      project: project,
       layers: currentFrame.layers,
       withBackground: withBackground,
       exportWidth: exportWidth,
@@ -485,8 +561,51 @@ class PixelDrawController extends _$PixelDrawController {
   Future<void> shareProject(BuildContext context) async {
     await _importExportService.shareProject(
       context: context,
-      project: _project,
+      project: project,
       layers: currentFrame.layers,
+    );
+  }
+
+  Future<void> exportAnimation({
+    required BuildContext context,
+    required List<AnimationFrame> frames,
+    bool withBackground = false,
+    double? exportWidth,
+    double? exportHeight,
+  }) async {
+    await _importExportService.exportAnimation(
+      context: context,
+      project: project,
+      frames: frames,
+      withBackground: withBackground,
+      exportWidth: exportWidth,
+      exportHeight: exportHeight,
+    );
+  }
+
+  Future<void> exportSpriteSheet({
+    required BuildContext context,
+    required int columns,
+    required int spacing,
+    required bool includeAllFrames,
+    bool withBackground = false,
+    Color backgroundColor = Colors.white,
+    double? exportWidth,
+    double? exportHeight,
+  }) async {
+    final frames = includeAllFrames ? state.currentFrames : [state.currentFrame];
+
+    await _importExportService.exportSpriteSheet(
+      context: context,
+      project: project,
+      frames: frames,
+      columns: columns,
+      spacing: spacing,
+      includeAllFrames: includeAllFrames,
+      withBackground: withBackground,
+      backgroundColor: backgroundColor,
+      exportWidth: exportWidth,
+      exportHeight: exportHeight,
     );
   }
 
@@ -500,7 +619,7 @@ class PixelDrawController extends _$PixelDrawController {
 
     if (newLayer != null) {
       final createdLayer = await _layerService.createLayer(
-        projectId: _project.id,
+        projectId: project.id,
         frameId: currentFrame.id,
         name: newLayer.name,
         width: state.width,
@@ -520,6 +639,10 @@ class PixelDrawController extends _$PixelDrawController {
   }
 
   // Helper methods
+  Color _getDrawingColor() {
+    return state.currentTool == PixelTool.eraser ? Colors.transparent : state.currentColor;
+  }
+
   void _updateCurrentLayerPixels(Uint32List newPixels) {
     final updatedLayer = currentLayer.copyWith(pixels: newPixels);
     final updatedLayers = List<Layer>.from(currentFrame.layers);
@@ -529,7 +652,7 @@ class PixelDrawController extends _$PixelDrawController {
     _updateCurrentFrame(updatedFrame);
 
     _layerService.updateLayer(
-      projectId: _project.id,
+      projectId: project.id,
       frameId: currentFrame.id,
       layer: updatedLayer,
     );
@@ -544,7 +667,7 @@ class PixelDrawController extends _$PixelDrawController {
     _updateCurrentFrame(updatedFrame);
 
     await _layerService.updateLayer(
-      projectId: _project.id,
+      projectId: project.id,
       frameId: currentFrame.id,
       layer: updatedLayer,
     );

@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
 import '../../data/models/subscription_model.dart';
+import '../../pixel/pixel_draw_state.dart';
 import '../../pixel/tools.dart';
 import '../../pixel/providers/pixel_notifier_provider.dart';
 import 'color_palette_panel.dart';

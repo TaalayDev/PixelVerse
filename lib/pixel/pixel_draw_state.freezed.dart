@@ -30,6 +30,7 @@ mixin _$PixelDrawState {
   SelectionModel? get selectionRect => throw _privateConstructorUsedError;
   bool get canUndo => throw _privateConstructorUsedError;
   bool get canRedo => throw _privateConstructorUsedError;
+  PixelModifier get currentModifier => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $PixelDrawStateCopyWith<PixelDrawState> get copyWith =>
@@ -55,7 +56,8 @@ abstract class $PixelDrawStateCopyWith<$Res> {
       MirrorAxis mirrorAxis,
       SelectionModel? selectionRect,
       bool canUndo,
-      bool canRedo});
+      bool canRedo,
+      PixelModifier currentModifier});
 }
 
 /// @nodoc
@@ -84,6 +86,7 @@ class _$PixelDrawStateCopyWithImpl<$Res, $Val extends PixelDrawState>
     Object? selectionRect = freezed,
     Object? canUndo = null,
     Object? canRedo = null,
+    Object? currentModifier = null,
   }) {
     return _then(_value.copyWith(
       width: null == width
@@ -138,6 +141,10 @@ class _$PixelDrawStateCopyWithImpl<$Res, $Val extends PixelDrawState>
           ? _value.canRedo
           : canRedo // ignore: cast_nullable_to_non_nullable
               as bool,
+      currentModifier: null == currentModifier
+          ? _value.currentModifier
+          : currentModifier // ignore: cast_nullable_to_non_nullable
+              as PixelModifier,
     ) as $Val);
   }
 }
@@ -163,7 +170,8 @@ abstract class _$$PixelDrawStateImplCopyWith<$Res>
       MirrorAxis mirrorAxis,
       SelectionModel? selectionRect,
       bool canUndo,
-      bool canRedo});
+      bool canRedo,
+      PixelModifier currentModifier});
 }
 
 /// @nodoc
@@ -190,6 +198,7 @@ class __$$PixelDrawStateImplCopyWithImpl<$Res>
     Object? selectionRect = freezed,
     Object? canUndo = null,
     Object? canRedo = null,
+    Object? currentModifier = null,
   }) {
     return _then(_$PixelDrawStateImpl(
       width: null == width
@@ -244,6 +253,10 @@ class __$$PixelDrawStateImplCopyWithImpl<$Res>
           ? _value.canRedo
           : canRedo // ignore: cast_nullable_to_non_nullable
               as bool,
+      currentModifier: null == currentModifier
+          ? _value.currentModifier
+          : currentModifier // ignore: cast_nullable_to_non_nullable
+              as PixelModifier,
     ));
   }
 }
@@ -264,7 +277,8 @@ class _$PixelDrawStateImpl extends _PixelDrawState {
       required this.mirrorAxis,
       this.selectionRect,
       this.canUndo = false,
-      this.canRedo = false})
+      this.canRedo = false,
+      this.currentModifier = PixelModifier.none})
       : _animationStates = animationStates,
         _frames = frames,
         super._();
@@ -312,10 +326,13 @@ class _$PixelDrawStateImpl extends _PixelDrawState {
   @override
   @JsonKey()
   final bool canRedo;
+  @override
+  @JsonKey()
+  final PixelModifier currentModifier;
 
   @override
   String toString() {
-    return 'PixelDrawState(width: $width, height: $height, animationStates: $animationStates, frames: $frames, currentAnimationStateIndex: $currentAnimationStateIndex, currentFrameIndex: $currentFrameIndex, currentLayerIndex: $currentLayerIndex, currentColor: $currentColor, currentTool: $currentTool, mirrorAxis: $mirrorAxis, selectionRect: $selectionRect, canUndo: $canUndo, canRedo: $canRedo)';
+    return 'PixelDrawState(width: $width, height: $height, animationStates: $animationStates, frames: $frames, currentAnimationStateIndex: $currentAnimationStateIndex, currentFrameIndex: $currentFrameIndex, currentLayerIndex: $currentLayerIndex, currentColor: $currentColor, currentTool: $currentTool, mirrorAxis: $mirrorAxis, selectionRect: $selectionRect, canUndo: $canUndo, canRedo: $canRedo, currentModifier: $currentModifier)';
   }
 
   @override
@@ -345,7 +362,9 @@ class _$PixelDrawStateImpl extends _PixelDrawState {
             (identical(other.selectionRect, selectionRect) ||
                 other.selectionRect == selectionRect) &&
             (identical(other.canUndo, canUndo) || other.canUndo == canUndo) &&
-            (identical(other.canRedo, canRedo) || other.canRedo == canRedo));
+            (identical(other.canRedo, canRedo) || other.canRedo == canRedo) &&
+            (identical(other.currentModifier, currentModifier) ||
+                other.currentModifier == currentModifier));
   }
 
   @override
@@ -363,7 +382,8 @@ class _$PixelDrawStateImpl extends _PixelDrawState {
       mirrorAxis,
       selectionRect,
       canUndo,
-      canRedo);
+      canRedo,
+      currentModifier);
 
   @JsonKey(ignore: true)
   @override
@@ -387,7 +407,8 @@ abstract class _PixelDrawState extends PixelDrawState {
       required final MirrorAxis mirrorAxis,
       final SelectionModel? selectionRect,
       final bool canUndo,
-      final bool canRedo}) = _$PixelDrawStateImpl;
+      final bool canRedo,
+      final PixelModifier currentModifier}) = _$PixelDrawStateImpl;
   const _PixelDrawState._() : super._();
 
   @override
@@ -416,6 +437,8 @@ abstract class _PixelDrawState extends PixelDrawState {
   bool get canUndo;
   @override
   bool get canRedo;
+  @override
+  PixelModifier get currentModifier;
   @override
   @JsonKey(ignore: true)
   _$$PixelDrawStateImplCopyWith<_$PixelDrawStateImpl> get copyWith =>

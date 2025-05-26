@@ -421,6 +421,7 @@ class AppDatabase extends _$AppDatabase {
     ));
 
     final states = <AnimationStateModel>[];
+    final stateIds = <int, int>{};
     for (final state in project.states) {
       final stateId = await into(animationStateTable).insert(
         AnimationStateTableCompanion(
@@ -432,13 +433,14 @@ class AppDatabase extends _$AppDatabase {
         ),
       );
       states.add(state.copyWith(id: stateId));
+      if (state.id != 0) stateIds[state.id] = stateId;
     }
 
     final frames = <AnimationFrame>[];
     for (final frame in project.frames) {
       final frameId = await into(framesTable).insert(FramesTableCompanion(
         projectId: Value(projectId),
-        stateId: Value(frame.stateId),
+        stateId: Value(stateIds[frame.stateId] ?? frame.stateId),
         name: Value(frame.name),
         duration: Value(frame.duration),
         createdAt: Value(frame.createdAt),

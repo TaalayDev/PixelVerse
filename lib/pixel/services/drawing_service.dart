@@ -2,7 +2,7 @@ import 'dart:collection';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import '../../core/pixel_point.dart';
+import '../pixel_point.dart';
 import '../tools.dart';
 import '../tools/mirror_modifier.dart';
 import '../../data.dart';
@@ -67,7 +67,7 @@ class DrawingService {
     for (final point in points) {
       final index = point.y * width + point.x;
       if (index >= 0 && index < newPixels.length && _isInSelectionBounds(point.x, point.y, selection)) {
-        newPixels[index] = point.color != 0 ? point.color : color.value;
+        newPixels[index] = color.value;
       }
     }
 
@@ -179,5 +179,50 @@ class DrawingService {
       case PixelModifier.shadow:
         return null;
     }
+  }
+
+  // Drag-related operations
+  Uint32List dragPixels({
+    required Uint32List originalPixels,
+    required Uint32List currentPixels,
+    required int width,
+    required int height,
+    required Offset deltaOffset,
+  }) {
+    // Convert delta to integer pixel offsets
+    int dx = deltaOffset.dx.round();
+    int dy = deltaOffset.dy.round();
+
+    // If there's no movement, return current pixels
+    if (dx == 0 && dy == 0) {
+      return currentPixels;
+    }
+
+    // Use the original pixels to prevent accumulation of errors
+    final newPixels = Uint32List(width * height);
+
+    // Loop through the pixels and move them by the delta offset
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        final index = y * width + x;
+        final color = originalPixels[index];
+
+        if (color == 0) {
+          // Skip transparent pixels
+          continue;
+        }
+
+        final newX = x + dx;
+        final newY = y + dy;
+
+        // Check if the new position is within bounds
+        if (newX >= 0 && newX < width && newY >= 0 && newY < height) {
+          final newIndex = newY * width + newX;
+          newPixels[newIndex] = color;
+        }
+      }
+    }
+
+    return newPixels;
   }
 }

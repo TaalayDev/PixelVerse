@@ -12,7 +12,7 @@ import '../../pixel/tools/fill_tool.dart';
 import '../../pixel/tools/pencil_tool.dart';
 import '../../pixel/tools/selection_tool.dart';
 import '../../pixel/tools/eyedropper_tool.dart';
-import '../../core/pixel_point.dart';
+import '../../pixel/pixel_point.dart';
 import '../../core/utils/cursor_manager.dart';
 import '../../pixel/tools/mirror_modifier.dart';
 import '../../pixel/tools/pen_tool.dart';
@@ -819,9 +819,29 @@ class _PixelCanvasState extends State<PixelCanvas> {
     }
   }
 
+  List<PixelPoint<int>> _applyModifierToPixels(PixelPoint<int> pixels) {
+    if (modifier == null) return [pixels];
+
+    final modifiedPixels = modifier!.apply(
+      pixels,
+      widget.width,
+      widget.height,
+    );
+
+    return [pixels] +
+        modifiedPixels.where((point) {
+          return point.x >= 0 &&
+              point.x < widget.width &&
+              point.y >= 0 &&
+              point.y < widget.height &&
+              _selectionUtils.inInSelectionBounds(point.x, point.y);
+        }).toList();
+  }
+
   void _onTapPixel(int x, int y) {
     if (!_selectionUtils.inInSelectionBounds(x, y)) return;
-    _previewPixels.add(PixelPoint(x, y, color: widget.currentColor.value));
+    final pixels = PixelPoint(x, y, color: widget.currentColor.value);
+    _previewPixels.addAll(_applyModifierToPixels(pixels));
   }
 
   void _drawLine(int x0, int y0, int x1, int y1) {

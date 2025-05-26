@@ -82,7 +82,7 @@ class ToolBar extends StatelessWidget {
                       const SizedBox(width: 4),
                       PopupMenuButton(
                         icon: const Icon(Feather.save, size: 18),
-                        tooltip: Strings.of(context).save,
+                        tooltip: Strings.of(context).fileMenu,
                         itemBuilder: (context) => [
                           PopupMenuItem(
                             value: 'import',

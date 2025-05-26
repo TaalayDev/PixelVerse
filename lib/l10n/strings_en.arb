@@ -68,5 +68,6 @@
     "width": "Width",
     "height": "Height",
     "create": "Create",
-    "subscriptions": "Subscriptions"
+    "subscriptions": "Subscriptions",
+    "fileMenu": "File"
 }

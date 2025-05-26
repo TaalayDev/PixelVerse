@@ -1,4 +1,4 @@
-import '../../core/pixel_point.dart';
+import '../pixel_point.dart';
 import '../tools.dart';
 
 class MirrorModifier extends Modifier {

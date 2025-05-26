@@ -2,7 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:pixelverse/pixel/tools.dart';
 
-import '../../core/pixel_point.dart';
+import '../pixel_point.dart';
 
 class GlowModifier extends Modifier {
   final int radius;

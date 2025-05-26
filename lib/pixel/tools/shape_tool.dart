@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import '../../core/pixel_point.dart';
+import '../pixel_point.dart';
 import '../tools.dart';
 
 abstract class ShapeTool extends Tool {
@@ -49,8 +49,7 @@ abstract class ShapeTool extends Tool {
 
         for (final point in _previewPoints) {
           modifiedPoints.add(point);
-          modifiedPoints
-              .addAll(modifier.apply(point, details.width, details.height));
+          modifiedPoints.addAll(modifier.apply(point, details.width, details.height));
         }
 
         _previewPoints = modifiedPoints;
@@ -126,40 +125,217 @@ class OvalTool extends ShapeTool {
   ) {
     final points = <PixelPoint<int>>[];
 
-    // Calculate center and radius
-    final centerX = (start.x + end.x) ~/ 2;
-    final centerY = (start.y + end.y) ~/ 2;
-    final radiusX = (end.x - start.x).abs() ~/ 2;
-    final radiusY = (end.y - start.y).abs() ~/ 2;
+    // Calculate bounding rectangle
+    final left = min(start.x, end.x);
+    final right = max(start.x, end.x);
+    final top = min(start.y, end.y);
+    final bottom = max(start.y, end.y);
 
-    // Use midpoint circle algorithm modified for ellipse
-    int hh = radiusY * radiusY;
-    int ww = radiusX * radiusX;
-    int hhww = hh * ww;
-    int x0 = radiusX;
-    int dx = 0;
+    // Calculate center and radii
+    final centerX = (left + right) / 2;
+    final centerY = (top + bottom) / 2;
+    final radiusX = (right - left) / 2;
+    final radiusY = (bottom - top) / 2;
 
-    // Draw first set of points
-    for (int x = -radiusX; x <= radiusX; x++) {
-      final y = (radiusY * sqrt(1 - x * x / (radiusX * radiusX))).round();
-      final point1 = PixelPoint(centerX + x, centerY + y, color: start.color);
-      final point2 = PixelPoint(centerX + x, centerY - y, color: start.color);
-
-      if (_isValidPoint(point1, width, height)) points.add(point1);
-      if (_isValidPoint(point2, width, height)) points.add(point2);
+    // Handle edge cases
+    if (radiusX < 0.5 && radiusY < 0.5) {
+      // Single point
+      if (_isValidPoint(start.x, start.y, width, height)) {
+        points.add(PixelPoint(start.x, start.y, color: start.color));
+      }
+      return points;
     }
 
-    // Draw second set of points
-    for (int y = -radiusY; y <= radiusY; y++) {
-      final x = (radiusX * sqrt(1 - y * y / (radiusY * radiusY))).round();
-      final point1 = PixelPoint(centerX + x, centerY + y, color: start.color);
-      final point2 = PixelPoint(centerX - x, centerY + y, color: start.color);
+    if (radiusX < 0.5) {
+      // Vertical line
+      for (int y = top; y <= bottom; y++) {
+        if (_isValidPoint(start.x, y, width, height)) {
+          points.add(PixelPoint(start.x, y, color: start.color));
+        }
+      }
+      return points;
+    }
 
-      if (_isValidPoint(point1, width, height)) points.add(point1);
-      if (_isValidPoint(point2, width, height)) points.add(point2);
+    if (radiusY < 0.5) {
+      // Horizontal line
+      for (int x = left; x <= right; x++) {
+        if (_isValidPoint(x, start.y, width, height)) {
+          points.add(PixelPoint(x, start.y, color: start.color));
+        }
+      }
+      return points;
+    }
+
+    // Use a set to avoid duplicate points
+    final Set<String> addedPoints = {};
+
+    // Draw ellipse using parametric equations
+    final maxRadius = max(radiusX, radiusY);
+    final steps = (2 * pi * maxRadius * 1.5).ceil(); // Adjust density as needed
+
+    for (int i = 0; i <= steps; i++) {
+      final angle = (2 * pi * i) / steps;
+      final x = (centerX + radiusX * cos(angle)).round();
+      final y = (centerY + radiusY * sin(angle)).round();
+
+      final key = '$x,$y';
+      if (!addedPoints.contains(key) && _isValidPoint(x, y, width, height)) {
+        addedPoints.add(key);
+        points.add(PixelPoint(x, y, color: start.color));
+      }
     }
 
     return points;
+  }
+
+  bool _isValidPoint(int x, int y, int width, int height) {
+    return x >= 0 && x < width && y >= 0 && y < height;
+  }
+}
+
+class OvalToolBresenham extends ShapeTool {
+  OvalToolBresenham() : super(PixelTool.circle);
+
+  @override
+  List<PixelPoint<int>> generateShapePoints(
+    PixelPoint<int> start,
+    PixelPoint<int> end,
+    int width,
+    int height,
+  ) {
+    final points = <PixelPoint<int>>[];
+
+    // Calculate bounding rectangle
+    final left = min(start.x, end.x);
+    final right = max(start.x, end.x);
+    final top = min(start.y, end.y);
+    final bottom = max(start.y, end.y);
+
+    final centerX = ((left + right) / 2).round();
+    final centerY = ((top + bottom) / 2).round();
+    final radiusX = ((right - left) / 2).round();
+    final radiusY = ((bottom - top) / 2).round();
+
+    // Handle degenerate cases
+    if (radiusX <= 0 && radiusY <= 0) {
+      if (_isValidPoint(centerX, centerY, width, height)) {
+        points.add(PixelPoint(centerX, centerY, color: start.color));
+      }
+      return points;
+    }
+
+    if (radiusX <= 0) {
+      // Vertical line
+      for (int y = top; y <= bottom; y++) {
+        if (_isValidPoint(centerX, y, width, height)) {
+          points.add(PixelPoint(centerX, y, color: start.color));
+        }
+      }
+      return points;
+    }
+
+    if (radiusY <= 0) {
+      // Horizontal line
+      for (int x = left; x <= right; x++) {
+        if (_isValidPoint(x, centerY, width, height)) {
+          points.add(PixelPoint(x, centerY, color: start.color));
+        }
+      }
+      return points;
+    }
+
+    // Bresenham's ellipse algorithm
+    _drawEllipse(points, centerX, centerY, radiusX, radiusY, width, height, start.color);
+
+    return points;
+  }
+
+  void _drawEllipse(
+    List<PixelPoint<int>> points,
+    int centerX,
+    int centerY,
+    int radiusX,
+    int radiusY,
+    int width,
+    int height,
+    int color,
+  ) {
+    int x = 0;
+    int y = radiusY;
+
+    // Region 1 decision parameter
+    double p1 = (radiusY * radiusY) - (radiusX * radiusX * radiusY) + (0.25 * radiusX * radiusX);
+    int dx = 2 * radiusY * radiusY * x;
+    int dy = 2 * radiusX * radiusX * y;
+
+    // Region 1
+    while (dx < dy) {
+      _addEllipsePoints(points, centerX, centerY, x, y, width, height, color);
+
+      if (p1 < 0) {
+        x++;
+        dx = 2 * radiusY * radiusY * x;
+        p1 = p1 + dx + (radiusY * radiusY);
+      } else {
+        x++;
+        y--;
+        dx = 2 * radiusY * radiusY * x;
+        dy = 2 * radiusX * radiusX * y;
+        p1 = p1 + dx - dy + (radiusY * radiusY);
+      }
+    }
+
+    // Region 2 decision parameter
+    double p2 = ((radiusY * radiusY) * ((x + 0.5) * (x + 0.5))) +
+        ((radiusX * radiusX) * ((y - 1) * (y - 1))) -
+        (radiusX * radiusX * radiusY * radiusY);
+
+    // Region 2
+    while (y >= 0) {
+      _addEllipsePoints(points, centerX, centerY, x, y, width, height, color);
+
+      if (p2 > 0) {
+        y--;
+        dy = 2 * radiusX * radiusX * y;
+        p2 = p2 - dy + (radiusX * radiusX);
+      } else {
+        y--;
+        x++;
+        dx = 2 * radiusY * radiusY * x;
+        dy = 2 * radiusX * radiusX * y;
+        p2 = p2 + dx - dy + (radiusX * radiusX);
+      }
+    }
+  }
+
+  void _addEllipsePoints(
+    List<PixelPoint<int>> points,
+    int centerX,
+    int centerY,
+    int x,
+    int y,
+    int width,
+    int height,
+    int color,
+  ) {
+    final candidates = [
+      [centerX + x, centerY + y],
+      [centerX - x, centerY + y],
+      [centerX + x, centerY - y],
+      [centerX - x, centerY - y],
+    ];
+
+    for (final candidate in candidates) {
+      final px = candidate[0];
+      final py = candidate[1];
+      if (_isValidPoint(px, py, width, height)) {
+        points.add(PixelPoint(px, py, color: color));
+      }
+    }
+  }
+
+  bool _isValidPoint(int x, int y, int width, int height) {
+    return x >= 0 && x < width && y >= 0 && y < height;
   }
 }
 
@@ -241,10 +417,8 @@ class StarTool extends ShapeTool {
 
       // Inner point
       final innerAngle = outerAngle + angleStep / 2;
-      final innerX =
-          centerX + (radius * innerRadiusRatio * cos(innerAngle)).round();
-      final innerY =
-          centerY + (radius * innerRadiusRatio * sin(innerAngle)).round();
+      final innerX = centerX + (radius * innerRadiusRatio * cos(innerAngle)).round();
+      final innerY = centerY + (radius * innerRadiusRatio * sin(innerAngle)).round();
 
       // Connect points with lines
       points.addAll(_drawLine(

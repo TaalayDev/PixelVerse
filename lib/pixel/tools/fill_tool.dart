@@ -2,7 +2,7 @@ import 'dart:collection';
 import 'dart:math';
 import 'dart:typed_data';
 
-import '../../core/pixel_point.dart';
+import '../pixel_point.dart';
 import '../tools.dart';
 
 class FillTool extends Tool {
@@ -169,8 +169,7 @@ class AdvancedFillTool extends FillTool {
           if (!_isValidPoint(neighbor, width, height)) continue;
 
           final index = neighbor.y * width + neighbor.x;
-          if (_colorWithinTolerance(pixels[index], targetColor) &&
-              !fillPoints.contains(neighbor)) {
+          if (_colorWithinTolerance(pixels[index], targetColor) && !fillPoints.contains(neighbor)) {
             queue.add(neighbor);
             fillPoints.add(neighbor);
 
@@ -236,8 +235,7 @@ class AdvancedFillTool extends FillTool {
     final b2 = color2 & 0xFF;
     final a2 = (color2 >> 24) & 0xFF;
 
-    final diff = sqrt(
-        pow(r1 - r2, 2) + pow(g1 - g2, 2) + pow(b1 - b2, 2) + pow(a1 - a2, 2));
+    final diff = sqrt(pow(r1 - r2, 2) + pow(g1 - g2, 2) + pow(b1 - b2, 2) + pow(a1 - a2, 2));
 
     return diff <= (tolerance * 441.67); // 441.67 = sqrt(255^2 * 4)
   }

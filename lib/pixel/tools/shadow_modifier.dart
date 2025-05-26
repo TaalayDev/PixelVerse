@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:pixelverse/pixel/tools.dart';
 
-import '../../core/pixel_point.dart';
+import '../pixel_point.dart';
 
 class ShadowModifier extends Modifier {
   final int offsetX;

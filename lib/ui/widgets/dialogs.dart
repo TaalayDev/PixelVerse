@@ -5,6 +5,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../../core/utils.dart';
 import '../../data/models/subscription_model.dart';
 import '../../pixel/image_painter.dart';
+import '../../pixel/pixel_draw_state.dart';
 import '../../pixel/providers/pixel_notifier_provider.dart';
 import '../../data.dart';
 import '../widgets.dart';

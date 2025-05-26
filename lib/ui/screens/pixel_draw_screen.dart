@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -9,10 +9,12 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:pixelverse/ui/widgets/animated_background.dart';
 
 import '../../l10n/strings.dart';
+import '../../pixel/canvas/pixel_canvas.dart';
 import '../../pixel/image_painter.dart';
+import '../../pixel/pixel_draw_state.dart';
 import '../../providers/background_image_provider.dart';
 import '../../pixel/providers/pixel_notifier_provider.dart';
-import '../../pixel/animation_frame_controller.dart';
+import '../../pixel/animation_frame_controller.dart' hide AnimationController;
 import '../../pixel/tools.dart';
 import '../../data.dart';
 import '../../providers/subscription_provider.dart';
@@ -20,11 +22,9 @@ import '../widgets/animation_preview_dialog.dart';
 import '../widgets/animation_timeline.dart';
 import '../widgets/effects/effects_panel.dart';
 import '../widgets/grid_painter.dart';
-import '../widgets/pixel_canvas.dart';
 import '../widgets/shortcuts_wrapper.dart';
 import '../widgets/dialogs.dart';
 import '../widgets.dart';
-import '../widgets/theme_selector.dart';
 import '../widgets/tool_bar.dart';
 import '../widgets/tool_menu.dart';
 import '../widgets/tools_bottom_bar.dart';
@@ -41,10 +41,15 @@ class PixelDrawScreen extends StatefulHookConsumerWidget {
   ConsumerState<PixelDrawScreen> createState() => _PixelDrawScreenState();
 }
 
-class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
+class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerProviderStateMixin {
   late Project project = widget.project;
   late PixelDrawNotifierProvider provider = pixelDrawNotifierProvider(project);
   late PixelDrawNotifier notifier = ref.read(provider.notifier);
+
+  final _focusNode = FocusNode();
+  bool _showUI = true;
+  bool _isPanMode = false;
+  Color _backgroundColor = Colors.white;
 
   @override
   void initState() {
@@ -224,6 +229,34 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
     );
   }
 
+  void _toggleUI() {
+    setState(() {
+      _showUI = !_showUI;
+    });
+  }
+
+  void _setZoomFit(ValueNotifier<double> gridScale, ValueNotifier<Offset> gridOffset) {
+    // Calculate zoom to fit canvas in view
+    final screenSize = MediaQuery.of(context).size;
+    final canvasAspectRatio = project.width / project.height;
+    final screenAspectRatio = screenSize.width / screenSize.height;
+
+    double newScale;
+    if (canvasAspectRatio > screenAspectRatio) {
+      newScale = (screenSize.width * 0.8) / project.width;
+    } else {
+      newScale = (screenSize.height * 0.8) / project.height;
+    }
+
+    gridScale.value = newScale.clamp(0.5, 5.0);
+    gridOffset.value = Offset.zero;
+  }
+
+  void _setZoom100(ValueNotifier<double> gridScale, ValueNotifier<Offset> gridOffset) {
+    gridScale.value = 1.0;
+    gridOffset.value = Offset.zero;
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentTool = useState(PixelTool.pencil);
@@ -232,6 +265,8 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
     final height = project.height;
 
     final state = ref.watch(provider);
+    print('Building PixelDrawScreen ${project.hashCode}');
+    print(' ${state.frames.map((f) => f.layers.length)}');
 
     useEffect(() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -258,6 +293,93 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
       onUndo: state.canUndo ? notifier.undo : () {},
       onRedo: state.canRedo ? notifier.redo : () {},
       onSave: () => notifier.exportAnimation(context),
+      onExport: () => handleExport(context, notifier, state),
+      onImport: () async {
+        final result = await showImportDialog(context);
+        if (result != null) {
+          notifier.importImage(context, background: result);
+        }
+      },
+      onToolChanged: (tool) {
+        currentTool.value = tool;
+        if (_isPanMode && tool != PixelTool.drag) {
+          _isPanMode = false;
+        } else if (tool == PixelTool.drag) {
+          _isPanMode = true;
+        }
+      },
+      onBrushSizeChanged: (size) {
+        brushSize.value = size;
+      },
+      onZoomIn: () {
+        gridScale.value = (gridScale.value * 1.1).clamp(0.5, 5.0);
+      },
+      onZoomOut: () {
+        gridScale.value = (gridScale.value / 1.1).clamp(0.5, 5.0);
+      },
+      onZoomFit: () => _setZoomFit(gridScale, gridOffset),
+      onZoom100: () => _setZoom100(gridScale, gridOffset),
+      onSwapColors: () {},
+      onDefaultColors: () {},
+      onToggleUI: _toggleUI,
+      onPanStart: () {
+        if (!_isPanMode) {
+          currentTool.value = PixelTool.drag;
+          _isPanMode = true;
+        }
+      },
+      onPanEnd: () {
+        if (_isPanMode) {
+          currentTool.value = PixelTool.pencil;
+          _isPanMode = false;
+        }
+      },
+      onLayerChanged: (layerIndex) {
+        if (layerIndex < state.layers.length) {
+          notifier.selectLayer(layerIndex);
+        }
+      },
+      onColorPicker: () {
+        showColorPicker(context, notifier);
+      },
+      onNewLayer: () {
+        notifier.addLayer('Layer ${state.layers.length + 1}');
+      },
+      onDeleteLayer: () {
+        if (state.layers.length > 1) {
+          notifier.removeLayer(state.currentLayerIndex);
+        }
+      },
+      onSelectAll: () {
+        // Select entire canvas
+        notifier.setSelection(SelectionModel(
+          x: 0,
+          y: 0,
+          width: width,
+          height: height,
+        ));
+      },
+      onDeselectAll: () {
+        notifier.setSelection(null);
+      },
+      onCopy: () {
+        // TODO: Implement copy functionality
+      },
+      onPaste: () {
+        // TODO: Implement paste functionality
+      },
+      onCut: () {
+        // TODO: Implement cut functionality
+      },
+      onDuplicate: () {
+        // Duplicate current layer
+        final currentLayer = state.layers[state.currentLayerIndex];
+        notifier.addLayer('${currentLayer.name} Copy');
+        // TODO: Copy pixels from current layer to new layer
+      },
+      currentBrushSize: brushSize.value,
+      maxBrushSize: 10,
+      maxLayers: state.layers.length,
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         body: SafeArea(
@@ -293,6 +415,7 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
                   currentModifier: currentModifier,
                   onSelectModifier: (modifier) {
                     currentModifier.value = modifier;
+                    notifier.setCurrentModifier(modifier);
                   },
                   onZoomIn: () {
                     gridScale.value = (gridScale.value * 1.1).clamp(0.5, 5.0);
@@ -336,7 +459,10 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
                           onScaleUpdate: (details) {
                             final pointerCount = details.pointerCount;
                             if (pointerCount == 2) {
-                              gridScale.value = (details.scale * gridScale.value).clamp(0.5, 5.0);
+                              const sensitivity = 0.5;
+                              final initialScale = gridScale.value;
+                              final newScale = initialScale * (1 + (details.scale - 1) * sensitivity);
+                              gridScale.value = newScale.clamp(0.5, 5.0);
                               gridOffset.value = details.focalPoint + normalizedOffset.value * gridScale.value;
                             }
                           },
@@ -363,16 +489,7 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> {
                                         clipBehavior: Clip.hardEdge,
                                         decoration: BoxDecoration(
                                           color: Colors.white,
-                                          border: Border.all(
-                                            color: Colors.grey,
-                                          ),
-                                          // image: const DecorationImage(
-                                          //   image: AssetImage(
-                                          //     'assets/images/girl.png',
-                                          //   ),
-                                          //   opacity: 0.6,
-                                          //   fit: BoxFit.cover,
-                                          // ),
+                                          border: Border.all(color: Colors.grey),
                                         ),
                                         child: PixelPainter(
                                           project: project,
@@ -847,8 +964,10 @@ class PixelPainter extends HookConsumerWidget {
               modifier: currentModifier,
               brushSize: brushSize.value,
               sprayIntensity: sprayIntensity.value,
+              zoomLevel: gridScale.value,
+              currentOffset: gridOffset.value,
               onDrawShape: (points) {
-                notifier.fillPixels(points, currentModifier);
+                notifier.fillPixels(points);
               },
               onStartDrawing: () {
                 // notifier.saveState();

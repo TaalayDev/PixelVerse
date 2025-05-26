@@ -5,4 +5,4 @@ export 'utils/screen_size.dart';
 export 'utils/image_helper.dart';
 export 'utils/queue_manager.dart';
 export 'utils/file_utils.dart';
-export 'utils/pixel_utils.dart';
+export '../pixel/pixel_utils.dart';

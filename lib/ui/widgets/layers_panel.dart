@@ -12,6 +12,7 @@ import 'package:pixelverse/ui/widgets/subscription/feature_gate.dart';
 import '../../pixel/image_painter.dart';
 import '../../l10n/strings.dart';
 import '../../data.dart';
+import '../../pixel/pixel_draw_state.dart';
 import '../../providers/background_image_provider.dart';
 import '../../pixel/providers/pixel_notifier_provider.dart';
 import 'layers_preview.dart';

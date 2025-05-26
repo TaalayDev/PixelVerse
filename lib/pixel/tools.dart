@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../core/pixel_point.dart';
+import 'pixel_point.dart';
 import '../data/models/layer.dart';
 
 enum PixelTool {

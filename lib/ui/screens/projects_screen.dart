@@ -1105,7 +1105,7 @@ class ProjectCard extends StatelessWidget {
           ),
         ),
       );
-    } else {
+    } else if (project.remoteId == null) {
       // Upload to cloud
       items.add(
         const PopupMenuItem(

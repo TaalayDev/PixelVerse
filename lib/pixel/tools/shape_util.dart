@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'dart:ui';
 
-import '../../core/pixel_point.dart';
+import '../pixel_point.dart';
 
 class ShapeUtils {
   final int width;
@@ -238,8 +238,7 @@ class ShapeUtils {
         int index = pixels.indexOf(point);
         if (index == 0) return false;
         Point<int> prevPoint = pixels[index - 1];
-        return (point.x - prevPoint.x).abs() == 1 &&
-            (point.y - prevPoint.y).abs() == 1;
+        return (point.x - prevPoint.x).abs() == 1 && (point.y - prevPoint.y).abs() == 1;
       });
     }
 

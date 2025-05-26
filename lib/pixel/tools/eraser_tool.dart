@@ -1,28 +1,28 @@
 import '../pixel_point.dart';
 import '../tools.dart';
 
-class PencilTool extends Tool {
+class EraserTool extends Tool {
   List<PixelPoint<int>> _currentPixels = [];
   PixelPoint<int>? _previousPoint;
 
-  PencilTool() : super(PixelTool.pencil);
+  EraserTool() : super(PixelTool.eraser);
 
   @override
   void onStart(PixelDrawDetails details) {
     _currentPixels = [];
     _previousPoint = null;
 
-    final point = details.pixelPosition;
+    // Create eraser pixel with transparent color but mark it specially
+    final point = details.pixelPosition.copyWith(color: 0x00000000); // Transparent
     if (_isValidPoint(point, details.width, details.height)) {
       _addPoint(point, details);
-
       details.onPixelsUpdated(_currentPixels);
     }
   }
 
   @override
   void onMove(PixelDrawDetails details) {
-    final point = details.pixelPosition;
+    final point = details.pixelPosition.copyWith(color: 0x00000000); // Transparent
 
     if (_isValidPoint(point, details.width, details.height)) {
       if (_previousPoint != null) {
@@ -59,14 +59,13 @@ class PencilTool extends Tool {
           final p = PixelPoint(
             point.x + x,
             point.y + y,
-            color: details.color.value,
+            color: 0x00000000, // Transparent for eraser
           );
           if (_isValidPoint(p, details.width, details.height)) {
             _addPoint(p, details);
           }
         }
       }
-
       details.onPixelsUpdated(_currentPixels);
     }
   }
@@ -83,8 +82,9 @@ class PencilTool extends Tool {
           details.width,
           details.height,
         );
-
-        _currentPixels.addAll(modPoints);
+        // Make sure modifier points are also transparent
+        final eraserModPoints = modPoints.map((p) => PixelPoint(p.x, p.y, color: 0x00000000)).toList();
+        _currentPixels.addAll(eraserModPoints);
       }
     }
   }
@@ -107,7 +107,7 @@ class PencilTool extends Tool {
     var err = dx - dy;
 
     while (true) {
-      points.add(PixelPoint(x0, y0, color: start.color));
+      points.add(PixelPoint(x0, y0, color: 0x00000000)); // Transparent
 
       if (x0 == x1 && y0 == y1) break;
 
@@ -123,5 +123,11 @@ class PencilTool extends Tool {
     }
 
     return points;
+  }
+}
+
+extension PixelPointCopyWith on PixelPoint<int> {
+  PixelPoint<int> copyWith({int? color}) {
+    return PixelPoint(x, y, color: color ?? this.color);
   }
 }

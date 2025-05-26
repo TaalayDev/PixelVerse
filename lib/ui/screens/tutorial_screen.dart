@@ -6,7 +6,7 @@ import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:pixelverse/pixel/tools/pencil_tool.dart';
 
-import '../../core/pixel_point.dart';
+import '../../pixel/pixel_point.dart';
 import '../../pixel/tools.dart';
 import '../../data.dart';
 import '../../pixel/providers/pixel_notifier_provider.dart';
@@ -164,13 +164,12 @@ class DrawingTutorialScreen extends HookConsumerWidget {
                               layers: state.layers,
                               currentLayerIndex: state.currentLayerIndex,
                               onTapPixel: (x, y) => notifier.setPixel(x, y),
-                              onStartDrawing: () => notifier.saveState(),
+                              onStartDrawing: () {},
                               onFinishDrawing: () {},
                               currentTool: state.currentTool,
                               currentColor: state.currentColor,
                               onDrawShape: (points) => notifier.fillPixels(
                                 points,
-                                PixelModifier.none,
                               ),
                             ),
                           ),

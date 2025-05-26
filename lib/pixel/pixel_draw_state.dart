@@ -27,6 +27,7 @@ class PixelDrawState with _$PixelDrawState {
     final SelectionModel? selectionRect,
     @Default(false) final bool canUndo,
     @Default(false) final bool canRedo,
+    @Default(PixelModifier.none) final PixelModifier currentModifier,
   }) = _PixelDrawState;
 
   // Computed properties

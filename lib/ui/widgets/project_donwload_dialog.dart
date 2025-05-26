@@ -25,10 +25,7 @@ class ProjectDownloadDialog extends HookConsumerWidget {
         ref.read(projectDownloadProvider.notifier).downloadProject(project);
       });
 
-      return () {
-        // Reset state when dialog closes
-        ref.read(projectDownloadProvider.notifier).resetState();
-      };
+      return () {};
     }, []);
 
     return AlertDialog(

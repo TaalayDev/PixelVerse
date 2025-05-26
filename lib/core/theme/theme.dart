@@ -638,7 +638,7 @@ class AppTheme {
       bottomAppBarTheme: BottomAppBarTheme(
         color: toolbarColor,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: surface,
         shadowColor: isDark ? Colors.black54 : Colors.black12,
         elevation: 2,
