@@ -1,8 +1,13 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:logging/logging.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import '../data/models/auth_api_models.dart';
 import '../data/storage/local_storage.dart';
@@ -16,7 +21,7 @@ class AuthState with _$AuthState {
   const factory AuthState({
     @Default(false) bool isLoading,
     @Default(false) bool isSignedIn,
-    GoogleSignInAccount? user,
+    User? user,
     String? error,
     ApiUser? apiUser,
   }) = _AuthState;
@@ -28,6 +33,10 @@ class Auth extends _$Auth {
 
   late final GoogleSignIn _googleSignIn;
   late final FirebaseAuth _firebaseAuth;
+
+  static bool get isAppleSignInAvailable {
+    return !kIsWeb && (Platform.isIOS || Platform.isMacOS);
+  }
 
   @override
   AuthState build() {
@@ -42,16 +51,17 @@ class Auth extends _$Auth {
 
     _firebaseAuth = FirebaseAuth.instance;
 
-    // Check if user is already signed in
-    _checkCurrentUser();
+    scheduleMicrotask(() async {
+      await _checkCurrentUser();
+    });
 
     return const AuthState();
   }
 
   Future<void> _checkCurrentUser() async {
     try {
-      final currentUser = await _googleSignIn.signInSilently();
-      if (currentUser != null && ref.read(localStorageProvider).token?.isNotEmpty == true) {
+      final currentUser = _firebaseAuth.currentUser;
+      if (ref.read(localStorageProvider).token?.isNotEmpty == true) {
         state = state.copyWith(
           isSignedIn: true,
           user: currentUser,
@@ -103,12 +113,12 @@ class Auth extends _$Auth {
         }
 
         // Authenticate with your API using the Firebase ID token
-        await _authenticateWithAPI(idToken, googleUser);
+        await _authenticateWithAPI(idToken, googleUser: googleUser);
 
         state = state.copyWith(
           isLoading: false,
           isSignedIn: true,
-          user: googleUser,
+          user: firebaseUser,
         );
 
         ref.read(analyticsProvider).logEvent(
@@ -136,14 +146,107 @@ class Auth extends _$Auth {
     }
   }
 
-  Future<void> _authenticateWithAPI(String idToken, GoogleSignInAccount googleUser) async {
+  Future<void> signInWithApple() async {
     try {
-      // Call your API to authenticate/register user with Google ID token
+      state = state.copyWith(
+        isLoading: true,
+        error: null,
+      );
+
+      ref.read(analyticsProvider).logEvent(name: 'apple_sign_in_attempt');
+
+      // Request Apple Sign-In
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        webAuthenticationOptions: kIsWeb
+            ? WebAuthenticationOptions(
+                clientId: 'your-apple-service-id',
+                redirectUri: Uri.parse('https://keremetapps.if.ua/auth/callback'),
+              )
+            : null,
+      );
+
+      // Create Firebase credential from Apple credential
+      final oauthCredential = OAuthProvider("apple.com").credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode,
+      );
+
+      // Sign in with Firebase using Apple credentials
+      final UserCredential userCredential = await _firebaseAuth.signInWithCredential(oauthCredential);
+      final User? firebaseUser = userCredential.user;
+
+      if (firebaseUser != null) {
+        // Get ID token for API authentication
+        final idToken = await firebaseUser.getIdToken();
+        if (idToken == null) {
+          throw Exception('Failed to get ID token');
+        }
+
+        // Update display name if this is the first time signing in
+        if (firebaseUser.displayName == null &&
+            appleCredential.givenName != null &&
+            appleCredential.familyName != null) {
+          final displayName = '${appleCredential.givenName} ${appleCredential.familyName}';
+          await firebaseUser.updateDisplayName(displayName);
+        }
+
+        // Authenticate with your API using the Firebase ID token
+        await _authenticateWithAPI(
+          idToken,
+          appleCredential: appleCredential,
+        );
+
+        state = state.copyWith(
+          isLoading: false,
+          isSignedIn: true,
+          user: firebaseUser,
+        );
+
+        ref.read(analyticsProvider).logEvent(
+          name: 'apple_sign_in_success',
+          parameters: {
+            'user_id': firebaseUser.uid,
+            'email': firebaseUser.email ?? '',
+          },
+        );
+      } else {
+        throw Exception('Firebase authentication failed');
+      }
+    } catch (e) {
+      _logger.severe('Apple sign-in failed: $e');
+
+      // Handle specific Apple Sign-In errors
+      String errorMessage = _getAppleSignInErrorMessage(e);
+
+      state = state.copyWith(
+        isLoading: false,
+        error: errorMessage,
+      );
+
+      ref.read(analyticsProvider).logEvent(
+        name: 'apple_sign_in_failed',
+        parameters: {'error': e.toString()},
+      );
+    }
+  }
+
+  Future<void> _authenticateWithAPI(
+    String idToken, {
+    GoogleSignInAccount? googleUser,
+    AuthorizationCredentialAppleID? appleCredential,
+  }) async {
+    assert(idToken.isNotEmpty, 'ID token must not be empty');
+    assert(googleUser != null || appleCredential != null, 'At least one credential must be provided');
+    try {
       final response = await ref.read(authAPIRepoProvider).loginWithGoogle(
             idToken: idToken,
-            email: googleUser.email,
-            displayName: googleUser.displayName,
-            photoUrl: googleUser.photoUrl,
+            email: googleUser?.email ?? appleCredential?.email ?? '',
+            displayName: googleUser?.displayName ?? appleCredential?.givenName,
+            photoUrl: googleUser?.photoUrl,
           );
 
       if (response.success && response.data != null) {
@@ -233,6 +336,26 @@ class Auth extends _$Auth {
 
   void clearError() {
     state = state.copyWith(error: null);
+  }
+
+  String _getAppleSignInErrorMessage(dynamic error) {
+    if (error is SignInWithAppleAuthorizationException) {
+      switch (error.code) {
+        case AuthorizationErrorCode.canceled:
+          return 'Apple Sign-In was canceled.';
+        case AuthorizationErrorCode.failed:
+          return 'Apple Sign-In failed. Please try again.';
+        case AuthorizationErrorCode.invalidResponse:
+          return 'Invalid response from Apple Sign-In.';
+        case AuthorizationErrorCode.notHandled:
+          return 'Apple Sign-In request was not handled.';
+        case AuthorizationErrorCode.unknown:
+          return 'An unknown error occurred with Apple Sign-In.';
+        default:
+          return 'Apple Sign-In failed: ${error.message}';
+      }
+    }
+    return _getErrorMessage(error);
   }
 
   String _getErrorMessage(dynamic error) {

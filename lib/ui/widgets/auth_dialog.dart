@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -6,8 +9,12 @@ import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import '../../l10n/strings.dart';
 import '../../providers/auth_provider.dart';
 
-class GoogleAuthDialog extends HookConsumerWidget {
-  const GoogleAuthDialog({
+class AuthDialog extends HookConsumerWidget {
+  bool get isAppleSignInAvailable {
+    return !kIsWeb && (Platform.isIOS || Platform.isMacOS);
+  }
+
+  const AuthDialog({
     super.key,
     this.title,
     this.subtitle,
@@ -33,7 +40,7 @@ class GoogleAuthDialog extends HookConsumerWidget {
     return showDialog<bool>(
       context: context,
       barrierDismissible: !showSkipOption,
-      builder: (context) => GoogleAuthDialog(
+      builder: (context) => AuthDialog(
         title: title,
         subtitle: subtitle,
         showSkipOption: showSkipOption,
@@ -152,38 +159,78 @@ class GoogleAuthDialog extends HookConsumerWidget {
           ],
 
           // Sign in button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: authState.isLoading ? null : () => authNotifier.signInWithGoogle(),
-              icon: authState.isLoading
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Theme.of(context).colorScheme.onPrimary,
-                        ),
+          Column(
+            children: [
+              if (isAppleSignInAvailable) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: authState.isLoading ? null : () => authNotifier.signInWithApple(),
+                    icon: authState.isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                        : _buildAppleIcon(),
+                    label: Text(
+                      authState.isLoading ? 'Signing In...' : 'Continue with Apple',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
-                    )
-                  : _buildGoogleIcon(),
-              label: Text(
-                authState.isLoading ? 'Signing In' : 'Sign in with Google',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: authState.isLoading ? null : () => authNotifier.signInWithGoogle(),
+                  icon: authState.isLoading
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Theme.of(context).colorScheme.onPrimary,
+                            ),
+                          ),
+                        )
+                      : _buildGoogleIcon(),
+                  label: Text(
+                    authState.isLoading ? 'Signing In' : 'Sign in with Google',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
+            ],
           ),
 
           // Skip option
@@ -214,6 +261,18 @@ class GoogleAuthDialog extends HookConsumerWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildAppleIcon() {
+    return const SizedBox(
+      width: 20,
+      height: 20,
+      child: Icon(
+        AntDesign.apple1,
+        size: 18,
+        color: Colors.white,
       ),
     );
   }
@@ -335,12 +394,12 @@ class UserProfileWidget extends ConsumerWidget {
           children: [
             CircleAvatar(
               radius: 24,
-              backgroundImage: user.photoUrl != null ? NetworkImage(user.photoUrl!) : null,
-              child: user.photoUrl == null
+              backgroundImage: user.photoURL != null ? NetworkImage(user.photoURL!) : null,
+              child: user.photoURL == null
                   ? Text(
                       user.displayName?.isNotEmpty == true
                           ? user.displayName![0].toUpperCase()
-                          : user.email[0].toUpperCase(),
+                          : (user.email ?? 'A')[0].toUpperCase(),
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -361,7 +420,7 @@ class UserProfileWidget extends ConsumerWidget {
                           ),
                     ),
                   Text(
-                    user.email,
+                    user.email ?? 'No email',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                         ),

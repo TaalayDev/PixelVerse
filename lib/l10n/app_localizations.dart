@@ -445,6 +445,24 @@ abstract class Strings {
   /// In en, this message translates to:
   /// **'File'**
   String get fileMenu;
+
+  /// No description provided for @profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile;
+
+  /// No description provided for @logout.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout'**
+  String get logout;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccount;
 }
 
 class _StringsDelegate extends LocalizationsDelegate<Strings> {

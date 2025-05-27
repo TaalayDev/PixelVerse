@@ -7,7 +7,7 @@ part of 'pixel_controller_provider.dart';
 // **************************************************************************
 
 String _$pixelDrawControllerHash() =>
-    r'5ebe7f0bb2fbfc0b169e04b714851f654673bc22';
+    r'18ca7189332a0af5dd26a4f795033c3b801ef9d0';
 
 /// Copied from Dart SDK
 class _SystemHash {

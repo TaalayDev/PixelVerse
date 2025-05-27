@@ -18,7 +18,7 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$AuthState {
   bool get isLoading => throw _privateConstructorUsedError;
   bool get isSignedIn => throw _privateConstructorUsedError;
-  GoogleSignInAccount? get user => throw _privateConstructorUsedError;
+  User? get user => throw _privateConstructorUsedError;
   String? get error => throw _privateConstructorUsedError;
   ApiUser? get apiUser => throw _privateConstructorUsedError;
 
@@ -35,7 +35,7 @@ abstract class $AuthStateCopyWith<$Res> {
   $Res call(
       {bool isLoading,
       bool isSignedIn,
-      GoogleSignInAccount? user,
+      User? user,
       String? error,
       ApiUser? apiUser});
 
@@ -73,7 +73,7 @@ class _$AuthStateCopyWithImpl<$Res, $Val extends AuthState>
       user: freezed == user
           ? _value.user
           : user // ignore: cast_nullable_to_non_nullable
-              as GoogleSignInAccount?,
+              as User?,
       error: freezed == error
           ? _value.error
           : error // ignore: cast_nullable_to_non_nullable
@@ -109,7 +109,7 @@ abstract class _$$AuthStateImplCopyWith<$Res>
   $Res call(
       {bool isLoading,
       bool isSignedIn,
-      GoogleSignInAccount? user,
+      User? user,
       String? error,
       ApiUser? apiUser});
 
@@ -146,7 +146,7 @@ class __$$AuthStateImplCopyWithImpl<$Res>
       user: freezed == user
           ? _value.user
           : user // ignore: cast_nullable_to_non_nullable
-              as GoogleSignInAccount?,
+              as User?,
       error: freezed == error
           ? _value.error
           : error // ignore: cast_nullable_to_non_nullable
@@ -176,7 +176,7 @@ class _$AuthStateImpl implements _AuthState {
   @JsonKey()
   final bool isSignedIn;
   @override
-  final GoogleSignInAccount? user;
+  final User? user;
   @override
   final String? error;
   @override
@@ -216,7 +216,7 @@ abstract class _AuthState implements AuthState {
   const factory _AuthState(
       {final bool isLoading,
       final bool isSignedIn,
-      final GoogleSignInAccount? user,
+      final User? user,
       final String? error,
       final ApiUser? apiUser}) = _$AuthStateImpl;
 
@@ -225,7 +225,7 @@ abstract class _AuthState implements AuthState {
   @override
   bool get isSignedIn;
   @override
-  GoogleSignInAccount? get user;
+  User? get user;
   @override
   String? get error;
   @override

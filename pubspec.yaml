@@ -1,7 +1,7 @@
 name: pixelverse
 description: "A new Flutter project."
 
-version: 1.2.2+10
+version: 1.2.3+11
 
 environment:
   sdk: ">=3.4.4 <4.0.0"
@@ -77,6 +77,7 @@ dependencies:
   firebase_analytics: ^11.4.6
   firebase_auth: ^5.5.4
   google_sign_in: ^6.3.0
+  sign_in_with_apple: ^7.0.1
 
   # subscription
   in_app_purchase: ^3.2.0

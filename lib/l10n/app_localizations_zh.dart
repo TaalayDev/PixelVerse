@@ -184,4 +184,13 @@ class StringsZh extends Strings {
 
   @override
   String get fileMenu => 'File';
+
+  @override
+  String get profile => 'Profile';
+
+  @override
+  String get logout => 'Logout';
+
+  @override
+  String get deleteAccount => 'Delete Account';
 }

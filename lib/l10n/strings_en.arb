@@ -69,5 +69,8 @@
     "height": "Height",
     "create": "Create",
     "subscriptions": "Subscriptions",
-    "fileMenu": "File"
+    "fileMenu": "File",
+    "profile": "Profile",
+    "logout": "Logout",
+    "deleteAccount": "Delete Account"
 }

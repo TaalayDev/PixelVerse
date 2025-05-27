@@ -89,7 +89,7 @@ class ProjectUploadDialog extends HookConsumerWidget {
             color: Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(width: 12),
-          Text(isUpdate ? 'Update Project' : 'Upload Project'),
+          Text(isUpdate ? 'Update Project' : 'Upload Project', style: Theme.of(context).textTheme.titleLarge),
         ],
       ),
       content: ConstrainedBox(

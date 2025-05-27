@@ -186,6 +186,15 @@ class StringsEn extends Strings {
 
   @override
   String get fileMenu => 'File';
+
+  @override
+  String get profile => 'Profile';
+
+  @override
+  String get logout => 'Logout';
+
+  @override
+  String get deleteAccount => 'Delete Account';
 }
 
 /// The translations for English, as used in the United States (`en_US`).

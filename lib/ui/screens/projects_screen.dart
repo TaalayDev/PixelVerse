@@ -9,7 +9,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:pixelverse/ui/widgets/animated_background.dart';
-import 'package:pixelverse/ui/widgets/google_auth_dialog.dart';
+import 'package:pixelverse/ui/widgets/auth_dialog.dart';
 
 import '../../data/models/subscription_model.dart';
 import '../../data/models/project_api_models.dart';
@@ -26,6 +26,7 @@ import '../../providers/subscription_provider.dart';
 import '../widgets.dart';
 import '../widgets/animated_pro_button.dart';
 import '../widgets/community_project_card.dart';
+import '../widgets/delete_account_dialog.dart';
 import '../widgets/project_upload_dialog.dart';
 import '../widgets/subscription/subscription_menu.dart';
 import '../widgets/theme_selector.dart';
@@ -47,9 +48,10 @@ class ProjectsScreen extends HookConsumerWidget {
     final showBadge = useState(false);
     final subscription = ref.watch(subscriptionStateProvider);
 
-    final tabController = useTabController(initialLength: 2);
-
     final authState = ref.watch(authProvider);
+    final showProfileIcon = useState(false);
+
+    final tabController = useTabController(initialLength: 2);
 
     useEffect(() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -62,6 +64,22 @@ class ProjectsScreen extends HookConsumerWidget {
         }
       };
     }, []);
+
+    final tabListener = useCallback(() {
+      if (authState.isSignedIn && tabController.index == 1) {
+        showProfileIcon.value = true;
+      } else {
+        showProfileIcon.value = false;
+      }
+    }, [authState, tabController]);
+
+    useEffect(() {
+      tabController.removeListener(tabListener);
+
+      // Listen for tab changes
+      tabController.addListener(tabListener);
+      return null;
+    }, [authState]);
 
     return AnimatedBackground(
       child: Scaffold(
@@ -134,9 +152,103 @@ class ProjectsScreen extends HookConsumerWidget {
               const SizedBox(width: 8),
             ],
             const ThemeSelector(),
-            IconButton(
-              icon: const Icon(Feather.plus),
-              onPressed: () => _navigateToNewProject(context, ref, subscription),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: showProfileIcon.value && authState.isSignedIn
+                  ? PopupMenuButton<String>(
+                      icon: authState.apiUser?.avatarUrl != null
+                          ? CircleAvatar(
+                              backgroundImage: authState.apiUser?.avatarUrl != null
+                                  ? NetworkImage(authState.apiUser!.avatarUrl!)
+                                  : const AssetImage('assets/images/default_avatar.png'),
+                              radius: 15,
+                            )
+                          : const Icon(Feather.user),
+                      offset: const Offset(0, 45),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 8,
+                      shadowColor: Theme.of(context).shadowColor.withOpacity(0.3),
+                      surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
+                      onSelected: (value) {
+                        if (value == 'delete_account') {
+                          DeleteAccountDialog.show(
+                            context,
+                            onSuccess: () {},
+                          );
+                        } else if (value == 'logout') {
+                          ref.read(authProvider.notifier).signOut();
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        if (authState.apiUser?.displayName != null)
+                          PopupMenuItem(
+                            enabled: false,
+                            height: 56,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (authState.apiUser?.displayName != null)
+                                  Text(
+                                    authState.apiUser!.displayName!,
+                                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          color: Theme.of(context).colorScheme.onSurface,
+                                        ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        if (authState.apiUser?.displayName != null) const PopupMenuDivider(),
+                        PopupMenuItem(
+                          value: 'logout',
+                          height: 48,
+                          child: Row(
+                            children: [
+                              Icon(
+                                Feather.log_out,
+                                size: 18,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                Strings.of(context).logout,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuDivider(),
+                        PopupMenuItem(
+                          value: 'delete_account',
+                          height: 48,
+                          child: Row(
+                            children: [
+                              Icon(
+                                Feather.trash_2,
+                                size: 18,
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                Strings.of(context).deleteAccount,
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      color: Theme.of(context).colorScheme.error,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    )
+                  : IconButton(
+                      icon: const Icon(Feather.plus),
+                      onPressed: () => _navigateToNewProject(context, ref, subscription),
+                    ),
             ),
           ],
           bottom: PreferredSize(
@@ -371,7 +483,7 @@ class ProjectsScreen extends HookConsumerWidget {
     if (authState.isSignedIn) {
       ProjectUploadDialog.show(context, project);
     } else {
-      final auth = await GoogleAuthDialog.show(context);
+      final auth = await AuthDialog.show(context);
       if (!context.mounted) return;
       if (auth == true) {
         ProjectUploadDialog.show(context, project);
