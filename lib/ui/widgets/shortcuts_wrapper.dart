@@ -34,6 +34,7 @@ class ShortcutsWrapper extends StatefulWidget {
     this.onPaste,
     this.onCut,
     this.onDuplicate,
+    this.onCtrlEnter,
     this.currentBrushSize = 1,
     this.maxBrushSize = 10,
     this.maxLayers = 10,
@@ -83,6 +84,7 @@ class ShortcutsWrapper extends StatefulWidget {
   final VoidCallback? onPaste;
   final VoidCallback? onCut;
   final VoidCallback? onDuplicate;
+  final VoidCallback? onCtrlEnter;
 
   // State
   final int currentBrushSize;
@@ -235,6 +237,7 @@ class _ShortcutsWrapperState extends State<ShortcutsWrapper> {
       LogicalKeySet(controlKey, LogicalKeyboardKey.keyV): const PasteIntent(),
       LogicalKeySet(controlKey, LogicalKeyboardKey.keyX): const CutIntent(),
       LogicalKeySet(controlKey, LogicalKeyboardKey.keyJ): const DuplicateIntent(),
+      LogicalKeySet(controlKey, LogicalKeyboardKey.enter): CallbackIntent(widget.onCtrlEnter ?? () {}),
     };
   }
 
@@ -327,6 +330,7 @@ class _ShortcutsWrapperState extends State<ShortcutsWrapper> {
       DuplicateIntent: CallbackAction<DuplicateIntent>(
         onInvoke: (intent) => widget.onDuplicate?.call(),
       ),
+      CallbackIntent: CallbackAction<CallbackIntent>(onInvoke: (intent) => intent.callback()),
     };
   }
 }
@@ -433,4 +437,10 @@ class CutIntent extends Intent {
 
 class DuplicateIntent extends Intent {
   const DuplicateIntent();
+}
+
+class CallbackIntent extends Intent {
+  final VoidCallback callback;
+
+  const CallbackIntent(this.callback);
 }

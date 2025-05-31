@@ -265,8 +265,6 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerPr
     final height = project.height;
 
     final state = ref.watch(provider);
-    print('Building PixelDrawScreen ${project.hashCode}');
-    print(' ${state.frames.map((f) => f.layers.length)}');
 
     useEffect(() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -376,6 +374,11 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerPr
         final currentLayer = state.layers[state.currentLayerIndex];
         notifier.addLayer('${currentLayer.name} Copy');
         // TODO: Copy pixels from current layer to new layer
+      },
+      onCtrlEnter: () {
+        if (currentTool.value == PixelTool.pen) {
+          notifier.pushEvent(const ClosePenPathEvent());
+        }
       },
       currentBrushSize: brushSize.value,
       maxBrushSize: 10,
@@ -901,16 +904,30 @@ class PixelPainter extends HookConsumerWidget {
         // offset: gridOffset.value,
       ),
       child: Stack(
+        alignment: Alignment.center,
         children: [
           if (backgroundImage.image != null)
             Positioned.fill(
-              child: Opacity(
-                opacity: backgroundImage.opacity,
-                child: Image.memory(
-                  backgroundImage.image!,
-                  fit: BoxFit.cover,
-                ),
-              ),
+              child: LayoutBuilder(builder: (context, constraints) {
+                final maXWidth = constraints.maxWidth;
+                final maXHeight = constraints.maxHeight;
+
+                return Opacity(
+                  opacity: backgroundImage.opacity,
+                  child: Transform(
+                    transform: Matrix4.identity()
+                      ..scale(backgroundImage.scale)
+                      ..translate(
+                        backgroundImage.offset.dx * maXWidth,
+                        backgroundImage.offset.dy * maXHeight,
+                      ),
+                    child: Image.memory(
+                      backgroundImage.image!,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                );
+              }),
             ),
           if (showPrevFrames)
             for (var i = 0; i < state.currentFrameIndex; i++)
@@ -966,6 +983,7 @@ class PixelPainter extends HookConsumerWidget {
               sprayIntensity: sprayIntensity.value,
               zoomLevel: gridScale.value,
               currentOffset: gridOffset.value,
+              eventStream: notifier.eventStream,
               onDrawShape: (points) {
                 notifier.fillPixels(points);
               },

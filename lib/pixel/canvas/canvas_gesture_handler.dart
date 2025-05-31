@@ -31,6 +31,9 @@ class CanvasGestureHandler {
   // Drawing state
   bool _isDrawingActive = false;
 
+  final Map<int, PointerEvent> _activePointers = {};
+  bool _isRawPointerDrawing = false;
+
   CanvasGestureHandler({
     required this.controller,
     required this.toolManager,
@@ -113,7 +116,7 @@ class CanvasGestureHandler {
       toolManager.handlePenTap(drawDetails, controller);
     } else if (currentTool == PixelTool.select) {
       toolManager.handleSelectionStart(drawDetails);
-    } else {
+    } else if (currentTool != PixelTool.drag) {
       _startDrawing(currentTool, drawDetails);
     }
   }
@@ -138,7 +141,8 @@ class CanvasGestureHandler {
     if (currentTool == PixelTool.drag) {
       _panStartPosition = details.focalPoint - controller.offset;
       onStartDrag?.call(controller.zoomLevel, controller.offset);
-    } else {
+    } else if (!_isDrawingActive) {
+      // Only start drawing if not already active (prevents double initialization)
       onStartDrawing();
       toolManager.startDrawing(currentTool, drawDetails);
       _isDrawingActive = true;
@@ -216,7 +220,6 @@ class CanvasGestureHandler {
 
   void _finishDrawing() {
     final previewPixels = List<PixelPoint<int>>.from(controller.previewPixels);
-    controller.clearPreviewPixels();
 
     if (previewPixels.isNotEmpty) {
       onDrawShape(previewPixels);
@@ -224,6 +227,14 @@ class CanvasGestureHandler {
 
     onFinishDrawing();
     _isDrawingActive = false;
+  }
+
+  void finishDrawing() {
+    if (_isRawPointerDrawing) {
+      _finishRawPointerDrawing();
+    } else {
+      _finishDrawing();
+    }
   }
 
   void _resetTwoFingerState() {
@@ -240,4 +251,257 @@ class CanvasGestureHandler {
   bool _shouldFinishImmediately(PixelTool tool) {
     return tool == PixelTool.fill || tool == PixelTool.eyedropper;
   }
+
+  void handlePointerDown(
+    PointerDownEvent event,
+    PixelTool currentTool,
+    PixelDrawDetails drawDetails,
+  ) {
+    _activePointers[event.pointer] = event;
+    final pointerCount = _activePointers.length;
+
+    if (pointerCount == 1) {
+      _handleSinglePointerDown(event, currentTool, drawDetails);
+    } else if (pointerCount == 2) {
+      _handleTwoPointerDown(event, currentTool);
+    }
+  }
+
+  void handlePointerMove(
+    PointerMoveEvent event,
+    PixelTool currentTool,
+    PixelDrawDetails drawDetails,
+  ) {
+    if (!_activePointers.containsKey(event.pointer)) return;
+
+    _activePointers[event.pointer] = event;
+    final pointerCount = _activePointers.length;
+
+    if (pointerCount == 1) {
+      _handleSinglePointerMove(event, currentTool, drawDetails);
+    } else if (pointerCount == 2) {
+      _handleTwoPointerMove(event, currentTool);
+    }
+  }
+
+  void handlePointerUp(
+    PointerUpEvent event,
+    PixelTool currentTool,
+    PixelDrawDetails drawDetails,
+  ) {
+    _activePointers.remove(event.pointer);
+    final pointerCount = _activePointers.length;
+
+    if (pointerCount == 0) {
+      _handleAllPointersUp(event, currentTool, drawDetails);
+    } else if (pointerCount == 1) {
+      // Switched from multi-touch to single touch
+      _handleMultiToSinglePointer(currentTool);
+    }
+  }
+
+  void _handleSinglePointerDown(
+    PointerDownEvent event,
+    PixelTool currentTool,
+    PixelDrawDetails drawDetails,
+  ) {
+    if (currentTool == PixelTool.drag) {
+      _panStartPosition = event.position - controller.offset;
+      onStartDrag?.call(controller.zoomLevel, controller.offset);
+    } else if (_shouldHandleDirectTap(currentTool)) {
+      // Immediate tools like fill, eyedropper
+      onStartDrawing();
+      toolManager.handleTap(currentTool, drawDetails);
+
+      if (_shouldFinishImmediately(currentTool)) {
+        _finishDrawing();
+      }
+    } else if (currentTool == PixelTool.pen) {
+      toolManager.handlePenTap(
+        drawDetails,
+        controller,
+        onPathClosed: () {
+          _finishDrawing();
+        },
+      );
+    } else if (currentTool == PixelTool.select) {
+      toolManager.handleSelectionStart(drawDetails);
+    } else {
+      // Drawing tools - start immediately
+      onStartDrawing();
+      toolManager.startDrawing(currentTool, drawDetails);
+      _isRawPointerDrawing = true;
+    }
+  }
+
+  void _handleSinglePointerMove(
+    PointerMoveEvent event,
+    PixelTool currentTool,
+    PixelDrawDetails drawDetails,
+  ) {
+    if (currentTool == PixelTool.drag && _panStartPosition != null) {
+      final newOffset = event.position - _panStartPosition!;
+      controller.setOffset(newOffset);
+      onDrag?.call(controller.zoomLevel, newOffset);
+    } else if (_isRawPointerDrawing) {
+      toolManager.continueDrawing(currentTool, drawDetails);
+    } else if (currentTool == PixelTool.select) {
+      // Handle selection dragging
+      toolManager.handleSelectionUpdate(drawDetails);
+    }
+  }
+
+  void _handleTwoPointerDown(
+    PointerDownEvent event,
+    PixelTool currentTool,
+  ) {
+    // Stop any ongoing drawing when second finger touches
+    if (_isRawPointerDrawing) {
+      _finishRawPointerDrawing();
+    }
+
+    // Initialize two-finger gesture (zoom/pan or undo)
+    final pointers = _activePointers.values.toList();
+    if (pointers.length >= 2) {
+      final pointer1 = pointers[0];
+      final pointer2 = pointers[1];
+      final focalPoint = Offset(
+        (pointer1.position.dx + pointer2.position.dx) / 2,
+        (pointer1.position.dy + pointer2.position.dy) / 2,
+      );
+
+      _twoFingerStartFocalPoint = focalPoint;
+      _twoFingerStartTimeMs = DateTime.now().millisecondsSinceEpoch;
+      _initialTwoFingerScale = controller.zoomLevel;
+      _isTwoFingerPotentiallyUndo = true;
+      _normalizedOffset = (controller.offset - focalPoint) / controller.zoomLevel;
+    }
+  }
+
+  void _handleTwoPointerMove(
+    PointerMoveEvent event,
+    PixelTool currentTool,
+  ) {
+    final pointers = _activePointers.values.toList();
+    if (pointers.length < 2) return;
+
+    final pointer1 = pointers[0];
+    final pointer2 = pointers[1];
+
+    // Calculate current focal point and scale
+    final currentFocalPoint = Offset(
+      (pointer1.position.dx + pointer2.position.dx) / 2,
+      (pointer1.position.dy + pointer2.position.dy) / 2,
+    );
+
+    final currentDistance = (pointer1.position - pointer2.position).distance;
+    final initialDistance = _getInitialTwoPointerDistance();
+
+    if (_isTwoFingerPotentiallyUndo && _twoFingerStartFocalPoint != null) {
+      final distanceMoved = (currentFocalPoint - _twoFingerStartFocalPoint!).distance;
+      final scaleChange = initialDistance > 0 ? (currentDistance / initialDistance - 1.0).abs() : 0.0;
+
+      // Cancel undo potential if significant movement or scaling
+      if (distanceMoved > 20.0 || scaleChange > 0.05) {
+        _isTwoFingerPotentiallyUndo = false;
+      }
+    }
+
+    // Apply zoom and pan
+    if (initialDistance > 0 && _initialTwoFingerScale != null) {
+      final scale = currentDistance / initialDistance;
+      final newScale = (_initialTwoFingerScale! * scale).clamp(0.5, 10.0);
+      final newOffset = currentFocalPoint + _normalizedOffset * newScale;
+
+      controller.setZoomLevel(newScale);
+      controller.setOffset(newOffset);
+      onDrag?.call(newScale, newOffset);
+    }
+  }
+
+  void _handleAllPointersUp(
+    PointerUpEvent event,
+    PixelTool currentTool,
+    PixelDrawDetails drawDetails,
+  ) {
+    // Check for undo gesture
+    if (_isTwoFingerPotentiallyUndo && _twoFingerStartTimeMs != null) {
+      if (_handleUndoGesture(_twoFingerStartTimeMs!)) {
+        _resetPointerState();
+        return;
+      }
+    }
+
+    // Handle single-finger tool completion
+    if (currentTool == PixelTool.drag) {
+      onDragEnd?.call(controller.zoomLevel, controller.offset);
+    } else if (_isRawPointerDrawing) {
+      toolManager.endDrawing(currentTool, drawDetails);
+      _finishRawPointerDrawing();
+    } else if (currentTool == PixelTool.select) {
+      toolManager.handleSelectionEnd(drawDetails);
+    }
+
+    _resetPointerState();
+  }
+
+  void _handleMultiToSinglePointer(PixelTool currentTool) {
+    // Reset two-finger state when going from 2+ fingers to 1
+    _resetTwoFingerState();
+
+    // Could potentially restart single-finger operation here if needed
+    debugPrint("Switched from multi-touch to single touch");
+  }
+
+  void _finishRawPointerDrawing() {
+    if (_isRawPointerDrawing) {
+      final previewPixels = List<PixelPoint<int>>.from(controller.previewPixels);
+
+      if (previewPixels.isNotEmpty) {
+        onDrawShape(previewPixels);
+      }
+
+      onFinishDrawing();
+      _isRawPointerDrawing = false;
+    }
+  }
+
+  void _resetPointerState() {
+    _isRawPointerDrawing = false;
+    _panStartPosition = null;
+    _resetTwoFingerState();
+  }
+
+  double _getInitialTwoPointerDistance() {
+    if (_activePointers.length < 2) return 0.0;
+
+    final pointers = _activePointers.values.toList();
+    return (pointers[0].position - pointers[1].position).distance;
+  }
+
+  // Helper method to handle pointer cancel events
+  void handlePointerCancel(
+    PointerCancelEvent event,
+    PixelTool currentTool,
+    PixelDrawDetails drawDetails,
+  ) {
+    _activePointers.remove(event.pointer);
+
+    // Clean up any ongoing operations
+    if (_activePointers.isEmpty) {
+      if (_isRawPointerDrawing) {
+        // Don't finish drawing on cancel - just clean up
+        controller.clearPreviewPixels();
+        onFinishDrawing();
+        _isRawPointerDrawing = false;
+      }
+      _resetPointerState();
+    }
+  }
+
+  // Helper method to check if there are active drawing operations
+  bool get hasActivePointers => _activePointers.isNotEmpty;
+
+  // Helper method to get current pointer count
+  int get activePointerCount => _activePointers.length;
 }

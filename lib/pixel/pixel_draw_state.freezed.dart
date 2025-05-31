@@ -449,6 +449,8 @@ abstract class _PixelDrawState extends PixelDrawState {
 mixin _$BackgroundImageState {
   Uint8List? get image => throw _privateConstructorUsedError;
   double get opacity => throw _privateConstructorUsedError;
+  double get scale => throw _privateConstructorUsedError;
+  Offset get offset => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $BackgroundImageStateCopyWith<BackgroundImageState> get copyWith =>
@@ -461,7 +463,7 @@ abstract class $BackgroundImageStateCopyWith<$Res> {
           $Res Function(BackgroundImageState) then) =
       _$BackgroundImageStateCopyWithImpl<$Res, BackgroundImageState>;
   @useResult
-  $Res call({Uint8List? image, double opacity});
+  $Res call({Uint8List? image, double opacity, double scale, Offset offset});
 }
 
 /// @nodoc
@@ -480,6 +482,8 @@ class _$BackgroundImageStateCopyWithImpl<$Res,
   $Res call({
     Object? image = freezed,
     Object? opacity = null,
+    Object? scale = null,
+    Object? offset = null,
   }) {
     return _then(_value.copyWith(
       image: freezed == image
@@ -490,6 +494,14 @@ class _$BackgroundImageStateCopyWithImpl<$Res,
           ? _value.opacity
           : opacity // ignore: cast_nullable_to_non_nullable
               as double,
+      scale: null == scale
+          ? _value.scale
+          : scale // ignore: cast_nullable_to_non_nullable
+              as double,
+      offset: null == offset
+          ? _value.offset
+          : offset // ignore: cast_nullable_to_non_nullable
+              as Offset,
     ) as $Val);
   }
 }
@@ -502,7 +514,7 @@ abstract class _$$BackgroundImageStateImplCopyWith<$Res>
       __$$BackgroundImageStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({Uint8List? image, double opacity});
+  $Res call({Uint8List? image, double opacity, double scale, Offset offset});
 }
 
 /// @nodoc
@@ -518,6 +530,8 @@ class __$$BackgroundImageStateImplCopyWithImpl<$Res>
   $Res call({
     Object? image = freezed,
     Object? opacity = null,
+    Object? scale = null,
+    Object? offset = null,
   }) {
     return _then(_$BackgroundImageStateImpl(
       image: freezed == image
@@ -528,6 +542,14 @@ class __$$BackgroundImageStateImplCopyWithImpl<$Res>
           ? _value.opacity
           : opacity // ignore: cast_nullable_to_non_nullable
               as double,
+      scale: null == scale
+          ? _value.scale
+          : scale // ignore: cast_nullable_to_non_nullable
+              as double,
+      offset: null == offset
+          ? _value.offset
+          : offset // ignore: cast_nullable_to_non_nullable
+              as Offset,
     ));
   }
 }
@@ -535,7 +557,11 @@ class __$$BackgroundImageStateImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$BackgroundImageStateImpl extends _BackgroundImageState {
-  const _$BackgroundImageStateImpl({this.image, this.opacity = 0.3})
+  const _$BackgroundImageStateImpl(
+      {this.image,
+      this.opacity = 0.3,
+      this.scale = 1.0,
+      this.offset = Offset.zero})
       : super._();
 
   @override
@@ -543,10 +569,16 @@ class _$BackgroundImageStateImpl extends _BackgroundImageState {
   @override
   @JsonKey()
   final double opacity;
+  @override
+  @JsonKey()
+  final double scale;
+  @override
+  @JsonKey()
+  final Offset offset;
 
   @override
   String toString() {
-    return 'BackgroundImageState(image: $image, opacity: $opacity)';
+    return 'BackgroundImageState(image: $image, opacity: $opacity, scale: $scale, offset: $offset)';
   }
 
   @override
@@ -555,12 +587,14 @@ class _$BackgroundImageStateImpl extends _BackgroundImageState {
         (other.runtimeType == runtimeType &&
             other is _$BackgroundImageStateImpl &&
             const DeepCollectionEquality().equals(other.image, image) &&
-            (identical(other.opacity, opacity) || other.opacity == opacity));
+            (identical(other.opacity, opacity) || other.opacity == opacity) &&
+            (identical(other.scale, scale) || other.scale == scale) &&
+            (identical(other.offset, offset) || other.offset == offset));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType, const DeepCollectionEquality().hash(image), opacity);
+  int get hashCode => Object.hash(runtimeType,
+      const DeepCollectionEquality().hash(image), opacity, scale, offset);
 
   @JsonKey(ignore: true)
   @override
@@ -574,13 +608,19 @@ class _$BackgroundImageStateImpl extends _BackgroundImageState {
 abstract class _BackgroundImageState extends BackgroundImageState {
   const factory _BackgroundImageState(
       {final Uint8List? image,
-      final double opacity}) = _$BackgroundImageStateImpl;
+      final double opacity,
+      final double scale,
+      final Offset offset}) = _$BackgroundImageStateImpl;
   const _BackgroundImageState._() : super._();
 
   @override
   Uint8List? get image;
   @override
   double get opacity;
+  @override
+  double get scale;
+  @override
+  Offset get offset;
   @override
   @JsonKey(ignore: true)
   _$$BackgroundImageStateImplCopyWith<_$BackgroundImageStateImpl>

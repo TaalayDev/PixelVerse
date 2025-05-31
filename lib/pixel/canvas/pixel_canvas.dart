@@ -1,10 +1,10 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/utils/cursor_manager.dart';
 import '../../pixel/tools/mirror_modifier.dart';
 import '../../pixel/tools.dart';
 import '../../data.dart';
+import '../pixel_draw_state.dart';
 import '../pixel_point.dart';
 
 import 'canvas_controller.dart';
@@ -26,6 +26,8 @@ class PixelCanvas extends StatefulWidget {
   final MirrorAxis mirrorAxis;
   final double zoomLevel;
   final Offset currentOffset;
+
+  final Stream<PixelDrawEvent>? eventStream;
 
   // Callbacks
   final Function(int x, int y) onTapPixel;
@@ -63,6 +65,7 @@ class PixelCanvas extends StatefulWidget {
     this.zoomLevel = 1.0,
     this.currentOffset = Offset.zero,
     this.mirrorAxis = MirrorAxis.vertical,
+    this.eventStream,
     this.onStartDrag,
     this.onDrag,
     this.onDragEnd,
@@ -85,6 +88,21 @@ class _PixelCanvasState extends State<PixelCanvas> {
   void initState() {
     super.initState();
     _initializeComponents();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.eventStream?.listen((event) {
+        if (event is ClosePenPathEvent) {
+          _finishPenPath();
+        }
+      });
+    });
+  }
+
+  void _finishPenPath() {
+    final details = _createDrawDetails(Offset.zero);
+
+    _toolManager.closePenPath(_controller, details, close: false);
+    _gestureHandler.finishDrawing();
   }
 
   void _initializeComponents() {
@@ -163,33 +181,28 @@ class _PixelCanvasState extends State<PixelCanvas> {
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
-          return GestureDetector(
-            dragStartBehavior: DragStartBehavior.down,
-            onScaleStart: (details) => _gestureHandler.handleScaleStart(
-              details,
-              widget.currentTool,
-              _createDrawDetails(details.localFocalPoint),
-            ),
-            onScaleUpdate: (details) => _gestureHandler.handleScaleUpdate(
-              details,
-              widget.currentTool,
-              _createDrawDetails(details.localFocalPoint),
-            ),
-            onScaleEnd: (details) => _gestureHandler.handleScaleEnd(
-              details,
-              widget.currentTool,
-              _createDrawDetails(Offset.zero),
-            ),
-            onTapDown: (details) => _gestureHandler.handleTapDown(
-              details,
-              widget.currentTool,
-              _createDrawDetails(details.localPosition),
-            ),
-            onTapUp: (details) => _gestureHandler.handleTapUp(
-              details,
-              widget.currentTool,
-              _createDrawDetails(details.localPosition),
-            ),
+          return Listener(
+            onPointerDown: (event) {
+              _gestureHandler.handlePointerDown(
+                event,
+                widget.currentTool,
+                _createDrawDetails(event.localPosition),
+              );
+            },
+            onPointerMove: (event) {
+              _gestureHandler.handlePointerMove(
+                event,
+                widget.currentTool,
+                _createDrawDetails(event.localPosition),
+              );
+            },
+            onPointerUp: (event) {
+              _gestureHandler.handlePointerUp(
+                event,
+                widget.currentTool,
+                _createDrawDetails(event.localPosition),
+              );
+            },
             child: MouseRegion(
               cursor: _getCursor(),
               child: CustomPaint(
@@ -211,11 +224,8 @@ class _PixelCanvasState extends State<PixelCanvas> {
   }
 
   PixelDrawDetails _createDrawDetails(Offset position) {
-    final transformedPosition = position;
-    // (_controller.transformPosition(position));
-
     return PixelDrawDetails(
-      position: transformedPosition,
+      position: position,
       size: context.size ?? Size.zero,
       width: widget.width,
       height: widget.height,
@@ -227,15 +237,6 @@ class _PixelCanvasState extends State<PixelCanvas> {
         _controller.setPreviewPixels(pixels);
       },
     );
-  }
-
-  Color _getToolColor() {
-    switch (widget.currentTool) {
-      case PixelTool.eraser:
-        return const Color(0x00000000);
-      default:
-        return widget.currentColor;
-    }
   }
 
   Modifier? _getModifier() {

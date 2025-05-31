@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -76,7 +77,11 @@ class PixelCanvasController extends ChangeNotifier {
       final bool needsFullCache = _layers.length != layers.length;
       _layers = List.from(layers);
       _updateCachedPixels(cacheAll: needsFullCache);
-      _clearPreviewPixels();
+
+      scheduleMicrotask(() {
+        // Clear preview pixels after canvas is updated
+        clearPreviewPixels();
+      });
       notifyListeners();
     }
   }

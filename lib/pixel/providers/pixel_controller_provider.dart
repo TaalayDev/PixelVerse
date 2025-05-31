@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:pixelverse/providers/background_image_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../pixel_point.dart';
@@ -607,6 +608,13 @@ class PixelDrawController extends _$PixelDrawController {
       exportWidth: exportWidth,
       exportHeight: exportHeight,
     );
+  }
+
+  Future<void> importImageAsBackground(BuildContext context) async {
+    final imageBytes = await _importExportService.importImageAsBackground(context: context);
+    if (imageBytes != null) {
+      ref.read(backgroundImageProvider.notifier).update((state) => state.copyWith(image: imageBytes));
+    }
   }
 
   Future<void> importImageAsLayer(BuildContext context) async {

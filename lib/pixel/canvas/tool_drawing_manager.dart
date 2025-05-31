@@ -2,7 +2,6 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:pixelverse/pixel/tools/eraser_tool.dart';
 
 import '../../pixel/tools.dart';
 import '../../pixel/tools/fill_tool.dart';
@@ -119,7 +118,11 @@ class ToolDrawingManager {
     tool.onEnd(details);
   }
 
-  void handlePenTap(PixelDrawDetails details, PixelCanvasController controller) {
+  void handlePenTap(
+    PixelDrawDetails details,
+    PixelCanvasController controller, {
+    VoidCallback? onPathClosed,
+  }) {
     final position = details.position;
     final penPoints = List<Offset>.from(controller.penPoints);
     const closeThreshold = 10.0;
@@ -130,6 +133,7 @@ class ToolDrawingManager {
         // Close the path
         penPoints.add(startPoint);
         _finalizePenPath(penPoints, details, controller);
+        onPathClosed?.call();
       } else {
         // Add new point
         penPoints.add(position);
@@ -151,15 +155,20 @@ class ToolDrawingManager {
     _selectionTool.onEnd(details);
   }
 
+  void handleSelectionUpdate(PixelDrawDetails details) {
+    _selectionTool.onMove(details);
+  }
+
   void _finalizePenPath(
     List<Offset> penPoints,
     PixelDrawDetails details,
-    PixelCanvasController controller,
-  ) {
+    PixelCanvasController controller, {
+    bool close = true,
+  }) {
     if (penPoints.length > 1) {
       final pixels = _shapeUtils.getPenPathPixels(
         penPoints,
-        close: true,
+        close: close,
         size: details.size,
       );
 
@@ -176,6 +185,13 @@ class ToolDrawingManager {
 
     controller.setPenPoints([]);
     controller.setDrawingPenPath(false);
+  }
+
+  void closePenPath(PixelCanvasController controller, PixelDrawDetails details, {bool close = true}) {
+    final penPoints = List<Offset>.from(controller.penPoints);
+    if (penPoints.isNotEmpty && controller.isDrawingPenPath) {
+      _finalizePenPath(penPoints, details, controller, close: close);
+    }
   }
 
   /// Filter points based on current selection

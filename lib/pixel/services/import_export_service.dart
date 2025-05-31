@@ -138,6 +138,28 @@ class ImportExportService {
     ]);
   }
 
+  Future<Uint8List> importImageBytes({
+    required BuildContext context,
+    required int width,
+    required int height,
+  }) async {
+    final img.Image? pickedImage = await FileUtils(context).pickImageFile();
+    if (pickedImage == null) return Uint8List(0);
+
+    // Resize to canvas size if needed
+    img.Image resized = pickedImage;
+    if (pickedImage.width != width || pickedImage.height != height) {
+      resized = img.copyResize(
+        pickedImage,
+        width: width,
+        height: height,
+        interpolation: img.Interpolation.cubic,
+      );
+    }
+
+    return Uint8List.fromList(img.encodePng(resized));
+  }
+
   Future<Layer?> importImageAsLayer({
     required BuildContext context,
     required int width,

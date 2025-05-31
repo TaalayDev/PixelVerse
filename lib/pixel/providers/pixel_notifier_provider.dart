@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -16,6 +18,9 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   PixelDrawState build(Project project) {
     return ref.watch(pixelDrawControllerProvider(project));
   }
+
+  final StreamController<PixelDrawEvent> _eventController = StreamController.broadcast();
+  late Stream<PixelDrawEvent> eventStream = _eventController.stream;
 
   PixelDrawController get _controller => ref.read(pixelDrawControllerProvider(project).notifier);
 
@@ -83,6 +88,10 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     _controller.setCurrentModifier(modifier);
   }
 
+  void pushEvent(PixelDrawEvent event) {
+    _eventController.add(event);
+  }
+
   // Import/Export operations
   Future<void> exportJson(BuildContext context) => _controller.exportProjectAsJson(context);
   Future<void> exportImage(
@@ -98,7 +107,13 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
         exportHeight: exportHeight,
       );
   Future<void> share(BuildContext context) => _controller.shareProject(context);
-  Future<void> importImage(BuildContext context, {bool background = false}) => _controller.importImageAsLayer(context);
+  Future<void> importImage(BuildContext context, {bool background = false}) {
+    if (background) {
+      return _controller.importImageAsBackground(context);
+    } else {
+      return _controller.importImageAsLayer(context);
+    }
+  }
 
   Future<void> exportAnimation(
     BuildContext context, {

@@ -53,5 +53,15 @@ class BackgroundImageState with _$BackgroundImageState {
   const factory BackgroundImageState({
     final Uint8List? image,
     @Default(0.3) final double opacity,
+    @Default(1.0) final double scale,
+    @Default(Offset.zero) final Offset offset,
   }) = _BackgroundImageState;
+}
+
+sealed class PixelDrawEvent {
+  const PixelDrawEvent();
+}
+
+class ClosePenPathEvent extends PixelDrawEvent {
+  const ClosePenPathEvent();
 }

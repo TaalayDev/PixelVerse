@@ -1,22 +1,20 @@
-import 'dart:ui' as ui;
 import 'dart:async';
 
-import 'package:animated_reorderable_list/animated_reorderable_list.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:pixelverse/data/models/subscription_model.dart';
-import 'package:pixelverse/providers/subscription_provider.dart';
-import 'package:pixelverse/ui/widgets/subscription/feature_gate.dart';
+import 'package:animated_reorderable_list/animated_reorderable_list.dart';
 
-import '../../pixel/image_painter.dart';
-import '../../l10n/strings.dart';
 import '../../data.dart';
+import '../../l10n/strings.dart';
+import '../../pixel/image_painter.dart';
 import '../../pixel/pixel_draw_state.dart';
+import '../../data/models/subscription_model.dart';
+import '../../providers/subscription_provider.dart';
 import '../../providers/background_image_provider.dart';
-import '../../pixel/providers/pixel_notifier_provider.dart';
-import 'layers_preview.dart';
+import 'subscription/feature_gate.dart';
 import 'effects/effects_panel.dart';
+import 'layers_preview.dart';
 
 class LayersPanel extends HookConsumerWidget {
   final int width;
@@ -127,31 +125,80 @@ class LayersPanel extends HookConsumerWidget {
                 ),
                 const SizedBox(width: 12),
 
-                // Title and badge
                 Expanded(
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'BG',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.amber.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          'Reference',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.amber.shade800,
+                      Row(
+                        children: [
+                          const Text(
+                            'BG',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'Reference',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.amber.shade800,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      // Transform controls
+                      Row(
+                        children: [
+                          // Reset button
+                          InkWell(
+                            onTap: () => ref.read(backgroundImageProvider.notifier).resetTransform(),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'Reset',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Fit button
+                          InkWell(
+                            onTap: () => ref
+                                .read(backgroundImageProvider.notifier)
+                                .fitToCanvas(width.toDouble(), height.toDouble()),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'Fit',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -202,6 +249,90 @@ class LayersPanel extends HookConsumerWidget {
                     style: TextStyle(
                       fontSize: 10,
                       color: Colors.grey.shade700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            Row(
+              children: [
+                Icon(Icons.zoom_in, size: 14, color: Colors.grey.shade600),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 4,
+                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                      activeTrackColor: Colors.blue.shade300,
+                      inactiveTrackColor: Colors.grey.shade300,
+                      thumbColor: Colors.blue.shade500,
+                    ),
+                    child: Slider(
+                      value: backgroundImage.scale,
+                      min: 0.1,
+                      max: 1,
+                      onChanged: (value) {
+                        ref.read(backgroundImageProvider.notifier).setScale(value);
+                      },
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 32,
+                  child: Text(
+                    '${(backgroundImage.scale * 100).toInt()}%',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            Row(
+              children: [
+                Icon(Feather.move, size: 14, color: Colors.grey.shade600),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 4,
+                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                      activeTrackColor: Colors.green.shade300,
+                      inactiveTrackColor: Colors.grey.shade300,
+                      thumbColor: Colors.green.shade500,
+                    ),
+                    child: Slider(
+                      value: backgroundImage.offset.dx,
+                      min: 0,
+                      max: 1,
+                      onChanged: (value) {
+                        ref.read(backgroundImageProvider.notifier).setOffset(Offset(value, backgroundImage.offset.dy));
+                      },
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 4,
+                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                      activeTrackColor: Colors.green.shade300,
+                      inactiveTrackColor: Colors.grey.shade300,
+                      thumbColor: Colors.green.shade500,
+                    ),
+                    child: Slider(
+                      value: backgroundImage.offset.dy,
+                      min: 0,
+                      max: 1,
+                      onChanged: (value) {
+                        ref.read(backgroundImageProvider.notifier).setOffset(Offset(backgroundImage.offset.dx, value));
+                      },
                     ),
                   ),
                 ),
