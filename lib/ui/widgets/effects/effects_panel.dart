@@ -1096,7 +1096,9 @@ class _EffectSelectorDialogState extends State<EffectSelectorDialog> {
                 Expanded(
                   child: Text(
                     'Select Effect',
-                    style: Theme.of(context).textTheme.headlineSmall,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                     textAlign: TextAlign.center,
                   ),
                 ),

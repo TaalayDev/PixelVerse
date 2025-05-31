@@ -123,7 +123,12 @@ class _PixelCanvasState extends State<PixelCanvas> {
       width: widget.width,
       height: widget.height,
       onColorPicked: widget.onColorPicked,
-      onSelectionChanged: widget.onSelectionChanged,
+      onSelectionChanged: (selection) {
+        // Update the controller's selection state
+        _controller.setSelection(selection);
+        // Also call the widget's callback if provided
+        widget.onSelectionChanged?.call(selection);
+      },
       onMoveSelection: widget.onMoveSelection,
     );
 

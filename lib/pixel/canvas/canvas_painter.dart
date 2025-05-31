@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'dart:ui';
 
@@ -282,6 +281,7 @@ class PixelCanvasPainter extends CustomPainter {
 
   void _drawSelectionRect(Canvas canvas, double pixelWidth, double pixelHeight) {
     final selection = controller.selectionRect;
+    print('Drawing selection rect: ${selection?.width}x${selection?.height} at ${selection?.x}, ${selection?.y}');
     if (selection == null || selection.width <= 0 || selection.height <= 0) {
       return;
     }

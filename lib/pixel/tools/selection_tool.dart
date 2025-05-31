@@ -33,8 +33,14 @@ class SelectionUtils {
   bool isPointInsideSelection(Offset position) {
     if (selectionRect == null) return false;
 
-    final pixelWidth = size().width / width;
-    final pixelHeight = size().height / height;
+    final canvasSize = size();
+    if (canvasSize.width == 0 || canvasSize.height == 0) {
+      debugPrint('SelectionUtils: Canvas size is zero: $canvasSize');
+      return false;
+    }
+
+    final pixelWidth = canvasSize.width / width;
+    final pixelHeight = canvasSize.height / height;
 
     final selX = selectionRect!.x;
     final selY = selectionRect!.y;
@@ -44,10 +50,12 @@ class SelectionUtils {
     final x = (position.dx / pixelWidth).floor();
     final y = (position.dy / pixelHeight).floor();
 
-    return x >= selX &&
-        x < selX + selWidth &&
-        y >= selY &&
-        y < selY + selHeight;
+    final isInside = x >= selX && x < selX + selWidth && y >= selY && y < selY + selHeight;
+
+    debugPrint(
+        'SelectionUtils: Point check - pos: $position, pixel: ($x,$y), selection: ($selX,$selY,${selWidth}x$selHeight), inside: $isInside');
+
+    return isInside;
   }
 
   bool inInSelectionBounds(int x, int y) {
@@ -58,21 +66,27 @@ class SelectionUtils {
     final selWidth = selectionRect!.width;
     final selHeight = selectionRect!.height;
 
-    return x >= selX &&
-        x < selX + selWidth &&
-        y >= selY &&
-        y < selY + selHeight;
+    return x >= selX && x < selX + selWidth && y >= selY && y < selY + selHeight;
   }
 
   void startSelection(Offset position) {
-    final pixelWidth = size().width / width;
-    final pixelHeight = size().height / height;
+    final canvasSize = size();
+    if (canvasSize.width == 0 || canvasSize.height == 0) {
+      debugPrint('SelectionUtils: Cannot start selection - canvas size is zero: $canvasSize');
+      return;
+    }
+
+    final pixelWidth = canvasSize.width / width;
+    final pixelHeight = canvasSize.height / height;
 
     final x = (position.dx / pixelWidth).floor();
     final y = (position.dy / pixelHeight).floor();
 
     startPosition = position;
     endPosition = position;
+
+    debugPrint(
+        'SelectionUtils: Starting selection at screen: $position, pixel: ($x,$y), canvas size: $canvasSize, pixel size: ${pixelWidth}x$pixelHeight');
 
     update(() {
       selectionRect = SelectionModel(
@@ -85,10 +99,19 @@ class SelectionUtils {
   }
 
   void updateSelection(Offset position) {
-    if (startPosition == null) return;
+    if (startPosition == null) {
+      debugPrint('SelectionUtils: Cannot update selection - no start position');
+      return;
+    }
 
-    final pixelWidth = size().width / width;
-    final pixelHeight = size().height / height;
+    final canvasSize = size();
+    if (canvasSize.width == 0 || canvasSize.height == 0) {
+      debugPrint('SelectionUtils: Cannot update selection - canvas size is zero: $canvasSize');
+      return;
+    }
+
+    final pixelWidth = canvasSize.width / width;
+    final pixelHeight = canvasSize.height / height;
 
     final startX = (startPosition!.dx / pixelWidth).floor();
     final startY = (startPosition!.dy / pixelHeight).floor();
@@ -98,13 +121,16 @@ class SelectionUtils {
 
     endPosition = position;
 
-    final minX = startX < x ? startX : x;
-    final minY = startY < y ? startY : y;
-    final maxX = startX > x ? startX : x;
-    final maxY = startY > y ? startY : y;
+    final minX = min(startX, x);
+    final minY = min(startY, y);
+    final maxX = max(startX, x);
+    final maxY = max(startY, y);
 
     final selectionWidth = maxX - minX + 1;
     final selectionHeight = maxY - minY + 1;
+
+    debugPrint(
+        'SelectionUtils: Updating selection - start: ($startX,$startY), end: ($x,$y), rect: ($minX,$minY,${selectionWidth}x$selectionHeight)');
 
     update(() {
       selectionRect = SelectionModel(
@@ -117,9 +143,11 @@ class SelectionUtils {
   }
 
   void endSelection() {
-    if (selectionRect != null &&
-        (selectionRect!.width <= 1 || selectionRect!.height <= 1)) {
+    debugPrint('SelectionUtils: Ending selection - current: $selectionRect');
+
+    if (selectionRect != null && (selectionRect!.width <= 1 || selectionRect!.height <= 1)) {
       // If selection is too small, clear it
+      debugPrint('SelectionUtils: Selection too small, clearing');
       clearSelection();
       return;
     }
@@ -127,11 +155,14 @@ class SelectionUtils {
     startPosition = null;
     endPosition = null;
 
+    debugPrint('SelectionUtils: Selection completed: $selectionRect');
+
     // Notify selection changed callback
     onSelectionChanged?.call(selectionRect);
   }
 
   void clearSelection() {
+    debugPrint('SelectionUtils: Clearing selection');
     update(() {
       selectionRect = null;
       isDraggingSelection = false;
@@ -143,6 +174,7 @@ class SelectionUtils {
   }
 
   void startDraggingSelection(Offset position) {
+    debugPrint('SelectionUtils: Starting to drag selection from: $position');
     lastPanPosition = position;
     isDraggingSelection = true;
   }
