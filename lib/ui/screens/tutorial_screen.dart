@@ -6,12 +6,12 @@ import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:pixelverse/pixel/tools/pencil_tool.dart';
 
+import '../../pixel/canvas/pixel_canvas.dart';
 import '../../pixel/pixel_point.dart';
 import '../../pixel/tools.dart';
 import '../../data.dart';
 import '../../pixel/providers/pixel_notifier_provider.dart';
 import '../widgets/grid_painter.dart';
-import '../widgets/pixel_canvas.dart';
 
 class DrawingStep {
   final String title;

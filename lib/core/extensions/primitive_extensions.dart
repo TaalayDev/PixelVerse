@@ -119,6 +119,7 @@ extension SelectionOps on SelectionModel {
       y: this.y + dy,
       width: this.width,
       height: this.height,
+      canvasSize: this.canvasSize,
     );
   }
 
@@ -141,6 +142,7 @@ extension SelectionOps on SelectionModel {
       width: width,
       height: height,
       pixels: pixels,
+      canvasSize: Size(canvasWidth.toDouble(), canvasHeight.toDouble()),
     );
   }
 
@@ -181,6 +183,7 @@ extension SelectionOps on SelectionModel {
         y: this.y,
         width: this.width,
         height: this.height,
+        canvasSize: this.canvasSize,
       );
     } else if (rightDiff < snapDistance && rightDiff < topDiff && rightDiff < bottomDiff) {
       return SelectionModel(
@@ -188,6 +191,7 @@ extension SelectionOps on SelectionModel {
         y: this.y,
         width: this.width,
         height: this.height,
+        canvasSize: this.canvasSize,
       );
     } else if (topDiff < snapDistance && topDiff < bottomDiff) {
       return SelectionModel(
@@ -195,6 +199,7 @@ extension SelectionOps on SelectionModel {
         y: otherRect.bottom.toInt(),
         width: this.width,
         height: this.height,
+        canvasSize: this.canvasSize,
       );
     } else if (bottomDiff < snapDistance) {
       return SelectionModel(
@@ -202,6 +207,7 @@ extension SelectionOps on SelectionModel {
         y: otherRect.top.toInt() - this.height,
         width: this.width,
         height: this.height,
+        canvasSize: this.canvasSize,
       );
     }
 

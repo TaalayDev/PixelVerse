@@ -22,6 +22,7 @@ class ToolDrawingManager {
   final Function(Color)? onColorPicked;
   final Function(SelectionModel?)? onSelectionChanged;
   final Function(SelectionModel)? onMoveSelection;
+  final Function(SelectionModel?)? onSelectionEnd;
 
   late final SelectionUtils _selectionUtils;
   late final ShapeUtils _shapeUtils;
@@ -44,6 +45,7 @@ class ToolDrawingManager {
     this.onColorPicked,
     this.onSelectionChanged,
     this.onMoveSelection,
+    this.onSelectionEnd,
   }) {
     _initializeTools();
   }
@@ -55,6 +57,7 @@ class ToolDrawingManager {
       size: () => Size(width.toDouble(), height.toDouble()),
       onSelectionChanged: onSelectionChanged,
       onMoveSelection: onMoveSelection,
+      onSelectionEnd: onSelectionEnd,
       update: (callback) => callback(),
     );
 

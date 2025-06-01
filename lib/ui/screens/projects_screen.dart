@@ -723,6 +723,12 @@ class CloudProjectsView extends HookConsumerWidget {
                 label: const Text('All'),
                 selected: state.filters.tags.isEmpty,
                 selectedColor: theme.primaryColor.withOpacity(0.2),
+                labelStyle: TextStyle(
+                  color: state.filters.tags.isEmpty ? theme.primaryColor : theme.textPrimary,
+                ),
+                iconTheme: IconThemeData(
+                  color: state.filters.tags.isEmpty ? theme.primaryColor : theme.textPrimary,
+                ),
                 onSelected: (selected) {
                   if (selected) {
                     ref.read(communityProjectsProvider.notifier).clearFilters();
@@ -741,6 +747,12 @@ class CloudProjectsView extends HookConsumerWidget {
               label: Text(tag.name),
               selected: isSelected,
               selectedColor: theme.primaryColor.withOpacity(0.2),
+              labelStyle: TextStyle(
+                color: isSelected ? theme.primaryColor : theme.textPrimary,
+              ),
+              iconTheme: IconThemeData(
+                color: isSelected ? theme.primaryColor : theme.textPrimary,
+              ),
               onSelected: (selected) {
                 final newTags = List<String>.from(state.filters.tags);
                 if (selected) {
@@ -1292,12 +1304,22 @@ class ProjectCard extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(Strings.of(context).deleteProject),
+        title: Text(
+          Strings.of(context).deleteProject,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: Theme.of(context).colorScheme.error,
+              ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(Strings.of(context).areYouSureWantToDeleteProject),
+            Text(
+              Strings.of(context).areYouSureWantToDeleteProject,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+            ),
             if (project.isCloudSynced) ...[
               const SizedBox(height: 16),
               Container(
@@ -1488,7 +1510,7 @@ class _ProjectThumbnailWidgetState extends State<ProjectThumbnailWidget> {
       widget.project.width,
       widget.project.height,
     );
-    if (context.mounted) {
+    if (mounted) {
       setState(() {
         _image = image;
       });

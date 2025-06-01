@@ -30,7 +30,6 @@ class PixelCanvasPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     canvas.saveLayer(Offset.zero & size, Paint());
-    // _applyTransformations(canvas, size);
 
     final pixelWidth = size.width / width;
     final pixelHeight = size.height / height;
@@ -42,17 +41,16 @@ class PixelCanvasPainter extends CustomPainter {
     _drawLayers(canvas, size, pixelWidth, pixelHeight);
 
     // Draw UI overlays
-    _drawSelectionRect(canvas, pixelWidth, pixelHeight);
+    // _drawSelectionRect(canvas, pixelWidth, pixelHeight);
     _drawGradient(canvas, size);
     _drawPenPath(canvas);
 
+    if (controller.previewPixels.isEmpty) {
+      _drawHoverPreview(canvas, size, pixelWidth, pixelHeight);
+    }
+
     canvas.restore();
   }
-
-  // void _applyTransformations(Canvas canvas, Size size) {
-  //   canvas.translate(controller.offset.dx, controller.offset.dy);
-  //   canvas.scale(controller.zoomLevel);
-  // }
 
   void _drawGrid(Canvas canvas, Size size, double pixelWidth, double pixelHeight) {
     final paint = Paint()
@@ -279,18 +277,118 @@ class PixelCanvasPainter extends CustomPainter {
     }
   }
 
+  void _drawHoverPreview(Canvas canvas, Size size, double pixelWidth, double pixelHeight) {
+    final hoverPixels = controller.hoverPreviewPixels;
+    if (hoverPixels.isEmpty) return;
+
+    final List<Offset> positions = [];
+    final List<Color> colors = [];
+    final List<int> indices = [];
+    int vertexIndex = 0;
+
+    final isErasing = controller.currentTool == PixelTool.eraser;
+
+    for (final point in hoverPixels) {
+      final baseColor = Color(point.color);
+
+      // Make hover preview semi-transparent and slightly different
+      final Color hoverColor;
+      if (isErasing) {
+        // For eraser, show red semi-transparent preview
+        hoverColor = Colors.red.withOpacity(0.4);
+      } else {
+        // For other tools, show the color with reduced opacity
+        hoverColor = baseColor.withOpacity(0.6);
+      }
+
+      final left = point.x * pixelWidth;
+      final top = point.y * pixelHeight;
+      final right = left + pixelWidth;
+      final bottom = top + pixelHeight;
+
+      // Quad vertices
+      positions.addAll([
+        Offset(left, top),
+        Offset(right, top),
+        Offset(right, bottom),
+        Offset(left, bottom),
+      ]);
+
+      // Colors for each vertex
+      colors.addAll([hoverColor, hoverColor, hoverColor, hoverColor]);
+
+      // Triangle indices for the quad
+      indices.addAll([
+        vertexIndex,
+        vertexIndex + 1,
+        vertexIndex + 2,
+        vertexIndex,
+        vertexIndex + 2,
+        vertexIndex + 3,
+      ]);
+
+      vertexIndex += 4;
+    }
+
+    if (positions.isNotEmpty) {
+      final vertices = Vertices(
+        VertexMode.triangles,
+        positions,
+        colors: colors,
+        indices: indices,
+      );
+
+      // Draw hover preview with blend mode that shows on top
+      canvas.drawVertices(vertices, BlendMode.srcOver, Paint());
+
+      // Add a subtle border for better visibility
+      _drawHoverBorder(canvas, hoverPixels, pixelWidth, pixelHeight);
+    }
+  }
+
+  void _drawHoverBorder(Canvas canvas, List<PixelPoint<int>> hoverPixels, double pixelWidth, double pixelHeight) {
+    if (hoverPixels.isEmpty) return;
+
+    final borderPaint = Paint()
+      ..color = Colors.white.withOpacity(0.8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0 / controller.zoomLevel;
+
+    // Find the bounding box of hover pixels
+    int minX = hoverPixels.first.x;
+    int maxX = hoverPixels.first.x;
+    int minY = hoverPixels.first.y;
+    int maxY = hoverPixels.first.y;
+
+    for (final pixel in hoverPixels) {
+      minX = minX < pixel.x ? minX : pixel.x;
+      maxX = maxX > pixel.x ? maxX : pixel.x;
+      minY = minY < pixel.y ? minY : pixel.y;
+      maxY = maxY > pixel.y ? maxY : pixel.y;
+    }
+
+    // Draw border around the hover area
+    final rect = Rect.fromLTWH(
+      minX * pixelWidth,
+      minY * pixelHeight,
+      (maxX - minX + 1) * pixelWidth,
+      (maxY - minY + 1) * pixelHeight,
+    );
+
+    canvas.drawRect(rect, borderPaint);
+  }
+
   void _drawSelectionRect(Canvas canvas, double pixelWidth, double pixelHeight) {
     final selection = controller.selectionRect;
-    print('Drawing selection rect: ${selection?.width}x${selection?.height} at ${selection?.x}, ${selection?.y}');
     if (selection == null || selection.width <= 0 || selection.height <= 0) {
       return;
     }
 
     final rect = Rect.fromLTWH(
-      selection.x * pixelWidth,
-      selection.y * pixelHeight,
-      selection.width * pixelWidth,
-      selection.height * pixelHeight,
+      selection.x.toDouble(),
+      selection.y.toDouble(),
+      selection.width.toDouble(),
+      selection.height.toDouble(),
     );
 
     // Fill

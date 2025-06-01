@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import '../../data.dart';
 
 class SelectionService {
+  final int width;
+  final int height;
+
   SelectionModel? _selectionRect;
   SelectionModel? _originalSelectionRect;
   List<MapEntry<Point<int>, int>> _selectedPixels = [];
@@ -12,13 +15,18 @@ class SelectionService {
   SelectionModel? get currentSelection => _selectionRect;
   bool get hasSelection => _selectionRect != null;
 
+  SelectionService({required this.width, required this.height});
+
   void setSelection(SelectionModel? selection, Uint32List layerPixels) {
-    _selectionRect = selection;
-    _originalSelectionRect = selection;
+    debugPrint('Setting selection: $selection');
+    _selectionRect = selection?.copyWith();
+    _originalSelectionRect = selection?.copyWith();
 
     if (selection != null) {
-      _selectedPixels = _getSelectedPixels(selection, layerPixels);
       _cachedPixels = Uint32List.fromList(layerPixels);
+      _selectedPixels = _getSelectedPixels(selection, layerPixels);
+      // Remove selected pixels from the cache
+      _removeSelectedPixelsFromCache();
     } else {
       _selectedPixels = [];
       _cachedPixels = Uint32List(0);
@@ -26,53 +34,42 @@ class SelectionService {
   }
 
   Uint32List moveSelection({
-    required SelectionModel newSelection,
-    required Uint32List currentPixels,
-    required int width,
-    required int height,
+    required SelectionModel newTargetSelection,
+    required Uint32List currentLayerPixels,
   }) {
-    if (_selectionRect == null || _selectedPixels.isEmpty) {
-      return currentPixels;
+    if (_originalSelectionRect == null || _selectedPixels.isEmpty) {
+      _selectionRect = newTargetSelection.copyWith();
+      return currentLayerPixels;
     }
 
-    // Calculate the difference in positions
-    final dx = newSelection.x - _selectionRect!.x;
-    final dy = newSelection.y - _selectionRect!.y;
+    final pixelsToModify = Uint32List.fromList(_cachedPixels);
+    final origRect = _originalSelectionRect!;
 
-    final pixels = Uint32List.fromList(currentPixels);
-    final newSelectedPixels = <MapEntry<Point<int>, int>>[];
+    final dX = ((newTargetSelection.x - origRect.x) * 0.08).floor();
+    final dY = ((newTargetSelection.y - origRect.y) * 0.08).floor();
 
-    // Clear pixels at old positions
     for (final entry in _selectedPixels) {
-      final x = entry.key.x;
-      final y = entry.key.y;
-      if (x >= 0 && x < width && y >= 0 && y < height) {
-        final index = y * width + x;
-        pixels[index] = _originalSelectionRect != null && !_isPointInOriginalSelection(x, y)
-            ? _cachedPixels[index]
-            : Colors.transparent.value;
+      final originalPoint = entry.key;
+      final color = entry.value;
+
+      final newX = originalPoint.x + dX;
+      final newY = originalPoint.y + dY;
+
+      if (isPointInSelection(newX, newY)) {
+        continue; // Skip if the new point is still within the selection bounds
       }
-    }
-
-    // Apply pixels at new positions
-    for (final entry in _selectedPixels) {
-      final newX = entry.key.x + dx;
-      final newY = entry.key.y + dy;
 
       if (newX >= 0 && newX < width && newY >= 0 && newY < height) {
-        final index = newY * width + newX;
-        if (entry.value != Colors.transparent.value) {
-          pixels[index] = entry.value;
+        final newIndex = newY * width + newX;
+        if (newIndex >= 0 && newIndex < pixelsToModify.length) {
+          pixelsToModify[newIndex] = color;
         }
-        newSelectedPixels.add(MapEntry(Point(newX, newY), entry.value));
       }
     }
 
-    // Update state
-    _selectedPixels = newSelectedPixels;
-    _selectionRect = newSelection;
+    _selectionRect = newTargetSelection.copyWith();
 
-    return pixels;
+    return pixelsToModify;
   }
 
   void clearSelection() {
@@ -87,6 +84,18 @@ class SelectionService {
 
     final rect = _selectionRect!.rect;
     return x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom;
+  }
+
+  bool isPointsInSelection(List<Point<int>> points) {
+    if (_selectionRect == null) return true;
+
+    final rect = _selectionRect!.rect;
+    for (final point in points) {
+      if (point.x < rect.left || point.x >= rect.right || point.y < rect.top || point.y >= rect.bottom) {
+        return false;
+      }
+    }
+    return true;
   }
 
   SelectionModel? constrainSelectionToBounds({
@@ -111,6 +120,7 @@ class SelectionService {
       y: constrainedY,
       width: constrainedWidth,
       height: constrainedHeight,
+      canvasSize: selection.canvasSize,
     );
   }
 
@@ -119,21 +129,44 @@ class SelectionService {
     Uint32List pixels,
   ) {
     final selectedPixels = <MapEntry<Point<int>, int>>[];
-    final width = sqrt(pixels.length).round(); // Assuming square canvas for simplicity
+    final canvasSize = selection.canvasSize;
 
-    for (int y = selection.y; y < selection.y + selection.height; y++) {
-      for (int x = selection.x; x < selection.x + selection.width; x++) {
-        if (x >= 0 && x < width && y >= 0 && y < width) {
-          final index = y * width + x;
-          if (index < pixels.length) {
-            final color = pixels[index];
-            selectedPixels.add(MapEntry(Point(x, y), color));
-          }
+    final gridWidth = width;
+    final gridHeight = height;
+
+    final pixelWidth = canvasSize.width / width;
+    final pixelHeight = canvasSize.height / width;
+
+    final startX = (selection.x / pixelWidth).floor().clamp(0, gridWidth - 1);
+    final startY = (selection.y / pixelHeight).floor().clamp(0, gridHeight - 1);
+    final endX = ((selection.x + selection.width) / pixelWidth).floor().clamp(0, gridWidth);
+    final endY = ((selection.y + selection.height) / pixelHeight).floor().clamp(0, gridHeight);
+
+    for (int y = startY; y < endY; y++) {
+      for (int x = startX; x < endX; x++) {
+        final index = y * gridWidth + x;
+        if (index >= 0 && index < pixels.length) {
+          final color = pixels[index];
+          if (color == Colors.transparent.value) continue;
+          selectedPixels.add(MapEntry(Point(x, y), color));
         }
       }
     }
 
     return selectedPixels;
+  }
+
+  void _removeSelectedPixelsFromCache() {
+    if (_originalSelectionRect == null || _selectedPixels.isEmpty) return;
+
+    for (final entry in _selectedPixels) {
+      final originalPoint = entry.key;
+      final index = originalPoint.y * width + originalPoint.x;
+
+      if (index >= 0 && index < _cachedPixels.length) {
+        _cachedPixels[index] = Colors.transparent.value; // Удаляем пиксель из кэша
+      }
+    }
   }
 
   bool _isPointInOriginalSelection(int x, int y) {
@@ -174,6 +207,7 @@ class SelectionService {
       y: minY,
       width: width,
       height: height,
+      canvasSize: canvasSize,
     );
   }
 }

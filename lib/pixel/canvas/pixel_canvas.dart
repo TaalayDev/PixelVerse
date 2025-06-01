@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide SelectionOverlay;
 
 import '../../core/utils/cursor_manager.dart';
 import '../../pixel/tools/mirror_modifier.dart';
@@ -12,6 +12,7 @@ import 'canvas_gesture_handler.dart';
 import 'canvas_painter.dart';
 import 'layer_cache_manager.dart';
 import 'tool_drawing_manager.dart';
+import 'widgets/selection_overlay.dart';
 
 class PixelCanvas extends StatefulWidget {
   final int width;
@@ -124,12 +125,21 @@ class _PixelCanvasState extends State<PixelCanvas> {
       height: widget.height,
       onColorPicked: widget.onColorPicked,
       onSelectionChanged: (selection) {
-        // Update the controller's selection state
         _controller.setSelection(selection);
-        // Also call the widget's callback if provided
-        widget.onSelectionChanged?.call(selection);
+        if (selection == null) {
+          widget.onSelectionChanged!(selection);
+        }
       },
-      onMoveSelection: widget.onMoveSelection,
+      onMoveSelection: (selection) {
+        _controller.setSelection(selection);
+
+        widget.onMoveSelection?.call(selection);
+      },
+      onSelectionEnd: (selection) {
+        final newSelection = selection?.copyWith(canvasSize: context.size ?? Size.zero);
+        _controller.setSelection(newSelection);
+        widget.onSelectionChanged?.call(newSelection);
+      },
     );
 
     _gestureHandler = CanvasGestureHandler(
@@ -179,6 +189,31 @@ class _PixelCanvasState extends State<PixelCanvas> {
     super.dispose();
   }
 
+  bool _shouldShowHoverPreview(PixelTool tool) {
+    return [
+      PixelTool.pencil,
+      PixelTool.eraser,
+      PixelTool.line,
+      PixelTool.rectangle,
+      PixelTool.circle,
+    ].contains(tool);
+  }
+
+  void _updateHoverPreview(Offset? position) {
+    if (position == null || !_shouldShowHoverPreview(widget.currentTool)) {
+      return _controller.setHoverPosition(null);
+    }
+
+    final brushStroke = _toolManager.generateBrushStroke(
+      position,
+      position,
+      widget.brushSize,
+      widget.currentColor,
+      context.size ?? Size.zero,
+    );
+    _controller.setHoverPosition(position, previewPixels: brushStroke);
+  }
+
   @override
   Widget build(BuildContext context) {
     return RepaintBoundary(
@@ -186,42 +221,72 @@ class _PixelCanvasState extends State<PixelCanvas> {
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
-          return Listener(
-            onPointerDown: (event) {
-              _gestureHandler.handlePointerDown(
-                event,
-                widget.currentTool,
-                _createDrawDetails(event.localPosition),
-              );
-            },
-            onPointerMove: (event) {
-              _gestureHandler.handlePointerMove(
-                event,
-                widget.currentTool,
-                _createDrawDetails(event.localPosition),
-              );
-            },
-            onPointerUp: (event) {
-              _gestureHandler.handlePointerUp(
-                event,
-                widget.currentTool,
-                _createDrawDetails(event.localPosition),
-              );
-            },
-            child: MouseRegion(
-              cursor: _getCursor(),
-              child: CustomPaint(
-                painter: PixelCanvasPainter(
-                  width: widget.width,
-                  height: widget.height,
-                  controller: _controller,
-                  cacheManager: _cacheManager,
-                  currentTool: widget.currentTool,
-                  currentColor: widget.currentColor,
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              Listener(
+                onPointerDown: (event) {
+                  _gestureHandler.handlePointerDown(
+                    event,
+                    widget.currentTool,
+                    _createDrawDetails(event.localPosition),
+                  );
+                },
+                onPointerMove: (event) {
+                  _gestureHandler.handlePointerMove(
+                    event,
+                    widget.currentTool,
+                    _createDrawDetails(event.localPosition),
+                  );
+                },
+                onPointerUp: (event) {
+                  _gestureHandler.handlePointerUp(
+                    event,
+                    widget.currentTool,
+                    _createDrawDetails(event.localPosition),
+                  );
+                },
+                child: MouseRegion(
+                  cursor: _getCursor(),
+                  onHover: (event) {
+                    _controller.setHoverPosition(event.localPosition);
+                    _updateHoverPreview(event.localPosition);
+                  },
+                  onExit: (event) {
+                    _controller.setHoverPosition(null);
+                  },
+                  child: CustomPaint(
+                    painter: PixelCanvasPainter(
+                      width: widget.width,
+                      height: widget.height,
+                      controller: _controller,
+                      cacheManager: _cacheManager,
+                      currentTool: widget.currentTool,
+                      currentColor: widget.currentColor,
+                    ),
+                    size: Size.infinite,
+                  ),
                 ),
-                size: Size.infinite,
               ),
-            ),
+              LayoutBuilder(builder: (context, constraints) {
+                return SelectionOverlay(
+                  selection: _controller.selectionRect,
+                  zoomLevel: widget.zoomLevel,
+                  canvasOffset: widget.currentOffset,
+                  canvasWidth: widget.width,
+                  canvasHeight: widget.height,
+                  canvasSize: constraints.biggest,
+                  onSelectionMove: (selection) {
+                    final updatedSelection = selection;
+                    _controller.setSelection(updatedSelection);
+                    widget.onMoveSelection?.call(updatedSelection);
+                  },
+                  onSelectionEnd: () {
+                    // widget.onMoveSelection?.call(_controller.selectionRect);
+                  },
+                );
+              }),
+            ],
           );
         },
       ),

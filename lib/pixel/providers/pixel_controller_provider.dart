@@ -38,7 +38,7 @@ class PixelDrawController extends _$PixelDrawController {
     _frameService = FrameService(ref.read(projectRepo));
     _animationService = AnimationService(ref.read(projectRepo));
     _drawingService = DrawingService();
-    _selectionService = SelectionService();
+    _selectionService = SelectionService(width: project.width, height: project.height);
     _undoRedoService = UndoRedoService();
     _importExportService = ImportExportService();
 
@@ -121,6 +121,14 @@ class PixelDrawController extends _$PixelDrawController {
   }
 
   void fillPixels(List<PixelPoint<int>> points) {
+    debugPrint({
+      'currentLayerIndex': state.currentLayerIndex,
+      'hasSelection': _selectionService.hasSelection,
+      'isPointsInSelection': _selectionService.isPointsInSelection(points),
+    }.toString());
+    if (_selectionService.hasSelection && !_selectionService.isPointsInSelection(points)) {
+      return;
+    }
     _saveState();
 
     final newPixels = _drawingService.fillPixels(
@@ -474,14 +482,45 @@ class PixelDrawController extends _$PixelDrawController {
     state = state.copyWith(selectionRect: selection);
   }
 
+  void prepareToMoveSelection(SelectionModel initialSelection) {
+    if (state.currentLayerIndex < 0 || state.currentLayerIndex >= currentFrame.layers.length) {
+      debugPrint("prepareToMoveSelection: Invalid currentLayerIndex");
+      return;
+    }
+    final layer = currentFrame.layers[state.currentLayerIndex];
+    _selectionService.setSelection(initialSelection, layer.pixels);
+    state = state.copyWith(selectionRect: initialSelection);
+  }
+
   void moveSelection(SelectionModel newSelection) {
+    if (state.selectionRect == null) {
+      debugPrint('No selection to move');
+      return;
+    }
+
+    if (_selectionService.currentSelection == null || !_selectionService.hasSelection) {
+      debugPrint('PixelDrawController.moveSelection: SelectionService not primed or has no selection.');
+
+      if (state.selectionRect != null) {
+        prepareToMoveSelection(state.selectionRect!);
+      } else {
+        return;
+      }
+    }
+
+    if (_selectionService.currentSelection?.rect == newSelection.rect &&
+        _selectionService.currentSelection?.canvasSize == newSelection.canvasSize) {
+      if (state.selectionRect != newSelection) {
+        state = state.copyWith(selectionRect: newSelection);
+      }
+      return;
+    }
+
     _saveState();
 
     final newPixels = _selectionService.moveSelection(
-      newSelection: newSelection,
-      currentPixels: currentLayer.pixels,
-      width: state.width,
-      height: state.height,
+      newTargetSelection: newSelection,
+      currentLayerPixels: Uint32List.fromList(currentLayer.pixels),
     );
 
     _updateCurrentLayerPixels(newPixels);

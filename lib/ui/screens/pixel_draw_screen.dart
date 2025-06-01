@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/gestures.dart';
@@ -348,15 +349,7 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerPr
           notifier.removeLayer(state.currentLayerIndex);
         }
       },
-      onSelectAll: () {
-        // Select entire canvas
-        notifier.setSelection(SelectionModel(
-          x: 0,
-          y: 0,
-          width: width,
-          height: height,
-        ));
-      },
+      onSelectAll: () {},
       onDeselectAll: () {
         notifier.setSelection(null);
       },
@@ -985,32 +978,33 @@ class PixelPainter extends HookConsumerWidget {
               currentOffset: gridOffset.value,
               eventStream: notifier.eventStream,
               onDrawShape: (points) {
-                notifier.fillPixels(points);
+                ref.read(pixelDrawNotifierProvider(project).notifier).fillPixels(points);
               },
               onStartDrawing: () {
                 // notifier.saveState();
               },
               onFinishDrawing: () {},
               onSelectionChanged: (rect) {
-                notifier.setSelection(rect);
+                ref.read(pixelDrawNotifierProvider(project).notifier).setSelection(rect);
               },
               onMoveSelection: (rect) {
-                notifier.moveSelection(rect);
+                ref.read(pixelDrawNotifierProvider(project).notifier).moveSelection(rect);
               },
               onColorPicked: (color) {
-                notifier.currentColor = color == Colors.transparent ? Colors.white : color;
+                ref.read(pixelDrawNotifierProvider(project).notifier).currentColor =
+                    color == Colors.transparent ? Colors.white : color;
               },
               onGradientApplied: (gradientColors) {
-                notifier.applyGradient(gradientColors);
+                ref.read(pixelDrawNotifierProvider(project).notifier).applyGradient(gradientColors);
               },
               onStartDrag: (scale, offset) {
                 if (currentTool == PixelTool.drag) {
-                  return notifier.startDrag();
+                  return ref.read(pixelDrawNotifierProvider(project).notifier).startDrag();
                 }
               },
               onDrag: (scale, offset) {
                 if (currentTool == PixelTool.drag) {
-                  return notifier.dragPixels(scale, offset);
+                  return ref.read(pixelDrawNotifierProvider(project).notifier).dragPixels(scale, offset);
                 }
 
                 gridScale.value = scale;
@@ -1018,7 +1012,7 @@ class PixelPainter extends HookConsumerWidget {
               },
               onDragEnd: (s, o) {
                 if (currentTool == PixelTool.drag) {
-                  return notifier.endDrag();
+                  return ref.read(pixelDrawNotifierProvider(project).notifier).endDrag();
                 }
               },
             ),

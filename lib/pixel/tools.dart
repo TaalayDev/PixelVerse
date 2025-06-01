@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import 'pixel_point.dart';
@@ -104,6 +106,21 @@ abstract class Tool {
   void onStart(PixelDrawDetails details);
   void onMove(PixelDrawDetails details);
   void onEnd(PixelDrawDetails details);
+
+  Uint32List createPreviewPixels(PixelDrawDetails details) {
+    final pixelPosition = details.pixelPosition;
+    final colorValue = details.color.value;
+
+    final previewPixels = Uint32List(details.width * details.height);
+
+    final index = pixelPosition.y * details.width + pixelPosition.x;
+
+    if (index >= 0 && index < previewPixels.length) {
+      previewPixels[index] = colorValue;
+    }
+
+    return previewPixels;
+  }
 }
 
 class PixelDrawDetails {

@@ -13,6 +13,7 @@ class SelectionUtils {
   final Size Function() size;
   final Function(SelectionModel?)? onSelectionChanged;
   final Function(SelectionModel)? onMoveSelection;
+  final Function(SelectionModel?)? onSelectionEnd;
   final Function(Function()) update;
 
   SelectionModel? selectionRect;
@@ -27,6 +28,7 @@ class SelectionUtils {
     required this.size,
     required this.onSelectionChanged,
     required this.onMoveSelection,
+    required this.onSelectionEnd,
     required this.update,
   });
 
@@ -51,9 +53,6 @@ class SelectionUtils {
     final y = (position.dy / pixelHeight).floor();
 
     final isInside = x >= selX && x < selX + selWidth && y >= selY && y < selY + selHeight;
-
-    debugPrint(
-        'SelectionUtils: Point check - pos: $position, pixel: ($x,$y), selection: ($selX,$selY,${selWidth}x$selHeight), inside: $isInside');
 
     return isInside;
   }
@@ -85,17 +84,16 @@ class SelectionUtils {
     startPosition = position;
     endPosition = position;
 
-    debugPrint(
-        'SelectionUtils: Starting selection at screen: $position, pixel: ($x,$y), canvas size: $canvasSize, pixel size: ${pixelWidth}x$pixelHeight');
-
     update(() {
       selectionRect = SelectionModel(
         x: x,
         y: y,
         width: 1,
         height: 1,
+        canvasSize: canvasSize,
       );
     });
+    onSelectionChanged?.call(selectionRect);
   }
 
   void updateSelection(Offset position) {
@@ -129,17 +127,16 @@ class SelectionUtils {
     final selectionWidth = maxX - minX + 1;
     final selectionHeight = maxY - minY + 1;
 
-    debugPrint(
-        'SelectionUtils: Updating selection - start: ($startX,$startY), end: ($x,$y), rect: ($minX,$minY,${selectionWidth}x$selectionHeight)');
-
     update(() {
       selectionRect = SelectionModel(
         x: minX,
         y: minY,
         width: selectionWidth,
         height: selectionHeight,
+        canvasSize: canvasSize,
       );
     });
+    onSelectionChanged?.call(selectionRect);
   }
 
   void endSelection() {
@@ -155,10 +152,9 @@ class SelectionUtils {
     startPosition = null;
     endPosition = null;
 
-    debugPrint('SelectionUtils: Selection completed: $selectionRect');
-
     // Notify selection changed callback
     onSelectionChanged?.call(selectionRect);
+    onSelectionEnd?.call(selectionRect);
   }
 
   void clearSelection() {
@@ -174,16 +170,21 @@ class SelectionUtils {
   }
 
   void startDraggingSelection(Offset position) {
-    debugPrint('SelectionUtils: Starting to drag selection from: $position');
     lastPanPosition = position;
     isDraggingSelection = true;
   }
 
   void updateDraggingSelection(Offset delta) {
+    final canvasSize = size();
+    if (canvasSize.width == 0 || canvasSize.height == 0) {
+      debugPrint('SelectionUtils: Cannot update dragging selection - canvas size is zero: $canvasSize');
+      return;
+    }
+
     if (selectionRect == null || !isDraggingSelection) return;
 
-    final pixelWidth = size().width / width;
-    final pixelHeight = size().height / height;
+    final pixelWidth = canvasSize.width / width;
+    final pixelHeight = canvasSize.height / height;
 
     // Convert delta from screen coordinates to grid coordinates
     final pixelDeltaX = (delta.dx / pixelWidth).round();
@@ -195,15 +196,12 @@ class SelectionUtils {
     int newX = selectionRect!.x + pixelDeltaX;
     int newY = selectionRect!.y + pixelDeltaY;
 
-    // Constrain selection to canvas bounds
-    newX = newX.clamp(0, width - selectionRect!.width);
-    newY = newY.clamp(0, height - selectionRect!.height);
-
     final updatedSelection = SelectionModel(
       x: newX,
       y: newY,
       width: selectionRect!.width,
       height: selectionRect!.height,
+      canvasSize: canvasSize,
     );
 
     update(() {

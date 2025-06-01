@@ -36,6 +36,9 @@ class PixelCanvasController extends ChangeNotifier {
   Uint32List _processedPreviewPixels = Uint32List(0);
   bool _previewEffectsEnabled = true;
 
+  Offset? _hoverPosition;
+  List<PixelPoint<int>> _hoverPreviewPixels = [];
+
   PixelCanvasController({
     required this.width,
     required this.height,
@@ -62,6 +65,9 @@ class PixelCanvasController extends ChangeNotifier {
 
   Uint32List get processedPreviewPixels => _processedPreviewPixels;
   bool get previewEffectsEnabled => _previewEffectsEnabled;
+
+  Offset? get hoverPosition => _hoverPosition;
+  List<PixelPoint<int>> get hoverPreviewPixels => _hoverPreviewPixels;
 
   Layer get currentLayer => _layers[_currentLayerIndex];
   int get currentLayerId => currentLayer.layerId;
@@ -161,6 +167,15 @@ class PixelCanvasController extends ChangeNotifier {
 
   void setSelection(SelectionModel? selection) {
     _selectionRect = selection;
+    notifyListeners();
+  }
+
+  void setHoverPosition(
+    Offset? position, {
+    List<PixelPoint<int>>? previewPixels,
+  }) {
+    _hoverPosition = position;
+    _hoverPreviewPixels = List<PixelPoint<int>>.from(previewPixels ?? []);
     notifyListeners();
   }
 
