@@ -27,12 +27,11 @@ class PixelCanvasController extends ChangeNotifier {
   Uint32List _cachedPixels = Uint32List(0);
 
   // Drawing state
-  SelectionModel? _selectionRect;
+  List<PixelPoint<int>> _selectionPoints = [];
   List<Offset> _penPoints = [];
   bool _isDrawingPenPath = false;
   Offset? _gradientStart;
   Offset? _gradientEnd;
-
   Uint32List _processedPreviewPixels = Uint32List(0);
   bool _previewEffectsEnabled = true;
 
@@ -57,7 +56,9 @@ class PixelCanvasController extends ChangeNotifier {
   Offset get offset => _offset;
   List<PixelPoint<int>> get previewPixels => _previewPixels;
   Uint32List get cachedPixels => _cachedPixels;
-  SelectionModel? get selectionRect => _selectionRect;
+
+  List<PixelPoint<int>> get selectionPoints => _selectionPoints;
+
   List<Offset> get penPoints => _penPoints;
   bool get isDrawingPenPath => _isDrawingPenPath;
   Offset? get gradientStart => _gradientStart;
@@ -131,7 +132,7 @@ class PixelCanvasController extends ChangeNotifier {
   }
 
   void setPreviewPixels(List<PixelPoint<int>> pixels) {
-    _previewPixels = pixels;
+    _previewPixels = filterPixelsInSelection(pixels);
     _updateCurrentLayerCache();
     _updatePreviewPixelsWithEffects();
     notifyListeners();
@@ -140,6 +141,23 @@ class PixelCanvasController extends ChangeNotifier {
   void clearPreviewPixels() {
     _clearPreviewPixels();
     notifyListeners();
+  }
+
+  List<PixelPoint<int>> filterPixelsInSelection(List<PixelPoint<int>> pixels) {
+    if (_selectionPoints.isEmpty) return pixels;
+
+    final minX = _selectionPoints.map((p) => p.x).reduce((a, b) => a < b ? a : b);
+    final minY = _selectionPoints.map((p) => p.y).reduce((a, b) => a < b ? a : b);
+    final maxX = _selectionPoints.map((p) => p.x).reduce((a, b) => a > b ? a : b);
+    final maxY = _selectionPoints.map((p) => p.y).reduce((a, b) => a > b ? a : b);
+
+    final selectedPixels = <PixelPoint<int>>[];
+    for (final point in pixels) {
+      if (point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY) {
+        selectedPixels.add(point);
+      }
+    }
+    return selectedPixels;
   }
 
   void _updatePreviewPixelsWithEffects() {
@@ -165,8 +183,8 @@ class PixelCanvasController extends ChangeNotifier {
     _processedPreviewPixels = EffectsManager.applyMultipleEffects(tempPixels, width, height, currentLayer.effects);
   }
 
-  void setSelection(SelectionModel? selection) {
-    _selectionRect = selection;
+  void setSelection(List<PixelPoint<int>>? selection) {
+    _selectionPoints = selection?.isNotEmpty == true ? List<PixelPoint<int>>.from(selection ?? []) : [];
     notifyListeners();
   }
 

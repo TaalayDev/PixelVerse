@@ -12,11 +12,10 @@ class DrawingService {
     return x >= 0 && x < width && y >= 0 && y < height;
   }
 
-  bool _isInSelectionBounds(int x, int y, SelectionModel? selection) {
-    if (selection == null) return true;
+  bool _isInSelectionBounds(int x, int y, List<PixelPoint<int>>? selection) {
+    if (selection == null || selection.isEmpty) return true;
 
-    final rect = selection.rect;
-    return x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom;
+    return selection.any((point) => point.x == x && point.y == y);
   }
 
   Uint32List setPixel({
@@ -26,7 +25,7 @@ class DrawingService {
     required int width,
     required int height,
     required Color color,
-    SelectionModel? selection,
+    List<PixelPoint<int>>? selection,
     Modifier? modifier,
   }) {
     if (!_isWithinBounds(x, y, width, height)) return pixels;
@@ -60,7 +59,7 @@ class DrawingService {
     required List<PixelPoint<int>> points,
     required int width,
     required Color color,
-    SelectionModel? selection,
+    List<PixelPoint<int>>? selection,
   }) {
     final newPixels = Uint32List.fromList(pixels);
 
@@ -81,7 +80,7 @@ class DrawingService {
     required int width,
     required int height,
     required Color fillColor,
-    SelectionModel? selection,
+    List<PixelPoint<int>>? selection,
   }) {
     if (!_isWithinBounds(x, y, width, height)) return pixels;
     if (!_isInSelectionBounds(x, y, selection)) return pixels;

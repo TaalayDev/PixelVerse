@@ -1,15 +1,18 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:pixelverse/pixel/pixel_point.dart';
 import '../../../data.dart';
 
 /// A separate widget to display and handle selection overlay with animated marching ants
 class SelectionOverlay extends StatefulWidget {
-  final SelectionModel? selection;
+  final List<PixelPoint<int>>? selection;
   final double zoomLevel;
   final Offset canvasOffset;
   final int canvasWidth;
   final int canvasHeight;
   final Size canvasSize;
-  final Function(SelectionModel)? onSelectionMove;
+  final Function(List<PixelPoint<int>>, math.Point delta)? onSelectionMove;
   final Function()? onSelectionEnd;
 
   const SelectionOverlay({
@@ -31,8 +34,8 @@ class SelectionOverlay extends StatefulWidget {
 class _SelectionOverlayState extends State<SelectionOverlay> with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
 
-  Offset _panStartLocalOffset = Offset.zero;
-  SelectionModel? _originalSelectionOnPanStart;
+  Offset _lastPanPosition = Offset.zero;
+  List<PixelPoint<int>>? _originalSelection;
 
   @override
   void initState() {
@@ -49,17 +52,72 @@ class _SelectionOverlayState extends State<SelectionOverlay> with SingleTickerPr
     super.dispose();
   }
 
+  /// Calculate bounding rectangle from list of pixel points
+  SelectionModel? _getSelectionBounds() {
+    if (widget.selection == null || widget.selection!.isEmpty) {
+      return null;
+    }
+
+    return fromPointsToSelection(widget.selection!, widget.canvasSize);
+  }
+
+  SelectionModel? fromPointsToSelection(List<PixelPoint<int>> points, Size canvasSize) {
+    if (points.isEmpty ||
+        widget.canvasWidth <= 0 ||
+        widget.canvasHeight <= 0 ||
+        canvasSize.width <= 0 ||
+        canvasSize.height <= 0) {
+      return null;
+    }
+
+    // Calculate pixel size in canvas coordinates
+    final pixelWidth = canvasSize.width / widget.canvasWidth;
+    final pixelHeight = canvasSize.height / widget.canvasHeight;
+
+    // Find bounds in pixel coordinates
+    int minPixelX = points.first.x;
+    int minPixelY = points.first.y;
+    int maxPixelX = points.first.x;
+    int maxPixelY = points.first.y;
+
+    for (final point in points) {
+      minPixelX = math.min(minPixelX, point.x);
+      maxPixelX = math.max(maxPixelX, point.x);
+      minPixelY = math.min(minPixelY, point.y);
+      maxPixelY = math.max(maxPixelY, point.y);
+    }
+
+    // Convert to canvas coordinates
+    final canvasX = minPixelX * pixelWidth;
+    final canvasY = minPixelY * pixelHeight;
+    final canvasWidth = (maxPixelX - minPixelX + 1) * pixelWidth;
+    final canvasHeight = (maxPixelY - minPixelY + 1) * pixelHeight;
+
+    return SelectionModel(
+      x: canvasX.toInt(),
+      y: canvasY.toInt(),
+      width: canvasWidth.toInt(),
+      height: canvasHeight.toInt(),
+      canvasSize: canvasSize,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (widget.selection == null || widget.canvasSize.width == 0 || widget.canvasSize.height == 0) {
+    final selectionBounds = _getSelectionBounds();
+
+    if (selectionBounds == null ||
+        widget.canvasSize.width == 0 ||
+        widget.canvasSize.height == 0 ||
+        widget.zoomLevel <= 0) {
       return const SizedBox.shrink();
     }
 
     // Calculate selection rectangle in screen coordinates
-    final screenLeft = (widget.selection!.x * widget.zoomLevel) + widget.canvasOffset.dx;
-    final screenTop = (widget.selection!.y * widget.zoomLevel) + widget.canvasOffset.dy;
-    final screenWidth = widget.selection!.width * widget.zoomLevel;
-    final screenHeight = widget.selection!.height * widget.zoomLevel;
+    final screenLeft = (selectionBounds.x * widget.zoomLevel);
+    final screenTop = (selectionBounds.y * widget.zoomLevel);
+    final screenWidth = selectionBounds.width.toDouble();
+    final screenHeight = selectionBounds.height.toDouble();
 
     return Stack(
       children: [
@@ -147,6 +205,7 @@ class _SelectionOverlayState extends State<SelectionOverlay> with SingleTickerPr
             color: Colors.blue,
             width: 1.0,
           ),
+          borderRadius: BorderRadius.circular(1.0),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.3),
@@ -160,41 +219,39 @@ class _SelectionOverlayState extends State<SelectionOverlay> with SingleTickerPr
   }
 
   void _handlePanStart(DragStartDetails details) {
-    if (widget.selection == null) return;
-    _originalSelectionOnPanStart = widget.selection!.copyWith();
-    _panStartLocalOffset = details.localPosition;
+    _lastPanPosition = details.localPosition;
+    _originalSelection = widget.selection?.map((point) => PixelPoint<int>(point.x, point.y)).toList();
   }
 
   void _handlePanUpdate(DragUpdateDetails details) {
-    if (widget.selection == null || _originalSelectionOnPanStart == null || widget.zoomLevel == 0) {
+    if (_originalSelection == null || _originalSelection!.isEmpty) {
       return;
     }
 
-    final currentPanLocalOffset = details.localPosition;
+    final totalDelta = details.localPosition - _lastPanPosition;
 
-    final dxScreen = currentPanLocalOffset.dx - _panStartLocalOffset.dx;
-    final dyScreen = currentPanLocalOffset.dy - _panStartLocalOffset.dy;
+    final pixelDeltaX = (totalDelta.dx / widget.zoomLevel).round();
+    final pixelDeltaY = (totalDelta.dy / widget.zoomLevel).round();
 
-    final dxCanvas = dxScreen / widget.zoomLevel;
-    final dyCanvas = dyScreen / widget.zoomLevel;
+    final newSelection = _originalSelection!.map((point) {
+      return PixelPoint<int>(
+        point.x + pixelDeltaX * widget.canvasWidth ~/ widget.canvasSize.width,
+        point.y + pixelDeltaY * widget.canvasHeight ~/ widget.canvasSize.height,
+      );
+    }).toList();
 
-    final newX = _originalSelectionOnPanStart!.x + dxCanvas;
-    final newY = _originalSelectionOnPanStart!.y + dyCanvas;
-
-    final newSelection = SelectionModel(
-      x: newX.round(),
-      y: newY.round(),
-      width: _originalSelectionOnPanStart!.width,
-      height: _originalSelectionOnPanStart!.height,
-      canvasSize: widget.canvasSize,
+    widget.onSelectionMove?.call(
+      newSelection,
+      math.Point(
+        pixelDeltaX * widget.canvasWidth ~/ widget.canvasSize.width,
+        pixelDeltaY * widget.canvasHeight ~/ widget.canvasSize.height,
+      ),
     );
-
-    widget.onSelectionMove?.call(newSelection);
   }
 
   void _handlePanEnd(DragEndDetails details) {
-    _panStartLocalOffset = Offset.zero;
-    _originalSelectionOnPanStart = null;
+    _lastPanPosition = Offset.zero;
+    _originalSelection = null;
     widget.onSelectionEnd?.call();
   }
 }
@@ -235,6 +292,8 @@ class MarchingAntsPainter extends CustomPainter {
   void _drawDashedLine(
       Canvas canvas, Offset start, Offset end, Paint paint, double dashWidth, double dashSpace, double offset) {
     final distance = (end - start).distance;
+    if (distance == 0) return; // Avoid division by zero
+
     final unitVector = (end - start) / distance;
 
     double currentDistance = -offset;

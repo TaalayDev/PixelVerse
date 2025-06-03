@@ -6,7 +6,7 @@ part of 'background_image_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$backgroundImageHash() => r'733206a32e6bbcd0164b195d329eb3217399ffa6';
+String _$backgroundImageHash() => r'8293ef1393b6a120314f9aaddf41487ea70e4364';
 
 /// See also [BackgroundImage].
 @ProviderFor(BackgroundImage)

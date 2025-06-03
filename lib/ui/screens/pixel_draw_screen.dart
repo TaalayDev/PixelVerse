@@ -984,11 +984,11 @@ class PixelPainter extends HookConsumerWidget {
                 // notifier.saveState();
               },
               onFinishDrawing: () {},
-              onSelectionChanged: (rect) {
-                ref.read(pixelDrawNotifierProvider(project).notifier).setSelection(rect);
+              onSelectionChanged: (selectionPoints) {
+                ref.read(pixelDrawNotifierProvider(project).notifier).setSelection(selectionPoints);
               },
-              onMoveSelection: (rect) {
-                ref.read(pixelDrawNotifierProvider(project).notifier).moveSelection(rect);
+              onMoveSelection: (selectionPoints, delta) {
+                ref.read(pixelDrawNotifierProvider(project).notifier).moveSelection(selectionPoints, delta);
               },
               onColorPicked: (color) {
                 ref.read(pixelDrawNotifierProvider(project).notifier).currentColor =

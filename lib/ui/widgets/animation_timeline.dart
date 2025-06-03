@@ -480,6 +480,7 @@ class _FramesGrid extends StatelessWidget {
                       : Theme.of(context).dividerColor.withOpacity(0.2),
                   width: isSelected ? 1.5 : 1,
                 ),
+                color: Colors.white.withOpacity(0.8),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: ClipRRect(

@@ -22,7 +22,7 @@ class ToolDrawingManager {
   final Function(Color)? onColorPicked;
   final Function(SelectionModel?)? onSelectionChanged;
   final Function(SelectionModel)? onMoveSelection;
-  final Function(SelectionModel?)? onSelectionEnd;
+  final Function(List<PixelPoint<int>>?)? onSelectionEnd;
 
   late final SelectionUtils _selectionUtils;
   late final ShapeUtils _shapeUtils;
@@ -57,7 +57,7 @@ class ToolDrawingManager {
       size: () => Size(width.toDouble(), height.toDouble()),
       onSelectionChanged: onSelectionChanged,
       onMoveSelection: onMoveSelection,
-      onSelectionEnd: onSelectionEnd,
+      onSelectionEnd: (s) {},
       update: (callback) => callback(),
     );
 
@@ -72,7 +72,7 @@ class ToolDrawingManager {
     _lineTool = LineTool();
     _rectangleTool = RectangleTool();
     _circleTool = OvalToolBresenham();
-    _selectionTool = SelectionTool(_selectionUtils);
+    _selectionTool = SelectionTool(_selectionUtils, _circleTool);
     _eyedropperTool = EyedropperTool(
       onColorPicked: (color) => onColorPicked?.call(color),
     );
@@ -156,6 +156,7 @@ class ToolDrawingManager {
 
   void handleSelectionEnd(PixelDrawDetails details) {
     _selectionTool.onEnd(details);
+    onSelectionEnd?.call(_selectionTool.previewPoints);
   }
 
   void handleSelectionUpdate(PixelDrawDetails details) {

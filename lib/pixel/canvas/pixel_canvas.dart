@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart' hide SelectionOverlay;
 
 import '../../core/utils/cursor_manager.dart';
@@ -35,8 +37,8 @@ class PixelCanvas extends StatefulWidget {
   final Function() onStartDrawing;
   final Function() onFinishDrawing;
   final Function(List<PixelPoint<int>>) onDrawShape;
-  final Function(SelectionModel?)? onSelectionChanged;
-  final Function(SelectionModel)? onMoveSelection;
+  final Function(List<PixelPoint<int>>?)? onSelectionChanged;
+  final Function(List<PixelPoint<int>>, Point)? onMoveSelection;
   final Function(Color)? onColorPicked;
   final Function(List<Color>)? onGradientApplied;
   final Function(double, Offset)? onStartDrag;
@@ -124,21 +126,25 @@ class _PixelCanvasState extends State<PixelCanvas> {
       width: widget.width,
       height: widget.height,
       onColorPicked: widget.onColorPicked,
-      onSelectionChanged: (selection) {
-        _controller.setSelection(selection);
-        if (selection == null) {
-          widget.onSelectionChanged!(selection);
-        }
-      },
-      onMoveSelection: (selection) {
-        _controller.setSelection(selection);
+      // onSelectionChanged: (selection) {
+      //   _controller.setSelection(selection);
+      //   if (selection == null) {
+      //     widget.onSelectionChanged!(selection);
+      //   }
+      // },
+      // onMoveSelection: (selection) {
+      //   _controller.setSelection(selection);
 
-        widget.onMoveSelection?.call(selection);
-      },
+      //   widget.onMoveSelection?.call(selection);
+      // },
       onSelectionEnd: (selection) {
-        final newSelection = selection?.copyWith(canvasSize: context.size ?? Size.zero);
-        _controller.setSelection(newSelection);
-        widget.onSelectionChanged?.call(newSelection);
+        final length = _controller.selectionPoints.length;
+        if (length < 2) {
+          _controller.setSelection(null);
+          widget.onSelectionChanged?.call(null);
+        } else {
+          widget.onSelectionChanged?.call(_controller.selectionPoints);
+        }
       },
     );
 
@@ -147,7 +153,13 @@ class _PixelCanvasState extends State<PixelCanvas> {
       toolManager: _toolManager,
       onStartDrawing: widget.onStartDrawing,
       onFinishDrawing: widget.onFinishDrawing,
-      onDrawShape: widget.onDrawShape,
+      onDrawShape: (shape) {
+        if (widget.currentTool == PixelTool.select) {
+          _controller.setSelection(shape);
+        } else {
+          widget.onDrawShape(shape);
+        }
+      },
       onStartDrag: widget.onStartDrag,
       onDrag: widget.onDrag,
       onDragEnd: widget.onDragEnd,
@@ -270,16 +282,15 @@ class _PixelCanvasState extends State<PixelCanvas> {
               ),
               LayoutBuilder(builder: (context, constraints) {
                 return SelectionOverlay(
-                  selection: _controller.selectionRect,
+                  selection: _controller.selectionPoints,
                   zoomLevel: widget.zoomLevel,
                   canvasOffset: widget.currentOffset,
                   canvasWidth: widget.width,
                   canvasHeight: widget.height,
                   canvasSize: constraints.biggest,
-                  onSelectionMove: (selection) {
-                    final updatedSelection = selection;
-                    _controller.setSelection(updatedSelection);
-                    widget.onMoveSelection?.call(updatedSelection);
+                  onSelectionMove: (selection, delta) {
+                    _controller.setSelection(selection);
+                    widget.onMoveSelection?.call(selection, delta);
                   },
                   onSelectionEnd: () {
                     // widget.onMoveSelection?.call(_controller.selectionRect);
@@ -304,7 +315,11 @@ class _PixelCanvasState extends State<PixelCanvas> {
       strokeWidth: widget.brushSize,
       modifier: _getModifier(),
       onPixelsUpdated: (pixels) {
-        _controller.setPreviewPixels(pixels);
+        if (widget.currentTool == PixelTool.select) {
+          _controller.setSelection(pixels);
+        } else {
+          _controller.setPreviewPixels(pixels);
+        }
       },
     );
   }

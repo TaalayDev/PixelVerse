@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'pixel_point.dart';
 import 'tools.dart';
 import '../data/models/animation_frame_model.dart';
 import '../data/models/layer.dart';
@@ -24,7 +25,7 @@ class PixelDrawState with _$PixelDrawState {
     required final Color currentColor,
     required final PixelTool currentTool,
     required final MirrorAxis mirrorAxis,
-    final SelectionModel? selectionRect,
+    final List<PixelPoint<int>>? selectionRect,
     @Default(false) final bool canUndo,
     @Default(false) final bool canRedo,
     @Default(PixelModifier.none) final PixelModifier currentModifier,

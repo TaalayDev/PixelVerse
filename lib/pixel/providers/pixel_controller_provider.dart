@@ -1,11 +1,13 @@
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:pixelverse/providers/background_image_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:universal_html/html.dart';
 
 import '../pixel_point.dart';
 import '../../data.dart';
 import '../../providers/providers.dart';
+import '../../providers/background_image_provider.dart';
 import '../services/animation_service.dart';
 import '../services/drawing_service.dart';
 import '../services/frame_service.dart';
@@ -121,11 +123,6 @@ class PixelDrawController extends _$PixelDrawController {
   }
 
   void fillPixels(List<PixelPoint<int>> points) {
-    debugPrint({
-      'currentLayerIndex': state.currentLayerIndex,
-      'hasSelection': _selectionService.hasSelection,
-      'isPointsInSelection': _selectionService.isPointsInSelection(points),
-    }.toString());
     if (_selectionService.hasSelection && !_selectionService.isPointsInSelection(points)) {
       return;
     }
@@ -477,12 +474,12 @@ class PixelDrawController extends _$PixelDrawController {
   }
 
   // Selection operations
-  void setSelection(SelectionModel? selection) {
+  void setSelection(List<PixelPoint<int>>? selection) {
     _selectionService.setSelection(selection, currentLayer.pixels);
     state = state.copyWith(selectionRect: selection);
   }
 
-  void prepareToMoveSelection(SelectionModel initialSelection) {
+  void prepareToMoveSelection(List<PixelPoint<int>> initialSelection) {
     if (state.currentLayerIndex < 0 || state.currentLayerIndex >= currentFrame.layers.length) {
       debugPrint("prepareToMoveSelection: Invalid currentLayerIndex");
       return;
@@ -492,7 +489,7 @@ class PixelDrawController extends _$PixelDrawController {
     state = state.copyWith(selectionRect: initialSelection);
   }
 
-  void moveSelection(SelectionModel newSelection) {
+  void moveSelection(List<PixelPoint<int>> newSelection, Point delta) {
     if (state.selectionRect == null) {
       debugPrint('No selection to move');
       return;
@@ -508,8 +505,7 @@ class PixelDrawController extends _$PixelDrawController {
       }
     }
 
-    if (_selectionService.currentSelection?.rect == newSelection.rect &&
-        _selectionService.currentSelection?.canvasSize == newSelection.canvasSize) {
+    if (_selectionService.currentSelection != null && listEquals(_selectionService.currentSelection!, newSelection)) {
       if (state.selectionRect != newSelection) {
         state = state.copyWith(selectionRect: newSelection);
       }
@@ -520,6 +516,7 @@ class PixelDrawController extends _$PixelDrawController {
 
     final newPixels = _selectionService.moveSelection(
       newTargetSelection: newSelection,
+      delta: delta,
       currentLayerPixels: Uint32List.fromList(currentLayer.pixels),
     );
 

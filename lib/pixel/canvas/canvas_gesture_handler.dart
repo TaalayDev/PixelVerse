@@ -107,6 +107,7 @@ class CanvasGestureHandler {
   ) {
     if (_shouldHandleDirectTap(currentTool)) {
       onStartDrawing();
+
       toolManager.handleTap(currentTool, drawDetails);
 
       if (_shouldFinishImmediately(currentTool)) {
@@ -142,8 +143,8 @@ class CanvasGestureHandler {
       _panStartPosition = details.focalPoint - controller.offset;
       onStartDrag?.call(controller.zoomLevel, controller.offset);
     } else if (!_isDrawingActive) {
-      // Only start drawing if not already active (prevents double initialization)
       onStartDrawing();
+
       toolManager.startDrawing(currentTool, drawDetails);
       _isDrawingActive = true;
     }
@@ -311,6 +312,7 @@ class CanvasGestureHandler {
     } else if (_shouldHandleDirectTap(currentTool)) {
       // Immediate tools like fill, eyedropper
       onStartDrawing();
+      toolManager.handleSelectionEnd(drawDetails);
       toolManager.handleTap(currentTool, drawDetails);
 
       if (_shouldFinishImmediately(currentTool)) {
@@ -329,6 +331,7 @@ class CanvasGestureHandler {
     } else {
       // Drawing tools - start immediately
       onStartDrawing();
+      toolManager.handleSelectionEnd(drawDetails);
       toolManager.startDrawing(currentTool, drawDetails);
       _isRawPointerDrawing = true;
     }

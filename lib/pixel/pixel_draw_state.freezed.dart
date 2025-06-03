@@ -27,7 +27,8 @@ mixin _$PixelDrawState {
   Color get currentColor => throw _privateConstructorUsedError;
   PixelTool get currentTool => throw _privateConstructorUsedError;
   MirrorAxis get mirrorAxis => throw _privateConstructorUsedError;
-  SelectionModel? get selectionRect => throw _privateConstructorUsedError;
+  List<PixelPoint<int>>? get selectionRect =>
+      throw _privateConstructorUsedError;
   bool get canUndo => throw _privateConstructorUsedError;
   bool get canRedo => throw _privateConstructorUsedError;
   PixelModifier get currentModifier => throw _privateConstructorUsedError;
@@ -54,7 +55,7 @@ abstract class $PixelDrawStateCopyWith<$Res> {
       Color currentColor,
       PixelTool currentTool,
       MirrorAxis mirrorAxis,
-      SelectionModel? selectionRect,
+      List<PixelPoint<int>>? selectionRect,
       bool canUndo,
       bool canRedo,
       PixelModifier currentModifier});
@@ -132,7 +133,7 @@ class _$PixelDrawStateCopyWithImpl<$Res, $Val extends PixelDrawState>
       selectionRect: freezed == selectionRect
           ? _value.selectionRect
           : selectionRect // ignore: cast_nullable_to_non_nullable
-              as SelectionModel?,
+              as List<PixelPoint<int>>?,
       canUndo: null == canUndo
           ? _value.canUndo
           : canUndo // ignore: cast_nullable_to_non_nullable
@@ -168,7 +169,7 @@ abstract class _$$PixelDrawStateImplCopyWith<$Res>
       Color currentColor,
       PixelTool currentTool,
       MirrorAxis mirrorAxis,
-      SelectionModel? selectionRect,
+      List<PixelPoint<int>>? selectionRect,
       bool canUndo,
       bool canRedo,
       PixelModifier currentModifier});
@@ -242,9 +243,9 @@ class __$$PixelDrawStateImplCopyWithImpl<$Res>
           : mirrorAxis // ignore: cast_nullable_to_non_nullable
               as MirrorAxis,
       selectionRect: freezed == selectionRect
-          ? _value.selectionRect
+          ? _value._selectionRect
           : selectionRect // ignore: cast_nullable_to_non_nullable
-              as SelectionModel?,
+              as List<PixelPoint<int>>?,
       canUndo: null == canUndo
           ? _value.canUndo
           : canUndo // ignore: cast_nullable_to_non_nullable
@@ -275,12 +276,13 @@ class _$PixelDrawStateImpl extends _PixelDrawState {
       required this.currentColor,
       required this.currentTool,
       required this.mirrorAxis,
-      this.selectionRect,
+      final List<PixelPoint<int>>? selectionRect,
       this.canUndo = false,
       this.canRedo = false,
       this.currentModifier = PixelModifier.none})
       : _animationStates = animationStates,
         _frames = frames,
+        _selectionRect = selectionRect,
         super._();
 
   @override
@@ -318,8 +320,16 @@ class _$PixelDrawStateImpl extends _PixelDrawState {
   final PixelTool currentTool;
   @override
   final MirrorAxis mirrorAxis;
+  final List<PixelPoint<int>>? _selectionRect;
   @override
-  final SelectionModel? selectionRect;
+  List<PixelPoint<int>>? get selectionRect {
+    final value = _selectionRect;
+    if (value == null) return null;
+    if (_selectionRect is EqualUnmodifiableListView) return _selectionRect;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
+
   @override
   @JsonKey()
   final bool canUndo;
@@ -359,8 +369,8 @@ class _$PixelDrawStateImpl extends _PixelDrawState {
                 other.currentTool == currentTool) &&
             (identical(other.mirrorAxis, mirrorAxis) ||
                 other.mirrorAxis == mirrorAxis) &&
-            (identical(other.selectionRect, selectionRect) ||
-                other.selectionRect == selectionRect) &&
+            const DeepCollectionEquality()
+                .equals(other._selectionRect, _selectionRect) &&
             (identical(other.canUndo, canUndo) || other.canUndo == canUndo) &&
             (identical(other.canRedo, canRedo) || other.canRedo == canRedo) &&
             (identical(other.currentModifier, currentModifier) ||
@@ -380,7 +390,7 @@ class _$PixelDrawStateImpl extends _PixelDrawState {
       currentColor,
       currentTool,
       mirrorAxis,
-      selectionRect,
+      const DeepCollectionEquality().hash(_selectionRect),
       canUndo,
       canRedo,
       currentModifier);
@@ -405,7 +415,7 @@ abstract class _PixelDrawState extends PixelDrawState {
       required final Color currentColor,
       required final PixelTool currentTool,
       required final MirrorAxis mirrorAxis,
-      final SelectionModel? selectionRect,
+      final List<PixelPoint<int>>? selectionRect,
       final bool canUndo,
       final bool canRedo,
       final PixelModifier currentModifier}) = _$PixelDrawStateImpl;
@@ -432,7 +442,7 @@ abstract class _PixelDrawState extends PixelDrawState {
   @override
   MirrorAxis get mirrorAxis;
   @override
-  SelectionModel? get selectionRect;
+  List<PixelPoint<int>>? get selectionRect;
   @override
   bool get canUndo;
   @override

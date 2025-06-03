@@ -45,6 +45,10 @@ class PixelCanvasPainter extends CustomPainter {
     _drawGradient(canvas, size);
     _drawPenPath(canvas);
 
+    // if (controller.selectionPoints.isNotEmpty) {
+    //   _drawSelectionOverlay(canvas, size, pixelWidth, pixelHeight);
+    // }
+
     if (controller.previewPixels.isEmpty) {
       _drawHoverPreview(canvas, size, pixelWidth, pixelHeight);
     }
@@ -216,6 +220,29 @@ class PixelCanvasPainter extends CustomPainter {
     }
   }
 
+  void _drawSelectionOverlay(
+    Canvas canvas,
+    Size size,
+    double pixelWidth,
+    double pixelHeight,
+  ) {
+    final selectionPoints = controller.selectionPoints;
+    if (selectionPoints.isEmpty) return;
+
+    final paint = Paint()
+      ..color = Colors.blue.withOpacity(0.5)
+      ..style = PaintingStyle.fill;
+
+    for (final point in selectionPoints) {
+      final left = point.x * pixelWidth;
+      final top = point.y * pixelHeight;
+      final right = left + pixelWidth;
+      final bottom = top + pixelHeight;
+
+      canvas.drawRect(Rect.fromLTRB(left, top, right, bottom), paint);
+    }
+  }
+
   void _drawPixelsAsVertices(
     Canvas canvas,
     List<PixelPoint<int>> pixels,
@@ -376,64 +403,6 @@ class PixelCanvasPainter extends CustomPainter {
     );
 
     canvas.drawRect(rect, borderPaint);
-  }
-
-  void _drawSelectionRect(Canvas canvas, double pixelWidth, double pixelHeight) {
-    final selection = controller.selectionRect;
-    if (selection == null || selection.width <= 0 || selection.height <= 0) {
-      return;
-    }
-
-    final rect = Rect.fromLTWH(
-      selection.x.toDouble(),
-      selection.y.toDouble(),
-      selection.width.toDouble(),
-      selection.height.toDouble(),
-    );
-
-    // Fill
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..color = Colors.blueAccent.withOpacity(0.2)
-        ..style = PaintingStyle.fill,
-    );
-
-    // Border
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..color = Colors.blue
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.0 / controller.zoomLevel,
-    );
-
-    // Corner handles
-    _drawSelectionHandles(canvas, rect);
-  }
-
-  void _drawSelectionHandles(Canvas canvas, Rect rect) {
-    const handleSize = 6.0;
-    final handlePaint = Paint()..color = Colors.blue;
-    final handleRadius = handleSize / (2 * controller.zoomLevel);
-
-    final handles = [
-      rect.topLeft,
-      rect.topRight,
-      rect.bottomLeft,
-      rect.bottomRight,
-    ];
-
-    for (final center in handles) {
-      canvas.drawRect(
-        Rect.fromCenter(
-          center: center,
-          width: handleRadius * 2,
-          height: handleRadius * 2,
-        ),
-        handlePaint,
-      );
-    }
   }
 
   void _drawGradient(Canvas canvas, Size size) {

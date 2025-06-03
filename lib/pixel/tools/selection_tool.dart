@@ -1,7 +1,8 @@
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:pixelverse/pixel/pixel_point.dart';
+import 'package:pixelverse/pixel/tools/shape_tool.dart';
 
 import '../../data/models/selection_model.dart';
 import '../tools.dart';
@@ -111,11 +112,15 @@ class SelectionUtils {
     final pixelWidth = canvasSize.width / width;
     final pixelHeight = canvasSize.height / height;
 
+    // Use floor() for start position to get exact pixel coordinate
     final startX = (startPosition!.dx / pixelWidth).floor();
     final startY = (startPosition!.dy / pixelHeight).floor();
 
-    final x = (position.dx / pixelWidth).floor();
-    final y = (position.dy / pixelHeight).floor();
+    // Use round() for end position to make selection more inclusive
+    // This ensures that if user drags to 30.34x40.56, it rounds to (30,41)
+    // giving a more intuitive selection behavior
+    final x = (position.dx / pixelWidth).round();
+    final y = (position.dy / pixelHeight).round();
 
     endPosition = position;
 
@@ -140,8 +145,6 @@ class SelectionUtils {
   }
 
   void endSelection() {
-    debugPrint('SelectionUtils: Ending selection - current: $selectionRect');
-
     if (selectionRect != null && (selectionRect!.width <= 1 || selectionRect!.height <= 1)) {
       // If selection is too small, clear it
       debugPrint('SelectionUtils: Selection too small, clearing');
@@ -222,39 +225,45 @@ class SelectionUtils {
 }
 
 /// Implementation of SelectionTool that conforms to the Tool interface
-class SelectionTool extends Tool {
+class SelectionTool extends ShapeTool {
   final SelectionUtils utils;
+  final ShapeTool rectangleTool;
 
-  SelectionTool(this.utils) : super(PixelTool.select);
+  SelectionTool(this.utils, this.rectangleTool) : super(PixelTool.select);
+
+  // @override
+  // void onStart(PixelDrawDetails details) {
+  //   if (utils.isPointInsideSelection(details.position)) {
+  //     utils.startDraggingSelection(details.position);
+  //   } else {
+  //     utils.startSelection(details.position);
+  //   }
+  // }
+
+  // @override
+  // void onMove(PixelDrawDetails details) {
+  //   if (utils.isDraggingSelection) {
+  //     if (utils.lastPanPosition != null) {
+  //       final delta = details.position - utils.lastPanPosition!;
+  //       utils.updateDraggingSelection(delta);
+  //       utils.lastPanPosition = details.position;
+  //     }
+  //   } else {
+  //     utils.updateSelection(details.position);
+  //   }
+  // }
+
+  // @override
+  // void onEnd(PixelDrawDetails details) {
+  //   if (utils.isDraggingSelection) {
+  //     utils.endDraggingSelection();
+  //   } else {
+  //     utils.endSelection();
+  //   }
+  // }
 
   @override
-  void onStart(PixelDrawDetails details) {
-    if (utils.isPointInsideSelection(details.position)) {
-      utils.startDraggingSelection(details.position);
-    } else {
-      utils.startSelection(details.position);
-    }
-  }
-
-  @override
-  void onMove(PixelDrawDetails details) {
-    if (utils.isDraggingSelection) {
-      if (utils.lastPanPosition != null) {
-        final delta = details.position - utils.lastPanPosition!;
-        utils.updateDraggingSelection(delta);
-        utils.lastPanPosition = details.position;
-      }
-    } else {
-      utils.updateSelection(details.position);
-    }
-  }
-
-  @override
-  void onEnd(PixelDrawDetails details) {
-    if (utils.isDraggingSelection) {
-      utils.endDraggingSelection();
-    } else {
-      utils.endSelection();
-    }
+  List<PixelPoint<int>> generateShapePoints(PixelPoint<int> start, PixelPoint<int> end, int width, int height) {
+    return rectangleTool.generateShapePoints(start, end, width, height);
   }
 }

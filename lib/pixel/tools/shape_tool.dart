@@ -7,6 +7,8 @@ abstract class ShapeTool extends Tool {
   List<PixelPoint<int>> _previewPoints = [];
   PixelPoint<int>? _startPoint;
 
+  List<PixelPoint<int>> get previewPoints => _previewPoints;
+
   ShapeTool(super.type);
 
   @override

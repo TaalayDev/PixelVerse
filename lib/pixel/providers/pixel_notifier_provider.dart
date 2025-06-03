@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -77,8 +78,8 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   void selectAnimationState(int stateId) => _controller.selectAnimationState(stateId);
 
   // Selection operations
-  void setSelection(SelectionModel? selection) => _controller.setSelection(selection);
-  void moveSelection(SelectionModel model) => _controller.moveSelection(model);
+  void setSelection(List<PixelPoint<int>>? selection) => _controller.setSelection(selection);
+  void moveSelection(List<PixelPoint<int>> selection, Point delta) => _controller.moveSelection(selection, delta);
 
   // Undo/Redo operations
   void undo() => _controller.undo();
