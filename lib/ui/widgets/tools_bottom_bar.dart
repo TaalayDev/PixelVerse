@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
+import 'package:pixelverse/ui/widgets/app_expandable.dart';
 
 import '../../data/models/subscription_model.dart';
 import '../../pixel/pixel_draw_state.dart';
@@ -83,7 +85,7 @@ class ToolsBottomBar extends HookWidget {
                       tooltip: label,
                     );
                   }).toList(),
-                ),
+                ).animate().fadeIn(duration: const Duration(milliseconds: 200)),
               ),
             if (showExtraTools.value) Divider(color: Colors.grey.withOpacity(0.5), thickness: 0.1),
             Expanded(
@@ -161,35 +163,38 @@ class ToolsBottomBar extends HookWidget {
                           expand: false,
                           builder: (context, scrollController) => ValueListenableBuilder(
                             valueListenable: drawState,
-                            builder: (context, state, _) => LayersPanel(
-                              width: width,
-                              height: height,
-                              layers: state.layers,
-                              activeLayerIndex: state.currentLayerIndex,
-                              onLayerAdded: (name) {
-                                notifier.addLayer(name);
-                              },
-                              onLayerVisibilityChanged: (index) {
-                                notifier.toggleLayerVisibility(index);
-                              },
-                              onLayerSelected: (index) {
-                                notifier.selectLayer(index);
-                              },
-                              onLayerDeleted: (index) {
-                                notifier.removeLayer(index);
-                              },
-                              onLayerLockedChanged: (index) {},
-                              onLayerNameChanged: (index, name) {},
-                              onLayerReordered: (oldIndex, newIndex) {
-                                notifier.reorderLayers(
-                                  newIndex,
-                                  oldIndex,
-                                );
-                              },
-                              onLayerOpacityChanged: (index, opacity) {},
-                              onLayerEffectsChanged: (updatedLayer) {
-                                notifier.updateLayer(updatedLayer);
-                              },
+                            builder: (context, state, _) => Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: LayersPanel(
+                                width: width,
+                                height: height,
+                                layers: state.layers,
+                                activeLayerIndex: state.currentLayerIndex,
+                                onLayerAdded: (name) {
+                                  notifier.addLayer(name);
+                                },
+                                onLayerVisibilityChanged: (index) {
+                                  notifier.toggleLayerVisibility(index);
+                                },
+                                onLayerSelected: (index) {
+                                  notifier.selectLayer(index);
+                                },
+                                onLayerDeleted: (index) {
+                                  notifier.removeLayer(index);
+                                },
+                                onLayerLockedChanged: (index) {},
+                                onLayerNameChanged: (index, name) {},
+                                onLayerReordered: (oldIndex, newIndex) {
+                                  notifier.reorderLayers(
+                                    newIndex,
+                                    oldIndex,
+                                  );
+                                },
+                                onLayerOpacityChanged: (index, opacity) {},
+                                onLayerEffectsChanged: (updatedLayer) {
+                                  notifier.updateLayer(updatedLayer);
+                                },
+                              ),
                             ),
                           ),
                         ),

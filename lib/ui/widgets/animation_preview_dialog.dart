@@ -320,7 +320,9 @@ class _AnimationPreviewDialogState extends State<AnimationPreviewDialog> with Si
                     if (widget.frames.isNotEmpty)
                       Text(
                         'Duration: ${widget.frames[_currentFrameIndex].duration}ms',
-                        style: Theme.of(context).textTheme.bodySmall,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey.shade600,
+                            ),
                       ),
                   ],
                 ),

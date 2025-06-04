@@ -778,7 +778,7 @@ class EffectListItem extends StatelessWidget {
         onTap: onSelect,
         borderRadius: BorderRadius.circular(8),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
           child: ListTile(
             leading: CircleAvatar(
               backgroundColor: effectColor.withOpacity(0.2),
@@ -786,7 +786,7 @@ class EffectListItem extends StatelessWidget {
             ),
             title: Text(
               effect.name.capitalize(),
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
             ),
             // subtitle: Text(
             //   _formatParameters(effect.parameters),

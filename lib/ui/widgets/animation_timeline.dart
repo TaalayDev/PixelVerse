@@ -6,7 +6,6 @@ import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
 import '../../pixel/animation_frame_controller.dart';
 import '../../pixel/image_painter.dart';
-import '../../l10n/strings.dart';
 import '../../data.dart';
 import '../widgets.dart';
 import 'app_expandable.dart';
