@@ -208,6 +208,7 @@ class _PixelCanvasState extends State<PixelCanvas> {
       PixelTool.line,
       PixelTool.rectangle,
       PixelTool.circle,
+      PixelTool.sprayPaint,
     ].contains(tool);
   }
 
@@ -216,14 +217,28 @@ class _PixelCanvasState extends State<PixelCanvas> {
       return _controller.setHoverPosition(null);
     }
 
-    final brushStroke = _toolManager.generateBrushStroke(
-      position,
-      position,
-      widget.brushSize,
-      widget.currentColor,
-      context.size ?? Size.zero,
-    );
-    _controller.setHoverPosition(position, previewPixels: brushStroke);
+    List<PixelPoint<int>> previewPixels;
+
+    if (widget.currentTool == PixelTool.sprayPaint) {
+      // Generate spray preview for hover
+      previewPixels = _toolManager.generateSprayPixels(
+        position,
+        widget.brushSize,
+        widget.sprayIntensity,
+        widget.currentColor.withOpacity(0.5), // Semi-transparent for preview
+        context.size ?? Size.zero,
+      );
+    } else {
+      // Use existing brush stroke for other tools
+      previewPixels = _toolManager.generateBrushStroke(
+        position,
+        position,
+        widget.brushSize,
+        widget.currentColor,
+        context.size ?? Size.zero,
+      );
+    }
+    _controller.setHoverPosition(position, previewPixels: previewPixels);
   }
 
   @override
@@ -261,6 +276,10 @@ class _PixelCanvasState extends State<PixelCanvas> {
                 child: MouseRegion(
                   cursor: _getCursor(),
                   onHover: (event) {
+                    if (widget.width > 128 || widget.height > 128) {
+                      return;
+                    }
+
                     _controller.setHoverPosition(event.localPosition);
                     _updateHoverPreview(event.localPosition);
                   },
@@ -292,8 +311,8 @@ class _PixelCanvasState extends State<PixelCanvas> {
                     _controller.setSelection(selection);
                     widget.onMoveSelection?.call(selection, delta);
                   },
-                  onSelectionEnd: () {
-                    // widget.onMoveSelection?.call(_controller.selectionRect);
+                  onSelectionMoveEnd: () {
+                    widget.onSelectionChanged?.call(_controller.selectionPoints);
                   },
                 );
               }),

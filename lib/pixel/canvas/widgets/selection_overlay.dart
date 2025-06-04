@@ -13,7 +13,7 @@ class SelectionOverlay extends StatefulWidget {
   final int canvasHeight;
   final Size canvasSize;
   final Function(List<PixelPoint<int>>, math.Point delta)? onSelectionMove;
-  final Function()? onSelectionEnd;
+  final Function()? onSelectionMoveEnd;
 
   const SelectionOverlay({
     super.key,
@@ -24,7 +24,7 @@ class SelectionOverlay extends StatefulWidget {
     required this.canvasHeight,
     required this.canvasSize,
     this.onSelectionMove,
-    this.onSelectionEnd,
+    this.onSelectionMoveEnd,
   });
 
   @override
@@ -252,7 +252,7 @@ class _SelectionOverlayState extends State<SelectionOverlay> with SingleTickerPr
   void _handlePanEnd(DragEndDetails details) {
     _lastPanPosition = Offset.zero;
     _originalSelection = null;
-    widget.onSelectionEnd?.call();
+    widget.onSelectionMoveEnd?.call();
   }
 }
 

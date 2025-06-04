@@ -442,6 +442,7 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerPr
                             },
                             currentColor: state.currentColor,
                             subscription: subscription,
+                            // onColorSelected: (color) {},
                           ),
                         ),
                       Expanded(
@@ -980,9 +981,7 @@ class PixelPainter extends HookConsumerWidget {
               onDrawShape: (points) {
                 ref.read(pixelDrawNotifierProvider(project).notifier).fillPixels(points);
               },
-              onStartDrawing: () {
-                // notifier.saveState();
-              },
+              onStartDrawing: () {},
               onFinishDrawing: () {},
               onSelectionChanged: (selectionPoints) {
                 ref.read(pixelDrawNotifierProvider(project).notifier).setSelection(selectionPoints);

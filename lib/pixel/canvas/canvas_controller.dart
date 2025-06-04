@@ -132,7 +132,7 @@ class PixelCanvasController extends ChangeNotifier {
   }
 
   void setPreviewPixels(List<PixelPoint<int>> pixels) {
-    _previewPixels = filterPixelsInSelection(pixels);
+    _previewPixels = List<PixelPoint<int>>.from(filterPixelsInSelection(pixels));
     _updateCurrentLayerCache();
     _updatePreviewPixelsWithEffects();
     notifyListeners();

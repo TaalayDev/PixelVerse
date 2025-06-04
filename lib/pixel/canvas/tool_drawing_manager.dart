@@ -13,6 +13,7 @@ import '../../pixel/tools/shape_tool.dart';
 import '../../pixel/tools/shape_util.dart';
 import '../../data.dart';
 import '../pixel_point.dart';
+import '../tools/spray_tool.dart';
 import 'canvas_controller.dart';
 
 /// Manages tool-specific drawing operations
@@ -36,6 +37,7 @@ class ToolDrawingManager {
   late final OvalToolBresenham _circleTool;
   late final SelectionTool _selectionTool;
   late final EyedropperTool _eyedropperTool;
+  late final SprayTool _sprayTool;
 
   final Random _random = Random();
 
@@ -76,6 +78,7 @@ class ToolDrawingManager {
     _eyedropperTool = EyedropperTool(
       onColorPicked: (color) => onColorPicked?.call(color),
     );
+    _sprayTool = SprayTool();
   }
 
   Tool _getTool(PixelTool toolType) {
@@ -96,6 +99,8 @@ class ToolDrawingManager {
         return _selectionTool;
       case PixelTool.eyedropper:
         return _eyedropperTool;
+      case PixelTool.sprayPaint:
+        return _sprayTool;
       default:
         return _pencilTool;
     }

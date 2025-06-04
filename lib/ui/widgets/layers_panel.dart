@@ -57,9 +57,12 @@ class LayersPanel extends HookConsumerWidget {
 
     return Column(
       children: [
-        const SizedBox(height: 8),
-        _buildLayersPanelHeader(context),
         Divider(color: Theme.of(context).dividerColor.withOpacity(0.2), height: 0),
+        const SizedBox(height: 4),
+        _buildActionButtonsBar(context, subscription),
+        const SizedBox(height: 4),
+        Divider(color: Theme.of(context).dividerColor.withOpacity(0.2), height: 0),
+        const SizedBox(height: 4),
         Expanded(
           child: AnimatedReorderableListView(
             items: layers,
@@ -86,6 +89,115 @@ class LayersPanel extends HookConsumerWidget {
         if (backgroundImage.image != null) _buildBackgroundImageTile(context, ref, backgroundImage),
         const SizedBox(height: 8),
       ],
+    );
+  }
+
+  Widget _buildActionButtonsBar(BuildContext context, UserSubscription subscription) {
+    final hasSelectedLayer = activeLayerIndex >= 0 && activeLayerIndex < layers.length;
+    final selectedLayer = hasSelectedLayer ? layers[activeLayerIndex] : null;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          // Add Layer Button
+          _buildActionButton(
+            context: context,
+            icon: Icons.add,
+            color: Colors.green,
+            onPressed: () async {
+              onLayerAdded('Layer ${layers.length + 1}');
+            },
+          ),
+          const SizedBox(width: 8),
+
+          // Effects Button
+          ProBadge(
+            show: !subscription.isPro,
+            padding: const EdgeInsets.all(2),
+            child: _buildActionButton(
+              context: context,
+              icon: Icons.auto_fix_high,
+              color: Colors.purple,
+              onPressed: hasSelectedLayer && subscription.isPro && onLayerEffectsChanged != null
+                  ? () {
+                      _showEffectsDialog(context, selectedLayer!);
+                    }
+                  : null,
+              badge: selectedLayer?.effects.isNotEmpty == true,
+            ),
+          ),
+          const SizedBox(width: 8),
+
+          // Delete Button
+          _buildActionButton(
+            context: context,
+            icon: Icons.delete_outline,
+            color: Colors.red,
+            onPressed: hasSelectedLayer && layers.length > 1
+                ? () {
+                    _showDeleteConfirmation(context, activeLayerIndex);
+                  }
+                : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required BuildContext context,
+    required IconData icon,
+    required Color color,
+    required VoidCallback? onPressed,
+    bool badge = false,
+  }) {
+    final isEnabled = onPressed != null;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isEnabled ? color.withOpacity(0.3) : Colors.grey.withOpacity(0.2),
+              width: 1,
+            ),
+            color: isEnabled ? color.withOpacity(0.1) : Colors.grey.withOpacity(0.05),
+          ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Icon(
+                icon,
+                size: 12,
+                color: isEnabled ? color : Colors.grey.shade400,
+              ),
+              if (badge)
+                Positioned(
+                  right: -4,
+                  top: -4,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -377,20 +489,23 @@ class LayersPanel extends HookConsumerWidget {
 
   Widget _buildLayersPanelHeader(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             Strings.of(context).layers,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () async {
-              onLayerAdded('Layer ${layers.length + 1}');
-            },
-            tooltip: 'Add new layer',
+          Text(
+            '${layers.length} layers',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+            ),
           ),
         ],
       ),
@@ -403,121 +518,74 @@ class LayersPanel extends HookConsumerWidget {
     int index,
     UserSubscription subscription,
   ) {
-    final contentColor = index == activeLayerIndex ? Colors.white : Theme.of(context).colorScheme.onSurface;
+    final isSelected = index == activeLayerIndex;
+    final contentColor = isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface;
 
-    return Card(
+    return SizedBox(
       key: ValueKey(layer.id),
-      color: index == activeLayerIndex ? Colors.blue.withOpacity(0.5) : null,
-      child: ListTile(
-        contentPadding: const EdgeInsets.only(left: 8, right: 8),
-        leading: Stack(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: _buildLayerPreview(layer, width, height),
-            ),
-            // Show indicator if the layer has effects
-            if (layer.effects.isNotEmpty)
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.purple.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  padding: const EdgeInsets.all(2),
-                  child: const Icon(
-                    Icons.auto_fix_high,
-                    color: Colors.white,
-                    size: 12,
-                  ),
-                ),
-              ),
-          ],
+      height: 40,
+      child: Card(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        elevation: isSelected ? 3 : 1,
+        color: isSelected ? Colors.blue.withOpacity(0.7) : null,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: isSelected ? BorderSide(color: Colors.blue.shade300, width: 2) : BorderSide.none,
         ),
-        title: Text(
-          layer.name,
-          style: TextStyle(
-            color: contentColor,
-            fontSize: 12,
-          ),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Effects button
-            if (onLayerEffectsChanged != null)
-              ProBadge(
-                show: !subscription.isPro,
-                padding: const EdgeInsets.all(4),
-                child: InkWell(
-                  onTap: !subscription.isPro ? null : () => _showEffectsDialog(context, layer),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Icon(
-                      Icons.auto_fix_high,
-                      color: contentColor,
-                      size: 15,
-                    ),
-                  ),
-                ),
-              ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
+        child: Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: InkWell(
+            child: Row(
               children: [
-                InkWell(
-                  child: Padding(
-                    padding: const EdgeInsets.all(4.0),
-                    child: Icon(
-                      layer.isVisible ? Icons.visibility : Icons.visibility_off,
-                      color: contentColor,
-                      size: 15,
-                    ),
-                  ),
-                  onTap: () {
+                IconButton(
+                  onPressed: () {
                     onLayerVisibilityChanged(index);
                   },
-                ),
-                InkWell(
-                  child: Padding(
-                    padding: const EdgeInsets.all(4.0),
-                    child: Icon(
-                      Icons.delete,
-                      color: contentColor,
-                      size: 15,
-                    ),
+                  icon: Icon(
+                    layer.isVisible ? Icons.visibility : Icons.visibility_off,
+                    size: 14,
+                    color: contentColor,
                   ),
-                  onTap: () => _showDeleteConfirmation(context, index),
+                ),
+                Text(
+                  layer.name,
+                  style: TextStyle(
+                    color: contentColor,
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  ),
                 ),
               ],
             ),
-            const SizedBox(width: 30),
-          ],
+            onTap: () {
+              onLayerSelected(index);
+            },
+          ),
         ),
-        onTap: () {
-          onLayerSelected(index);
-        },
-        selected: index == activeLayerIndex,
       ),
     );
   }
 
   Widget _buildLayerPreview(Layer layer, int width, int height) {
     return Container(
-      width: 40,
-      height: 40,
+      width: 44,
+      height: 44,
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.white),
-        color: Colors.white.withOpacity(0.8),
+        border: Border.all(color: Colors.grey.shade300),
+        color: Colors.white.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: LayersPreview(
         width: width,
         height: height,
         layers: [layer],
         builder: (context, image) {
-          return image != null ? CustomPaint(painter: ImagePainter(image)) : const ColoredBox(color: Colors.white);
+          return image != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(5),
+                  child: CustomPaint(painter: ImagePainter(image)),
+                )
+              : const ColoredBox(color: Colors.white);
         },
       ),
     );
@@ -538,6 +606,9 @@ class LayersPanel extends HookConsumerWidget {
               },
             ),
             TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
               child: Text(Strings.of(context).delete),
               onPressed: () {
                 Navigator.of(context).pop();
