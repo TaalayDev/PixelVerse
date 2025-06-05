@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
+import 'package:pixelverse/ui/widgets/animated_background.dart';
 import 'package:pixelverse/ui/widgets/reward_dialog.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -185,80 +186,82 @@ class ProjectDetailScreen extends HookConsumerWidget {
     AsyncValue<List<ApiComment>> comments,
     ApiProject currentProject,
   ) {
-    return Scaffold(
-      backgroundColor: theme.background,
-      body: CustomScrollView(
-        controller: scrollController,
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 400,
-            floating: false,
-            pinned: true,
-            backgroundColor: theme.toolbarColor,
-            flexibleSpace: FlexibleSpaceBar(
-              title: showAppBar.value
-                  ? null
-                  : Text(
-                      currentProject.title,
-                      style: TextStyle(color: theme.textPrimary, fontSize: 18),
-                    ),
-              background: _buildTabletProjectPreview(context, ref, currentProject, theme),
+    return AnimatedBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: CustomScrollView(
+          controller: scrollController,
+          slivers: [
+            SliverAppBar(
+              expandedHeight: 400,
+              floating: false,
+              pinned: true,
+              backgroundColor: Colors.transparent,
+              flexibleSpace: FlexibleSpaceBar(
+                title: showAppBar.value
+                    ? null
+                    : Text(
+                        currentProject.title,
+                        style: TextStyle(color: theme.textPrimary, fontSize: 18),
+                      ),
+                background: _buildTabletProjectPreview(context, ref, currentProject, theme),
+              ),
+              actions: [
+                _buildQuickActions(context, ref, currentProject, theme, isTablet: true),
+              ],
             ),
-            actions: [
-              _buildQuickActions(context, ref, currentProject, theme, isTablet: true),
-            ],
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Left column
-                  Expanded(
-                    flex: 2,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Project info
-                        _buildProjectInfo(context, ref, currentProject, theme, isTablet: true),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Left column
+                    Expanded(
+                      flex: 2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Project info
+                          _buildProjectInfo(context, ref, currentProject, theme, isTablet: true),
 
-                        const SizedBox(height: 24),
-
-                        // Tags
-                        if (currentProject.tags.isNotEmpty) ...[
-                          _buildTags(context, currentProject, theme, isTablet: true),
                           const SizedBox(height: 24),
+
+                          // Tags
+                          if (currentProject.tags.isNotEmpty) ...[
+                            _buildTags(context, currentProject, theme, isTablet: true),
+                            const SizedBox(height: 24),
+                          ],
+
+                          // Comments on tablet (below main content)
+                          _buildCommentsSection(context, ref, comments, theme, currentProject, isTablet: true),
                         ],
-
-                        // Comments on tablet (below main content)
-                        _buildCommentsSection(context, ref, comments, theme, currentProject, isTablet: true),
-                      ],
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(width: 24),
+                    const SizedBox(width: 24),
 
-                  // Right column
-                  Expanded(
-                    flex: 1,
-                    child: Column(
-                      children: [
-                        // Author info
-                        _buildAuthorInfo(context, ref, currentProject, theme, isTablet: true),
+                    // Right column
+                    Expanded(
+                      flex: 1,
+                      child: Column(
+                        children: [
+                          // Author info
+                          _buildAuthorInfo(context, ref, currentProject, theme, isTablet: true),
 
-                        const SizedBox(height: 20),
+                          const SizedBox(height: 20),
 
-                        // Project actions
-                        _buildProjectActions(context, ref, currentProject, theme, isTablet: true),
-                      ],
+                          // Project actions
+                          _buildProjectActions(context, ref, currentProject, theme, isTablet: true),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -2044,7 +2047,7 @@ class ProjectDetailScreen extends HookConsumerWidget {
   ) {
     final isAdLoaded = ref.read(rewardVideoAdProvider);
 
-    if (!subscription.hasFeatureAccess(SubscriptionFeature.exportFormats)) {
+    if (!subscription.isPro) {
       if (isAdLoaded) {
         _showDownloadOptionsDialog(context, ref, currentProject);
       } else {

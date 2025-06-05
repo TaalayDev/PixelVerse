@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -66,6 +67,7 @@ class RewardVideoAdController extends StateNotifier<bool> {
 
   Future<bool> showAdIfLoaded() async {
     if (_isAdLoaded && _rewardedAd != null) {
+      final completer = Completer<bool>();
       bool rewardEarned = false;
 
       _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
@@ -75,6 +77,7 @@ class RewardVideoAdController extends StateNotifier<bool> {
           state = false;
           loadAd(); // Load the next ad
           debugPrint('Reward video ad dismissed');
+          completer.complete(rewardEarned);
         },
         onAdFailedToShowFullScreenContent: (ad, error) {
           debugPrint('Failed to show reward video ad: ${error.message}');
@@ -82,6 +85,7 @@ class RewardVideoAdController extends StateNotifier<bool> {
           _isAdLoaded = false;
           state = false;
           loadAd(); // Load the next ad
+          completer.complete(false);
         },
         onAdShowedFullScreenContent: (ad) {
           debugPrint('Reward video ad showed full screen content');
@@ -98,7 +102,7 @@ class RewardVideoAdController extends StateNotifier<bool> {
         },
       );
 
-      return rewardEarned;
+      return completer.future;
     } else {
       // If ad is not loaded, try to load one
       loadAd();

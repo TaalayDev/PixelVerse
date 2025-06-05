@@ -28,7 +28,7 @@ class StringsZh extends Strings {
 
   @override
   String get features =>
-      '直观的像素编辑工具\n自定义调色板\n图层支持复杂作品\n动画时间轴创建GIF\n多种格式导出（开发中）\n社区分享功能（开发中）';
+      '直观的像素编辑工具\n自定义调色板\n图层支持复杂作品\n动画时间轴创建GIF\n多种格式导出\n社区分享功能';
 
   @override
   String get featuresTitle => '主要功能：';

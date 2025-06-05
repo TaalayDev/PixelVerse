@@ -182,12 +182,11 @@ class RewardDialog extends HookConsumerWidget {
 
       // Show reward video
       final rewardEarned = await rewardController.showAdIfLoaded();
-
-      if (!context.mounted) return;
+      debugPrint('Reward video ad completed: $rewardEarned');
 
       if (rewardEarned) {
         onRewardEarned?.call();
-      } else {
+      } else if (context.mounted) {
         // User didn't complete the video or ad failed
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

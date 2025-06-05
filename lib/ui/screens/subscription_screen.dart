@@ -430,7 +430,12 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
                         const SizedBox(width: 8),
                         Expanded(
                           flex: 4,
-                          child: Text(feature.title, style: Theme.of(context).textTheme.bodyMedium),
+                          child: Text(
+                            feature.title,
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
                         ),
                         Expanded(
                           flex: 3,
@@ -444,7 +449,9 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
                                 )
                               : Text(
                                   feature.free as String,
-                                  style: Theme.of(context).textTheme.bodySmall,
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: theme.textSecondary,
+                                      ),
                                   textAlign: TextAlign.center,
                                 ),
                         ),
@@ -568,7 +575,7 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
           Text(
             'By continuing, you agree to our Terms of Service and Privacy Policy.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                 ),
             textAlign: TextAlign.center,
           ),
@@ -615,7 +622,7 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
           Text(
             'Subscriptions auto-renew until canceled. You can cancel anytime via your app store.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                   fontSize: 11,
                 ),
             textAlign: TextAlign.center,
@@ -674,7 +681,7 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
                           TextSpan(
                             text: ' ${selectedOffer.period}',
                             style: TextStyle(
-                              color: Theme.of(context).textTheme.bodySmall?.color,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                             ),
                           ),
                         ],
@@ -849,12 +856,18 @@ class _SubscriptionOfferCard extends StatelessWidget {
                             offer.price,
                             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: isSelected ? Theme.of(context).colorScheme.primary : null,
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Theme.of(context).colorScheme.onSurface,
                                 ),
                           ),
                           Text(
                             offer.period,
-                            style: Theme.of(context).textTheme.bodySmall,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Theme.of(context).colorScheme.onSurface,
+                                ),
                           ),
                         ],
                       ),

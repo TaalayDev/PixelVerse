@@ -202,7 +202,7 @@ List<SubscriptionOffer> subscriptionOffers(SubscriptionOffersRef ref) {
           'Advanced tools & effects',
           'Canvas up to 512x512 pixels',
           'Export to PNG, JPEG, SVG, GIF',
-          'Cloud backup (coming soon)',
+          'Cloud backup',
         ],
       ));
     } else if (product.id == SubscriptionProductIds.proYearly) {
@@ -244,7 +244,7 @@ List<SubscriptionOffer> subscriptionOffers(SubscriptionOffersRef ref) {
           'Advanced tools & effects',
           'Canvas up to 1024x1024 pixels',
           'Export to all formats including video',
-          'Cloud backup (coming soon)',
+          'Cloud backup',
           'Priority support',
         ],
       ));

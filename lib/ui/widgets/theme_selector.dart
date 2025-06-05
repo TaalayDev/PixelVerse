@@ -18,6 +18,9 @@ final _lockedThemeTypes = [
   ThemeType.purpleRain,
   ThemeType.goldenHour,
   ThemeType.cyberpunk,
+  ThemeType.cherryBlossom,
+  ThemeType.retroWave,
+  ThemeType.volcanic,
 ];
 
 class ThemeSelector extends HookConsumerWidget {
@@ -57,30 +60,32 @@ class ThemeSelector extends HookConsumerWidget {
       }).toList(),
       onSelected: (type) {
         if (!unlockedThemeTypes.value.contains(type) && isAdLoaded && !subscription.isPro) {
-          _showUnlockDialog(context, ref, type);
+          RewardDialog.show(
+            context,
+            title: 'Unlock ${type.displayName} Theme',
+            subtitle: 'Watch a video ad to unlock this theme.',
+            onRewardEarned: () {
+              debugPrint('Reward earned for unlocking theme: ${type.displayName}');
+              ref.read(themeProvider).setTheme(type);
+
+              unlockedThemeTypes.value = [
+                ...unlockedThemeTypes.value,
+                type,
+              ];
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${type.displayName} theme unlocked!'),
+                  backgroundColor: Colors.green,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+          );
           return;
         }
 
         themeManager.setTheme(type);
-      },
-    );
-  }
-
-  void _showUnlockDialog(BuildContext context, WidgetRef ref, ThemeType themeType) {
-    RewardDialog.show(
-      context,
-      title: 'Unlock ${themeType.displayName} Theme',
-      subtitle: 'Watch a video ad to unlock this theme.',
-      onRewardEarned: () {
-        ref.read(themeProvider).setTheme(themeType);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${themeType.displayName} theme unlocked!'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
       },
     );
   }

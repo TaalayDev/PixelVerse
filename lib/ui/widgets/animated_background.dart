@@ -1174,24 +1174,6 @@ class _CherryBlossomPainter extends CustomPainter {
         canvas.drawCircle(Offset(x, y), 1 * intensity * pollenIntensity, paint);
       }
     }
-
-    // Draw cherry blossom branches (subtle)
-    paint.style = PaintingStyle.stroke;
-    paint.strokeWidth = 2 * intensity;
-    paint.color = Color.lerp(primaryColor, Colors.brown, 0.7)!.withOpacity(0.1 * intensity);
-
-    for (int i = 0; i < 2; i++) {
-      final branchStartX = size.width * (0.1 + i * 0.8);
-      final branchStartY = size.height * (0.1 + i * 0.2);
-      final branchEndX = branchStartX + (100 + i * 50) * intensity;
-      final branchEndY = branchStartY + (30 + math.sin(animation * math.pi + i) * 20) * intensity;
-
-      canvas.drawLine(
-        Offset(branchStartX, branchStartY),
-        Offset(branchEndX, branchEndY),
-        paint,
-      );
-    }
   }
 
   @override
@@ -1430,8 +1412,8 @@ class _GoldenHourPainter extends CustomPainter {
       final sparkleIntensity = math.sin(animation * 6 * math.pi + i * 0.4) * 0.5 + 0.5;
 
       if (sparkleIntensity > 0.8) {
-        final sparkleSize = (2 + sparkleIntensity * 3) * intensity;
-        paint.color = primaryColor.withOpacity(0.4 * sparkleIntensity * intensity);
+        final sparkleSize = (4 + sparkleIntensity * 3) * intensity;
+        paint.color = Colors.amber.withOpacity(0.2 * sparkleIntensity * intensity);
 
         // Draw cross-shaped sparkle
         canvas.drawCircle(Offset(sparkleX, sparkleY), sparkleSize, paint);
@@ -1533,28 +1515,6 @@ class _PurpleRainPainter extends CustomPainter {
         canvas.drawLine(
           Offset(x, y),
           Offset(x + 2 * intensity, y + length),
-          paint,
-        );
-      }
-    }
-
-    // Draw lightning flashes (rare)
-    if (math.sin(animation * 8 * math.pi) > 0.95) {
-      paint.style = PaintingStyle.stroke;
-      paint.strokeWidth = 3 * intensity;
-      paint.color = accentColor.withOpacity(0.4 * intensity);
-
-      final lightningX = size.width * (0.2 + random.nextDouble() * 0.6);
-      final segments = 5;
-
-      for (int i = 0; i < segments; i++) {
-        final startY = i * (size.height / segments);
-        final endY = (i + 1) * (size.height / segments);
-        final offset = (random.nextDouble() - 0.5) * 40 * intensity;
-
-        canvas.drawLine(
-          Offset(lightningX + (i > 0 ? offset * 0.5 : 0), startY),
-          Offset(lightningX + offset, endY),
           paint,
         );
       }

@@ -814,7 +814,7 @@ class CloudProjectsView extends HookConsumerWidget {
                     child: CommunityProjectCard(
                       project: projects[index],
                       isFeatured: true,
-                      onTap: () => _openProjectDetail(context, ref, projects[index]),
+                      onTap: () => _openProjectDetail(context, ref, projects[index], subscription),
                       onLike: (project) => ref.read(communityProjectsProvider.notifier).toggleLike(project),
                     ),
                   );
@@ -936,7 +936,7 @@ class CloudProjectsView extends HookConsumerWidget {
             return CommunityProjectCard(
               key: ValueKey(project.id),
               project: project,
-              onTap: () => _openProjectDetail(context, ref, project),
+              onTap: () => _openProjectDetail(context, ref, project, subscription),
               onLike: (project) => ref.read(communityProjectsProvider.notifier).toggleLike(project),
               onUserTap: (username) {
                 ref.read(communityProjectsProvider.notifier).filterByUser(username);
@@ -948,14 +948,20 @@ class CloudProjectsView extends HookConsumerWidget {
     );
   }
 
-  void _openProjectDetail(BuildContext context, WidgetRef ref, ApiProject project) async {
+  void _openProjectDetail(
+    BuildContext context,
+    WidgetRef ref,
+    ApiProject project,
+    UserSubscription subscription,
+  ) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ProjectDetailScreen(project: project),
       ),
     );
-
-    ref.read(interstitialAdProvider.notifier).showAdIfLoaded(() {});
+    if (!subscription.isPro) {
+      ref.read(interstitialAdProvider.notifier).showAdIfLoaded(() {});
+    }
   }
 }
 

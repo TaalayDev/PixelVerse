@@ -137,7 +137,7 @@ abstract class Strings {
   /// No description provided for @features.
   ///
   /// In en, this message translates to:
-  /// **'Intuitive pixel editing tools, \nCustom color palettes, Layer support for complex artwork, \nAnimation timeline for creating GIFs, \nExport in various formats (in planning), \nCommunity sharing and inspiration (in planning)'**
+  /// **'Intuitive pixel editing tools, \nCustom color palettes, Layer support for complex artwork, \nAnimation timeline for creating GIFs, \nExport in various formats, \nCommunity sharing and inspiration'**
   String get features;
 
   /// No description provided for @featuresTitle.

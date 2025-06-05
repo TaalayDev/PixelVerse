@@ -28,7 +28,7 @@ class StringsEn extends Strings {
 
   @override
   String get features =>
-      'Intuitive pixel editing tools, \nCustom color palettes, Layer support for complex artwork, \nAnimation timeline for creating GIFs, \nExport in various formats (in planning), \nCommunity sharing and inspiration (in planning)';
+      'Intuitive pixel editing tools, \nCustom color palettes, Layer support for complex artwork, \nAnimation timeline for creating GIFs, \nExport in various formats, \nCommunity sharing and inspiration';
 
   @override
   String get featuresTitle => 'Key Features:';
@@ -221,7 +221,7 @@ class StringsEnUs extends StringsEn {
 
   @override
   String get features =>
-      'Intuitive pixel editing tools, \nCustom color palettes, Layer support for complex artwork, \nAnimation timeline for creating GIFs, \nExport in various formats (in planning), \nCommunity sharing and inspiration (in planning)';
+      'Intuitive pixel editing tools, \nCustom color palettes, Layer support for complex artwork, \nAnimation timeline for creating GIFs, \nExport in various formats, \nCommunity sharing and inspiration';
 
   @override
   String get featuresTitle => 'Key Features:';

@@ -7,11 +7,14 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../data.dart';
 import '../../data/models/project_api_models.dart';
 import '../../data/models/subscription_model.dart';
+import '../../providers/ad/reward_video_ad_controller.dart';
 import '../../providers/projects_provider.dart';
 import '../../providers/subscription_provider.dart';
 import '../../core.dart';
 import '../screens.dart';
+import '../screens/subscription_screen.dart';
 import 'project_donwload_dialog.dart';
+import 'reward_dialog.dart';
 import 'theme_selector.dart';
 
 class CommunityProjectCard extends ConsumerWidget {
@@ -36,6 +39,8 @@ class CommunityProjectCard extends ConsumerWidget {
     final theme = ref.watch(themeProvider).theme;
     final isDownloaded = ref.watch(isProjectDownloadedProvider(project.id));
     final localProject = ref.watch(localProjectByRemoteIdProvider(project.id));
+
+    final isAdloaded = ref.watch(rewardVideoAdProvider);
 
     return Card(
       elevation: isFeatured ? 8 : 4,
@@ -202,7 +207,7 @@ class CommunityProjectCard extends ConsumerWidget {
                       ),
                       onPressed: subscription.hasFeatureAccess(SubscriptionFeature.cloudBackup)
                           ? () => _downloadProject(context, ref, subscription)
-                          : () => _showSubscriptionRequired(context),
+                          : () => _showSubscriptionRequired(context, project, isAdloaded),
                       tooltip: subscription.hasFeatureAccess(SubscriptionFeature.cloudBackup)
                           ? 'Download'
                           : 'Premium Required',
@@ -262,12 +267,52 @@ class CommunityProjectCard extends ConsumerWidget {
     );
   }
 
-  void _showSubscriptionRequired(BuildContext context) {
-    showTopFlushbar(
+  void _showSubscriptionRequired(BuildContext context, ApiProject project, bool isAdLoaded) {
+    if (isAdLoaded) {
+      _showRewardDialog(context, project);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Premium subscription required to download projects'),
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: 'Upgrade',
+            onPressed: () {
+              // Navigate to subscription screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const SubscriptionOfferScreen(),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+    }
+  }
+
+  void _showRewardDialog(BuildContext context, ApiProject currentProject) {
+    RewardDialog.show(
       context,
-      message: const Text('Premium subscription required to download projects'),
-      color: Colors.orange,
-      duration: const Duration(seconds: 3),
+      title: 'Download Project',
+      subtitle: 'To download this project, you can either:',
+      onRewardEarned: () async {
+        // User successfully watched the video, allow download
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Thank you for watching! Your download is starting...'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+
+        // Show download dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => ProjectDownloadDialog(project: currentProject),
+        );
+      },
     );
   }
 

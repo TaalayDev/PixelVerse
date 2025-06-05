@@ -29,7 +29,7 @@ class EffectListItem extends StatelessWidget {
     final effectColor = _getEffectColor(effect.type, context);
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       elevation: isSelected ? 3 : 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
