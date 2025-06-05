@@ -31,7 +31,7 @@ class ThemeSelector extends HookConsumerWidget {
     final isAdLoaded = ref.watch(rewardVideoAdProvider);
 
     final unlockedThemeTypes = useState(
-      ThemeType.values.where((type) => !_lockedThemeTypes.contains(type) || !subscription.isPro).toList(),
+      ThemeType.values.where((type) => !_lockedThemeTypes.contains(type) || subscription.isPro).toList(),
     );
 
     return PopupMenuButton<ThemeType>(
