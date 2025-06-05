@@ -73,7 +73,7 @@ class AboutScreen extends StatelessWidget {
               ),
             ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.3, end: 0),
             Text(
-              Strings.of(context).version('1.1.0'),
+              Strings.of(context).version('1.2.0'),
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.white.withOpacity(0.8),
@@ -93,7 +93,10 @@ class AboutScreen extends StatelessWidget {
         children: [
           Text(
             Strings.of(context).welcome,
-            style: Theme.of(context).textTheme.headlineSmall,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
           ).animate().fadeIn(duration: 600.ms).slideX(begin: -0.2, end: 0),
           const SizedBox(height: 8),
           Text(

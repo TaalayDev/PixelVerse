@@ -195,13 +195,34 @@ class ColorPalettePanel extends HookWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Current color display with hex value
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                Strings.of(context).colorPalette,
-                style: Theme.of(context).textTheme.titleMedium,
+              Expanded(
+                child: InkWell(
+                  onTap: () => _showColorPicker(context, customColors),
+                  child: Container(
+                    width: double.infinity,
+                    height: 35,
+                    decoration: BoxDecoration(
+                      color: currentColor,
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '#${currentColor.value.toRadixString(16).toUpperCase().substring(2)}',
+                        style: TextStyle(
+                          color: currentColor.computeLuminance() > 0.5 ? Colors.black : Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
+              const SizedBox(width: 8),
               Row(
                 children: [
                   // Add current color to custom palette
@@ -228,32 +249,7 @@ class ColorPalettePanel extends HookWidget {
             ],
           ),
 
-          const SizedBox(height: 8),
-
-          // Current color display with hex value
-          InkWell(
-            onTap: () => _showColorPicker(context, customColors),
-            child: Container(
-              width: double.infinity,
-              height: 40,
-              decoration: BoxDecoration(
-                color: currentColor,
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Center(
-                child: Text(
-                  '#${currentColor.value.toRadixString(16).toUpperCase().substring(2)}',
-                  style: TextStyle(
-                    color: currentColor.computeLuminance() > 0.5 ? Colors.black : Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 12),
+          const SizedBox(height: 5),
 
           // Tabs for different palette types
           SizedBox(

@@ -16,6 +16,7 @@ import '../../data.dart';
 import '../../core.dart';
 import '../../pixel/image_painter.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/ad/interstitial_ad_controller.dart';
 import '../../providers/project_upload_provider.dart';
 import '../../providers/projects_provider.dart';
 import '../../providers/community_projects_providers.dart';
@@ -813,7 +814,7 @@ class CloudProjectsView extends HookConsumerWidget {
                     child: CommunityProjectCard(
                       project: projects[index],
                       isFeatured: true,
-                      onTap: () => _openProjectDetail(context, projects[index]),
+                      onTap: () => _openProjectDetail(context, ref, projects[index]),
                       onLike: (project) => ref.read(communityProjectsProvider.notifier).toggleLike(project),
                     ),
                   );
@@ -843,6 +844,8 @@ class CloudProjectsView extends HookConsumerWidget {
     if (state.isLoading && state.projects.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
+
+    final adLoaded = ref.watch(interstitialAdProvider);
 
     if (state.error != null && state.projects.isEmpty) {
       return Center(
@@ -933,7 +936,7 @@ class CloudProjectsView extends HookConsumerWidget {
             return CommunityProjectCard(
               key: ValueKey(project.id),
               project: project,
-              onTap: () => _openProjectDetail(context, project),
+              onTap: () => _openProjectDetail(context, ref, project),
               onLike: (project) => ref.read(communityProjectsProvider.notifier).toggleLike(project),
               onUserTap: (username) {
                 ref.read(communityProjectsProvider.notifier).filterByUser(username);
@@ -945,12 +948,14 @@ class CloudProjectsView extends HookConsumerWidget {
     );
   }
 
-  void _openProjectDetail(BuildContext context, ApiProject project) {
-    Navigator.of(context).push(
+  void _openProjectDetail(BuildContext context, WidgetRef ref, ApiProject project) async {
+    await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ProjectDetailScreen(project: project),
       ),
     );
+
+    ref.read(interstitialAdProvider.notifier).showAdIfLoaded(() {});
   }
 }
 

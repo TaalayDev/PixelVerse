@@ -190,6 +190,9 @@ PODS:
     - sqlite3/rtree
   - url_launcher_macos (0.0.1):
     - FlutterMacOS
+  - webview_flutter_wkwebview (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - window_manager (0.2.0):
     - FlutterMacOS
 
@@ -211,6 +214,7 @@ DEPENDENCIES:
   - sqflite (from `Flutter/ephemeral/.symlinks/plugins/sqflite/darwin`)
   - sqlite3_flutter_libs (from `Flutter/ephemeral/.symlinks/plugins/sqlite3_flutter_libs/macos`)
   - url_launcher_macos (from `Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos`)
+  - webview_flutter_wkwebview (from `Flutter/ephemeral/.symlinks/plugins/webview_flutter_wkwebview/darwin`)
   - window_manager (from `Flutter/ephemeral/.symlinks/plugins/window_manager/macos`)
 
 SPEC REPOS:
@@ -270,6 +274,8 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/sqlite3_flutter_libs/macos
   url_launcher_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos
+  webview_flutter_wkwebview:
+    :path: Flutter/ephemeral/.symlinks/plugins/webview_flutter_wkwebview/darwin
   window_manager:
     :path: Flutter/ephemeral/.symlinks/plugins/window_manager/macos
 
@@ -310,6 +316,7 @@ SPEC CHECKSUMS:
   sqlite3: 0bb0e6389d824e40296f531b858a2a0b71c0d2fb
   sqlite3_flutter_libs: 03311aede9d32fb2d24e32bebb8cd01c3b2e6239
   url_launcher_macos: de10e46d8d8b9e3a7b8a133e8de92b104379f05e
+  webview_flutter_wkwebview: 1821ceac936eba6f7984d89a9f3bcb4dea99ebb2
   window_manager: 1d01fa7ac65a6e6f83b965471b1a7fdd3f06166c
 
 PODFILE CHECKSUM: af76bf2dafc15639c355a8dffbc9421a28e83be6

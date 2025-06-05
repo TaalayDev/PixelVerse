@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:pixelverse/firebase_options.dart';
 import 'package:window_manager/window_manager.dart';
@@ -15,8 +17,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initWindowManager();
 
+  await dotenv.load(fileName: ".env");
   await LocalStorage.init();
 
+  MobileAds.instance.initialize();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );

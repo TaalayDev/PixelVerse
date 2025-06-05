@@ -55,12 +55,10 @@ class SubscriptionOfferScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<SubscriptionOfferScreen> createState() =>
-      _SubscriptionOfferScreenState();
+  ConsumerState<SubscriptionOfferScreen> createState() => _SubscriptionOfferScreenState();
 }
 
-class _SubscriptionOfferScreenState
-    extends ConsumerState<SubscriptionOfferScreen> {
+class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScreen> {
   late ConfettiController _confettiController;
   int _selectedIndex = 2; // Default to yearly plan (best value)
   bool _isLoading = false;
@@ -113,8 +111,7 @@ class _SubscriptionOfferScreenState
 
             _errorMessage = purchase.error?.message ?? 'Purchase failed';
           });
-        } else if (purchase.status == PurchaseStatus.purchased ||
-            purchase.status == PurchaseStatus.restored) {
+        } else if (purchase.status == PurchaseStatus.purchased || purchase.status == PurchaseStatus.restored) {
           setState(() {
             _isLoading = false;
             _errorMessage = null;
@@ -255,6 +252,7 @@ class _SubscriptionOfferScreenState
               : 'Unlock Premium Pixel Creation',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
           textAlign: TextAlign.center,
         )
@@ -277,11 +275,7 @@ class _SubscriptionOfferScreenState
               ? _getUpgradePromptSubtitle(widget.featurePrompt!)
               : 'Take your pixel art to the next level with Pro tools and features',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.color
-                    ?.withOpacity(0.7),
+                color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
               ),
           textAlign: TextAlign.center,
         ).animate().fadeIn(
@@ -297,8 +291,7 @@ class _SubscriptionOfferScreenState
       _FeatureComparisonItem(
         icon: Icons.inventory_2_outlined,
         title: 'Projects',
-        free:
-            '${SubscriptionFeatureConfig.maxProjects[SubscriptionPlan.free]} projects',
+        free: '${SubscriptionFeatureConfig.maxProjects[SubscriptionPlan.free]} projects',
         pro: 'Unlimited projects',
       ),
       _FeatureComparisonItem(
@@ -378,8 +371,7 @@ class _SubscriptionOfferScreenState
                     Expanded(
                       flex: 3,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 6, horizontal: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
                         decoration: BoxDecoration(
                           color: theme.background,
                           borderRadius: BorderRadius.circular(16),
@@ -395,19 +387,17 @@ class _SubscriptionOfferScreenState
                     Expanded(
                       flex: 3,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 6, horizontal: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
                         decoration: BoxDecoration(
                           color: theme.primaryColor.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
                           'Pro',
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: theme.primaryColor,
-                                  ),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: theme.primaryColor,
+                              ),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -440,8 +430,7 @@ class _SubscriptionOfferScreenState
                         const SizedBox(width: 8),
                         Expanded(
                           flex: 4,
-                          child: Text(feature.title,
-                              style: Theme.of(context).textTheme.bodyMedium),
+                          child: Text(feature.title, style: Theme.of(context).textTheme.bodyMedium),
                         ),
                         Expanded(
                           flex: 3,
@@ -449,9 +438,7 @@ class _SubscriptionOfferScreenState
                               ? Center(
                                   child: Icon(
                                     feature.free ? Icons.check : Icons.close,
-                                    color: feature.free
-                                        ? Colors.green
-                                        : Colors.red.shade300,
+                                    color: feature.free ? Colors.green : Colors.red.shade300,
                                     size: 20,
                                   ),
                                 )
@@ -470,19 +457,14 @@ class _SubscriptionOfferScreenState
                                     Center(
                                       child: Icon(
                                         feature.pro ? Icons.check : Icons.close,
-                                        color: feature.pro
-                                            ? theme.primaryColor
-                                            : Colors.red.shade300,
+                                        color: feature.pro ? theme.primaryColor : Colors.red.shade300,
                                         size: 20,
                                       ),
                                     ),
                                     if (feature.proExtraText != null)
                                       Text(
                                         feature.proExtraText!,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
+                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                               fontSize: 10,
                                               color: theme.textSecondary,
                                             ),
@@ -492,10 +474,7 @@ class _SubscriptionOfferScreenState
                                 )
                               : Text(
                                   feature.pro as String,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                         color: theme.primaryColor,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -548,10 +527,7 @@ class _SubscriptionOfferScreenState
       children: [
         Text(
           'Choose Your Plan',
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge
-              ?.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         ...List.generate(proOffers.length, (index) {
@@ -592,11 +568,7 @@ class _SubscriptionOfferScreenState
           Text(
             'By continuing, you agree to our Terms of Service and Privacy Policy.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.color
-                      ?.withOpacity(0.7),
+                  color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
                 ),
             textAlign: TextAlign.center,
           ),
@@ -620,11 +592,7 @@ class _SubscriptionOfferScreenState
               Text(
                 ' • ',
                 style: TextStyle(
-                  color: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.color
-                      ?.withOpacity(0.7),
+                  color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
                   fontSize: 12,
                 ),
               ),
@@ -647,11 +615,7 @@ class _SubscriptionOfferScreenState
           Text(
             'Subscriptions auto-renew until canceled. You can cancel anytime via your app store.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.color
-                      ?.withOpacity(0.7),
+                  color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
                   fontSize: 11,
                 ),
             textAlign: TextAlign.center,
@@ -662,8 +626,7 @@ class _SubscriptionOfferScreenState
   }
 
   Widget _buildBottomBar(BuildContext context, List<SubscriptionOffer> offers) {
-    final selectedOffer =
-        _selectedIndex < offers.length ? offers[_selectedIndex] : null;
+    final selectedOffer = _selectedIndex < offers.length ? offers[_selectedIndex] : null;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -684,8 +647,7 @@ class _SubscriptionOfferScreenState
       child: SafeArea(
         child: Row(
           children: [
-            if (selectedOffer != null &&
-                selectedOffer.plan != SubscriptionPlan.free)
+            if (selectedOffer != null && selectedOffer.plan != SubscriptionPlan.free)
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -712,8 +674,7 @@ class _SubscriptionOfferScreenState
                           TextSpan(
                             text: ' ${selectedOffer.period}',
                             style: TextStyle(
-                              color:
-                                  Theme.of(context).textTheme.bodySmall?.color,
+                              color: Theme.of(context).textTheme.bodySmall?.color,
                             ),
                           ),
                         ],
@@ -725,17 +686,14 @@ class _SubscriptionOfferScreenState
             const SizedBox(width: 16),
             Expanded(
               child: FilledButton(
-                onPressed:
-                    selectedOffer?.plan == SubscriptionPlan.free || _isLoading
-                        ? null
-                        : () => _handleSubscribe(selectedOffer!),
+                onPressed: selectedOffer?.plan == SubscriptionPlan.free || _isLoading
+                    ? null
+                    : () => _handleSubscribe(selectedOffer!),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 child: Text(
-                  selectedOffer?.plan == SubscriptionPlan.free
-                      ? 'Continue with Free'
-                      : 'Subscribe Now',
+                  selectedOffer?.plan == SubscriptionPlan.free ? 'Continue with Free' : 'Subscribe Now',
                   style: const TextStyle(fontSize: 16),
                 ),
               ),
@@ -841,14 +799,10 @@ class _SubscriptionOfferCard extends StatelessWidget {
         duration: const Duration(milliseconds: 300),
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
-              : Theme.of(context).cardColor,
+          color: isSelected ? Theme.of(context).colorScheme.primary.withOpacity(0.08) : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).dividerColor.withOpacity(0.3),
+            color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).dividerColor.withOpacity(0.3),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
@@ -875,14 +829,9 @@ class _SubscriptionOfferCard extends StatelessWidget {
                           children: [
                             Text(
                               offer.title,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    color: isSelected
-                                        ? Theme.of(context).colorScheme.primary
-                                        : null,
+                                    color: isSelected ? Theme.of(context).colorScheme.primary : null,
                                   ),
                             ),
                             const SizedBox(height: 4),
@@ -898,14 +847,9 @@ class _SubscriptionOfferCard extends StatelessWidget {
                         children: [
                           Text(
                             offer.price,
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(
+                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: isSelected
-                                      ? Theme.of(context).colorScheme.primary
-                                      : null,
+                                  color: isSelected ? Theme.of(context).colorScheme.primary : null,
                                 ),
                           ),
                           Text(
@@ -920,8 +864,7 @@ class _SubscriptionOfferCard extends StatelessWidget {
                   if (offer.saveText.isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.green.shade100,
                         borderRadius: BorderRadius.circular(12),
@@ -946,9 +889,7 @@ class _SubscriptionOfferCard extends StatelessWidget {
                           children: [
                             Icon(
                               Icons.check_circle_outline,
-                              color: isSelected
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Colors.green,
+                              color: isSelected ? Theme.of(context).colorScheme.primary : Colors.green,
                               size: 18,
                             ),
                             const SizedBox(width: 8),

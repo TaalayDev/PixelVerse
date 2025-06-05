@@ -4,12 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
+import 'package:pixelverse/ui/widgets/reward_dialog.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../data.dart';
 import '../../data/models/project_api_models.dart';
 import '../../data/models/subscription_model.dart';
 import '../../core.dart';
+import '../../providers/ad/reward_video_ad_controller.dart';
 import '../../providers/community_projects_providers.dart';
 import '../../providers/projects_provider.dart';
 import '../../providers/providers.dart';
@@ -44,6 +46,8 @@ class ProjectDetailScreen extends HookConsumerWidget {
     final isDesktop = screenWidth >= 1200;
     final isTablet = screenWidth >= 600 && screenWidth < 1200;
     final isMobile = screenWidth < 600;
+
+    final isAdLoaded = ref.watch(rewardVideoAdProvider);
 
     useEffect(() {
       if (isMobile) {
@@ -548,7 +552,7 @@ class ProjectDetailScreen extends HookConsumerWidget {
           onSelected: (value) async {
             switch (value) {
               case 'download':
-                _downloadProject(context, currentProject, ref.read(subscriptionStateProvider));
+                _downloadProject(context, ref, currentProject, ref.read(subscriptionStateProvider));
                 break;
               case 'save':
                 _saveToFavorites(context, ref, currentProject);
@@ -1266,7 +1270,7 @@ class ProjectDetailScreen extends HookConsumerWidget {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () => _downloadProject(context, currentProject, ref.read(subscriptionStateProvider)),
+                onPressed: () => _downloadProject(context, ref, currentProject, ref.read(subscriptionStateProvider)),
                 icon: const Icon(Icons.download),
                 label: const Text('Download'),
                 style: OutlinedButton.styleFrom(
@@ -1328,7 +1332,7 @@ class ProjectDetailScreen extends HookConsumerWidget {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () => _downloadProject(context, currentProject, ref.read(subscriptionStateProvider)),
+                  onPressed: () => _downloadProject(context, ref, currentProject, ref.read(subscriptionStateProvider)),
                   icon: const Icon(Icons.download),
                   label: const Text('Download Project'),
                 ),
@@ -2034,28 +2038,34 @@ class ProjectDetailScreen extends HookConsumerWidget {
 
   void _downloadProject(
     BuildContext context,
+    WidgetRef ref,
     ApiProject currentProject,
     UserSubscription subscription,
   ) {
-    // Check subscription access
+    final isAdLoaded = ref.read(rewardVideoAdProvider);
+
     if (!subscription.hasFeatureAccess(SubscriptionFeature.exportFormats)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Premium subscription required to download projects'),
-          duration: const Duration(seconds: 3),
-          action: SnackBarAction(
-            label: 'Upgrade',
-            onPressed: () {
-              // Navigate to subscription screen
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const SubscriptionOfferScreen(),
-                ),
-              );
-            },
+      if (isAdLoaded) {
+        _showDownloadOptionsDialog(context, ref, currentProject);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Premium subscription required to download projects'),
+            duration: const Duration(seconds: 3),
+            action: SnackBarAction(
+              label: 'Upgrade',
+              onPressed: () {
+                // Navigate to subscription screen
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const SubscriptionOfferScreen(),
+                  ),
+                );
+              },
+            ),
           ),
-        ),
-      );
+        );
+      }
       return;
     }
 
@@ -2064,6 +2074,31 @@ class ProjectDetailScreen extends HookConsumerWidget {
       context: context,
       barrierDismissible: false,
       builder: (context) => ProjectDownloadDialog(project: currentProject),
+    );
+  }
+
+  void _showDownloadOptionsDialog(BuildContext context, WidgetRef ref, ApiProject currentProject) {
+    RewardDialog.show(
+      context,
+      title: 'Download Project',
+      subtitle: 'To download this project, you can either:',
+      onRewardEarned: () async {
+        // User successfully watched the video, allow download
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Thank you for watching! Your download is starting...'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+
+        // Show download dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => ProjectDownloadDialog(project: currentProject),
+        );
+      },
     );
   }
 

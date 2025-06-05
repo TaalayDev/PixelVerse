@@ -8,6 +8,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:pixelverse/ui/widgets/animated_background.dart';
+import 'package:pixelverse/ui/widgets/effects/effects_side_panel.dart';
 
 import '../../l10n/strings.dart';
 import '../../pixel/canvas/pixel_canvas.dart';
@@ -820,8 +821,18 @@ class _DesktopSidePanelState extends State<_DesktopSidePanel> with SingleTickerP
                       },
                     ),
                   ),
-                  const Divider(height: 0, color: Colors.grey),
-
+                  Divider(height: 0, color: Colors.grey.withOpacity(0.5)),
+                  Expanded(
+                    child: EffectsSidePanel(
+                      layer: widget.state.layers[widget.state.currentLayerIndex],
+                      width: widget.width,
+                      height: widget.height,
+                      onLayerUpdated: (updatedLayer) {
+                        widget.notifier.updateLayer(updatedLayer);
+                      },
+                    ),
+                  ),
+                  Divider(height: 0, color: Colors.grey.withOpacity(0.5)),
                   // Color palette
                   Expanded(
                     child: ColorPalettePanel(

@@ -4,7 +4,11 @@ import 'package:equatable/equatable.dart';
 enum SubscriptionPlan {
   free,
   proMonthly,
-  proYearly,
+  proYearly;
+
+  bool get isPro => this != SubscriptionPlan.free;
+  bool get isMonthly => this == SubscriptionPlan.proMonthly;
+  bool get isYearly => this == SubscriptionPlan.proYearly;
 }
 
 // Subscription feature identifiers
@@ -70,8 +74,7 @@ class SubscriptionFeatureConfig {
   };
 
   // Get feature value by plan
-  static T getFeatureValue<T>(
-      SubscriptionFeature feature, SubscriptionPlan plan) {
+  static T getFeatureValue<T>(SubscriptionFeature feature, SubscriptionPlan plan) {
     switch (feature) {
       case SubscriptionFeature.maxProjects:
         return maxProjects[plan] as T;
@@ -194,11 +197,8 @@ class UserSubscription extends Equatable {
     );
   }
 
-  bool get isActive =>
-      status == SubscriptionStatus.active ||
-      status == SubscriptionStatus.gracePeriod;
-  bool get isProPlan =>
-      plan == SubscriptionPlan.proMonthly || plan == SubscriptionPlan.proYearly;
+  bool get isActive => status == SubscriptionStatus.active || status == SubscriptionStatus.gracePeriod;
+  bool get isProPlan => plan == SubscriptionPlan.proMonthly || plan == SubscriptionPlan.proYearly;
   bool get isPro => isProPlan && isActive;
 
   // Check if user has access to a specific feature
@@ -222,6 +222,5 @@ class UserSubscription extends Equatable {
   }
 
   @override
-  List<Object?> get props =>
-      [plan, status, expiryDate, purchaseId, purchaseDate];
+  List<Object?> get props => [plan, status, expiryDate, purchaseId, purchaseDate];
 }

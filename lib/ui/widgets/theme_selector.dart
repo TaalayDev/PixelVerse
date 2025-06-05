@@ -1,17 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../core/theme/theme.dart';
+import '../../providers/ad/reward_video_ad_controller.dart';
+import '../../providers/subscription_provider.dart';
+import 'reward_dialog.dart';
 
 final themeProvider = ChangeNotifierProvider((ref) => ThemeProvider());
 
-class ThemeSelector extends ConsumerWidget {
+final _lockedThemeTypes = [
+  ThemeType.ocean,
+  ThemeType.monochrome,
+  ThemeType.neon,
+  ThemeType.cosmic,
+  ThemeType.purpleRain,
+  ThemeType.goldenHour,
+  ThemeType.cyberpunk,
+];
+
+class ThemeSelector extends HookConsumerWidget {
   const ThemeSelector({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeManager = ref.watch(themeProvider);
     final currentTheme = themeManager.theme;
+    final subscription = ref.watch(subscriptionStateProvider);
+    final isAdLoaded = ref.watch(rewardVideoAdProvider);
+
+    final unlockedThemeTypes = useState(
+      ThemeType.values.where((type) => !_lockedThemeTypes.contains(type) || !subscription.isPro).toList(),
+    );
 
     return PopupMenuButton<ThemeType>(
       tooltip: 'Theme Selector',
@@ -22,17 +43,44 @@ class ThemeSelector extends ConsumerWidget {
       position: PopupMenuPosition.under,
       itemBuilder: (context) => ThemeType.values.map((type) {
         final theme = AppTheme.fromType(type);
+        final isLocked = !unlockedThemeTypes.value.contains(type) && isAdLoaded;
+
         return PopupMenuItem(
           value: type,
           child: _ThemeMenuItem(
             themeType: type,
             isSelected: currentTheme.type == type,
             theme: theme,
+            isLocked: isLocked,
           ),
         );
       }).toList(),
       onSelected: (type) {
+        if (!unlockedThemeTypes.value.contains(type) && isAdLoaded && !subscription.isPro) {
+          _showUnlockDialog(context, ref, type);
+          return;
+        }
+
         themeManager.setTheme(type);
+      },
+    );
+  }
+
+  void _showUnlockDialog(BuildContext context, WidgetRef ref, ThemeType themeType) {
+    RewardDialog.show(
+      context,
+      title: 'Unlock ${themeType.displayName} Theme',
+      subtitle: 'Watch a video ad to unlock this theme.',
+      onRewardEarned: () {
+        ref.read(themeProvider).setTheme(themeType);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${themeType.displayName} theme unlocked!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       },
     );
   }
@@ -42,11 +90,13 @@ class _ThemeMenuItem extends StatelessWidget {
   final ThemeType themeType;
   final bool isSelected;
   final AppTheme theme;
+  final bool isLocked;
 
   const _ThemeMenuItem({
     required this.themeType,
     required this.isSelected,
     required this.theme,
+    this.isLocked = false,
   });
 
   @override
@@ -64,6 +114,13 @@ class _ThemeMenuItem extends StatelessWidget {
               width: 1,
             ),
           ),
+          child: isLocked
+              ? Icon(
+                  MaterialCommunityIcons.crown,
+                  size: 16,
+                  color: theme.isDark ? Colors.white70 : Colors.black54,
+                )
+              : const SizedBox(),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -118,8 +175,7 @@ class ThemeShowcase extends ConsumerWidget {
                           title: 'Primary Colors',
                           children: [
                             _ColorBox('Primary', currentTheme.primaryColor),
-                            _ColorBox(
-                                'Primary Variant', currentTheme.primaryVariant),
+                            _ColorBox('Primary Variant', currentTheme.primaryVariant),
                             _ColorBox('On Primary', currentTheme.onPrimary),
                             _ColorBox('Accent', currentTheme.accentColor),
                             _ColorBox('On Accent', currentTheme.onAccent),
@@ -130,18 +186,15 @@ class ThemeShowcase extends ConsumerWidget {
                           children: [
                             _ColorBox('Background', currentTheme.background),
                             _ColorBox('Surface', currentTheme.surface),
-                            _ColorBox(
-                                'Surface Variant', currentTheme.surfaceVariant),
+                            _ColorBox('Surface Variant', currentTheme.surfaceVariant),
                           ],
                         ),
                         _ThemeSection(
                           title: 'Text Colors',
                           children: [
                             _ColorBox('Text Primary', currentTheme.textPrimary),
-                            _ColorBox(
-                                'Text Secondary', currentTheme.textSecondary),
-                            _ColorBox(
-                                'Text Disabled', currentTheme.textDisabled),
+                            _ColorBox('Text Secondary', currentTheme.textSecondary),
+                            _ColorBox('Text Disabled', currentTheme.textDisabled),
                           ],
                         ),
                         _ThemeSection(
@@ -221,8 +274,7 @@ class _ColorBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor =
-        color.computeLuminance() > 0.5 ? Colors.black : Colors.white;
+    final textColor = color.computeLuminance() > 0.5 ? Colors.black : Colors.white;
 
     return Column(
       children: [

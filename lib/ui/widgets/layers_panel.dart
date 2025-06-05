@@ -108,6 +108,7 @@ class LayersPanel extends HookConsumerWidget {
           _buildActionButton(
             context: context,
             icon: Icons.add,
+            label: 'Add',
             color: Colors.green,
             onPressed: () async {
               onLayerAdded('Layer ${layers.length + 1}');
@@ -115,28 +116,11 @@ class LayersPanel extends HookConsumerWidget {
           ),
           const SizedBox(width: 8),
 
-          // Effects Button
-          ProBadge(
-            show: !subscription.isPro,
-            padding: const EdgeInsets.all(2),
-            child: _buildActionButton(
-              context: context,
-              icon: Icons.auto_fix_high,
-              color: Colors.purple,
-              onPressed: hasSelectedLayer && subscription.isPro && onLayerEffectsChanged != null
-                  ? () {
-                      _showEffectsDialog(context, selectedLayer!);
-                    }
-                  : null,
-              badge: selectedLayer?.effects.isNotEmpty == true,
-            ),
-          ),
-          const SizedBox(width: 8),
-
           // Delete Button
           _buildActionButton(
             context: context,
             icon: Icons.delete_outline,
+            label: 'Remove',
             color: Colors.red,
             onPressed: hasSelectedLayer && layers.length > 1
                 ? () {
@@ -153,6 +137,7 @@ class LayersPanel extends HookConsumerWidget {
     required BuildContext context,
     required IconData icon,
     required Color color,
+    String? label,
     required VoidCallback? onPressed,
     bool badge = false,
   }) {
@@ -164,7 +149,7 @@ class LayersPanel extends HookConsumerWidget {
         onTap: onPressed,
         borderRadius: BorderRadius.circular(8),
         child: Container(
-          padding: const EdgeInsets.all(4),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
@@ -173,27 +158,44 @@ class LayersPanel extends HookConsumerWidget {
             ),
             color: isEnabled ? color.withOpacity(0.1) : Colors.grey.withOpacity(0.05),
           ),
-          child: Stack(
-            clipBehavior: Clip.none,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                icon,
-                size: 12,
-                color: isEnabled ? color : Colors.grey.shade400,
-              ),
-              if (badge)
-                Positioned(
-                  right: -4,
-                  top: -4,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: color,
-                      shape: BoxShape.circle,
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(
+                    icon,
+                    size: 14,
+                    color: isEnabled ? color : Colors.grey.shade400,
+                  ),
+                  if (badge)
+                    Positioned(
+                      right: -4,
+                      top: -4,
+                      child: Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
                     ),
+                ],
+              ),
+              if (label != null) ...[
+                const SizedBox(width: 4),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: isEnabled ? color : Colors.grey.shade400,
                   ),
                 ),
+              ]
             ],
           ),
         ),

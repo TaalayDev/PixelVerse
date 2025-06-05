@@ -107,6 +107,12 @@ PODS:
     - GoogleUtilities/UserDefaults (~> 8.0)
     - PromisesObjC (~> 2.4)
   - Flutter (1.0.0)
+  - Google-Mobile-Ads-SDK (11.13.0):
+    - GoogleUserMessagingPlatform (>= 1.1)
+  - google_mobile_ads (5.3.1):
+    - Flutter
+    - Google-Mobile-Ads-SDK (~> 11.13.0)
+    - webview_flutter_wkwebview
   - google_sign_in_ios (0.0.1):
     - AppAuth (>= 1.7.4)
     - Flutter
@@ -138,6 +144,7 @@ PODS:
     - AppCheckCore (~> 11.0)
     - GTMAppAuth (< 5.0, >= 4.1.1)
     - GTMSessionFetcher/Core (~> 3.3)
+  - GoogleUserMessagingPlatform (3.0.0)
   - GoogleUtilities/AppDelegateSwizzler (8.1.0):
     - GoogleUtilities/Environment
     - GoogleUtilities/Logger
@@ -230,6 +237,9 @@ PODS:
   - TOCropViewController (2.7.4)
   - url_launcher_ios (0.0.1):
     - Flutter
+  - webview_flutter_wkwebview (0.0.1):
+    - Flutter
+    - FlutterMacOS
 
 DEPENDENCIES:
   - file_picker (from `.symlinks/plugins/file_picker/ios`)
@@ -237,6 +247,7 @@ DEPENDENCIES:
   - firebase_auth (from `.symlinks/plugins/firebase_auth/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
   - Flutter (from `Flutter`)
+  - google_mobile_ads (from `.symlinks/plugins/google_mobile_ads/ios`)
   - google_sign_in_ios (from `.symlinks/plugins/google_sign_in_ios/darwin`)
   - image_cropper (from `.symlinks/plugins/image_cropper/ios`)
   - image_gallery_saver_plus (from `.symlinks/plugins/image_gallery_saver_plus/ios`)
@@ -250,6 +261,7 @@ DEPENDENCIES:
   - sqflite (from `.symlinks/plugins/sqflite/darwin`)
   - sqlite3_flutter_libs (from `.symlinks/plugins/sqlite3_flutter_libs/ios`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
+  - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/darwin`)
 
 SPEC REPOS:
   trunk:
@@ -266,8 +278,10 @@ SPEC REPOS:
     - FirebaseCoreExtension
     - FirebaseCoreInternal
     - FirebaseInstallations
+    - Google-Mobile-Ads-SDK
     - GoogleAppMeasurement
     - GoogleSignIn
+    - GoogleUserMessagingPlatform
     - GoogleUtilities
     - GTMAppAuth
     - GTMSessionFetcher
@@ -290,6 +304,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/firebase_core/ios"
   Flutter:
     :path: Flutter
+  google_mobile_ads:
+    :path: ".symlinks/plugins/google_mobile_ads/ios"
   google_sign_in_ios:
     :path: ".symlinks/plugins/google_sign_in_ios/darwin"
   image_cropper:
@@ -316,6 +332,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/sqlite3_flutter_libs/ios"
   url_launcher_ios:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
+  webview_flutter_wkwebview:
+    :path: ".symlinks/plugins/webview_flutter_wkwebview/darwin"
 
 SPEC CHECKSUMS:
   AppAuth: d4f13a8fe0baf391b2108511793e4b479691fb73
@@ -336,9 +354,12 @@ SPEC CHECKSUMS:
   FirebaseCoreInternal: ef4505d2afb1d0ebbc33162cb3795382904b5679
   FirebaseInstallations: 9980995bdd06ec8081dfb6ab364162bdd64245c3
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  Google-Mobile-Ads-SDK: 14f57f2dc33532a24db288897e26494640810407
+  google_mobile_ads: 16ad301354fa6a7ea55770c6254bd4339bf8558b
   google_sign_in_ios: b48bb9af78576358a168361173155596c845f0b9
   GoogleAppMeasurement: 36684bfb3ee034e2b42b4321eb19da3a1b81e65d
   GoogleSignIn: ce8c89bb9b37fb624b92e7514cc67335d1e277e4
+  GoogleUserMessagingPlatform: f8d0cdad3ca835406755d0a69aa634f00e76d576
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   GTMAppAuth: f69bd07d68cd3b766125f7e072c45d7340dea0de
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
@@ -361,6 +382,7 @@ SPEC CHECKSUMS:
   SwiftyGif: 706c60cf65fa2bc5ee0313beece843c8eb8194d4
   TOCropViewController: 80b8985ad794298fb69d3341de183f33d1853654
   url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
+  webview_flutter_wkwebview: 1821ceac936eba6f7984d89a9f3bcb4dea99ebb2
 
 PODFILE CHECKSUM: a57f30d18f102dd3ce366b1d62a55ecbef2158e5
 

@@ -218,3 +218,9 @@ extension SelectionOps on SelectionModel {
   /// Returns the same selection as Rect for easier Flutter interop
   Rect asRect() => this.rect;
 }
+
+extension StringX on String {
+  String capitalize() {
+    return isNotEmpty ? '${this[0].toUpperCase()}${substring(1)}' : '';
+  }
+}
