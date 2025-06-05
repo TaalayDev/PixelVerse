@@ -756,7 +756,7 @@ class _ToolElements extends StatelessWidget {
   }
 }
 
-class _DesktopSidePanel extends StatefulWidget {
+class _DesktopSidePanel extends StatefulHookConsumerWidget {
   final int width;
   final int height;
   final PixelDrawState state;
@@ -773,12 +773,14 @@ class _DesktopSidePanel extends StatefulWidget {
   });
 
   @override
-  State<_DesktopSidePanel> createState() => _DesktopSidePanelState();
+  ConsumerState<_DesktopSidePanel> createState() => _DesktopSidePanelState();
 }
 
-class _DesktopSidePanelState extends State<_DesktopSidePanel> with SingleTickerProviderStateMixin {
+class _DesktopSidePanelState extends ConsumerState<_DesktopSidePanel> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
+    final subscription = ref.watch(subscriptionStateProvider);
+
     return Container(
       color: Theme.of(context).colorScheme.surface,
       child: SizedBox(
@@ -821,19 +823,20 @@ class _DesktopSidePanelState extends State<_DesktopSidePanel> with SingleTickerP
                       },
                     ),
                   ),
-                  Divider(height: 0, color: Colors.grey.withOpacity(0.5)),
-                  Expanded(
-                    child: EffectsSidePanel(
-                      layer: widget.state.layers[widget.state.currentLayerIndex],
-                      width: widget.width,
-                      height: widget.height,
-                      onLayerUpdated: (updatedLayer) {
-                        widget.notifier.updateLayer(updatedLayer);
-                      },
+                  if (subscription.isPro) ...[
+                    Divider(height: 0, color: Colors.grey.withOpacity(0.5)),
+                    Expanded(
+                      child: EffectsSidePanel(
+                        layer: widget.state.layers[widget.state.currentLayerIndex],
+                        width: widget.width,
+                        height: widget.height,
+                        onLayerUpdated: (updatedLayer) {
+                          widget.notifier.updateLayer(updatedLayer);
+                        },
+                      ),
                     ),
-                  ),
+                  ],
                   Divider(height: 0, color: Colors.grey.withOpacity(0.5)),
-                  // Color palette
                   Expanded(
                     child: ColorPalettePanel(
                       currentColor: widget.state.currentColor,
