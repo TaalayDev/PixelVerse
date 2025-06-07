@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -954,14 +955,15 @@ class CloudProjectsView extends HookConsumerWidget {
     ApiProject project,
     UserSubscription subscription,
   ) async {
+    if (Random().nextInt(10) < 2 && !subscription.isPro) {
+      await ref.read(interstitialAdProvider.notifier).showAdIfLoaded(() {});
+    }
+
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ProjectDetailScreen(project: project),
       ),
     );
-    if (!subscription.isPro) {
-      ref.read(interstitialAdProvider.notifier).showAdIfLoaded(() {});
-    }
   }
 }
 

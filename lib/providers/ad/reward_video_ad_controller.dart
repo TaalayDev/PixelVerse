@@ -6,6 +6,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../subscription_provider.dart';
+
 class RewardVideoAdController extends StateNotifier<bool> {
   RewardedAd? _rewardedAd;
   bool _isAdLoaded = false;
@@ -99,6 +101,8 @@ class RewardVideoAdController extends StateNotifier<bool> {
         onUserEarnedReward: (ad, reward) {
           debugPrint('User earned reward: ${reward.amount} ${reward.type}');
           rewardEarned = true;
+
+          _ref.read(subscriptionStateProvider.notifier).grantTemporaryProAccess();
         },
       );
 

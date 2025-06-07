@@ -172,15 +172,15 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                   ),
                   RadioListTile(
                     title: const Text('Sprite Sheet'),
-                    subtitle: subscription.plan == SubscriptionPlan.proYearly
+                    subtitle: subscription.plan == SubscriptionPlan.proPurchase
                         ? null
                         : const Text(
-                            'Pro Yearly Plan Required',
+                            'Pro Plan Required',
                             style: TextStyle(fontSize: 12, color: Colors.blue),
                           ),
                     value: 'sprite-sheet',
                     groupValue: format,
-                    onChanged: subscription.plan == SubscriptionPlan.proYearly
+                    onChanged: subscription.plan == SubscriptionPlan.proPurchase
                         ? (String? value) => setState(() => format = value!)
                         : null,
                     contentPadding: EdgeInsets.zero,

@@ -198,12 +198,12 @@ class CommunityProjectCard extends ConsumerWidget {
                   ] else ...[
                     // Show download button for non-downloaded projects
                     IconButton(
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.download,
                         size: 20,
-                        color: subscription.hasFeatureAccess(SubscriptionFeature.cloudBackup)
-                            ? theme.activeIcon
-                            : theme.textDisabled,
+                        // color: subscription.hasFeatureAccess(SubscriptionFeature.cloudBackup)
+                        //     ? theme.activeIcon
+                        //     : theme.textDisabled,
                       ),
                       onPressed: subscription.hasFeatureAccess(SubscriptionFeature.cloudBackup)
                           ? () => _downloadProject(context, ref, subscription)

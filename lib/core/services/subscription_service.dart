@@ -24,6 +24,7 @@ class SubscriptionService {
 
   // Stream subscriptions
   StreamSubscription<List<PurchaseDetails>>? _purchaseSubscription;
+  Timer? _temporaryAccessTimer;
 
   // State
   bool _isInitialized = false;
@@ -50,11 +51,13 @@ class SubscriptionService {
       // Load saved subscription data
       await _loadSubscriptionData();
 
+      // Start timer to check temporary access expiry
+      _startTemporaryAccessTimer();
+
       // Initialize the IAP plugin
       final isAvailable = await _inAppPurchase.isAvailable();
       if (!isAvailable) {
         _errorController.add('In-app purchases are not available on this device.');
-
         return;
       }
 
@@ -82,8 +85,7 @@ class SubscriptionService {
   Future<void> loadProducts() async {
     try {
       final productIds = <String>{
-        SubscriptionProductIds.proMonthly,
-        SubscriptionProductIds.proYearly,
+        SubscriptionProductIds.proPurchase,
       };
 
       final response = await _inAppPurchase.queryProductDetails(productIds);
@@ -93,15 +95,14 @@ class SubscriptionService {
       }
 
       _products = response.productDetails;
-      _products.sort((a, b) => a.price.compareTo(b.price));
       _productsController.add(_products);
     } catch (e) {
       _errorController.add('Error loading products: $e');
     }
   }
 
-  // Purchase a subscription
-  Future<void> purchaseSubscription(ProductDetails product) async {
+  // Purchase the pro version
+  Future<void> purchasePro(ProductDetails product) async {
     try {
       final purchaseParam = PurchaseParam(
         productDetails: product,
@@ -111,15 +112,52 @@ class SubscriptionService {
       // Start the purchase flow
       await _inAppPurchase.buyNonConsumable(purchaseParam: purchaseParam);
 
-      // We set the status to pending, but the actual purchase will be
-      // handled by the _handlePurchaseUpdates method
+      // Set status to pending
       _updateSubscription(
         _currentSubscription.copyWith(
-          status: SubscriptionStatus.pendingPurchase,
+          status: AppPurchaseStatus.pendingPurchase,
         ),
       );
     } catch (e) {
       _errorController.add('Purchase error: $e');
+    }
+  }
+
+  // Grant temporary pro access from watching ads
+  void grantTemporaryProAccess({Duration duration = const Duration(minutes: 45)}) {
+    final temporaryAccess = TemporaryProAccess(
+      startTime: DateTime.now(),
+      duration: duration,
+    );
+
+    _updateSubscription(
+      _currentSubscription.copyWith(
+        plan: SubscriptionPlan.proPurchase,
+        status: AppPurchaseStatus.purchased,
+        temporaryProAccess: temporaryAccess,
+      ),
+    );
+
+    // Restart the timer to check for expiry
+    _startTemporaryAccessTimer();
+  }
+
+  // Start timer to monitor temporary access expiry
+  void _startTemporaryAccessTimer() {
+    _temporaryAccessTimer?.cancel();
+
+    if (_currentSubscription.hasTemporaryPro) {
+      final remainingTime = _currentSubscription.temporaryProAccess!.remainingTime;
+
+      if (remainingTime > Duration.zero) {
+        _temporaryAccessTimer = Timer(remainingTime, () {
+          // Clear temporary access when it expires
+          _updateSubscription(_currentSubscription.clearTemporaryAccess());
+        });
+      } else {
+        // Access has already expired
+        _updateSubscription(_currentSubscription.clearTemporaryAccess());
+      }
     }
   }
 
@@ -141,7 +179,7 @@ class SubscriptionService {
         // Show pending UI
         _updateSubscription(
           _currentSubscription.copyWith(
-            status: SubscriptionStatus.pendingPurchase,
+            status: AppPurchaseStatus.pendingPurchase,
           ),
         );
       } else {
@@ -152,14 +190,14 @@ class SubscriptionService {
           // Grant entitlement to user
           _handleSuccessfulPurchase(purchaseDetails);
         } else if (purchaseDetails.status == PurchaseStatus.canceled) {
-          // Restore previous subscription status
-          if (_currentSubscription.status == SubscriptionStatus.pendingPurchase) {
-            _updateSubscription(
-              _currentSubscription.copyWith(
-                status: _currentSubscription.isProPlan ? SubscriptionStatus.active : SubscriptionStatus.notPurchased,
-              ),
-            );
-          }
+          // Restore previous status
+          _updateSubscription(
+            _currentSubscription.copyWith(
+              status: _currentSubscription.plan == SubscriptionPlan.proPurchase
+                  ? AppPurchaseStatus.purchased
+                  : AppPurchaseStatus.notPurchased,
+            ),
+          );
         }
 
         // Complete the purchase
@@ -173,23 +211,17 @@ class SubscriptionService {
   // Process a successful purchase
   Future<void> _handleSuccessfulPurchase(PurchaseDetails purchaseDetails) async {
     // Verify the purchase on server (simplified for example)
-    // In a real app, you would verify the purchase with your backend
     final bool isValidPurchase = _verifyPurchase(purchaseDetails);
 
     if (isValidPurchase) {
       final plan = SubscriptionProductIds.productIdToPlan(purchaseDetails.productID);
 
-      // Create expiry date (simplified - in reality, get from the receipt)
-      final now = DateTime.now();
-      final expiryDate =
-          plan == SubscriptionPlan.proMonthly ? now.add(const Duration(days: 30)) : now.add(const Duration(days: 365));
-
       final subscription = UserSubscription(
         plan: plan,
-        status: SubscriptionStatus.active,
-        expiryDate: expiryDate,
+        status: AppPurchaseStatus.purchased,
         purchaseId: purchaseDetails.purchaseID,
-        purchaseDate: now,
+        purchaseDate: DateTime.now(),
+        temporaryProAccess: _currentSubscription.temporaryProAccess, // Preserve any existing temporary access
       );
 
       _updateSubscription(subscription);
@@ -229,29 +261,25 @@ class SubscriptionService {
       if (jsonData != null) {
         final Map<String, dynamic> data = jsonDecode(jsonData);
 
-        // Expiry date check
-        final expiryDateStr = data['expiryDate'] as String?;
-        final expiryDate = expiryDateStr != null ? DateTime.parse(expiryDateStr) : null;
+        debugPrint('Loaded subscription data: $data');
 
-        if (expiryDate != null && expiryDate.isBefore(DateTime.now())) {
-          // Subscription has expired
-          _currentSubscription = UserSubscription(
-            plan: SubscriptionPlan.values.byName(data['plan']),
-            status: SubscriptionStatus.expired,
-            expiryDate: expiryDate,
-            purchaseId: data['purchaseId'],
-            purchaseDate: data['purchaseDate'] != null ? DateTime.parse(data['purchaseDate']) : null,
-          );
-        } else {
-          // Active subscription
-          _currentSubscription = UserSubscription(
-            plan: SubscriptionPlan.values.byName(data['plan']),
-            status: SubscriptionStatus.values.byName(data['status']),
-            expiryDate: expiryDate,
-            purchaseId: data['purchaseId'],
-            purchaseDate: data['purchaseDate'] != null ? DateTime.parse(data['purchaseDate']) : null,
-          );
+        TemporaryProAccess? temporaryAccess;
+        if (data['temporaryProAccess'] != null) {
+          temporaryAccess = TemporaryProAccess.fromJson(data['temporaryProAccess'] as Map<String, dynamic>);
+
+          // Check if temporary access has expired
+          if (!temporaryAccess.isActive) {
+            temporaryAccess = null;
+          }
         }
+
+        _currentSubscription = UserSubscription(
+          plan: SubscriptionPlan.values.byName(data['plan']),
+          status: AppPurchaseStatus.values.byName(data['status']),
+          purchaseId: data['purchaseId'],
+          purchaseDate: data['purchaseDate'] != null ? DateTime.parse(data['purchaseDate']) : null,
+          temporaryProAccess: temporaryAccess,
+        );
 
         _subscriptionController.add(_currentSubscription);
       }
@@ -268,9 +296,9 @@ class SubscriptionService {
       final data = {
         'plan': _currentSubscription.plan.name,
         'status': _currentSubscription.status.name,
-        'expiryDate': _currentSubscription.expiryDate?.toIso8601String(),
         'purchaseId': _currentSubscription.purchaseId,
         'purchaseDate': _currentSubscription.purchaseDate?.toIso8601String(),
+        'temporaryProAccess': _currentSubscription.temporaryProAccess?.toJson(),
       };
 
       await prefs.setString('user_subscription', jsonEncode(data));
@@ -282,17 +310,17 @@ class SubscriptionService {
   // Clean up resources
   void dispose() {
     _purchaseSubscription?.cancel();
+    _temporaryAccessTimer?.cancel();
     _subscriptionController.close();
     _productsController.close();
     _purchaseUpdatedController.close();
     _errorController.close();
   }
 
-  // Get the details of a subscription plan
-  ProductDetails? getProductDetails(SubscriptionPlan plan) {
-    final productId = SubscriptionProductIds.planToProductId(plan);
+  // Get the details of the pro purchase
+  ProductDetails? getProProductDetails() {
     return _products.firstWhereOrNull(
-      (product) => product.id == productId,
+      (product) => product.id == SubscriptionProductIds.proPurchase,
     );
   }
 }

@@ -224,24 +224,23 @@ class _IsFeatureLockedProviderElement extends AutoDisposeProviderElement<bool>
       (origin as IsFeatureLockedProvider).feature;
 }
 
-String _$subscriptionOffersHash() =>
-    r'5cb6be1e1c6715534eb060de6b32f1a7026b41bf';
+String _$purchaseOffersHash() => r'6920072f5ee1a1c6622eba84c7cff71f175608ab';
 
-/// See also [subscriptionOffers].
-@ProviderFor(subscriptionOffers)
-final subscriptionOffersProvider =
-    AutoDisposeProvider<List<SubscriptionOffer>>.internal(
-  subscriptionOffers,
-  name: r'subscriptionOffersProvider',
+/// See also [purchaseOffers].
+@ProviderFor(purchaseOffers)
+final purchaseOffersProvider =
+    AutoDisposeProvider<List<PurchaseOffer>>.internal(
+  purchaseOffers,
+  name: r'purchaseOffersProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$subscriptionOffersHash,
+      : _$purchaseOffersHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef SubscriptionOffersRef = AutoDisposeProviderRef<List<SubscriptionOffer>>;
-String _$subscriptionStateHash() => r'c181df7836c89144878343880de8437a5366b9d6';
+typedef PurchaseOffersRef = AutoDisposeProviderRef<List<PurchaseOffer>>;
+String _$subscriptionStateHash() => r'8ae902cd2e66a80c45eee9db920a90399c2cb915';
 
 /// See also [SubscriptionState].
 @ProviderFor(SubscriptionState)
@@ -257,5 +256,22 @@ final subscriptionStateProvider =
 );
 
 typedef _$SubscriptionState = AutoDisposeNotifier<UserSubscription>;
+String _$temporaryProStatusHash() =>
+    r'85eea183671278e47aa34bb5c41e7748a7773a8b';
+
+/// See also [TemporaryProStatus].
+@ProviderFor(TemporaryProStatus)
+final temporaryProStatusProvider =
+    AutoDisposeNotifierProvider<TemporaryProStatus, Duration?>.internal(
+  TemporaryProStatus.new,
+  name: r'temporaryProStatusProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$temporaryProStatusHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef _$TemporaryProStatus = AutoDisposeNotifier<Duration?>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

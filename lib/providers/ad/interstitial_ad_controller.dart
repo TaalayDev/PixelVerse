@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -64,7 +65,8 @@ class InterstitialAdController extends StateNotifier<bool> {
 
   Future<void> showAdIfLoaded(VoidCallback onAdDismissed) async {
     if (_isAdLoaded && _interstitialAd != null) {
-      // SoundController().pauseBackgroundMusic();
+      final completer = Completer<void>();
+
       _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (ad) {
           ad.dispose();
@@ -72,6 +74,7 @@ class InterstitialAdController extends StateNotifier<bool> {
           state = false;
           loadAd(); // Load the next ad
           onAdDismissed();
+          completer.complete();
         },
         onAdFailedToShowFullScreenContent: (ad, error) {
           debugPrint('Failed to show interstitial ad: ${error.message}');
@@ -80,6 +83,7 @@ class InterstitialAdController extends StateNotifier<bool> {
           state = false;
           loadAd(); // Load the next ad
           onAdDismissed();
+          completer.complete();
         },
         onAdShowedFullScreenContent: (ad) {
           debugPrint('Interstitial ad showed full screen content');
@@ -89,10 +93,10 @@ class InterstitialAdController extends StateNotifier<bool> {
         },
       );
       await _interstitialAd!.show();
+
+      return completer.future;
     } else {
-      // If ad is not loaded, just continue with the callback
       onAdDismissed();
-      // Try to load a new ad for next time
       loadAd();
     }
   }

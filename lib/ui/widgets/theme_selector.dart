@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:pixelverse/ui/screens/subscription_screen.dart';
 
 import '../../core/theme/theme.dart';
 import '../../providers/ad/reward_video_ad_controller.dart';
@@ -37,6 +38,8 @@ class ThemeSelector extends HookConsumerWidget {
       ThemeType.values.where((type) => !_lockedThemeTypes.contains(type) || subscription.isPro).toList(),
     );
 
+    debugPrint('Unlocked themes: ${unlockedThemeTypes.value.map((e) => e.displayName).join(', ')}');
+
     return PopupMenuButton<ThemeType>(
       tooltip: 'Theme Selector',
       icon: Icon(
@@ -46,7 +49,7 @@ class ThemeSelector extends HookConsumerWidget {
       position: PopupMenuPosition.under,
       itemBuilder: (context) => ThemeType.values.map((type) {
         final theme = AppTheme.fromType(type);
-        final isLocked = !unlockedThemeTypes.value.contains(type) && isAdLoaded;
+        final isLocked = !unlockedThemeTypes.value.contains(type);
 
         return PopupMenuItem(
           value: type,
@@ -59,13 +62,20 @@ class ThemeSelector extends HookConsumerWidget {
         );
       }).toList(),
       onSelected: (type) {
-        if (!unlockedThemeTypes.value.contains(type) && isAdLoaded && !subscription.isPro) {
+        if (!unlockedThemeTypes.value.contains(type) && !subscription.isPro) {
+          if (!isAdLoaded) {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const SubscriptionOfferScreen(),
+              ),
+            );
+            return;
+          }
           RewardDialog.show(
             context,
             title: 'Unlock ${type.displayName} Theme',
             subtitle: 'Watch a video ad to unlock this theme.',
             onRewardEarned: () {
-              debugPrint('Reward earned for unlocking theme: ${type.displayName}');
               ref.read(themeProvider).setTheme(type);
 
               unlockedThemeTypes.value = [

@@ -1,6 +1,7 @@
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:pixelverse/config/constants.dart';
@@ -10,6 +11,7 @@ import '../../config/assets.dart';
 import '../../core/theme/theme.dart';
 import '../../data/models/subscription_model.dart';
 import '../../providers/subscription_provider.dart';
+import '../../providers/ad/reward_video_ad_controller.dart';
 import '../widgets/theme_selector.dart';
 
 class SubscriptionOfferScreen extends ConsumerStatefulWidget {
@@ -60,7 +62,7 @@ class SubscriptionOfferScreen extends ConsumerStatefulWidget {
 
 class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScreen> {
   late ConfettiController _confettiController;
-  int _selectedIndex = 2; // Default to yearly plan (best value)
+  int _selectedIndex = 1; // Default to pro purchase
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -75,7 +77,7 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final service = ref.read(subscriptionServiceProvider);
       if (service.products.isEmpty) {
-        // await service.loadProducts();
+        await service.loadProducts();
         if (mounted) {
           setState(() {
             _isLoading = false;
@@ -94,8 +96,9 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
   @override
   Widget build(BuildContext context) {
     final theme = ref.watch(themeProvider).theme;
-    final offers = ref.watch(subscriptionOffersProvider);
-    final hasFree = offers.any((offer) => offer.plan == SubscriptionPlan.free);
+    final offers = ref.watch(purchaseOffersProvider);
+    final subscription = ref.watch(subscriptionStateProvider);
+    final rewardAdState = ref.watch(rewardVideoAdProvider);
 
     // Rebuild the UI when we get purchase updates
     ref.listen(purchaseUpdatesStreamProvider, (previous, next) {
@@ -108,7 +111,6 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
         } else if (purchase.status == PurchaseStatus.error) {
           setState(() {
             _isLoading = false;
-
             _errorMessage = purchase.error?.message ?? 'Purchase failed';
           });
         } else if (purchase.status == PurchaseStatus.purchased || purchase.status == PurchaseStatus.restored) {
@@ -156,8 +158,14 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
                   padding: const EdgeInsets.all(16),
                   children: [
                     _buildHeader(context),
-                    const SizedBox(height: 32),
-                    _buildOfferCards(context, offers, hasFree),
+                    const SizedBox(height: 24),
+                    if (subscription.hasTemporaryPro) _buildTemporaryProStatus(context, theme),
+                    const SizedBox(height: 16),
+                    if (rewardAdState) ...[
+                      _buildTemporaryProSection(context, theme, rewardAdState),
+                      const SizedBox(height: 24),
+                    ],
+                    _buildOfferCards(context, offers),
                     const SizedBox(height: 24),
                     _buildFeatureComparison(context, theme),
                     const SizedBox(height: 16),
@@ -217,6 +225,190 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
     );
   }
 
+  Widget _buildTemporaryProStatus(BuildContext context, AppTheme theme) {
+    final subscription = ref.watch(subscriptionStateProvider);
+    final remainingTime = subscription.temporaryProAccess?.remainingTime;
+
+    if (remainingTime == null || remainingTime <= Duration.zero) {
+      return const SizedBox.shrink();
+    }
+
+    final minutes = remainingTime.inMinutes;
+    final seconds = remainingTime.inSeconds % 60;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.green.shade400, Colors.green.shade600],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.star,
+            color: Colors.white,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Pro Access Active!',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                Text(
+                  'Time remaining: ${minutes}m ${seconds}s',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ).animate().scale(
+          duration: 600.ms,
+          curve: Curves.elasticOut,
+        );
+  }
+
+  Widget _buildTemporaryProSection(BuildContext context, AppTheme theme, bool adReady) {
+    final subscription = ref.watch(subscriptionStateProvider);
+
+    if (subscription.isPermanentPro) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.play_circle_fill,
+                color: Colors.orange,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Try Pro for Free!',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange.shade700,
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Watch a short video ad to unlock Pro features for 45 minutes',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: adReady && !subscription.hasTemporaryPro ? () => _watchAdForTemporaryPro() : null,
+              icon: Icon(
+                subscription.hasTemporaryPro ? Icons.check_circle : (adReady ? Icons.play_arrow : Icons.refresh),
+              ),
+              label: Text(
+                subscription.hasTemporaryPro
+                    ? 'Pro Access Active'
+                    : (adReady ? 'Watch Ad (45 min Pro)' : 'Loading Ad...'),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: subscription.hasTemporaryPro ? Colors.green : Colors.orange,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(
+          duration: 600.ms,
+          delay: 200.ms,
+        );
+  }
+
+  Future<void> _watchAdForTemporaryPro() async {
+    final rewardController = ref.read(rewardVideoAdProvider.notifier);
+
+    setState(() => _isLoading = true);
+
+    try {
+      final rewardEarned = await rewardController.showAdIfLoaded();
+
+      if (rewardEarned) {
+        ref.read(subscriptionStateProvider.notifier).grantTemporaryProAccess();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('🎉 Pro access granted for 45 minutes!'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Video ad was not completed. Please try again.'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load video ad: $e'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   Widget _buildHeader(BuildContext context) {
     return Column(
       children: [
@@ -273,7 +465,7 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
         Text(
           widget.featurePrompt != null
               ? _getUpgradePromptSubtitle(widget.featurePrompt!)
-              : 'Take your pixel art to the next level with Pro tools and features',
+              : 'One-time purchase • No recurring fees • Try with ads first',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
               ),
@@ -311,11 +503,23 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
         icon: Icons.download,
         title: 'Export Formats',
         free: 'PNG, JPEG',
-        pro: 'All formats including Sprite Sheet & GIF',
+        pro: 'All formats including Video & GIF',
+      ),
+      _FeatureComparisonItem(
+        icon: Icons.play_circle_outline,
+        title: 'Try Pro Features',
+        free: 'Watch ads for temporary access',
+        pro: 'Unlimited access',
+      ),
+      _FeatureComparisonItem(
+        icon: MaterialCommunityIcons.advertisements,
+        title: 'Ads',
+        free: 'Watch ads for pro features',
+        pro: 'No ads',
       ),
       _FeatureComparisonItem(
         icon: Icons.cloud_upload,
-        title: 'Cloud Backup (Coming Soon)',
+        title: 'Cloud Backup',
         free: false,
         pro: true,
       ),
@@ -324,7 +528,6 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
         title: 'Priority Support',
         free: false,
         pro: true,
-        proExtraText: '(Yearly plan only)',
       ),
     ];
 
@@ -459,25 +662,12 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
                         Expanded(
                           flex: 3,
                           child: feature.pro is bool
-                              ? Column(
-                                  children: [
-                                    Center(
-                                      child: Icon(
-                                        feature.pro ? Icons.check : Icons.close,
-                                        color: feature.pro ? theme.primaryColor : Colors.red.shade300,
-                                        size: 20,
-                                      ),
-                                    ),
-                                    if (feature.proExtraText != null)
-                                      Text(
-                                        feature.proExtraText!,
-                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                              fontSize: 10,
-                                              color: theme.textSecondary,
-                                            ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                  ],
+                              ? Center(
+                                  child: Icon(
+                                    feature.pro ? Icons.check : Icons.close,
+                                    color: feature.pro ? theme.primaryColor : Colors.red.shade300,
+                                    size: 20,
+                                  ),
                                 )
                               : Text(
                                   feature.pro as String,
@@ -512,17 +702,8 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
     );
   }
 
-  Widget _buildOfferCards(
-    BuildContext context,
-    List<SubscriptionOffer> offers,
-    bool hasFree,
-  ) {
-    final proOffers = offers
-        .where(
-          (offer) => offer.plan != SubscriptionPlan.free,
-        )
-        .toList();
-    if (proOffers.isEmpty) {
+  Widget _buildOfferCards(BuildContext context, List<PurchaseOffer> offers) {
+    if (offers.isEmpty) {
       return const SizedBox(
         height: 150,
         child: Center(child: CircularProgressIndicator()),
@@ -537,16 +718,16 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
           style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
-        ...List.generate(proOffers.length, (index) {
-          final offer = proOffers[index];
-          final isSelected = _selectedIndex == (hasFree ? index + 1 : index);
+        ...List.generate(offers.length, (index) {
+          final offer = offers[index];
+          final isSelected = _selectedIndex == index;
 
-          return _SubscriptionOfferCard(
+          return _PurchaseOfferCard(
             offer: offer,
             isSelected: isSelected,
             onTap: () {
               setState(() {
-                _selectedIndex = hasFree ? index + 1 : index;
+                _selectedIndex = index;
               });
             },
           )
@@ -585,7 +766,6 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
             children: [
               InkWell(
                 onTap: () {
-                  // Launch terms of service URL
                   launchUrlString(Constants.termsOfServiceUrl);
                 },
                 child: Text(
@@ -605,7 +785,6 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
               ),
               InkWell(
                 onTap: () {
-                  // Launch privacy policy URL
                   launchUrlString(Constants.privacyPolicyUrl);
                 },
                 child: Text(
@@ -620,7 +799,7 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
           ),
           const SizedBox(height: 8),
           Text(
-            'Subscriptions auto-renew until canceled. You can cancel anytime via your app store.',
+            'One-time purchase • No recurring charges • Lifetime access',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                   fontSize: 11,
@@ -632,7 +811,7 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
     );
   }
 
-  Widget _buildBottomBar(BuildContext context, List<SubscriptionOffer> offers) {
+  Widget _buildBottomBar(BuildContext context, List<PurchaseOffer> offers) {
     final selectedOffer = _selectedIndex < offers.length ? offers[_selectedIndex] : null;
 
     return Container(
@@ -667,25 +846,12 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
                           ),
                     ),
                     const SizedBox(height: 2),
-                    RichText(
-                      text: TextSpan(
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        children: [
-                          TextSpan(
-                            text: selectedOffer.price,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
+                    Text(
+                      selectedOffer.price,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.bold,
                           ),
-                          TextSpan(
-                            text: ' ${selectedOffer.period}',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
                   ],
                 ),
@@ -695,12 +861,12 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
               child: FilledButton(
                 onPressed: selectedOffer?.plan == SubscriptionPlan.free || _isLoading
                     ? null
-                    : () => _handleSubscribe(selectedOffer!),
+                    : () => _handlePurchase(selectedOffer!),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 child: Text(
-                  selectedOffer?.plan == SubscriptionPlan.free ? 'Continue with Free' : 'Subscribe Now',
+                  selectedOffer?.plan == SubscriptionPlan.free ? 'Continue with Free' : 'Buy Pro',
                   style: const TextStyle(fontSize: 16),
                 ),
               ),
@@ -711,7 +877,7 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
     );
   }
 
-  Future<void> _handleSubscribe(SubscriptionOffer offer) async {
+  Future<void> _handlePurchase(PurchaseOffer offer) async {
     if (_isLoading) return;
 
     setState(() {
@@ -720,7 +886,7 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
     });
 
     try {
-      await ref.read(subscriptionStateProvider.notifier).purchase(offer.plan);
+      await ref.read(subscriptionStateProvider.notifier).purchasePro();
       // Purchase state will be handled by the listener
     } catch (e) {
       setState(() {
@@ -752,13 +918,13 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
   String _getUpgradePromptSubtitle(SubscriptionFeature feature) {
     switch (feature) {
       case SubscriptionFeature.maxProjects:
-        return 'You\'ve reached your free plan project limit';
+        return 'You\'ve reached your free plan project limit • Watch an ad for temporary access or buy Pro';
       case SubscriptionFeature.maxCanvasSize:
-        return 'Create pixel art at higher resolutions';
+        return 'Create pixel art at higher resolutions • Try with ads first';
       case SubscriptionFeature.exportFormats:
-        return 'Export your art in more formats including SVG and GIF';
+        return 'Export your art in more formats • Watch ad for temporary access';
       case SubscriptionFeature.advancedTools:
-        return 'Access premium tools and effects for better art';
+        return 'Access premium tools and effects • Try with video ads';
       case SubscriptionFeature.cloudBackup:
         return 'Never lose your pixel art creations';
       case SubscriptionFeature.noWatermark:
@@ -775,24 +941,22 @@ class _FeatureComparisonItem {
   final String title;
   final dynamic free; // String or bool
   final dynamic pro; // String or bool
-  final String? proExtraText;
 
   _FeatureComparisonItem({
     required this.icon,
     required this.title,
     required this.free,
     required this.pro,
-    this.proExtraText,
   });
 }
 
-// Subscription offer card widget
-class _SubscriptionOfferCard extends StatelessWidget {
-  final SubscriptionOffer offer;
+// Purchase offer card widget
+class _PurchaseOfferCard extends StatelessWidget {
+  final PurchaseOffer offer;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _SubscriptionOfferCard({
+  const _PurchaseOfferCard({
     required this.offer,
     required this.isSelected,
     required this.onTap,
@@ -849,49 +1013,18 @@ class _SubscriptionOfferCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            offer.price,
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: isSelected
-                                      ? Theme.of(context).colorScheme.primary
-                                      : Theme.of(context).colorScheme.onSurface,
-                                ),
-                          ),
-                          Text(
-                            offer.period,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: isSelected
-                                      ? Theme.of(context).colorScheme.primary
-                                      : Theme.of(context).colorScheme.onSurface,
-                                ),
-                          ),
-                        ],
-                      ),
+                      if (offer.plan != SubscriptionPlan.free)
+                        Text(
+                          offer.price,
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).colorScheme.onSurface,
+                              ),
+                        ),
                     ],
                   ),
-
-                  if (offer.saveText.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade100,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        offer.saveText,
-                        style: TextStyle(
-                          color: Colors.green.shade800,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
 
                   const SizedBox(height: 16),
 
@@ -919,10 +1052,10 @@ class _SubscriptionOfferCard extends StatelessWidget {
               ),
             ),
 
-            // "Most Popular" tag
+            // "Best Value" tag
             if (offer.isMostPopular)
               Positioned(
-                bottom: 0,
+                top: 0,
                 right: 0,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
@@ -932,8 +1065,8 @@ class _SubscriptionOfferCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.primary,
                     borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8),
+                      bottomLeft: Radius.circular(8),
+                      topRight: Radius.circular(15),
                     ),
                   ),
                   child: Text(
@@ -949,7 +1082,7 @@ class _SubscriptionOfferCard extends StatelessWidget {
             // Selection indicator
             if (isSelected)
               Positioned(
-                bottom: offer.isMostPopular ? 30 : 16,
+                bottom: 16,
                 right: 16,
                 child: Container(
                   width: 24,

@@ -53,12 +53,12 @@ class SubscriptionMenuItem extends ConsumerWidget {
       return 'Limited features';
     }
 
-    if (subscription.expiryDate != null) {
-      final formatter = DateFormat.yMMMd();
-      final endDate = formatter.format(subscription.expiryDate!);
+    // if (subscription.expiryDate != null) {
+    //   final formatter = DateFormat.yMMMd();
+    //   final endDate = formatter.format(subscription.expiryDate!);
 
-      return 'Renews on $endDate';
-    }
+    //   return 'Renews on $endDate';
+    // }
 
     return subscription.plan.name;
   }
@@ -107,13 +107,10 @@ class SubscriptionPromoBanner extends ConsumerStatefulWidget {
   const SubscriptionPromoBanner({super.key, this.onDismiss});
 
   @override
-  ConsumerState<SubscriptionPromoBanner> createState() =>
-      _SubscriptionPromoBannerState();
+  ConsumerState<SubscriptionPromoBanner> createState() => _SubscriptionPromoBannerState();
 }
 
-class _SubscriptionPromoBannerState
-    extends ConsumerState<SubscriptionPromoBanner>
-    with SingleTickerProviderStateMixin {
+class _SubscriptionPromoBannerState extends ConsumerState<SubscriptionPromoBanner> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _glowAnimation;
@@ -193,8 +190,7 @@ class _SubscriptionPromoBannerState
                   splashColor: Colors.white.withOpacity(0.1),
                   highlightColor: Colors.white.withOpacity(0.1),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0, vertical: 12.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                     child: Row(
                       children: [
                         _buildSparklingStar(),
@@ -204,9 +200,9 @@ class _SubscriptionPromoBannerState
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
+                              const Text(
                                 'Upgrade to Pro',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                   fontSize: 16,
@@ -293,12 +289,10 @@ class _SubscriptionPromoBannerState
           ),
         ),
       ),
-    ).animate().fadeIn(duration: 400.ms, delay: 200.ms).slideX(
-        begin: 0.2,
-        end: 0,
-        duration: 400.ms,
-        delay: 200.ms,
-        curve: Curves.easeOutQuad);
+    )
+        .animate()
+        .fadeIn(duration: 400.ms, delay: 200.ms)
+        .slideX(begin: 0.2, end: 0, duration: 400.ms, delay: 200.ms, curve: Curves.easeOutQuad);
   }
 
   Widget _buildDismissButton() {

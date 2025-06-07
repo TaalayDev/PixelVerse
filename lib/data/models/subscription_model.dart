@@ -3,15 +3,11 @@ import 'package:equatable/equatable.dart';
 // Subscription plan types
 enum SubscriptionPlan {
   free,
-  proMonthly,
-  proYearly;
+  proPurchase; // One-time purchase
 
-  bool get isPro => this != SubscriptionPlan.free;
-  bool get isMonthly => this == SubscriptionPlan.proMonthly;
-  bool get isYearly => this == SubscriptionPlan.proYearly;
+  bool get isPro => this == SubscriptionPlan.proPurchase;
 }
 
-// Subscription feature identifiers
 enum SubscriptionFeature {
   maxProjects,
   maxCanvasSize,
@@ -22,55 +18,45 @@ enum SubscriptionFeature {
   prioritySupport,
 }
 
-// Feature limits for each subscription plan
 class SubscriptionFeatureConfig {
-  // Maximum number of projects
   static const Map<SubscriptionPlan, int> maxProjects = {
     SubscriptionPlan.free: 10,
-    SubscriptionPlan.proMonthly: 999,
-    SubscriptionPlan.proYearly: 999,
+    SubscriptionPlan.proPurchase: 999,
   };
 
-  // Maximum canvas size (width/height in pixels)
   static const Map<SubscriptionPlan, int> maxCanvasSize = {
     SubscriptionPlan.free: 64,
-    SubscriptionPlan.proMonthly: 512,
-    SubscriptionPlan.proYearly: 1024,
+    SubscriptionPlan.proPurchase: 1024,
   };
 
   // Available export formats
   static const Map<SubscriptionPlan, List<String>> exportFormats = {
     SubscriptionPlan.free: ['PNG', 'JPEG'],
-    SubscriptionPlan.proMonthly: ['PNG', 'JPEG', 'SVG', 'GIF'],
-    SubscriptionPlan.proYearly: ['PNG', 'JPEG', 'SVG', 'GIF', 'WEBP', 'MP4'],
+    SubscriptionPlan.proPurchase: ['PNG', 'JPEG', 'SVG', 'GIF', 'WEBP', 'MP4'],
   };
 
   // Advanced tools access
   static const Map<SubscriptionPlan, bool> advancedTools = {
     SubscriptionPlan.free: false,
-    SubscriptionPlan.proMonthly: true,
-    SubscriptionPlan.proYearly: true,
+    SubscriptionPlan.proPurchase: true,
   };
 
   // Cloud backup access
   static const Map<SubscriptionPlan, bool> cloudBackup = {
     SubscriptionPlan.free: false,
-    SubscriptionPlan.proMonthly: true,
-    SubscriptionPlan.proYearly: true,
+    SubscriptionPlan.proPurchase: true,
   };
 
   // No watermark on exports
   static const Map<SubscriptionPlan, bool> noWatermark = {
     SubscriptionPlan.free: false,
-    SubscriptionPlan.proMonthly: true,
-    SubscriptionPlan.proYearly: true,
+    SubscriptionPlan.proPurchase: true,
   };
 
   // Priority support
   static const Map<SubscriptionPlan, bool> prioritySupport = {
     SubscriptionPlan.free: false,
-    SubscriptionPlan.proMonthly: false,
-    SubscriptionPlan.proYearly: true,
+    SubscriptionPlan.proPurchase: true,
   };
 
   // Get feature value by plan
@@ -94,18 +80,13 @@ class SubscriptionFeatureConfig {
   }
 }
 
-// Subscription product identifiers
 class SubscriptionProductIds {
-  // Replace these with your actual product IDs from the stores
-  static const String proMonthly = 'com.pixelverse.app.pro.monthly';
-  static const String proYearly = 'com.pixelverse.app.pro.yearly';
+  static const String proPurchase = 'com.pixelverse.app.pro.purchase';
 
   static String planToProductId(SubscriptionPlan plan) {
     switch (plan) {
-      case SubscriptionPlan.proMonthly:
-        return proMonthly;
-      case SubscriptionPlan.proYearly:
-        return proYearly;
+      case SubscriptionPlan.proPurchase:
+        return proPurchase;
       case SubscriptionPlan.free:
         return '';
     }
@@ -113,96 +94,147 @@ class SubscriptionProductIds {
 
   static SubscriptionPlan productIdToPlan(String productId) {
     switch (productId) {
-      case proMonthly:
-        return SubscriptionPlan.proMonthly;
-      case proYearly:
-        return SubscriptionPlan.proYearly;
+      case proPurchase:
+        return SubscriptionPlan.proPurchase;
       default:
         return SubscriptionPlan.free;
     }
   }
 }
 
-// Model representing a subscription plan offer
-class SubscriptionOffer extends Equatable {
+// Model representing a purchase offer
+class PurchaseOffer extends Equatable {
   final SubscriptionPlan plan;
   final String title;
   final String description;
   final String price;
-  final String period;
-  final String saveText;
   final bool isMostPopular;
   final List<String> features;
 
-  const SubscriptionOffer({
+  const PurchaseOffer({
     required this.plan,
     required this.title,
     required this.description,
     required this.price,
-    required this.period,
-    this.saveText = '',
     this.isMostPopular = false,
     required this.features,
   });
 
   @override
-  List<Object?> get props => [plan, title, price, period, features];
+  List<Object?> get props => [plan, title, price, features];
 }
 
-// Status of a subscription
-enum SubscriptionStatus {
+// Status of a purchase
+enum AppPurchaseStatus {
   notPurchased,
-  active,
-  expired,
-  gracePeriod,
+  purchased,
   pendingPurchase,
 }
 
-// Model to track the user's current subscription
+// Temporary pro access from ads
+class TemporaryProAccess extends Equatable {
+  final DateTime startTime;
+  final Duration duration;
+
+  const TemporaryProAccess({
+    required this.startTime,
+    required this.duration,
+  });
+
+  DateTime get endTime => startTime.add(duration);
+  bool get isActive => DateTime.now().isBefore(endTime);
+  Duration get remainingTime => isActive ? endTime.difference(DateTime.now()) : Duration.zero;
+
+  @override
+  List<Object?> get props => [startTime, duration];
+
+  factory TemporaryProAccess.fromJson(Map<String, dynamic> json) {
+    return TemporaryProAccess(
+      startTime: DateTime.parse(json['startTime'] as String),
+      duration: Duration(milliseconds: json['duration'] as int),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'startTime': startTime.toIso8601String(),
+      'duration': duration.inMilliseconds,
+    };
+  }
+}
+
+// Model to track the user's current purchase and temporary access
 class UserSubscription extends Equatable {
   final SubscriptionPlan plan;
-  final SubscriptionStatus status;
-  final DateTime? expiryDate;
+  final AppPurchaseStatus status;
   final String? purchaseId;
   final DateTime? purchaseDate;
+  final TemporaryProAccess? temporaryProAccess;
 
   const UserSubscription({
     required this.plan,
     required this.status,
-    this.expiryDate,
     this.purchaseId,
     this.purchaseDate,
+    this.temporaryProAccess,
   });
 
   const UserSubscription.free()
       : plan = SubscriptionPlan.free,
-        status = SubscriptionStatus.notPurchased,
-        expiryDate = null,
+        status = AppPurchaseStatus.notPurchased,
         purchaseId = null,
-        purchaseDate = null;
+        purchaseDate = null,
+        temporaryProAccess = null;
 
   UserSubscription copyWith({
     SubscriptionPlan? plan,
-    SubscriptionStatus? status,
-    DateTime? expiryDate,
+    AppPurchaseStatus? status,
     String? purchaseId,
     DateTime? purchaseDate,
+    TemporaryProAccess? temporaryProAccess,
   }) {
     return UserSubscription(
       plan: plan ?? this.plan,
       status: status ?? this.status,
-      expiryDate: expiryDate ?? this.expiryDate,
       purchaseId: purchaseId ?? this.purchaseId,
       purchaseDate: purchaseDate ?? this.purchaseDate,
+      temporaryProAccess: temporaryProAccess ?? this.temporaryProAccess,
     );
   }
 
-  bool get isActive => status == SubscriptionStatus.active || status == SubscriptionStatus.gracePeriod;
-  bool get isProPlan => plan == SubscriptionPlan.proMonthly || plan == SubscriptionPlan.proYearly;
-  bool get isPro => isProPlan && isActive;
+  UserSubscription clearTemporaryAccess() {
+    return copyWith(
+      plan: SubscriptionPlan.free,
+      status: AppPurchaseStatus.notPurchased,
+      temporaryProAccess: TemporaryProAccess(
+        startTime: DateTime.now(),
+        duration: Duration.zero,
+      ),
+    );
+  }
+
+  bool get isPermanentPro => plan == SubscriptionPlan.proPurchase && status == AppPurchaseStatus.purchased;
+  bool get hasTemporaryPro => temporaryProAccess?.isActive ?? false;
+  bool get isPro => isPermanentPro || hasTemporaryPro;
 
   // Check if user has access to a specific feature
   bool hasFeatureAccess(SubscriptionFeature feature) {
+    // If user has temporary pro access, grant all pro features
+    if (hasTemporaryPro) {
+      switch (feature) {
+        case SubscriptionFeature.maxProjects:
+        case SubscriptionFeature.maxCanvasSize:
+        case SubscriptionFeature.exportFormats:
+          return true;
+        case SubscriptionFeature.advancedTools:
+        case SubscriptionFeature.cloudBackup:
+        case SubscriptionFeature.noWatermark:
+        case SubscriptionFeature.prioritySupport:
+          return true;
+      }
+    }
+
+    // Otherwise check permanent purchase status
     switch (feature) {
       case SubscriptionFeature.maxProjects:
       case SubscriptionFeature.maxCanvasSize:
@@ -213,7 +245,7 @@ class UserSubscription extends Equatable {
       case SubscriptionFeature.cloudBackup:
       case SubscriptionFeature.noWatermark:
       case SubscriptionFeature.prioritySupport:
-        if (!isPro) return false;
+        if (!isPermanentPro) return false;
         return SubscriptionFeatureConfig.getFeatureValue<bool>(
           feature,
           plan,
@@ -221,6 +253,12 @@ class UserSubscription extends Equatable {
     }
   }
 
+  // Get feature limit based on current access level
+  T getFeatureLimit<T>(SubscriptionFeature feature) {
+    final effectivePlan = isPro ? SubscriptionPlan.proPurchase : SubscriptionPlan.free;
+    return SubscriptionFeatureConfig.getFeatureValue<T>(feature, effectivePlan);
+  }
+
   @override
-  List<Object?> get props => [plan, status, expiryDate, purchaseId, purchaseDate];
+  List<Object?> get props => [plan, status, purchaseId, purchaseDate, temporaryProAccess];
 }
