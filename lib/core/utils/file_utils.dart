@@ -42,7 +42,7 @@ class FileUtils {
     img.Image image = img.Image.fromBytes(
       width: width,
       height: height,
-      bytes: pixels.buffer,
+      bytes: ImageHelper.fixColorChannels(pixels).buffer,
       numChannels: 4,
     );
     if (exportWidth != null && exportHeight != null) {
@@ -97,11 +97,10 @@ class FileUtils {
   Future<String?> readProjectFileContents() async {
     final completer = Completer<String?>();
     if (kIsWeb) {
-      final html.InputElement input =
-          html.document.createElement('input') as html.InputElement
-            ..type = 'file'
-            ..accept = '.pxv'
-            ..style.display = 'none';
+      final html.InputElement input = html.document.createElement('input') as html.InputElement
+        ..type = 'file'
+        ..accept = '.pxv'
+        ..style.display = 'none';
 
       input.onChange.listen((event) {
         final html.File file = input.files!.first;
@@ -134,11 +133,10 @@ class FileUtils {
     final completer = Completer<img.Image?>();
 
     if (kIsWeb) {
-      final html.InputElement input =
-          html.document.createElement('input') as html.InputElement
-            ..type = 'file'
-            ..accept = 'image/*'
-            ..style.display = 'none';
+      final html.InputElement input = html.document.createElement('input') as html.InputElement
+        ..type = 'file'
+        ..accept = 'image/*'
+        ..style.display = 'none';
 
       input.onChange.listen((event) {
         final html.File file = input.files!.first;

@@ -22,7 +22,7 @@ final subscriptionServiceProvider = Provider<SubscriptionService>((ref) {
 class SubscriptionState extends _$SubscriptionState {
   @override
   UserSubscription build() {
-    if (kIsWeb || Platform.isAndroid || Platform.isWindows) {
+    if (kIsWeb || Platform.isAndroid || Platform.isWindows || kDebugMode) {
       return UserSubscription(
         plan: SubscriptionPlan.proPurchase,
         status: AppPurchaseStatus.purchased,
@@ -41,14 +41,11 @@ class SubscriptionState extends _$SubscriptionState {
       if (previous?.plan != next.plan || previous?.status != next.status) {}
     });
 
-    ref.listen(
-      subscriptionStreamProvider,
-      (previous, next) {
-        if (next.valueOrNull != null) {
-          state = next.value!;
-        }
-      },
-    );
+    ref.listen(subscriptionStreamProvider, (previous, next) {
+      if (next.valueOrNull != null) {
+        state = next.value!;
+      }
+    });
 
     return service.currentSubscription;
   }
@@ -109,9 +106,7 @@ Stream<List<ProductDetails>> productsStream(ProductsStreamRef ref) {
 }
 
 @riverpod
-Stream<List<PurchaseDetails>> purchaseUpdatesStream(
-  PurchaseUpdatesStreamRef ref,
-) {
+Stream<List<PurchaseDetails>> purchaseUpdatesStream(PurchaseUpdatesStreamRef ref) {
   final service = ref.watch(subscriptionServiceProvider);
   return service.purchaseUpdatedStream;
 }
@@ -155,33 +150,33 @@ List<PurchaseOffer> purchaseOffers(PurchaseOffersRef ref) {
         'Basic tools',
         'Canvas up to 64x64 pixels',
         'PNG & JPEG export',
-        'Watch ads for temporary Pro access'
+        'Watch ads for temporary Pro access',
       ],
     ),
   ];
 
-  final proProduct = products.firstWhereOrNull(
-    (product) => product.id == SubscriptionProductIds.proPurchase,
-  );
+  final proProduct = products.firstWhereOrNull((product) => product.id == SubscriptionProductIds.proPurchase);
 
   if (proProduct != null) {
-    offers.add(PurchaseOffer(
-      plan: SubscriptionPlan.proPurchase,
-      title: 'Pro (One-time Purchase)',
-      description: 'Unlock everything forever',
-      price: proProduct.price,
-      isMostPopular: true,
-      features: const [
-        'Unlimited projects',
-        'Advanced tools & effects',
-        'Canvas up to 1024x1024 pixels',
-        'Export to all formats including video',
-        'Cloud backup',
-        'Priority support',
-        'No ads',
-        'No watermarks',
-      ],
-    ));
+    offers.add(
+      PurchaseOffer(
+        plan: SubscriptionPlan.proPurchase,
+        title: 'Pro (One-time Purchase)',
+        description: 'Unlock everything forever',
+        price: proProduct.price,
+        isMostPopular: true,
+        features: const [
+          'Unlimited projects',
+          'Advanced tools & effects',
+          'Canvas up to 1024x1024 pixels',
+          'Export to all formats including video',
+          'Cloud backup',
+          'Priority support',
+          'No ads',
+          'No watermarks',
+        ],
+      ),
+    );
   }
 
   return offers;

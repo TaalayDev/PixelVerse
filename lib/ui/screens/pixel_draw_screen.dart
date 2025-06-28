@@ -292,7 +292,13 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerPr
     return ShortcutsWrapper(
       onUndo: state.canUndo ? notifier.undo : () {},
       onRedo: state.canRedo ? notifier.redo : () {},
-      onSave: () => notifier.exportAnimation(context),
+      onSave: () {
+        handleExport(
+          context,
+          notifier,
+          state,
+        );
+      },
       onExport: () => handleExport(context, notifier, state),
       onImport: () async {
         final result = await showImportDialog(context);

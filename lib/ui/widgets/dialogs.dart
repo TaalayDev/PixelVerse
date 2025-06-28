@@ -97,9 +97,9 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
     Navigator.of(context).pop();
   }
 
-  double _calcSpriteSheetHeight() {
+  double _calcSpriteSheetHeight(double width) {
     double originalRatio = widget.state.width / widget.state.height;
-    return (400 / spriteSheetColumns) / originalRatio;
+    return (width / spriteSheetColumns) / originalRatio;
   }
 
   @override
@@ -314,24 +314,28 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                             ),
                           );
                         } else if (format == 'gif') {
-                          return AnimationPreview(
-                            width: widget.state.width,
-                            height: widget.state.height,
-                            frames: widget.state.currentFrames,
-                          );
-                        } else {
-                          return SizedBox(
-                            width: 400,
-                            height: _calcSpriteSheetHeight(),
-                            child: SpriteSheetPreview(
+                          return Center(
+                            child: AnimationPreview(
                               width: widget.state.width,
                               height: widget.state.height,
                               frames: widget.state.currentFrames,
-                              columns: spriteSheetColumns,
-                              spacing: spriteSheetSpacing,
-                              includeAllFrames: includeAllFrames,
                             ),
                           );
+                        } else {
+                          return LayoutBuilder(builder: (context, constraints) {
+                            return SizedBox(
+                              width: 400,
+                              height: _calcSpriteSheetHeight(constraints.maxWidth),
+                              child: SpriteSheetPreview(
+                                width: widget.state.width,
+                                height: widget.state.height,
+                                frames: widget.state.currentFrames,
+                                columns: spriteSheetColumns,
+                                spacing: spriteSheetSpacing,
+                                includeAllFrames: includeAllFrames,
+                              ),
+                            );
+                          });
                         }
                       }(),
                     ),
