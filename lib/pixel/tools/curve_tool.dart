@@ -35,7 +35,7 @@ class CurveTool extends Tool {
       _currentPixels.clear();
 
       // Add a single pixel at start point for visual feedback
-      final pixelPos = details.pixelPosition.copyWith(color: 0x99000000);
+      final pixelPos = details.pixelPosition.copyWith(color: 0x99FF0000);
       if (_isValidPoint(pixelPos, details.width, details.height)) {
         _currentPixels.add(pixelPos);
         details.onPixelsUpdated(_currentPixels);
