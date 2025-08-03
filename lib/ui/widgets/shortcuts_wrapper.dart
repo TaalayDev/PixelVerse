@@ -140,7 +140,6 @@ class _ShortcutsWrapperState extends State<ShortcutsWrapper> {
 
     return GestureDetector(
       onTap: () {
-        // Ensure focus is maintained when clicking
         if (!_focusNode.hasFocus && _focusNode.canRequestFocus) {
           _focusNode.requestFocus();
         }

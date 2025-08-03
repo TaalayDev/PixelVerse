@@ -6,7 +6,6 @@ import '../../core/utils.dart';
 import '../../data/models/subscription_model.dart';
 import '../../pixel/image_painter.dart';
 import '../../pixel/pixel_draw_state.dart';
-import '../../pixel/providers/pixel_notifier_provider.dart';
 import '../../data.dart';
 import '../widgets.dart';
 import 'animation_timeline.dart';
@@ -114,105 +113,147 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
       maxChildSize: 0.95,
       expand: false,
       builder: (context, scrollController) {
-        return CustomScrollView(
-          controller: scrollController,
-          slivers: [
-            SliverToBoxAdapter(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        return Focus(
+          autofocus: true,
+          child: CustomScrollView(
+            controller: scrollController,
+            slivers: [
+              SliverToBoxAdapter(
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      'Save',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.of(context).pop(),
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
                   ],
                 ),
               ),
-            ),
-            const SliverToBoxAdapter(child: Divider()),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  RadioListTile(
-                    title: const Text('PNG'),
-                    value: 'png',
-                    groupValue: format,
-                    onChanged: (value) => setState(() => format = value!),
-                    contentPadding: EdgeInsets.zero,
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Save',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
                   ),
-                  RadioListTile(
-                    title: const Text('Animated GIF'),
-                    subtitle: subscription.isPro
-                        ? null
-                        : const Text(
-                            'Pro Plan Required',
-                            style: TextStyle(fontSize: 12, color: Colors.blue),
-                          ),
-                    value: 'gif',
-                    groupValue: format,
-                    onChanged: subscription.isPro ? (String? value) => setState(() => format = value!) : null,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  RadioListTile(
-                    title: const Text('Sprite Sheet'),
-                    subtitle: subscription.plan == SubscriptionPlan.proPurchase
-                        ? null
-                        : const Text(
-                            'Pro Plan Required',
-                            style: TextStyle(fontSize: 12, color: Colors.blue),
-                          ),
-                    value: 'sprite-sheet',
-                    groupValue: format,
-                    onChanged: subscription.plan == SubscriptionPlan.proPurchase
-                        ? (String? value) => setState(() => format = value!)
-                        : null,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-
-                  const Divider(),
-
-                  // Background Options
-                  SwitchListTile(
-                    title: const Text(
-                      'Transparent Background',
-                      style: TextStyle(fontSize: 14),
+                ),
+              ),
+              const SliverToBoxAdapter(child: Divider()),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    RadioListTile(
+                      title: const Text('PNG'),
+                      value: 'png',
+                      groupValue: format,
+                      onChanged: (value) => setState(() => format = value!),
+                      contentPadding: EdgeInsets.zero,
                     ),
-                    value: transparent,
-                    onChanged: (value) => setState(() => transparent = value),
-                    activeColor: Theme.of(context).colorScheme.onPrimary,
-                    contentPadding: EdgeInsets.zero,
-                  ),
+                    RadioListTile(
+                      title: const Text('Animated GIF'),
+                      subtitle: subscription.isPro
+                          ? null
+                          : const Text(
+                              'Pro Plan Required',
+                              style: TextStyle(fontSize: 12, color: Colors.blue),
+                            ),
+                      value: 'gif',
+                      groupValue: format,
+                      onChanged: subscription.isPro ? (String? value) => setState(() => format = value!) : null,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    RadioListTile(
+                      title: const Text('Sprite Sheet'),
+                      subtitle: subscription.plan == SubscriptionPlan.proPurchase
+                          ? null
+                          : const Text(
+                              'Pro Plan Required',
+                              style: TextStyle(fontSize: 12, color: Colors.blue),
+                            ),
+                      value: 'sprite-sheet',
+                      groupValue: format,
+                      onChanged: subscription.plan == SubscriptionPlan.proPurchase
+                          ? (String? value) => setState(() => format = value!)
+                          : null,
+                      contentPadding: EdgeInsets.zero,
+                    ),
 
-                  if (format == 'sprite-sheet') ...[
                     const Divider(),
+
+                    // Background Options
+                    SwitchListTile(
+                      title: const Text(
+                        'Transparent Background',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                      value: transparent,
+                      onChanged: (value) => setState(() => transparent = value),
+                      activeColor: Theme.of(context).colorScheme.onPrimary,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+
+                    if (format == 'sprite-sheet') ...[
+                      const Divider(),
+                      const SizedBox(height: 16),
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Sprite Sheet Options',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<int>(
+                              decoration: const InputDecoration(
+                                labelText: 'Columns',
+                              ),
+                              value: spriteSheetColumns,
+                              items: columnOptions.map((int value) {
+                                return DropdownMenuItem<int>(
+                                  value: value,
+                                  child: Text('$value'),
+                                );
+                              }).toList(),
+                              onChanged: (value) => setState(() => spriteSheetColumns = value!),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: TextFormField(
+                              decoration: const InputDecoration(
+                                labelText: 'Spacing (px)',
+                              ),
+                              initialValue: spriteSheetSpacing.toString(),
+                              keyboardType: TextInputType.number,
+                              onChanged: (value) => setState(() => spriteSheetSpacing = int.tryParse(value) ?? 0),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     const Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'Sprite Sheet Options',
+                        'Size',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -220,173 +261,134 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                     Row(
                       children: [
                         Expanded(
-                          child: DropdownButtonFormField<int>(
+                          child: TextFormField(
                             decoration: const InputDecoration(
-                              labelText: 'Columns',
+                              labelText: 'Width',
                             ),
-                            value: spriteSheetColumns,
-                            items: columnOptions.map((int value) {
-                              return DropdownMenuItem<int>(
-                                value: value,
-                                child: Text('$value'),
-                              );
-                            }).toList(),
-                            onChanged: (value) => setState(() => spriteSheetColumns = value!),
+                            controller: widthController,
+                            keyboardType: TextInputType.number,
+                            onChanged: (value) {
+                              width = double.tryParse(value) ?? widget.state.width.toDouble();
+
+                              double originalRatio = widget.state.width / widget.state.height;
+                              height = width / originalRatio;
+
+                              heightController.text = height.toString();
+                            },
                           ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: TextFormField(
                             decoration: const InputDecoration(
-                              labelText: 'Spacing (px)',
+                              labelText: 'Height',
                             ),
-                            initialValue: spriteSheetSpacing.toString(),
+                            controller: heightController,
                             keyboardType: TextInputType.number,
-                            onChanged: (value) => setState(() => spriteSheetSpacing = int.tryParse(value) ?? 0),
+                            onChanged: (value) {
+                              height = double.tryParse(value) ?? widget.state.height.toDouble();
+                              double originalRatio = widget.state.width / widget.state.height;
+                              width = height / originalRatio;
+
+                              widthController.text = width.toString();
+                            },
                           ),
                         ),
                       ],
                     ),
-                  ],
-                  const SizedBox(height: 16),
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Size',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          decoration: const InputDecoration(
-                            labelText: 'Width',
-                          ),
-                          controller: widthController,
-                          keyboardType: TextInputType.number,
-                          onChanged: (value) {
-                            width = double.tryParse(value) ?? widget.state.width.toDouble();
-
-                            double originalRatio = widget.state.width / widget.state.height;
-                            height = width / originalRatio;
-
-                            heightController.text = height.toString();
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextFormField(
-                          decoration: const InputDecoration(
-                            labelText: 'Height',
-                          ),
-                          controller: heightController,
-                          keyboardType: TextInputType.number,
-                          onChanged: (value) {
-                            height = double.tryParse(value) ?? widget.state.height.toDouble();
-                            double originalRatio = widget.state.width / widget.state.height;
-                            width = height / originalRatio;
-
-                            widthController.text = width.toString();
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  ColoredBox(
-                    color: backgroundColor,
-                    child: RepaintBoundary(
-                      key: previewKey,
-                      child: () {
-                        if (format == 'png') {
-                          return AspectRatio(
-                            aspectRatio: widget.state.width / widget.state.height,
-                            child: LayersPreview(
-                              width: widget.state.width,
-                              height: widget.state.height,
-                              layers: widget.state.layers,
-                              builder: (context, image) {
-                                return image != null
-                                    ? CustomPaint(painter: ImagePainter(image))
-                                    : const ColoredBox(color: Colors.white);
-                              },
-                            ),
-                          );
-                        } else if (format == 'gif') {
-                          return Center(
-                            child: AnimationPreview(
-                              width: widget.state.width,
-                              height: widget.state.height,
-                              frames: widget.state.currentFrames,
-                            ),
-                          );
-                        } else {
-                          return LayoutBuilder(builder: (context, constraints) {
-                            return SizedBox(
-                              width: 400,
-                              height: _calcSpriteSheetHeight(constraints.maxWidth),
-                              child: SpriteSheetPreview(
+                    const SizedBox(height: 16),
+                    ColoredBox(
+                      color: backgroundColor,
+                      child: RepaintBoundary(
+                        key: previewKey,
+                        child: () {
+                          if (format == 'png') {
+                            return AspectRatio(
+                              aspectRatio: widget.state.width / widget.state.height,
+                              child: LayersPreview(
+                                width: widget.state.width,
+                                height: widget.state.height,
+                                layers: widget.state.layers,
+                                builder: (context, image) {
+                                  return image != null
+                                      ? CustomPaint(painter: ImagePainter(image))
+                                      : const ColoredBox(color: Colors.white);
+                                },
+                              ),
+                            );
+                          } else if (format == 'gif') {
+                            return Center(
+                              child: AnimationPreview(
                                 width: widget.state.width,
                                 height: widget.state.height,
                                 frames: widget.state.currentFrames,
-                                columns: spriteSheetColumns,
-                                spacing: spriteSheetSpacing,
-                                includeAllFrames: includeAllFrames,
                               ),
                             );
-                          });
-                        }
-                      }(),
+                          } else {
+                            return LayoutBuilder(builder: (context, constraints) {
+                              return SizedBox(
+                                width: 400,
+                                height: _calcSpriteSheetHeight(constraints.maxWidth),
+                                child: SpriteSheetPreview(
+                                  width: widget.state.width,
+                                  height: widget.state.height,
+                                  frames: widget.state.currentFrames,
+                                  columns: spriteSheetColumns,
+                                  spacing: spriteSheetSpacing,
+                                  includeAllFrames: includeAllFrames,
+                                ),
+                              );
+                            });
+                          }
+                        }(),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                ]),
-              ),
-            ),
-            // Action buttons at the bottom
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancel'),
-                    ),
-                    const SizedBox(width: 8),
-                    FilledButton(
-                      onPressed: () {
-                        if (format == 'sprite-sheet') {
-                          _savePreviewImage();
-                          return;
-                        }
-
-                        widget.onSave({
-                          'format': format,
-                          'transparent': transparent,
-                          'backgroundColor': backgroundColor.value,
-                          'exportWidth': width,
-                          'exportHeight': height,
-                          if (format == 'sprite-sheet')
-                            'spriteSheetOptions': {
-                              'columns': spriteSheetColumns,
-                              'spacing': spriteSheetSpacing,
-                              'includeAllFrames': includeAllFrames,
-                            },
-                        });
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text('Save'),
-                    ),
-                  ],
+                    const SizedBox(height: 24),
+                  ]),
                 ),
               ),
-            ),
-          ],
+              // Action buttons at the bottom
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Cancel'),
+                      ),
+                      const SizedBox(width: 8),
+                      FilledButton(
+                        onPressed: () {
+                          if (format == 'sprite-sheet') {
+                            _savePreviewImage();
+                            return;
+                          }
+
+                          widget.onSave({
+                            'format': format,
+                            'transparent': transparent,
+                            'backgroundColor': backgroundColor.value,
+                            'exportWidth': width,
+                            'exportHeight': height,
+                            if (format == 'sprite-sheet')
+                              'spriteSheetOptions': {
+                                'columns': spriteSheetColumns,
+                                'spacing': spriteSheetSpacing,
+                                'includeAllFrames': includeAllFrames,
+                              },
+                          });
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('Save'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );

@@ -9,6 +9,7 @@ import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:pixelverse/ui/widgets/animated_background.dart';
 import 'package:pixelverse/ui/widgets/effects/effects_side_panel.dart';
+import 'package:pixelverse/ui/widgets/pixel_draw_shortcuts.dart';
 
 import '../../l10n/strings.dart';
 import '../../pixel/canvas/pixel_canvas.dart';
@@ -48,10 +49,8 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerPr
   late PixelDrawNotifierProvider provider = pixelDrawNotifierProvider(project);
   late PixelDrawNotifier notifier = ref.read(provider.notifier);
 
-  final _focusNode = FocusNode();
+  final _shortcutsFocusNode = FocusNode();
   bool _showUI = true;
-  bool _isPanMode = false;
-  Color _backgroundColor = Colors.white;
 
   @override
   void initState() {
@@ -62,8 +61,10 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerPr
     BuildContext context,
     PixelDrawNotifier notifier,
     PixelDrawState state,
-  ) {
-    showSaveImageDialog(
+  ) async {
+    _shortcutsFocusNode.canRequestFocus = false;
+
+    await showSaveImageDialog(
       context,
       state: state,
       subscription: ref.read(subscriptionStateProvider),
@@ -107,6 +108,8 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerPr
         }
       },
     );
+
+    _shortcutsFocusNode.canRequestFocus = true;
   }
 
   Future<bool?> showImportDialog(BuildContext context) {
@@ -289,100 +292,20 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerPr
 
     final subscription = ref.watch(subscriptionStateProvider);
 
-    return ShortcutsWrapper(
-      onUndo: state.canUndo ? notifier.undo : () {},
-      onRedo: state.canRedo ? notifier.redo : () {},
-      onSave: () {
-        handleExport(
-          context,
-          notifier,
-          state,
-        );
-      },
-      onExport: () => handleExport(context, notifier, state),
-      onImport: () async {
-        final result = await showImportDialog(context);
-        if (result != null) {
-          notifier.importImage(context, background: result);
-        }
-      },
-      onToolChanged: (tool) {
-        currentTool.value = tool;
-        if (_isPanMode && tool != PixelTool.drag) {
-          _isPanMode = false;
-        } else if (tool == PixelTool.drag) {
-          _isPanMode = true;
-        }
-      },
-      onBrushSizeChanged: (size) {
-        brushSize.value = size;
-      },
-      onZoomIn: () {
-        gridScale.value = (gridScale.value * 1.1).clamp(0.5, 5.0);
-      },
-      onZoomOut: () {
-        gridScale.value = (gridScale.value / 1.1).clamp(0.5, 5.0);
-      },
-      onZoomFit: () => _setZoomFit(gridScale, gridOffset),
-      onZoom100: () => _setZoom100(gridScale, gridOffset),
-      onSwapColors: () {},
-      onDefaultColors: () {},
-      onToggleUI: _toggleUI,
-      onPanStart: () {
-        if (!_isPanMode) {
-          currentTool.value = PixelTool.drag;
-          _isPanMode = true;
-        }
-      },
-      onPanEnd: () {
-        if (_isPanMode) {
-          currentTool.value = PixelTool.pencil;
-          _isPanMode = false;
-        }
-      },
-      onLayerChanged: (layerIndex) {
-        if (layerIndex < state.layers.length) {
-          notifier.selectLayer(layerIndex);
-        }
-      },
-      onColorPicker: () {
-        showColorPicker(context, notifier);
-      },
-      onNewLayer: () {
-        notifier.addLayer('Layer ${state.layers.length + 1}');
-      },
-      onDeleteLayer: () {
-        if (state.layers.length > 1) {
-          notifier.removeLayer(state.currentLayerIndex);
-        }
-      },
-      onSelectAll: () {},
-      onDeselectAll: () {
-        notifier.setSelection(null);
-      },
-      onCopy: () {
-        // TODO: Implement copy functionality
-      },
-      onPaste: () {
-        // TODO: Implement paste functionality
-      },
-      onCut: () {
-        // TODO: Implement cut functionality
-      },
-      onDuplicate: () {
-        // Duplicate current layer
-        final currentLayer = state.layers[state.currentLayerIndex];
-        notifier.addLayer('${currentLayer.name} Copy');
-        // TODO: Copy pixels from current layer to new layer
-      },
-      onCtrlEnter: () {
-        if (currentTool.value == PixelTool.pen) {
-          notifier.pushEvent(const ClosePenPathEvent());
-        }
-      },
-      currentBrushSize: brushSize.value,
-      maxBrushSize: 10,
-      maxLayers: state.layers.length,
+    return PixelDrawShortcutsWrapper(
+      shortcutsFocusNode: _shortcutsFocusNode,
+      currentTool: currentTool,
+      brushSize: brushSize,
+      gridScale: gridScale,
+      gridOffset: gridOffset,
+      state: state,
+      notifier: notifier,
+      handleExport: handleExport,
+      setZoomFit: _setZoomFit,
+      setZoom100: _setZoom100,
+      showImportDialog: showImportDialog,
+      showColorPicker: showColorPicker,
+      toggleUI: _toggleUI,
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         body: SafeArea(
