@@ -197,7 +197,6 @@ class PixelCanvasController extends ChangeNotifier {
       return;
     }
 
-    // Create temporary pixel buffer from preview pixels
     final tempPixels = Uint32List(width * height);
 
     for (final point in _previewPixels) {
@@ -284,7 +283,6 @@ class PixelCanvasController extends ChangeNotifier {
       }
     }
 
-    // Add preview pixels to current layer
     if (_previewPixels.isNotEmpty) {
       _cachedPixels = _mergePixelsWithPoints(_cachedPixels, _previewPixels);
     }

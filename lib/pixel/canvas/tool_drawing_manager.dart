@@ -29,7 +29,6 @@ class ToolDrawingManager {
   late final SelectionUtils _selectionUtils;
   late final ShapeUtils _shapeUtils;
 
-  // Tool instances
   late final FillTool _fillTool;
   late final PencilTool _pencilTool;
   late final PenTool _penTool;
@@ -134,7 +133,6 @@ class ToolDrawingManager {
   void handleCurveTap(PixelDrawDetails details, PixelCanvasController controller) {
     _curveTool.onStart(details);
 
-    // Update controller with curve state for UI feedback
     if (_curveTool.hasStartPoint && _curveTool.hasEndPoint) {
       controller.setCurvePoints(
         _curveTool.startPoint,
@@ -148,7 +146,6 @@ class ToolDrawingManager {
     if (_curveTool.isDefiningCurve) {
       _curveTool.onMove(details);
 
-      // Update controller with current curve state
       controller.setCurvePoints(
         _curveTool.startPoint,
         _curveTool.endPoint,
@@ -158,9 +155,7 @@ class ToolDrawingManager {
   }
 
   void resetCurveTool() {
-    // Reset the curve tool state
     if (_curveTool.hasStartPoint || _curveTool.hasEndPoint) {
-      // Create a new instance to reset state
       _curveTool = CurveTool();
     }
   }
@@ -183,17 +178,14 @@ class ToolDrawingManager {
     if (penPoints.isNotEmpty) {
       final startPoint = penPoints[0];
       if ((position - startPoint).distance <= closeThreshold) {
-        // Close the path
         penPoints.add(startPoint);
         _finalizePenPath(penPoints, details, controller);
         onPathClosed?.call();
       } else {
-        // Add new point
         penPoints.add(position);
         controller.setPenPoints(penPoints);
       }
     } else {
-      // Start new path
       penPoints.add(position);
       controller.setPenPoints(penPoints);
       controller.setDrawingPenPath(true);
@@ -275,7 +267,6 @@ class ToolDrawingManager {
         }).toList();
   }
 
-  /// Generate brush stroke pixels
   List<PixelPoint<int>> generateBrushStroke(
     Offset startPos,
     Offset endPos,
@@ -310,7 +301,6 @@ class ToolDrawingManager {
     return filterPointsBySelection(pixels);
   }
 
-  /// Generate spray paint pixels
   List<PixelPoint<int>> generateSprayPixels(
     Offset position,
     int brushSize,
@@ -340,7 +330,6 @@ class ToolDrawingManager {
     return filterPointsBySelection(pixels);
   }
 
-  /// Generate shape preview pixels
   List<PixelPoint<int>> generateShapePreview(
     PixelTool tool,
     Offset startPos,

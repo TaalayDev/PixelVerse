@@ -126,17 +126,6 @@ class _PixelCanvasState extends State<PixelCanvas> {
       width: widget.width,
       height: widget.height,
       onColorPicked: widget.onColorPicked,
-      // onSelectionChanged: (selection) {
-      //   _controller.setSelection(selection);
-      //   if (selection == null) {
-      //     widget.onSelectionChanged!(selection);
-      //   }
-      // },
-      // onMoveSelection: (selection) {
-      //   _controller.setSelection(selection);
-
-      //   widget.onMoveSelection?.call(selection);
-      // },
       onSelectionEnd: (selection) {
         final length = _controller.selectionPoints.length;
         if (length < 2) {
@@ -221,16 +210,14 @@ class _PixelCanvasState extends State<PixelCanvas> {
     List<PixelPoint<int>> previewPixels;
 
     if (widget.currentTool == PixelTool.sprayPaint) {
-      // Generate spray preview for hover
       previewPixels = _toolManager.generateSprayPixels(
         position,
         widget.brushSize,
         widget.sprayIntensity,
-        widget.currentColor.withOpacity(0.5), // Semi-transparent for preview
+        widget.currentColor.withOpacity(0.5),
         context.size ?? Size.zero,
       );
     } else {
-      // Use existing brush stroke for other tools
       previewPixels = _toolManager.generateBrushStroke(
         position,
         position,
@@ -341,7 +328,6 @@ class _PixelCanvasState extends State<PixelCanvas> {
     );
   }
 
-  // Update the Listener onPointerDown to handle curve tool
   void _handlePointerDown(PointerDownEvent event) {
     if (widget.currentTool == PixelTool.curve) {
       _handleCurveToolInteraction(event.localPosition);
@@ -354,7 +340,6 @@ class _PixelCanvasState extends State<PixelCanvas> {
     }
   }
 
-// Update the Listener onPointerMove to handle curve tool
   void _handlePointerMove(PointerMoveEvent event) {
     if (widget.currentTool == PixelTool.curve && _toolManager.isCurveDefining) {
       final details = _createDrawDetails(event.localPosition);
@@ -373,13 +358,11 @@ class _PixelCanvasState extends State<PixelCanvas> {
 
     final details = _createDrawDetails(position);
 
-    // Handle curve tool tap
     _toolManager.handleCurveTap(details, _controller);
 
-    // Check if we need to finish the drawing
     if (!_toolManager.isCurveActive) {
-      // Curve was completed
       _gestureHandler.finishDrawing();
+      _controller.clearCurvePoints();
     }
   }
 

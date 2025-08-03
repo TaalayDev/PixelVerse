@@ -1,11 +1,10 @@
-import 'dart:math' as math;
 import 'dart:ui';
 
 import '../pixel_point.dart';
 import '../tools.dart';
+import 'eraser_tool.dart';
 
 /// Tool for drawing smooth curves using Bézier curves
-/// User creates two points, then moves mouse to define the curve direction
 class CurveTool extends Tool {
   List<PixelPoint<int>> _currentPixels = [];
 
@@ -19,32 +18,35 @@ class CurveTool extends Tool {
 
   CurveTool() : super(PixelTool.curve);
 
+  bool get hasStartPoint => _hasStartPoint;
+  bool get hasEndPoint => _hasEndPoint;
+  bool get isDefiningCurve => _isDefiningCurve;
+  Offset? get startPoint => _startPoint;
+  Offset? get endPoint => _endPoint;
+  Offset? get controlPoint => _controlPoint;
+
   @override
   void onStart(PixelDrawDetails details) {
     final position = details.position;
 
     if (!_hasStartPoint) {
-      // Set the first point
       _startPoint = position;
       _hasStartPoint = true;
       _currentPixels.clear();
 
       // Add a single pixel at start point for visual feedback
-      final pixelPos = details.pixelPosition;
+      final pixelPos = details.pixelPosition.copyWith(color: 0x99000000);
       if (_isValidPoint(pixelPos, details.width, details.height)) {
         _currentPixels.add(pixelPos);
         details.onPixelsUpdated(_currentPixels);
       }
     } else if (!_hasEndPoint) {
-      // Set the second point
       _endPoint = position;
       _hasEndPoint = true;
       _isDefiningCurve = true;
 
-      // Draw straight line between start and end for now
       _updateCurvePreview(details, position);
     } else if (_isDefiningCurve) {
-      // Finalize the curve
       _controlPoint = position;
       _finalizeCurve(details);
     }
@@ -53,16 +55,12 @@ class CurveTool extends Tool {
   @override
   void onMove(PixelDrawDetails details) {
     if (_hasStartPoint && _hasEndPoint && _isDefiningCurve) {
-      // Update curve preview as mouse moves
       _updateCurvePreview(details, details.position);
     }
   }
 
   @override
-  void onEnd(PixelDrawDetails details) {
-    // This tool uses clicks rather than drag, so onEnd doesn't finalize
-    // The curve is finalized in onStart when the third click happens
-  }
+  void onEnd(PixelDrawDetails details) {}
 
   void _updateCurvePreview(PixelDrawDetails details, Offset currentPosition) {
     if (_startPoint == null || _endPoint == null) return;
@@ -70,7 +68,6 @@ class CurveTool extends Tool {
     _controlPoint = currentPosition;
     _currentPixels.clear();
 
-    // Generate curve points using quadratic Bézier curve
     final curvePoints = _generateBezierCurve(
       _startPoint!,
       _controlPoint!,
@@ -80,7 +77,6 @@ class CurveTool extends Tool {
       details.height,
     );
 
-    // Apply stroke width if needed
     List<PixelPoint<int>> finalPixels = [];
     if (details.strokeWidth == 1) {
       finalPixels = curvePoints;
@@ -88,7 +84,6 @@ class CurveTool extends Tool {
       finalPixels = _applyStrokeWidth(curvePoints, details);
     }
 
-    // Apply modifier if present
     if (details.modifier != null) {
       List<PixelPoint<int>> modifiedPixels = [];
       for (final point in finalPixels) {
@@ -108,10 +103,8 @@ class CurveTool extends Tool {
   }
 
   void _finalizeCurve(PixelDrawDetails details) {
-    // The curve is already drawn in _currentPixels, just update it one final time
     details.onPixelsUpdated(_currentPixels);
 
-    // Reset state for next curve
     _reset();
   }
 
@@ -125,7 +118,6 @@ class CurveTool extends Tool {
     _currentPixels.clear();
   }
 
-  /// Generate points along a quadratic Bézier curve
   List<PixelPoint<int>> _generateBezierCurve(
     Offset start,
     Offset control,
@@ -138,9 +130,8 @@ class CurveTool extends Tool {
     final pixelWidth = canvasSize.width / canvasWidth;
     final pixelHeight = canvasSize.height / canvasHeight;
 
-    // Calculate the number of steps based on curve length
     final curveLength = _estimateCurveLength(start, control, end);
-    final steps = (curveLength * 2).ceil().clamp(10, 200); // Adaptive resolution
+    final steps = (curveLength * 2).ceil().clamp(10, 200);
 
     for (int i = 0; i <= steps; i++) {
       final t = i / steps;
@@ -156,7 +147,6 @@ class CurveTool extends Tool {
       )) {
         final pixelPoint = PixelPoint(pixelX, pixelY, color: 0);
 
-        // Avoid duplicate consecutive points
         if (points.isEmpty || points.last.x != pixelPoint.x || points.last.y != pixelPoint.y) {
           points.add(pixelPoint);
         }
@@ -166,7 +156,6 @@ class CurveTool extends Tool {
     return points;
   }
 
-  /// Calculate a point on a quadratic Bézier curve
   Offset _quadraticBezier(Offset p0, Offset p1, Offset p2, double t) {
     final oneMinusT = 1 - t;
     final x = oneMinusT * oneMinusT * p0.dx + 2 * oneMinusT * t * p1.dx + t * t * p2.dx;
@@ -174,16 +163,13 @@ class CurveTool extends Tool {
     return Offset(x, y);
   }
 
-  /// Estimate the length of the curve for adaptive resolution
   double _estimateCurveLength(Offset start, Offset control, Offset end) {
-    // Approximate using the control polygon
     final d1 = (control - start).distance;
     final d2 = (end - control).distance;
     final d3 = (end - start).distance;
     return (d1 + d2 + d3) / 2;
   }
 
-  /// Apply stroke width to curve points
   List<PixelPoint<int>> _applyStrokeWidth(
     List<PixelPoint<int>> curvePoints,
     PixelDrawDetails details,
@@ -222,12 +208,4 @@ class CurveTool extends Tool {
   bool _isValidPoint(PixelPoint<int> point, int width, int height) {
     return point.x >= 0 && point.x < width && point.y >= 0 && point.y < height;
   }
-
-  // Getters for current state (useful for UI feedback)
-  bool get hasStartPoint => _hasStartPoint;
-  bool get hasEndPoint => _hasEndPoint;
-  bool get isDefiningCurve => _isDefiningCurve;
-  Offset? get startPoint => _startPoint;
-  Offset? get endPoint => _endPoint;
-  Offset? get controlPoint => _controlPoint;
 }
