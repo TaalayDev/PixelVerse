@@ -42,6 +42,7 @@ class AuthInterceptor extends Interceptor {
           return;
         }
       } catch (e) {
+        print('Token refresh failed: $e');
         // Refresh failed, clear token and proceed with error
         _localStorage.clearToken();
       }

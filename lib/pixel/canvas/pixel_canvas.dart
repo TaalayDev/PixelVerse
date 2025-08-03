@@ -209,6 +209,7 @@ class _PixelCanvasState extends State<PixelCanvas> {
       PixelTool.rectangle,
       PixelTool.circle,
       PixelTool.sprayPaint,
+      PixelTool.curve,
     ].contains(tool);
   }
 
@@ -252,21 +253,13 @@ class _PixelCanvasState extends State<PixelCanvas> {
             fit: StackFit.expand,
             children: [
               Listener(
-                onPointerDown: (event) {
-                  _gestureHandler.handlePointerDown(
-                    event,
-                    widget.currentTool,
-                    _createDrawDetails(event.localPosition),
-                  );
-                },
-                onPointerMove: (event) {
-                  _gestureHandler.handlePointerMove(
-                    event,
-                    widget.currentTool,
-                    _createDrawDetails(event.localPosition),
-                  );
-                },
+                onPointerDown: _handlePointerDown,
+                onPointerMove: _handlePointerMove,
                 onPointerUp: (event) {
+                  if (widget.currentTool == PixelTool.curve) {
+                    return;
+                  }
+
                   _gestureHandler.handlePointerUp(
                     event,
                     widget.currentTool,
@@ -281,7 +274,12 @@ class _PixelCanvasState extends State<PixelCanvas> {
                     }
 
                     _controller.setHoverPosition(event.localPosition);
-                    _updateHoverPreview(event.localPosition);
+                    if (widget.currentTool == PixelTool.curve && _toolManager.isCurveDefining) {
+                      final details = _createDrawDetails(event.localPosition);
+                      _toolManager.handleCurveMove(details, _controller);
+                    } else {
+                      _updateHoverPreview(event.localPosition);
+                    }
                   },
                   onExit: (event) {
                     _controller.setHoverPosition(null);
@@ -341,6 +339,48 @@ class _PixelCanvasState extends State<PixelCanvas> {
         }
       },
     );
+  }
+
+  // Update the Listener onPointerDown to handle curve tool
+  void _handlePointerDown(PointerDownEvent event) {
+    if (widget.currentTool == PixelTool.curve) {
+      _handleCurveToolInteraction(event.localPosition);
+    } else {
+      _gestureHandler.handlePointerDown(
+        event,
+        widget.currentTool,
+        _createDrawDetails(event.localPosition),
+      );
+    }
+  }
+
+// Update the Listener onPointerMove to handle curve tool
+  void _handlePointerMove(PointerMoveEvent event) {
+    if (widget.currentTool == PixelTool.curve && _toolManager.isCurveDefining) {
+      final details = _createDrawDetails(event.localPosition);
+      _toolManager.handleCurveMove(details, _controller);
+    } else {
+      _gestureHandler.handlePointerMove(
+        event,
+        widget.currentTool,
+        _createDrawDetails(event.localPosition),
+      );
+    }
+  }
+
+  void _handleCurveToolInteraction(Offset position) {
+    if (widget.currentTool != PixelTool.curve) return;
+
+    final details = _createDrawDetails(position);
+
+    // Handle curve tool tap
+    _toolManager.handleCurveTap(details, _controller);
+
+    // Check if we need to finish the drawing
+    if (!_toolManager.isCurveActive) {
+      // Curve was completed
+      _gestureHandler.finishDrawing();
+    }
   }
 
   Modifier? _getModifier() {

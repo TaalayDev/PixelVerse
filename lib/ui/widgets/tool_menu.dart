@@ -1,10 +1,10 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
 import '../../data/models/subscription_model.dart';
 import '../../l10n/strings.dart';
 import '../../pixel/tools.dart';
+import 'app_icon.dart';
 import 'subscription/feature_gate.dart';
 
 class ToolMenu extends StatelessWidget {
@@ -39,29 +39,29 @@ class ToolMenu extends StatelessWidget {
             spacing: 15,
             children: [
               IconButton(
-                icon: Icon(
-                  Icons.edit,
+                icon: AppIcon(
+                  AppIcons.pencil,
                   color: tool == PixelTool.pencil ? Colors.blue : null,
                 ),
                 onPressed: () => onSelectTool(PixelTool.pencil),
               ),
               IconButton(
-                icon: Icon(
-                  Icons.brush,
+                icon: AppIcon(
+                  AppIcons.brush,
                   color: tool == PixelTool.brush ? Colors.blue : null,
                 ),
                 onPressed: () => onSelectTool(PixelTool.brush),
               ),
               IconButton(
-                icon: Icon(
-                  Icons.format_color_fill,
+                icon: AppIcon(
+                  AppIcons.fill,
                   color: tool == PixelTool.fill ? Colors.blue : null,
                 ),
                 onPressed: () => onSelectTool(PixelTool.fill),
               ),
               IconButton(
-                icon: Icon(
-                  Fontisto.eraser,
+                icon: AppIcon(
+                  AppIcons.eraser,
                   color: tool == PixelTool.eraser ? Colors.blue : null,
                 ),
                 onPressed: () => onSelectTool(PixelTool.eraser),
@@ -74,8 +74,8 @@ class ToolMenu extends StatelessWidget {
               ProBadge(
                 show: !subscription.isPro,
                 child: IconButton(
-                  icon: Icon(
-                    Icons.crop,
+                  icon: AppIcon(
+                    AppIcons.select,
                     color: tool == PixelTool.select ? Colors.blue : null,
                   ),
                   onPressed: !subscription.isPro ? null : () => onSelectTool(PixelTool.select),
@@ -84,11 +84,21 @@ class ToolMenu extends StatelessWidget {
               ProBadge(
                 show: !subscription.isPro,
                 child: IconButton(
-                  icon: Icon(
-                    CupertinoIcons.pencil,
+                  icon: AppIcon(
+                    AppIcons.pen,
                     color: tool == PixelTool.pen ? Colors.blue : null,
                   ),
                   onPressed: !subscription.isPro ? null : () => onSelectTool(PixelTool.pen),
+                ),
+              ),
+              ProBadge(
+                show: !subscription.isPro,
+                child: IconButton(
+                  icon: AppIcon(
+                    AppIcons.curved_connector,
+                    color: tool == PixelTool.curve ? Colors.blue : null,
+                  ),
+                  onPressed: !subscription.isPro ? null : () => onSelectTool(PixelTool.curve),
                 ),
               ),
               ProBadge(

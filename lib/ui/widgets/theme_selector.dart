@@ -38,8 +38,6 @@ class ThemeSelector extends HookConsumerWidget {
       ThemeType.values.where((type) => !_lockedThemeTypes.contains(type) || subscription.isPro).toList(),
     );
 
-    debugPrint('Unlocked themes: ${unlockedThemeTypes.value.map((e) => e.displayName).join(', ')}');
-
     return PopupMenuButton<ThemeType>(
       tooltip: 'Theme Selector',
       icon: Icon(

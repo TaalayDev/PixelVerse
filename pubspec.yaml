@@ -1,7 +1,7 @@
 name: pixelverse
 description: "A new Flutter project."
 
-version: 1.2.5+14
+version: 1.2.6+15
 
 environment:
   sdk: ">=3.4.4 <4.0.0"
@@ -91,6 +91,7 @@ dependencies:
   window_manager: ^0.4.3
 
   google_mobile_ads: ^5.2.0
+  flutter_box_transform: ^0.4.7
 
 
 dependency_overrides:

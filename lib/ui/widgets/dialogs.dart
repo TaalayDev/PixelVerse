@@ -114,42 +114,48 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
       maxChildSize: 0.95,
       expand: false,
       builder: (context, scrollController) {
-        return Column(
-          children: [
-            // Handle bar
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            // Title
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        return CustomScrollView(
+          controller: scrollController,
+          slivers: [
+            SliverToBoxAdapter(
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    'Save',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ],
               ),
             ),
-            const Divider(),
-            // Content
-            Expanded(
-              child: ListView(
-                controller: scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: Row(
+                  children: [
+                    Text(
+                      'Save',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SliverToBoxAdapter(child: Divider()),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
                   RadioListTile(
                     title: const Text('PNG'),
                     value: 'png',
@@ -261,14 +267,12 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                           controller: widthController,
                           keyboardType: TextInputType.number,
                           onChanged: (value) {
-                            setState(() {
-                              width = double.tryParse(value) ?? widget.state.width.toDouble();
+                            width = double.tryParse(value) ?? widget.state.width.toDouble();
 
-                              double originalRatio = widget.state.width / widget.state.height;
-                              height = width / originalRatio;
+                            double originalRatio = widget.state.width / widget.state.height;
+                            height = width / originalRatio;
 
-                              heightController.text = height.toString();
-                            });
+                            heightController.text = height.toString();
                           },
                         ),
                       ),
@@ -281,13 +285,11 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                           controller: heightController,
                           keyboardType: TextInputType.number,
                           onChanged: (value) {
-                            setState(() {
-                              height = double.tryParse(value) ?? widget.state.height.toDouble();
-                              double originalRatio = widget.state.width / widget.state.height;
-                              width = height / originalRatio;
+                            height = double.tryParse(value) ?? widget.state.height.toDouble();
+                            double originalRatio = widget.state.width / widget.state.height;
+                            width = height / originalRatio;
 
-                              widthController.text = width.toString();
-                            });
+                            widthController.text = width.toString();
                           },
                         ),
                       ),
@@ -341,45 +343,47 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                ],
+                ]),
               ),
             ),
             // Action buttons at the bottom
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancel'),
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    onPressed: () {
-                      if (format == 'sprite-sheet') {
-                        _savePreviewImage();
-                        return;
-                      }
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      onPressed: () {
+                        if (format == 'sprite-sheet') {
+                          _savePreviewImage();
+                          return;
+                        }
 
-                      widget.onSave({
-                        'format': format,
-                        'transparent': transparent,
-                        'backgroundColor': backgroundColor.value,
-                        'exportWidth': width,
-                        'exportHeight': height,
-                        if (format == 'sprite-sheet')
-                          'spriteSheetOptions': {
-                            'columns': spriteSheetColumns,
-                            'spacing': spriteSheetSpacing,
-                            'includeAllFrames': includeAllFrames,
-                          },
-                      });
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('Save'),
-                  ),
-                ],
+                        widget.onSave({
+                          'format': format,
+                          'transparent': transparent,
+                          'backgroundColor': backgroundColor.value,
+                          'exportWidth': width,
+                          'exportHeight': height,
+                          if (format == 'sprite-sheet')
+                            'spriteSheetOptions': {
+                              'columns': spriteSheetColumns,
+                              'spacing': spriteSheetSpacing,
+                              'includeAllFrames': includeAllFrames,
+                            },
+                        });
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Save'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

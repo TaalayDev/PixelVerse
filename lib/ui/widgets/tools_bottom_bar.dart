@@ -9,6 +9,7 @@ import '../../data/models/subscription_model.dart';
 import '../../pixel/pixel_draw_state.dart';
 import '../../pixel/tools.dart';
 import '../../pixel/providers/pixel_notifier_provider.dart';
+import 'app_icon.dart';
 import 'color_palette_panel.dart';
 import 'layers_panel.dart';
 import 'styled_tool_bottom_sheet.dart';
@@ -47,12 +48,13 @@ class ToolsBottomBar extends HookWidget {
     }, [state]);
 
     const extraTools = {
-      PixelTool.sprayPaint: (MaterialCommunityIcons.spray, 'Spray'),
-      PixelTool.line: (Icons.show_chart, 'Line'),
-      PixelTool.circle: (Icons.radio_button_unchecked, 'Circle'),
-      PixelTool.rectangle: (Icons.crop_square, 'Rectangle'),
-      PixelTool.pen: (CupertinoIcons.pencil, 'Pen'),
-      PixelTool.select: (Icons.crop, 'Select'),
+      PixelTool.sprayPaint: (AppIcons.spray, 'Spray'),
+      PixelTool.line: (AppIcons.line, 'Line'),
+      PixelTool.circle: (AppIcons.circle, 'Circle'),
+      PixelTool.rectangle: (AppIcons.rectangle, 'Rectangle'),
+      PixelTool.pen: (AppIcons.pencil, 'Pen'),
+      PixelTool.select: (AppIcons.select, 'Select'),
+      PixelTool.curve: (AppIcons.curved_connector, 'Curve'),
     };
 
     return BottomAppBar(
@@ -76,7 +78,7 @@ class ToolsBottomBar extends HookWidget {
                     final label = entry.value.$2;
 
                     return IconButton(
-                      icon: Icon(iconData),
+                      icon: AppIcon(iconData),
                       color: currentTool.value == tool ? Colors.blue : null,
                       onPressed: () {
                         currentTool.value = tool;
@@ -93,21 +95,21 @@ class ToolsBottomBar extends HookWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.edit),
+                    icon: const AppIcon(AppIcons.pencil),
                     color: currentTool.value == PixelTool.pencil ? Colors.blue : null,
                     onPressed: () async {
                       currentTool.value = PixelTool.pencil;
                     },
                   ),
                   IconButton(
-                    icon: const Icon(Fontisto.eraser),
+                    icon: const AppIcon(AppIcons.eraser),
                     color: currentTool.value == PixelTool.eraser ? Colors.blue : null,
                     onPressed: () {
                       currentTool.value = PixelTool.eraser;
                     },
                   ),
                   IconButton(
-                    icon: const Icon(Icons.format_color_fill),
+                    icon: const AppIcon(AppIcons.fill),
                     color: currentTool.value == PixelTool.fill ? Colors.blue : null,
                     onPressed: () {
                       currentTool.value = PixelTool.fill;
@@ -152,7 +154,7 @@ class ToolsBottomBar extends HookWidget {
                     },
                   ),
                   IconButton(
-                    icon: const Icon(Icons.layers),
+                    icon: const AppIcon(AppIcons.layers),
                     onPressed: () {
                       showModalBottomSheet(
                         context: context,

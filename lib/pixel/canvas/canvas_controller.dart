@@ -35,6 +35,12 @@ class PixelCanvasController extends ChangeNotifier {
   Uint32List _processedPreviewPixels = Uint32List(0);
   bool _previewEffectsEnabled = true;
 
+  // Curve state
+  Offset? _curveStartPoint;
+  Offset? _curveEndPoint;
+  Offset? _curveControlPoint;
+  bool _isDrawingCurve = false;
+
   Offset? _hoverPosition;
   List<PixelPoint<int>> _hoverPreviewPixels = [];
 
@@ -56,6 +62,11 @@ class PixelCanvasController extends ChangeNotifier {
   Offset get offset => _offset;
   List<PixelPoint<int>> get previewPixels => _previewPixels;
   Uint32List get cachedPixels => _cachedPixels;
+
+  Offset? get curveStartPoint => _curveStartPoint;
+  Offset? get curveEndPoint => _curveEndPoint;
+  Offset? get curveControlPoint => _curveControlPoint;
+  bool get isDrawingCurve => _isDrawingCurve;
 
   List<PixelPoint<int>> get selectionPoints => _selectionPoints;
 
@@ -140,6 +151,22 @@ class PixelCanvasController extends ChangeNotifier {
 
   void clearPreviewPixels() {
     _clearPreviewPixels();
+    notifyListeners();
+  }
+
+  void setCurvePoints(Offset? start, Offset? end, Offset? control) {
+    _curveStartPoint = start;
+    _curveEndPoint = end;
+    _curveControlPoint = control;
+    _isDrawingCurve = start != null;
+    notifyListeners();
+  }
+
+  void clearCurvePoints() {
+    _curveStartPoint = null;
+    _curveEndPoint = null;
+    _curveControlPoint = null;
+    _isDrawingCurve = false;
     notifyListeners();
   }
 
@@ -283,6 +310,11 @@ class PixelCanvasController extends ChangeNotifier {
     _isDrawingPenPath = false;
     _gradientStart = null;
     _gradientEnd = null;
+
+    _curveStartPoint = null;
+    _curveEndPoint = null;
+    _curveControlPoint = null;
+    _isDrawingCurve = false;
   }
 
   Uint32List _mergePixels(Uint32List base, Uint32List overlay) {

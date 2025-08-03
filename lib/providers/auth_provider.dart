@@ -55,6 +55,14 @@ class Auth extends _$Auth {
       await _checkCurrentUser();
     });
 
+    ref.read(localStorageProvider).addListener(StorageKey.token, (value) {
+      if (value == null) {
+        state = state.copyWith(isSignedIn: false, user: null);
+      } else {
+        // state = state.copyWith(status: AuthStatus.authenticated);
+      }
+    });
+
     return const AuthState();
   }
 

@@ -115,6 +115,15 @@ class CanvasGestureHandler {
       }
     } else if (currentTool == PixelTool.pen) {
       toolManager.handlePenTap(drawDetails, controller);
+    } else if (currentTool == PixelTool.curve) {
+      // Handle curve tool clicks
+      toolManager.handleCurveTap(drawDetails, controller);
+
+      // Check if curve is complete (3 clicks)
+      if (!toolManager.isCurveActive) {
+        // Curve was completed, finish drawing
+        _finishDrawing();
+      }
     } else if (currentTool == PixelTool.select) {
       toolManager.handleSelectionStart(drawDetails);
     } else if (currentTool != PixelTool.drag) {
@@ -131,6 +140,26 @@ class CanvasGestureHandler {
       _finishDrawing();
     } else if (currentTool == PixelTool.select) {
       toolManager.handleSelectionEnd(drawDetails);
+    }
+  }
+
+  void handleCurveTap(
+    TapDownDetails details,
+    PixelTool currentTool,
+    PixelDrawDetails drawDetails,
+  ) {
+    if (currentTool == PixelTool.curve) {
+      toolManager.handleCurveTap(drawDetails, controller);
+    }
+  }
+
+  void handleCurveMove(
+    Offset position,
+    PixelTool currentTool,
+    PixelDrawDetails drawDetails,
+  ) {
+    if (currentTool == PixelTool.curve) {
+      toolManager.handleCurveMove(drawDetails, controller);
     }
   }
 
@@ -159,6 +188,11 @@ class CanvasGestureHandler {
       final newOffset = details.focalPoint - _panStartPosition!;
       controller.setOffset(newOffset);
       onDrag?.call(controller.zoomLevel, newOffset);
+    } else if (currentTool == PixelTool.curve) {
+      // Handle curve control point movement
+      if (toolManager.isCurveDefining) {
+        toolManager.handleCurveMove(drawDetails, controller);
+      }
     } else if (_isDrawingActive) {
       toolManager.continueDrawing(currentTool, drawDetails);
     }
@@ -346,6 +380,11 @@ class CanvasGestureHandler {
       final newOffset = event.position - _panStartPosition!;
       controller.setOffset(newOffset);
       onDrag?.call(controller.zoomLevel, newOffset);
+    } else if (currentTool == PixelTool.curve) {
+      // Handle curve control point movement
+      if (toolManager.isCurveDefining) {
+        toolManager.handleCurveMove(drawDetails, controller);
+      }
     } else if (_isRawPointerDrawing) {
       toolManager.continueDrawing(currentTool, drawDetails);
     } else if (currentTool == PixelTool.select) {
@@ -500,6 +539,11 @@ class CanvasGestureHandler {
       }
       _resetPointerState();
     }
+  }
+
+  void resetCurveTool() {
+    toolManager.resetCurveTool();
+    controller.clearCurvePoints();
   }
 
   // Helper method to check if there are active drawing operations

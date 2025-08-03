@@ -23,7 +23,8 @@ enum PixelTool {
   drag,
   contour,
   pen,
-  lasso;
+  lasso,
+  curve;
 
   MouseCursor get cursor {
     switch (this) {
@@ -37,11 +38,11 @@ enum PixelTool {
         return SystemMouseCursors.click;
       case PixelTool.eyedropper:
         return SystemMouseCursors.precise;
-      case PixelTool.select:
-        return SystemMouseCursors.cell;
-      case PixelTool.line:
       case PixelTool.rectangle:
+      case PixelTool.select:
       case PixelTool.circle:
+      case PixelTool.curve:
+      case PixelTool.line:
         return SystemMouseCursors.cell;
       case PixelTool.gradient:
         return SystemMouseCursors.click;
@@ -102,6 +103,7 @@ abstract class Tool {
   bool get isContour => type == PixelTool.contour;
   bool get isPen => type == PixelTool.pen;
   bool get isLasso => type == PixelTool.lasso;
+  bool get isCurve => type == PixelTool.curve;
 
   void onStart(PixelDrawDetails details);
   void onMove(PixelDrawDetails details);

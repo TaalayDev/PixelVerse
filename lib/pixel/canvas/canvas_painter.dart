@@ -34,16 +34,14 @@ class PixelCanvasPainter extends CustomPainter {
     final pixelWidth = size.width / width;
     final pixelHeight = size.height / height;
 
-    // Draw grid background
     _drawGrid(canvas, size, pixelWidth, pixelHeight);
 
-    // Draw layers
     _drawLayers(canvas, size, pixelWidth, pixelHeight);
 
-    // Draw UI overlays
     // _drawSelectionRect(canvas, pixelWidth, pixelHeight);
     _drawGradient(canvas, size);
     _drawPenPath(canvas);
+    _drawCurveGuides(canvas, size);
 
     if (controller.previewPixels.isEmpty) {
       _drawHoverPreview(canvas, size, pixelWidth, pixelHeight);
@@ -58,7 +56,6 @@ class PixelCanvasPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.5 / controller.zoomLevel;
 
-    // Vertical lines
     for (int x = 0; x <= width; x++) {
       canvas.drawLine(
         Offset(x * pixelWidth, 0),
@@ -67,7 +64,6 @@ class PixelCanvasPainter extends CustomPainter {
       );
     }
 
-    // Horizontal lines
     for (int y = 0; y <= height; y++) {
       canvas.drawLine(
         Offset(0, y * pixelHeight),
@@ -354,7 +350,6 @@ class PixelCanvasPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0 / controller.zoomLevel;
 
-    // Find the bounding box of hover pixels
     int minX = hoverPixels.first.x;
     int maxX = hoverPixels.first.x;
     int minY = hoverPixels.first.y;
@@ -367,7 +362,6 @@ class PixelCanvasPainter extends CustomPainter {
       maxY = maxY > pixel.y ? maxY : pixel.y;
     }
 
-    // Draw border around the hover area
     final rect = Rect.fromLTWH(
       minX * pixelWidth,
       minY * pixelHeight,
@@ -440,6 +434,81 @@ class PixelCanvasPainter extends CustomPainter {
         canvas.drawLine(penPoints.last, penPoints.first, dashPaint);
       }
     }
+  }
+
+  void _drawCurveGuides(Canvas canvas, Size size) {
+    final curveStart = controller.curveStartPoint;
+    final curveEnd = controller.curveEndPoint;
+    final curveControl = controller.curveControlPoint;
+
+    if (!controller.isDrawingCurve || curveStart == null) return;
+
+    final guidePaint = Paint()
+      ..color = Colors.blue.withOpacity(0.7)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5 / controller.zoomLevel;
+
+    final pointPaint = Paint()
+      ..color = Colors.blue
+      ..style = PaintingStyle.fill;
+
+    final controlPaint = Paint()
+      ..color = Colors.red
+      ..style = PaintingStyle.fill;
+
+    final controlLinePaint = Paint()
+      ..color = Colors.red.withOpacity(0.5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0 / controller.zoomLevel;
+
+    // Draw start point
+    canvas.drawCircle(
+      curveStart,
+      3.0 / controller.zoomLevel,
+      pointPaint,
+    );
+
+    // Draw end point if it exists
+    if (curveEnd != null) {
+      canvas.drawCircle(
+        curveEnd,
+        3.0 / controller.zoomLevel,
+        pointPaint,
+      );
+
+      // Draw line between start and end points
+      canvas.drawLine(curveStart, curveEnd, guidePaint);
+
+      // Draw control point and guides if it exists
+      if (curveControl != null) {
+        // Draw control point
+        canvas.drawCircle(
+          curveControl,
+          4.0 / controller.zoomLevel,
+          controlPaint,
+        );
+
+        // Draw control lines
+        canvas.drawLine(curveStart, curveControl, controlLinePaint);
+        canvas.drawLine(curveEnd, curveControl, controlLinePaint);
+
+        // Draw the actual curve preview
+        _drawCurvePreview(canvas, curveStart, curveControl, curveEnd);
+      }
+    }
+  }
+
+  void _drawCurvePreview(Canvas canvas, Offset start, Offset control, Offset end) {
+    final curvePaint = Paint()
+      ..color = currentColor.withOpacity(0.8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0 / controller.zoomLevel;
+
+    final path = Path();
+    path.moveTo(start.dx, start.dy);
+    path.quadraticBezierTo(control.dx, control.dy, end.dx, end.dy);
+
+    canvas.drawPath(path, curvePaint);
   }
 
   @override

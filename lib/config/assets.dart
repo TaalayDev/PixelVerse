@@ -10,6 +10,8 @@ class Assets {
 
   static const images = (logo: 'assets/images/logo.png',);
 
-  static const vectors =
-      (reflectSymmetry: 'assets/vectors/reflect_symmetry.svg',);
+  static const vectors = (
+    pen: 'assets/vectors/pen.svg',
+    reflectSymmetry: 'assets/vectors/reflect_symmetry.svg',
+  );
 }

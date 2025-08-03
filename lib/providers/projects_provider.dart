@@ -52,7 +52,7 @@ class Projects extends _$Projects {
           ),
         );
 
-    ref.read(inAppReviewProvider).incrementSessionCount();
+    ref.read(inAppReviewProvider).incrementProjectCount();
 
     return project.copyWith(
       states: [state],

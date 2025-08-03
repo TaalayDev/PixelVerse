@@ -13,6 +13,7 @@ import '../../pixel/tools/shape_tool.dart';
 import '../../pixel/tools/shape_util.dart';
 import '../../data.dart';
 import '../pixel_point.dart';
+import '../tools/curve_tool.dart';
 import '../tools/spray_tool.dart';
 import 'canvas_controller.dart';
 
@@ -32,6 +33,7 @@ class ToolDrawingManager {
   late final FillTool _fillTool;
   late final PencilTool _pencilTool;
   late final PenTool _penTool;
+  late final CurveTool _curveTool;
   late final LineTool _lineTool;
   late final RectangleTool _rectangleTool;
   late final OvalToolBresenham _circleTool;
@@ -71,6 +73,7 @@ class ToolDrawingManager {
     _fillTool = FillTool();
     _pencilTool = PencilTool();
     _penTool = PenTool();
+    _curveTool = CurveTool();
     _lineTool = LineTool();
     _rectangleTool = RectangleTool();
     _circleTool = OvalToolBresenham();
@@ -87,6 +90,8 @@ class ToolDrawingManager {
         return _pencilTool;
       case PixelTool.pen:
         return _penTool;
+      case PixelTool.curve:
+        return _curveTool;
       case PixelTool.line:
         return _lineTool;
       case PixelTool.rectangle:
@@ -125,6 +130,46 @@ class ToolDrawingManager {
     final tool = _getTool(toolType);
     tool.onEnd(details);
   }
+
+  void handleCurveTap(PixelDrawDetails details, PixelCanvasController controller) {
+    _curveTool.onStart(details);
+
+    // Update controller with curve state for UI feedback
+    if (_curveTool.hasStartPoint && _curveTool.hasEndPoint) {
+      controller.setCurvePoints(
+        _curveTool.startPoint,
+        _curveTool.endPoint,
+        _curveTool.controlPoint,
+      );
+    }
+  }
+
+  void handleCurveMove(PixelDrawDetails details, PixelCanvasController controller) {
+    if (_curveTool.isDefiningCurve) {
+      _curveTool.onMove(details);
+
+      // Update controller with current curve state
+      controller.setCurvePoints(
+        _curveTool.startPoint,
+        _curveTool.endPoint,
+        details.position,
+      );
+    }
+  }
+
+  void resetCurveTool() {
+    // Reset the curve tool state
+    if (_curveTool.hasStartPoint || _curveTool.hasEndPoint) {
+      // Create a new instance to reset state
+      _curveTool = CurveTool();
+    }
+  }
+
+  bool get isCurveActive => _curveTool.hasStartPoint;
+  bool get isCurveDefining => _curveTool.isDefiningCurve;
+  Offset? get curveStartPoint => _curveTool.startPoint;
+  Offset? get curveEndPoint => _curveTool.endPoint;
+  Offset? get curveControlPoint => _curveTool.controlPoint;
 
   void handlePenTap(
     PixelDrawDetails details,

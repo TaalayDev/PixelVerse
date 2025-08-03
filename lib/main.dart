@@ -20,7 +20,10 @@ void main() async {
   await dotenv.load(fileName: ".env");
   await LocalStorage.init();
 
-  MobileAds.instance.initialize();
+  if (!kIsWeb && !_isDesktop()) {
+    MobileAds.instance.initialize();
+  }
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -33,7 +36,7 @@ void main() async {
 }
 
 Future<void> initWindowManager() async {
-  if (kIsWeb || (!Platform.isWindows && !Platform.isLinux && !Platform.isMacOS)) {
+  if (kIsWeb || !_isDesktop()) {
     return;
   }
 
@@ -51,4 +54,8 @@ Future<void> initWindowManager() async {
     await windowManager.show();
     await windowManager.focus();
   });
+}
+
+bool _isDesktop() {
+  return Platform.isWindows || Platform.isLinux || Platform.isMacOS;
 }
