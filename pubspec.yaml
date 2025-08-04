@@ -1,7 +1,7 @@
 name: pixelverse
 description: "A new Flutter project."
 
-version: 1.2.6+15
+version: 1.2.7+16
 
 environment:
   sdk: ">=3.4.4 <4.0.0"
