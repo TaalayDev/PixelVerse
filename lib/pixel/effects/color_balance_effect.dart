@@ -50,4 +50,34 @@ class ColorBalanceEffect extends Effect {
       'blue': 0.0, // Range: -1.0 to 1.0
     };
   }
+
+  @override
+  Map<String, dynamic> getMetadata() {
+    return {
+      'red': {
+        'label': 'Red Balance',
+        'description': 'Adjusts the red channel. Negative values decrease red, positive values increase red.',
+        'type': 'slider',
+        'min': -1.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+      'green': {
+        'label': 'Green Balance',
+        'description': 'Adjusts the green channel. Negative values decrease green, positive values increase green.',
+        'type': 'slider',
+        'min': -1.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+      'blue': {
+        'label': 'Blue Balance',
+        'description': 'Adjusts the blue channel. Negative values decrease blue, positive values increase blue.',
+        'type': 'slider',
+        'min': -1.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+    };
+  }
 }

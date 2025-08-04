@@ -2,8 +2,7 @@ part of 'effects.dart';
 
 /// Adds random noise to pixels
 class NoiseEffect extends Effect {
-  NoiseEffect([Map<String, dynamic>? params])
-      : super(EffectType.noise, params ?? {'amount': 0.1});
+  NoiseEffect([Map<String, dynamic>? params]) : super(EffectType.noise, params ?? {'amount': 0.1});
 
   @override
   Uint32List apply(Uint32List pixels, int width, int height) {
@@ -41,5 +40,19 @@ class NoiseEffect extends Effect {
   @override
   Map<String, dynamic> getDefaultParameters() {
     return {'amount': 0.1}; // Range: 0.0 to 1.0
+  }
+
+  @override
+  Map<String, dynamic> getMetadata() {
+    return {
+      'amount': {
+        'label': 'Amount',
+        'description': 'Controls the strength of the noise effect. 0 = no noise, 1 = maximum noise.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+    };
   }
 }

@@ -2,13 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
-import 'package:pixelverse/config/assets.dart';
-import 'package:pixelverse/data/models/subscription_model.dart';
-import 'package:pixelverse/ui/widgets/selection_menu.dart';
-import 'package:pixelverse/ui/widgets/subscription/feature_gate.dart';
 
 import '../../l10n/strings.dart';
+import '../../config/assets.dart';
+import '../../data/models/subscription_model.dart';
 import '../../pixel/tools.dart';
+import 'subscription/feature_gate.dart';
+import 'app_icon.dart';
 import 'menu_value_field.dart';
 
 class ToolBar extends StatelessWidget {
@@ -87,15 +87,8 @@ class ToolBar extends StatelessWidget {
                           PopupMenuItem(
                             value: 'import',
                             child: ListTile(
-                              leading: const Icon(Feather.upload),
+                              leading: const AppIcon(AppIcons.album),
                               title: Text(Strings.of(context).open),
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'projects',
-                            child: ListTile(
-                              leading: const Icon(Feather.list),
-                              title: Text(Strings.of(context).projects),
                             ),
                           ),
                           if (kIsWeb ||
@@ -104,22 +97,29 @@ class ToolBar extends StatelessWidget {
                             PopupMenuItem(
                               value: 'export',
                               child: ListTile(
-                                leading: const Icon(Feather.save),
+                                leading: const AppIcon(AppIcons.archive_down),
                                 title: Text(Strings.of(context).save),
                               ),
                             ),
                           PopupMenuItem(
                             value: 'exportAsImage',
                             child: ListTile(
-                              leading: const Icon(Feather.image),
+                              leading: const AppIcon(AppIcons.archive_down),
                               title: Text(Strings.of(context).saveAs),
                             ),
                           ),
                           PopupMenuItem(
                             value: 'share',
                             child: ListTile(
-                              leading: const Icon(Feather.share),
+                              leading: const AppIcon(AppIcons.share),
                               title: Text(Strings.of(context).share),
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'projects',
+                            child: ListTile(
+                              leading: const AppIcon(AppIcons.home),
+                              title: Text(Strings.of(context).projects),
                             ),
                           ),
                         ],

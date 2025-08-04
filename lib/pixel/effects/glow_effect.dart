@@ -25,6 +25,44 @@ class GlowEffect extends Effect {
   }
 
   @override
+  Map<String, dynamic> getMetadata() {
+    return {
+      'radius': {
+        'label': 'Glow Radius',
+        'description': 'Controls the radius of the glow effect.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+      'intensity': {
+        'label': 'Glow Intensity',
+        'description': 'Controls the intensity of the glow effect.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+      'threshold': {
+        'label': 'Brightness Threshold',
+        'description': 'Controls the brightness threshold for the glow effect.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+      'color': {
+        'label': 'Glow Color',
+        'description': 'Controls the color of the glow effect.',
+        'type': 'slider',
+        'min': 0,
+        'max': 1,
+        'divisions': 100,
+      },
+    };
+  }
+
+  @override
   Uint32List apply(Uint32List pixels, int width, int height) {
     // Get parameters
     final radiusFactor = parameters['radius'] as double;

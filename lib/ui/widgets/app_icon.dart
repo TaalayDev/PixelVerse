@@ -14,7 +14,12 @@ enum AppIcons {
   line,
   circle,
   rectangle,
-  layers
+  layers,
+  share,
+  home,
+  magic_stick,
+  album,
+  archive_down
 }
 
 class AppIcon extends StatelessWidget {

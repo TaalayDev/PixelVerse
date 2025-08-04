@@ -25,6 +25,10 @@ part 'halftone_effect.dart';
 part 'glow_effect.dart';
 part 'oil_paint_effect.dart';
 part 'gradient_effect.dart';
+part 'fire_effect.dart';
+part 'wood_effect.dart';
+part 'rain_effect.dart';
+part 'crystal_effect.dart';
 
 enum EffectType {
   brightness,
@@ -48,6 +52,10 @@ enum EffectType {
   glow,
   oilPaint,
   gradient,
+  fire,
+  wood,
+  rain,
+  crystal,
 }
 
 /// Base abstract class for all effects
@@ -62,8 +70,9 @@ abstract class Effect {
 
   /// Get the default parameters for this effect
   Map<String, dynamic> getDefaultParameters();
+  Map<String, dynamic> getMetadata();
 
-  String get name => type.toString().split('.').last;
+  String get name => type.name;
 
   @override
   String toString() => '$name: $parameters';
@@ -142,6 +151,14 @@ class EffectsManager {
         return OilPaintEffect(params);
       case EffectType.gradient:
         return GradientEffect(params);
+      case EffectType.fire:
+        return FireEffect(params);
+      case EffectType.wood:
+        return WoodEffect(params);
+      case EffectType.rain:
+        return RainEffect(params);
+      case EffectType.crystal:
+        return CrystalEffect(params);
     }
   }
 

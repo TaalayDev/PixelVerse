@@ -41,42 +41,39 @@ class EffectListItem extends StatelessWidget {
       child: InkWell(
         onTap: onSelect,
         borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: effectColor.withOpacity(0.2),
-              radius: 15,
-              child: Icon(effectIcon, color: effectColor, size: 18),
-            ),
-            title: Text(
-              effect.name.capitalize(),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            // subtitle: Text(
-            //   _formatParameters(effect.parameters),
-            //   style: const TextStyle(fontSize: 10),
-            // ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+        child: ListTile(
+          leading: CircleAvatar(
+            backgroundColor: effectColor.withOpacity(0.2),
+            radius: 15,
+            child: Icon(effectIcon, color: effectColor, size: 18),
+          ),
+          title: Text(
+            effect.name.capitalize(),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          // subtitle: Text(
+          //   _formatParameters(effect.parameters),
+          //   style: const TextStyle(fontSize: 10),
+          // ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.edit_outlined),
+                tooltip: 'Edit effect',
+                onPressed: onEdit,
+                iconSize: 16,
+              ),
+              if (showRemoveButton)
                 IconButton(
-                  icon: const Icon(Icons.edit_outlined),
-                  tooltip: 'Edit effect',
-                  onPressed: onEdit,
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  tooltip: 'Remove effect',
+                  onPressed: onRemove,
                   iconSize: 20,
                 ),
-                if (showRemoveButton)
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    tooltip: 'Remove effect',
-                    onPressed: onRemove,
-                    iconSize: 20,
-                  ),
-              ],
-            ),
+            ],
           ),
         ),
       ),
@@ -127,6 +124,14 @@ class EffectListItem extends StatelessWidget {
         return Icons.brush;
       case EffectType.gradient:
         return Icons.gradient;
+      case EffectType.rain:
+        return Icons.umbrella;
+      case EffectType.crystal:
+        return Icons.diamond;
+      case EffectType.fire:
+        return Icons.local_fire_department;
+      case EffectType.wood:
+        return Icons.nature_people;
       default:
         return Icons.auto_fix_high;
     }

@@ -25,6 +25,47 @@ class HalftoneEffect extends Effect {
   }
 
   @override
+  Map<String, dynamic> getMetadata() {
+    return {
+      'dotSize': {
+        'label': 'Dot Size',
+        'description': 'Controls the size of the dots.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+      'spacing': {
+        'label': 'Dot Spacing',
+        'description': 'Controls the spacing between dots.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+      'angle': {
+        'label': 'Dot Angle',
+        'description': 'Controls the rotation angle of the dot pattern.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+      'style': {
+        'label': 'Dot Style',
+        'description': 'Controls the style of the dots.',
+        'type': 'select',
+        'options': {
+          0: 'Circle',
+          1: 'Square',
+          2: 'Line',
+          3: 'Cross',
+        },
+      },
+    };
+  }
+
+  @override
   Uint32List apply(Uint32List pixels, int width, int height) {
     // Get parameters
     final dotSizeFactor = parameters['dotSize'] as double;

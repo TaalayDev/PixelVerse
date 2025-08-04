@@ -36,8 +36,7 @@ class VignetteEffect extends Effect {
         final distance = sqrt(distanceX * distanceX + distanceY * distanceY);
 
         // Calculate vignette factor (1.0 at center, decreasing toward edges)
-        final factor =
-            1.0 - (distance / maxDistance).clamp(0.0, 1.0) * intensity;
+        final factor = 1.0 - (distance / maxDistance).clamp(0.0, 1.0) * intensity;
 
         // Apply vignette
         final newR = (r * factor).round().clamp(0, 255);
@@ -54,5 +53,27 @@ class VignetteEffect extends Effect {
   @override
   Map<String, dynamic> getDefaultParameters() {
     return {'intensity': 0.5, 'size': 0.5}; // Range: 0.0 to 1.0
+  }
+
+  @override
+  Map<String, dynamic> getMetadata() {
+    return {
+      'intensity': {
+        'label': 'Intensity',
+        'description': 'How dark the vignette becomes at the edges.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+      'size': {
+        'label': 'Size',
+        'description': 'How far the vignette extends from the edges. Lower values create a larger bright center.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+    };
   }
 }

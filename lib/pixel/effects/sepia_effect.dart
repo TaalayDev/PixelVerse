@@ -2,8 +2,7 @@ part of 'effects.dart';
 
 /// Applies a sepia tone to pixels
 class SepiaEffect extends Effect {
-  SepiaEffect([Map<String, dynamic>? params])
-      : super(EffectType.sepia, params ?? {'intensity': 1.0});
+  SepiaEffect([Map<String, dynamic>? params]) : super(EffectType.sepia, params ?? {'intensity': 1.0});
 
   @override
   Uint32List apply(Uint32List pixels, int width, int height) {
@@ -40,5 +39,19 @@ class SepiaEffect extends Effect {
   @override
   Map<String, dynamic> getDefaultParameters() {
     return {'intensity': 1.0}; // Range: 0.0 to 1.0
+  }
+
+  @override
+  Map<String, dynamic> getMetadata() {
+    return {
+      'intensity': {
+        'label': 'Intensity',
+        'description': 'Controls the strength of the sepia tone effect. 0 = no effect, 1 = full sepia.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+    };
   }
 }

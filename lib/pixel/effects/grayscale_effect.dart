@@ -2,8 +2,7 @@ part of 'effects.dart';
 
 /// Converts pixels to grayscale
 class GrayscaleEffect extends Effect {
-  GrayscaleEffect([Map<String, dynamic>? params])
-      : super(EffectType.grayscale, params ?? {'intensity': 1.0});
+  GrayscaleEffect([Map<String, dynamic>? params]) : super(EffectType.grayscale, params ?? {'intensity': 1.0});
 
   @override
   Uint32List apply(Uint32List pixels, int width, int height) {
@@ -38,5 +37,19 @@ class GrayscaleEffect extends Effect {
   @override
   Map<String, dynamic> getDefaultParameters() {
     return {'intensity': 1.0}; // Range: 0.0 to 1.0
+  }
+
+  @override
+  Map<String, dynamic> getMetadata() {
+    return {
+      'intensity': {
+        'label': 'Intensity',
+        'description': 'Controls how much color is removed. 0 = original colors, 1 = full grayscale.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+    };
   }
 }

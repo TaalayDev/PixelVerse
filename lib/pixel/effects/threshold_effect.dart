@@ -2,8 +2,7 @@ part of 'effects.dart';
 
 /// Applies threshold to create high-contrast black and white
 class ThresholdEffect extends Effect {
-  ThresholdEffect([Map<String, dynamic>? params])
-      : super(EffectType.threshold, params ?? {'threshold': 0.5});
+  ThresholdEffect([Map<String, dynamic>? params]) : super(EffectType.threshold, params ?? {'threshold': 0.5});
 
   @override
   Uint32List apply(Uint32List pixels, int width, int height) {
@@ -36,5 +35,20 @@ class ThresholdEffect extends Effect {
   @override
   Map<String, dynamic> getDefaultParameters() {
     return {'threshold': 0.5}; // Range: 0.0 to 1.0
+  }
+
+  @override
+  Map<String, dynamic> getMetadata() {
+    return {
+      'threshold': {
+        'label': 'Threshold',
+        'description': 'The brightness level where pixels become white. '
+            'Pixels darker than this become black, brighter pixels become white.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+    };
   }
 }

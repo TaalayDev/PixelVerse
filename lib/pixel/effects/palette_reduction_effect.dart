@@ -22,12 +22,9 @@ class PaletteReductionEffect extends Effect {
     final levels = _calculateLevelsPerChannel(colors);
 
     // Error arrays for dithering
-    final List<List<double>> errorR =
-        List.generate(height, (_) => List.filled(width, 0.0));
-    final List<List<double>> errorG =
-        List.generate(height, (_) => List.filled(width, 0.0));
-    final List<List<double>> errorB =
-        List.generate(height, (_) => List.filled(width, 0.0));
+    final List<List<double>> errorR = List.generate(height, (_) => List.filled(width, 0.0));
+    final List<List<double>> errorG = List.generate(height, (_) => List.filled(width, 0.0));
+    final List<List<double>> errorB = List.generate(height, (_) => List.filled(width, 0.0));
 
     // Process each pixel
     for (int y = 0; y < height; y++) {
@@ -81,8 +78,7 @@ class PaletteReductionEffect extends Effect {
     return result;
   }
 
-  void _distributeError(List<List<double>> errorArray, double error, int x,
-      int y, int width, int height) {
+  void _distributeError(List<List<double>> errorArray, double error, int x, int y, int width, int height) {
     if (x + 1 < width) {
       errorArray[y][x + 1] += error * 7 / 16;
     }
@@ -126,6 +122,30 @@ class PaletteReductionEffect extends Effect {
     return {
       'colors': 8, // Range: 2 to 64
       'dithering': 0.0, // Range: 0.0 to 1.0
+    };
+  }
+
+  @override
+  Map<String, dynamic> getMetadata() {
+    return {
+      'colors': {
+        'label': 'Colors',
+        'description': 'Number of colors in the reduced palette. '
+            'Higher values allow more colors but reduce the pixel art effect.',
+        'type': 'slider',
+        'min': 2,
+        'max': 64,
+        'divisions': 62,
+      },
+      'dithering': {
+        'label': 'Dithering',
+        'description': 'Applies dithering to smooth color transitions. '
+            'Higher values create more pronounced dithering effects.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
     };
   }
 }

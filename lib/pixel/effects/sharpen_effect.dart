@@ -2,8 +2,7 @@ part of 'effects.dart';
 
 /// Sharpens the image by enhancing edges
 class SharpenEffect extends Effect {
-  SharpenEffect([Map<String, dynamic>? params])
-      : super(EffectType.sharpen, params ?? {'amount': 0.5});
+  SharpenEffect([Map<String, dynamic>? params]) : super(EffectType.sharpen, params ?? {'amount': 0.5});
 
   @override
   Uint32List apply(Uint32List pixels, int width, int height) {
@@ -57,8 +56,7 @@ class SharpenEffect extends Effect {
           final newG = totalG.round().clamp(0, 255);
           final newB = totalB.round().clamp(0, 255);
 
-          result[resultIndex] =
-              (centerA << 24) | (newR << 16) | (newG << 8) | newB;
+          result[resultIndex] = (centerA << 24) | (newR << 16) | (newG << 8) | newB;
         } else {
           result[resultIndex] = 0; // Transparent if center pixel is transparent
         }
@@ -71,5 +69,19 @@ class SharpenEffect extends Effect {
   @override
   Map<String, dynamic> getDefaultParameters() {
     return {'amount': 0.5}; // Range: 0.0 to 1.0
+  }
+
+  @override
+  Map<String, dynamic> getMetadata() {
+    return {
+      'amount': {
+        'label': 'Amount',
+        'description': 'How much sharpening to apply. Higher values create stronger edge enhancement.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+    };
   }
 }

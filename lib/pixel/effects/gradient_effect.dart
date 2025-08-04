@@ -28,6 +28,41 @@ class GradientEffect extends Effect {
   }
 
   @override
+  Map<String, dynamic> getMetadata() {
+    return {
+      'startColor': {
+        'label': 'Start Color',
+        'description': 'The color at the start of the gradient.',
+        'type': 'color',
+      },
+      'endColor': {
+        'label': 'End Color',
+        'description': 'The color at the end of the gradient.',
+        'type': 'color',
+      },
+      'direction': {
+        'label': 'Gradient Direction',
+        'description': 'The direction of the gradient.',
+        'type': 'select',
+        'options': {
+          0: 'Horizontal',
+          1: 'Vertical',
+          2: 'Diagonal',
+          3: 'Radial',
+        },
+      },
+      'colorSteps': {
+        'label': 'Color Steps',
+        'description': 'The number of color steps in the gradient.',
+        'type': 'slider',
+        'min': 2,
+        'max': 16,
+        'divisions': 14,
+      },
+    };
+  }
+
+  @override
   Uint32List apply(Uint32List pixels, int width, int height) {
     final result = Uint32List.fromList(pixels);
     final startColor = Color(parameters['startColor'] as int);

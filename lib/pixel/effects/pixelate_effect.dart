@@ -2,13 +2,11 @@ part of 'effects.dart';
 
 /// Creates a pixelated look by reducing detail
 class PixelateEffect extends Effect {
-  PixelateEffect([Map<String, dynamic>? params])
-      : super(EffectType.pixelate, params ?? {'blockSize': 2});
+  PixelateEffect([Map<String, dynamic>? params]) : super(EffectType.pixelate, params ?? {'blockSize': 2});
 
   @override
   Uint32List apply(Uint32List pixels, int width, int height) {
-    final blockSize =
-        (parameters['blockSize'] as int).clamp(1, min(width, height) ~/ 2);
+    final blockSize = (parameters['blockSize'] as int).clamp(1, min(width, height) ~/ 2);
     final result = Uint32List(pixels.length);
 
     for (int y = 0; y < height; y += blockSize) {
@@ -58,5 +56,19 @@ class PixelateEffect extends Effect {
   @override
   Map<String, dynamic> getDefaultParameters() {
     return {'blockSize': 2}; // Range: 1 to image size/2
+  }
+
+  @override
+  Map<String, dynamic> getMetadata() {
+    return {
+      'blockSize': {
+        'label': 'Block Size',
+        'description': 'Size of the pixel blocks. Larger values create more pixelated look.',
+        'type': 'slider',
+        'min': 1,
+        'max': 10,
+        'divisions': 9,
+      },
+    };
   }
 }

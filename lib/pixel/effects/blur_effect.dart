@@ -2,8 +2,7 @@ part of 'effects.dart';
 
 /// Applies blur to pixels
 class BlurEffect extends Effect {
-  BlurEffect([Map<String, dynamic>? params])
-      : super(EffectType.blur, params ?? {'radius': 1});
+  BlurEffect([Map<String, dynamic>? params]) : super(EffectType.blur, params ?? {'radius': 1});
 
   @override
   Uint32List apply(Uint32List pixels, int width, int height) {
@@ -45,8 +44,7 @@ class BlurEffect extends Effect {
           final avgG = (totalG / count).round();
           final avgB = (totalB / count).round();
 
-          result[resultIndex] =
-              (avgA << 24) | (avgR << 16) | (avgG << 8) | avgB;
+          result[resultIndex] = (avgA << 24) | (avgR << 16) | (avgG << 8) | avgB;
         } else {
           result[resultIndex] = 0; // Transparent if no valid pixels
         }
@@ -59,5 +57,19 @@ class BlurEffect extends Effect {
   @override
   Map<String, dynamic> getDefaultParameters() {
     return {'radius': 1}; // Range: 1 to 10
+  }
+
+  @override
+  Map<String, dynamic> getMetadata() {
+    return {
+      'radius': {
+        'label': 'Radius',
+        'description': 'Blur radius. Higher values create more blur.',
+        'type': 'slider',
+        'min': 1,
+        'max': 10,
+        'divisions': 9,
+      },
+    };
   }
 }

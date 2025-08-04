@@ -27,6 +27,52 @@ class OilPaintEffect extends Effect {
   }
 
   @override
+  Map<String, dynamic> getMetadata() {
+    return {
+      'brushSize': {
+        'label': 'Brush Size',
+        'description': 'Controls the size of the brush strokes.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+      'detail': {
+        'label': 'Detail',
+        'description': 'Controls the amount of detail preserved.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+      'textureAmount': {
+        'label': 'Texture Amount',
+        'description': 'Controls the intensity of the brush texture.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+      'colorBlending': {
+        'label': 'Color Blending',
+        'description': 'Controls how much colors mix.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+      'strokeDirection': {
+        'label': 'Stroke Direction',
+        'description': 'Controls the direction of the brush strokes.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+    };
+  }
+
+  @override
   Uint32List apply(Uint32List pixels, int width, int height) {
     // Get parameters
     final brushSizeFactor = parameters['brushSize'] as double;

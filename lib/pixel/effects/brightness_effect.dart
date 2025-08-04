@@ -2,8 +2,7 @@ part of 'effects.dart';
 
 /// Alters the brightness of pixels
 class BrightnessEffect extends Effect {
-  BrightnessEffect([Map<String, dynamic>? params])
-      : super(EffectType.brightness, params ?? {'value': 0.0});
+  BrightnessEffect([Map<String, dynamic>? params]) : super(EffectType.brightness, params ?? {'value': 0.0});
 
   @override
   Uint32List apply(Uint32List pixels, int width, int height) {
@@ -35,5 +34,20 @@ class BrightnessEffect extends Effect {
   @override
   Map<String, dynamic> getDefaultParameters() {
     return {'value': 0.0}; // Range: -1.0 to 1.0
+  }
+
+  @override
+  Map<String, dynamic> getMetadata() {
+    return {
+      'value': {
+        'label': 'Brightness',
+        'description':
+            'Adjusts the brightness of pixels. Positive values make the image brighter, negative values make it darker.',
+        'type': 'slider',
+        'min': -1.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+    };
   }
 }

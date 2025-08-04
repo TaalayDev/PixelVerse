@@ -18,6 +18,36 @@ class WatercolorEffect extends Effect {
   }
 
   @override
+  Map<String, dynamic> getMetadata() {
+    return {
+      'intensity': {
+        'label': 'Intensity',
+        'description': 'Controls how strong the watercolor effect is.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+      'spread': {
+        'label': 'Color Spread',
+        'description': 'Controls how much colors bleed into each other.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+      'texture': {
+        'label': 'Paper Texture',
+        'description': 'Controls the amount of paper texture simulation.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+    };
+  }
+
+  @override
   Uint32List apply(Uint32List pixels, int width, int height) {
     // Get parameters
     final intensity = parameters['intensity'] as double;

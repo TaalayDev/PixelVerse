@@ -2,14 +2,12 @@ part of 'effects.dart';
 
 /// Creates an embossed effect (3D-like relief)
 class EmbossEffect extends Effect {
-  EmbossEffect([Map<String, dynamic>? params])
-      : super(EffectType.emboss, params ?? {'strength': 1.0, 'direction': 0});
+  EmbossEffect([Map<String, dynamic>? params]) : super(EffectType.emboss, params ?? {'strength': 1.0, 'direction': 0});
 
   @override
   Uint32List apply(Uint32List pixels, int width, int height) {
     final strength = (parameters['strength'] as double).clamp(0.0, 5.0);
-    final direction =
-        (parameters['direction'] as int).clamp(0, 7); // 0-7 for 8 directions
+    final direction = (parameters['direction'] as int).clamp(0, 7); // 0-7 for 8 directions
     final result = Uint32List(pixels.length);
 
     // Direction vectors for embossing
@@ -76,9 +74,28 @@ class EmbossEffect extends Effect {
 
   @override
   Map<String, dynamic> getDefaultParameters() {
+    return {'strength': 1.0, 'direction': 0}; // strength: 0.0-5.0, direction: 0-7
+  }
+
+  @override
+  Map<String, dynamic> getMetadata() {
     return {
-      'strength': 1.0,
-      'direction': 0
-    }; // strength: 0.0-5.0, direction: 0-7
+      'strength': {
+        'label': 'Strength',
+        'description': 'Controls the depth of the emboss effect. Higher values create more pronounced 3D relief.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 5.0,
+        'divisions': 50,
+      },
+      'direction': {
+        'label': 'Direction',
+        'description': 'Light direction for the emboss effect (0=NW, 1=N, 2=NE, 3=W, 4=E, 5=SW, 6=S, 7=SE).',
+        'type': 'slider',
+        'min': 0,
+        'max': 7,
+        'divisions': 7,
+      },
+    };
   }
 }

@@ -89,11 +89,8 @@ class OutlineEffect extends Effect {
                 if (neighborA < threshold * 255) {
                   // Preserve original alpha for smooth outline
                   final outlineA = (outlineColor >> 24) & 0xFF;
-                  final alpha = (outlineA * (1.0 - distance / (thickness + 1)))
-                      .round()
-                      .clamp(0, 255);
-                  final finalColor =
-                      (alpha << 24) | (outlineColor & 0x00FFFFFF);
+                  final alpha = (outlineA * (1.0 - distance / (thickness + 1))).round().clamp(0, 255);
+                  final finalColor = (alpha << 24) | (outlineColor & 0x00FFFFFF);
 
                   result[neighborIndex] = finalColor;
                 }
@@ -113,6 +110,33 @@ class OutlineEffect extends Effect {
       'color': Colors.black.value, // Outline color
       'thickness': 1, // Range: 1 to 5 pixels
       'threshold': 0.5, // Alpha threshold (0.0 to 1.0)
+    };
+  }
+
+  @override
+  Map<String, dynamic> getMetadata() {
+    return {
+      'color': {
+        'label': 'Outline Color',
+        'description': 'Color of the outline effect.',
+        'type': 'color',
+      },
+      'thickness': {
+        'label': 'Outline Thickness',
+        'description': 'Thickness of the outline in pixels.',
+        'type': 'slider',
+        'min': 1,
+        'max': 5,
+        'divisions': 4,
+      },
+      'threshold': {
+        'label': 'Alpha Threshold',
+        'description': 'Alpha threshold for edge detection. Pixels below this value are considered transparent.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
     };
   }
 }

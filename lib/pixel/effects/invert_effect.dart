@@ -2,8 +2,7 @@ part of 'effects.dart';
 
 /// Inverts the colors of pixels
 class InvertEffect extends Effect {
-  InvertEffect([Map<String, dynamic>? params])
-      : super(EffectType.invert, params ?? {'intensity': 1.0});
+  InvertEffect([Map<String, dynamic>? params]) : super(EffectType.invert, params ?? {'intensity': 1.0});
 
   @override
   Uint32List apply(Uint32List pixels, int width, int height) {
@@ -40,5 +39,19 @@ class InvertEffect extends Effect {
   @override
   Map<String, dynamic> getDefaultParameters() {
     return {'intensity': 1.0}; // Range: 0.0 to 1.0
+  }
+
+  @override
+  Map<String, dynamic> getMetadata() {
+    return {
+      'intensity': {
+        'label': 'Intensity',
+        'description': 'Controls how strongly the invert effect is applied. 0 = no effect, 1 = full invert.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+    };
   }
 }

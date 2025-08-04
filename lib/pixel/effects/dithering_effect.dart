@@ -41,8 +41,7 @@ class DitheringEffect extends Effect {
     return result;
   }
 
-  void _applyBayerDithering(Uint32List pixels, int width, int height,
-      double intensity, int matrixSize) {
+  void _applyBayerDithering(Uint32List pixels, int width, int height, double intensity, int matrixSize) {
     // Bayer matrices for different sizes
     final bayerMatrix2x2 = [
       [0, 2],
@@ -109,15 +108,11 @@ class DitheringEffect extends Effect {
     }
   }
 
-  void _applyFloydSteinbergDithering(
-      Uint32List pixels, int width, int height, double intensity) {
+  void _applyFloydSteinbergDithering(Uint32List pixels, int width, int height, double intensity) {
     // Create error arrays for each color channel
-    final List<List<double>> errorR =
-        List.generate(height, (_) => List.filled(width, 0.0));
-    final List<List<double>> errorG =
-        List.generate(height, (_) => List.filled(width, 0.0));
-    final List<List<double>> errorB =
-        List.generate(height, (_) => List.filled(width, 0.0));
+    final List<List<double>> errorR = List.generate(height, (_) => List.filled(width, 0.0));
+    final List<List<double>> errorG = List.generate(height, (_) => List.filled(width, 0.0));
+    final List<List<double>> errorB = List.generate(height, (_) => List.filled(width, 0.0));
 
     // Reduced color palette (for a more visible effect)
     final levels = (2 + intensity * 5).round(); // 2-7 levels based on intensity
@@ -185,6 +180,32 @@ class DitheringEffect extends Effect {
       'pattern': 0,
       // Range: 0.0 to 1.0
       'intensity': 0.5,
+    };
+  }
+
+  @override
+  Map<String, dynamic> getMetadata() {
+    return {
+      'pattern': {
+        'label': 'Dithering Pattern',
+        'description': 'Select the dithering pattern to apply.',
+        'type': 'select',
+        'options': {
+          0: 'Bayer 2x2',
+          1: 'Bayer 4x4',
+          2: 'Bayer 8x8',
+          3: 'Floyd-Steinberg',
+        },
+      },
+      'intensity': {
+        'label': 'Intensity',
+        'description': 'Controls the strength of the dithering effect. '
+            'Higher values create more pronounced dithering.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
     };
   }
 }

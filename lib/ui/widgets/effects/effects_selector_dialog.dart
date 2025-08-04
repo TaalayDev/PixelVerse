@@ -309,6 +309,14 @@ class _EffectSelectorDialogState extends State<EffectSelectorDialog> {
         return Icons.brush;
       case EffectType.gradient:
         return Icons.gradient;
+      case EffectType.rain:
+        return Icons.umbrella;
+      case EffectType.crystal:
+        return Icons.diamond;
+      case EffectType.fire:
+        return Icons.local_fire_department;
+      case EffectType.wood:
+        return Icons.nature_people;
       default:
         return Icons.auto_fix_high;
     }
