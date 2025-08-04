@@ -29,6 +29,9 @@ part 'fire_effect.dart';
 part 'wood_effect.dart';
 part 'rain_effect.dart';
 part 'crystal_effect.dart';
+part 'stained_glass_effect.dart';
+part 'glitch_effect.dart';
+part 'metal_effect.dart';
 
 enum EffectType {
   brightness,
@@ -56,6 +59,9 @@ enum EffectType {
   wood,
   rain,
   crystal,
+  stainedGlass,
+  glitch,
+  metal,
 }
 
 /// Base abstract class for all effects
@@ -159,6 +165,12 @@ class EffectsManager {
         return RainEffect(params);
       case EffectType.crystal:
         return CrystalEffect(params);
+      case EffectType.stainedGlass:
+        return StainedGlassEffect(params);
+      case EffectType.glitch:
+        return GlitchEffect(params);
+      case EffectType.metal:
+        return MetalEffect(params);
     }
   }
 

@@ -1,249 +1,305 @@
 part of 'effects.dart';
 
+/// Effect that transforms pixels to look like realistic wood grain
 class WoodEffect extends Effect {
   WoodEffect([Map<String, dynamic>? parameters])
       : super(
-            EffectType.wood,
-            parameters ??
-                {
-                  'woodType': 0, // 0=Oak, 1=Pine, 2=Cherry, 3=Walnut
-                  'grainDirection': 0.0, // 0=horizontal, 0.5=diagonal, 1=vertical
-                  'grainIntensity': 0.6,
-                  'ringSpacing': 8.0,
-                  'irregularity': 0.3,
-                  'knotCount': 2,
-                  'brightness': 0.0,
-                });
+          EffectType.wood,
+          parameters ??
+              const {
+                'woodType': 0, // 0=Oak, 1=Pine, 2=Walnut, 3=Cherry, 4=Mahogany
+                'grainDirection': 0.0, // 0-1 maps to 0-360°
+                'grainIntensity': 0.7, // How pronounced the grain is
+                'knotCount': 0, // Number of knots to add
+                'ringSpacing': 8.0, // Distance between growth rings
+                'colorVariation': 0.5, // Random color variation
+              },
+        );
 
   @override
-  Map<String, dynamic> getDefaultParameters() => {
-        'woodType': 0,
-        'grainDirection': 0.0,
-        'grainIntensity': 0.6,
-        'ringSpacing': 8.0,
-        'irregularity': 0.3,
-        'knotCount': 2,
-        'brightness': 0.0,
-      };
+  Map<String, dynamic> getDefaultParameters() {
+    return {
+      'woodType': 0, // Wood species (0-4)
+      'grainDirection': 0.0, // Grain direction (0-1)
+      'grainIntensity': 0.7, // Grain intensity (0-1)
+      'knotCount': 0, // Number of knots (0-10)
+      'ringSpacing': 8.0, // Growth ring spacing (2-20)
+      'colorVariation': 0.5, // Color variation (0-1)
+    };
+  }
 
   @override
   Map<String, dynamic> getMetadata() {
     return {
       'woodType': {
         'label': 'Wood Type',
-        'description': 'Select the type of wood grain to apply.',
+        'description': 'Select the type of wood grain pattern.',
         'type': 'select',
         'options': {
           0: 'Oak',
           1: 'Pine',
-          2: 'Cherry',
-          3: 'Walnut',
+          2: 'Walnut',
+          3: 'Cherry',
+          4: 'Mahogany',
         },
       },
       'grainDirection': {
         'label': 'Grain Direction',
-        'description': 'Controls the direction of the wood grain.',
+        'description': 'Controls the direction of the wood grain pattern.',
         'type': 'slider',
         'min': 0.0,
         'max': 1.0,
+        'divisions': 100,
       },
       'grainIntensity': {
         'label': 'Grain Intensity',
-        'description': 'Adjusts the visibility of the wood grain.',
+        'description': 'Controls how pronounced the wood grain appears.',
         'type': 'slider',
         'min': 0.0,
         'max': 1.0,
-      },
-      'ringSpacing': {
-        'label': 'Ring Spacing',
-        'description': 'Determines the spacing between growth rings in the wood grain.',
-        'type': 'slider',
-        'min': 1.0,
-        'max': 20.0,
-        'divisions': 1,
-      },
-      'irregularity': {
-        'label': 'Irregularity',
-        'description': 'Adds random variations to the wood grain for a more natural look.',
-        'type': 'slider',
-        'min': 0.0,
-        'max': 1.0,
+        'divisions': 100,
       },
       'knotCount': {
         'label': 'Knot Count',
-        'description': "Number of knots in the wood grain, affecting its realism.",
+        'description': 'Number of wood knots to add to the texture.',
         'type': 'slider',
         'min': 0,
         'max': 10,
-        'divisions': 1,
+        'divisions': 10,
       },
-      'brightness': {
-        'label': 'Brightness',
-        'description': 'Adjusts the overall brightness of the wood effect.',
+      'ringSpacing': {
+        'label': 'Ring Spacing',
+        'description': 'Distance between growth rings in the wood.',
         'type': 'slider',
-        'min': -1.0,
+        'min': 2.0,
+        'max': 20.0,
+        'divisions': 18,
+      },
+      'colorVariation': {
+        'label': 'Color Variation',
+        'description': 'Amount of natural color variation in the wood.',
+        'type': 'slider',
+        'min': 0.0,
         'max': 1.0,
+        'divisions': 100,
       },
     };
   }
 
   @override
   Uint32List apply(Uint32List pixels, int width, int height) {
-    final result = Uint32List(width * height);
-    final woodType = parameters['woodType'] as int;
+    // Get parameters
+    final woodType = (parameters['woodType'] as int).clamp(0, 4);
     final grainDirection = parameters['grainDirection'] as double;
     final grainIntensity = parameters['grainIntensity'] as double;
+    final knotCount = (parameters['knotCount'] as int).clamp(0, 10);
     final ringSpacing = parameters['ringSpacing'] as double;
-    final irregularity = parameters['irregularity'] as double;
-    final knotCount = parameters['knotCount'] as int;
-    final brightness = parameters['brightness'] as double;
+    final colorVariation = parameters['colorVariation'] as double;
 
-    final random = Random(42); // Fixed seed for consistent wood patterns
+    // Create result buffer
+    final result = Uint32List(pixels.length);
 
-    // Get wood color palette
-    final woodColors = _getWoodColorPalette(woodType);
+    // Get wood colors based on type
+    final woodColors = _getWoodColors(woodType);
 
-    // Generate knot positions
-    final knots = <Point<double>>[];
+    // Calculate grain angle in radians
+    final grainAngle = grainDirection * 2 * pi;
+    final sinAngle = sin(grainAngle);
+    final cosAngle = cos(grainAngle);
+
+    // Random generator with fixed seed for consistent results
+    final random = Random(42);
+
+    // Pre-generate knot positions
+    final knots = <_WoodKnot>[];
     for (int i = 0; i < knotCount; i++) {
-      knots.add(Point(
-        random.nextDouble() * width,
-        random.nextDouble() * height,
+      knots.add(_WoodKnot(
+        x: random.nextDouble() * width,
+        y: random.nextDouble() * height,
+        size: 3 + random.nextDouble() * 12, // 3-15 pixel radius
+        intensity: 0.3 + random.nextDouble() * 0.5, // 0.3-0.8 intensity
       ));
     }
 
+    // Process each pixel
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
         final index = y * width + x;
+        final originalPixel = pixels[index];
 
-        // Calculate grain direction
-        final grainAngle = grainDirection * pi;
-        final rotatedX = x * cos(grainAngle) + y * sin(grainAngle);
-        final rotatedY = -x * sin(grainAngle) + y * cos(grainAngle);
-
-        // Create wood rings (growth rings)
-        var ringDistance = _calculateRingDistance(rotatedX, rotatedY, ringSpacing);
-
-        // Add irregularity to rings
-        final noise1 = _woodNoise(x * 0.1, y * 0.1) * irregularity;
-        final noise2 = _woodNoise(x * 0.05, y * 0.05) * irregularity * 0.5;
-        ringDistance += noise1 + noise2;
-
-        // Calculate grain pattern
-        var grainValue = sin(ringDistance) * 0.5 + 0.5;
-
-        // Add fine grain texture
-        final fineGrain = _woodNoise(x * 0.3, y * 0.3) * 0.1;
-        grainValue += fineGrain;
-
-        // Apply grain intensity
-        grainValue = 0.5 + (grainValue - 0.5) * grainIntensity;
-
-        // Add knots
-        var knotInfluence = 0.0;
-        for (final knot in knots) {
-          final distance = sqrt(pow(x - knot.x, 2) + pow(y - knot.y, 2));
-          final knotSize = 8.0;
-
-          if (distance < knotSize) {
-            final knotStrength = 1.0 - (distance / knotSize);
-            final knotPattern = sin(distance * 0.5) * knotStrength;
-            knotInfluence += knotPattern * 0.3;
-          }
+        // Skip transparent pixels
+        final originalAlpha = (originalPixel >> 24) & 0xFF;
+        if (originalAlpha == 0) {
+          result[index] = 0;
+          continue;
         }
 
-        grainValue += knotInfluence;
-        grainValue = grainValue.clamp(0.0, 1.0);
+        // Calculate wood grain pattern
+        final woodColor = _calculateWoodColor(
+          x.toDouble(),
+          y.toDouble(),
+          width,
+          height,
+          woodColors,
+          grainAngle,
+          sinAngle,
+          cosAngle,
+          grainIntensity,
+          ringSpacing,
+          colorVariation,
+          knots,
+          random,
+        );
 
-        // Convert grain value to wood color
-        final woodColor = _interpolateWoodColor(woodColors, grainValue);
-
-        // Apply brightness adjustment
-        final adjustedColor = _adjustBrightness(woodColor, brightness);
-
-        result[index] = adjustedColor.value;
+        // Preserve original alpha
+        final finalColor = (originalAlpha << 24) | (woodColor & 0x00FFFFFF);
+        result[index] = finalColor;
       }
     }
 
     return result;
   }
 
-  List<Color> _getWoodColorPalette(int woodType) {
+  // Get color palette for different wood types
+  _WoodColors _getWoodColors(int woodType) {
     switch (woodType) {
       case 0: // Oak
-        return [
-          const Color(0xFF8B4513), // Saddle brown
-          const Color(0xFFCD853F), // Peru
-          const Color(0xFFDEB887), // Burlywood
-          const Color(0xFFF5DEB3), // Wheat
-        ];
+        return _WoodColors(
+          baseColor: const Color(0xFFD2B48C), // Tan
+          darkColor: const Color(0xFF8B4513), // Saddle brown
+          lightColor: const Color(0xFFF5DEB3), // Wheat
+        );
       case 1: // Pine
-        return [
-          const Color(0xFF8FBC8F), // Dark sea green
-          const Color(0xFFDAA520), // Goldenrod
-          const Color(0xFFFFE4B5), // Moccasin
-          const Color(0xFFFFFACD), // Lemon chiffon
-        ];
-      case 2: // Cherry
-        return [
-          const Color(0xFF8B2635), // Dark red
-          const Color(0xFFB22222), // Fire brick
-          const Color(0xFFCD5C5C), // Indian red
-          const Color(0xFFF08080), // Light coral
-        ];
-      case 3: // Walnut
-        return [
-          const Color(0xFF2F1B14), // Very dark brown
-          const Color(0xFF654321), // Dark goldenrod
-          const Color(0xFF8B4513), // Saddle brown
-          const Color(0xFFA0522D), // Sienna
-        ];
+        return _WoodColors(
+          baseColor: const Color(0xFFFAEBD7), // Antique white
+          darkColor: const Color(0xFFCD853F), // Peru
+          lightColor: const Color(0xFFFFFAF0), // Floral white
+        );
+      case 2: // Walnut
+        return _WoodColors(
+          baseColor: const Color(0xFF8B4513), // Saddle brown
+          darkColor: const Color(0xFF654321), // Dark brown
+          lightColor: const Color(0xFFA0522D), // Sienna
+        );
+      case 3: // Cherry
+        return _WoodColors(
+          baseColor: const Color(0xFFDC143C), // Crimson
+          darkColor: const Color(0xFF8B0000), // Dark red
+          lightColor: const Color(0xFFFFB6C1), // Light pink
+        );
+      case 4: // Mahogany
+        return _WoodColors(
+          baseColor: const Color(0xFFC04000), // Mahogany
+          darkColor: const Color(0xFF7B3F00), // Chocolate
+          lightColor: const Color(0xFFD2691E), // Chocolate (lighter)
+        );
       default:
-        return [
-          const Color(0xFF8B4513),
-          const Color(0xFFCD853F),
-          const Color(0xFFDEB887),
-          const Color(0xFFF5DEB3),
-        ];
+        return _getWoodColors(0); // Default to oak
     }
   }
 
-  double _calculateRingDistance(double x, double y, double spacing) {
-    // Create concentric rings with some variation
-    final centerX = 0.0; // Can be randomized for different effect
-    final centerY = 0.0;
+  // Calculate the wood color for a specific pixel
+  int _calculateWoodColor(
+    double x,
+    double y,
+    int width,
+    int height,
+    _WoodColors colors,
+    double grainAngle,
+    double sinAngle,
+    double cosAngle,
+    double grainIntensity,
+    double ringSpacing,
+    double colorVariation,
+    List<_WoodKnot> knots,
+    Random random,
+  ) {
+    // Transform coordinates based on grain direction
+    final transformedX = x * cosAngle - y * sinAngle;
+    final transformedY = x * sinAngle + y * cosAngle;
 
-    final distance = sqrt(pow(x - centerX, 2) + pow(y - centerY, 2));
-    return distance * 2.0 * pi / spacing;
-  }
+    // Calculate growth rings (concentric patterns)
+    final centerX = width / 2;
+    final centerY = height / 2;
+    final distanceFromCenter = sqrt((x - centerX) * (x - centerX) + (y - centerY) * (y - centerY));
+    final ringPosition = (distanceFromCenter / ringSpacing) % 1.0;
+    final ringPattern = sin(ringPosition * 2 * pi) * 0.5 + 0.5;
 
-  double _woodNoise(double x, double y) {
-    // Simple noise function for wood grain
-    final seed = ((x * 12.9898 + y * 78.233) * 43758.5453).floor();
-    final random = Random(seed);
-    return random.nextDouble() * 2.0 - 1.0;
-  }
+    // Calculate wood grain pattern using Perlin-like noise
+    final grainNoise1 = _perlinNoise(transformedX * 0.02, transformedY * 0.1, 0);
+    final grainNoise2 = _perlinNoise(transformedX * 0.05, transformedY * 0.05, 1);
+    final grainNoise3 = _perlinNoise(transformedX * 0.1, transformedY * 0.02, 2);
 
-  Color _interpolateWoodColor(List<Color> palette, double value) {
-    if (palette.isEmpty) return Colors.brown;
+    // Combine noise layers for complex grain pattern
+    final grainPattern = (grainNoise1 * 0.5 + grainNoise2 * 0.3 + grainNoise3 * 0.2);
 
-    final scaledValue = value * (palette.length - 1);
-    final index = scaledValue.floor();
-    final fraction = scaledValue - index;
-
-    if (index >= palette.length - 1) {
-      return palette.last;
+    // Calculate knot influence
+    double knotInfluence = 0.0;
+    for (final knot in knots) {
+      final distanceToKnot = sqrt((x - knot.x) * (x - knot.x) + (y - knot.y) * (y - knot.y));
+      if (distanceToKnot < knot.size) {
+        final knotStrength = (1.0 - distanceToKnot / knot.size) * knot.intensity;
+        knotInfluence = max(knotInfluence, knotStrength);
+      }
     }
 
-    return Color.lerp(palette[index], palette[index + 1], fraction)!;
+    // Combine all patterns
+    final combinedPattern = (ringPattern * 0.4 + grainPattern * 0.6) * grainIntensity;
+
+    // Add color variation
+    final variation = (_perlinNoise(x * 0.03, y * 0.03, 3) - 0.5) * colorVariation * 0.3;
+
+    // Interpolate between colors based on pattern
+    Color finalColor;
+    if (knotInfluence > 0.1) {
+      // Knot area - use darker color
+      finalColor = Color.lerp(colors.darkColor, colors.baseColor, 1.0 - knotInfluence)!;
+    } else {
+      // Regular grain
+      final t = (combinedPattern + variation).clamp(0.0, 1.0);
+      if (t < 0.3) {
+        finalColor = Color.lerp(colors.darkColor, colors.baseColor, t / 0.3)!;
+      } else if (t < 0.7) {
+        finalColor = colors.baseColor;
+      } else {
+        finalColor = Color.lerp(colors.baseColor, colors.lightColor, (t - 0.7) / 0.3)!;
+      }
+    }
+
+    return finalColor.value;
   }
 
-  Color _adjustBrightness(Color color, double adjustment) {
-    if (adjustment == 0) return color;
-
-    final hsv = HSVColor.fromColor(color);
-    final newValue = (hsv.value + adjustment).clamp(0.0, 1.0);
-
-    return hsv.withValue(newValue).toColor();
+  // Simple Perlin-like noise function
+  double _perlinNoise(double x, double y, int seed) {
+    // Simple pseudo-random noise based on position and seed
+    final n = (sin(x * 12.9898 + y * 78.233 + seed * 37.719) * 43758.5453);
+    return (n - n.floor()) * 2 - 1; // Return value between -1 and 1
   }
+}
+
+// Helper classes for wood effect
+class _WoodColors {
+  final Color baseColor;
+  final Color darkColor;
+  final Color lightColor;
+
+  _WoodColors({
+    required this.baseColor,
+    required this.darkColor,
+    required this.lightColor,
+  });
+}
+
+class _WoodKnot {
+  final double x;
+  final double y;
+  final double size;
+  final double intensity;
+
+  _WoodKnot({
+    required this.x,
+    required this.y,
+    required this.size,
+    required this.intensity,
+  });
 }

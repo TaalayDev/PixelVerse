@@ -1,259 +1,401 @@
 part of 'effects.dart';
 
+/// Effect that transforms pixels to look like realistic fire with flames and embers
 class FireEffect extends Effect {
   FireEffect([Map<String, dynamic>? parameters])
       : super(
-            EffectType.fire,
-            parameters ??
-                {
-                  'intensity': 0.8,
-                  'flameHeight': 0.7,
-                  'animationSeed': 0,
-                  'colorVariation': 0.3,
-                  'sparkles': true,
-                  'baseTemperature': 0.6,
-                });
+          EffectType.fire,
+          parameters ??
+              const {
+                'intensity': 0.7, // How intense the fire effect is (0-1)
+                'flameHeight': 0.6, // How tall the flames appear (0-1)
+                'turbulence': 0.5, // Amount of flame movement/distortion (0-1)
+                'emberCount': 0.0, // Number of flying embers (0-1)
+                'heatDistortion': 0.4, // Heat wave distortion effect (0-1)
+                'baseTemperature': 0.5, // Base heat level - affects color (0-1)
+                'windDirection': 0.5, // Wind direction affecting flame lean (0-1, 0=left, 1=right)
+              },
+        );
 
   @override
-  Map<String, dynamic> getDefaultParameters() => {
-        'intensity': 0.8,
-        'flameHeight': 0.7,
-        'animationSeed': 0,
-        'colorVariation': 0.3,
-        'sparkles': true,
-        'baseTemperature': 0.6,
-      };
+  Map<String, dynamic> getDefaultParameters() {
+    return {
+      'intensity': 0.7, // How intense the fire effect is
+      'flameHeight': 0.6, // How tall flames appear
+      'turbulence': 0.5, // Amount of flame movement
+      'emberCount': 0.0, // Number of flying embers
+      'heatDistortion': 0.4, // Heat wave distortion
+      'baseTemperature': 0.5, // Base heat level
+      'windDirection': 0.5, // Wind direction (0=left, 0.5=up, 1=right)
+    };
+  }
 
   @override
   Map<String, dynamic> getMetadata() {
     return {
       'intensity': {
-        'label': 'Intensity',
-        'description': 'Controls the overall strength of the fire effect.',
+        'label': 'Fire Intensity',
+        'description': 'Controls how intense and bright the fire appears.',
         'type': 'slider',
         'min': 0.0,
         'max': 1.0,
+        'divisions': 100,
       },
       'flameHeight': {
         'label': 'Flame Height',
-        'description': 'Determines how tall the flames appear.',
+        'description': 'Controls how tall the flames appear.',
         'type': 'slider',
         'min': 0.0,
         'max': 1.0,
-      },
-      'animationSeed': {
-        'label': 'Animation Seed',
-        'description': 'Seed for randomizing the fire animation.',
-        'type': 'slider',
-        'min': 0,
-        'max': 0x7FFFFFFFFFFFFFFF,
         'divisions': 100,
       },
-      'colorVariation': {
-        'label': 'Color Variation',
-        'description': 'Adds random color variations to the fire.',
+      'turbulence': {
+        'label': 'Turbulence',
+        'description': 'Controls the amount of flame movement and distortion.',
         'type': 'slider',
         'min': 0.0,
         'max': 1.0,
+        'divisions': 100,
       },
-      'sparkles': {
-        'label': 'Sparkles',
-        'description': 'Enables sparkles or embers in the fire effect.',
-        'type': 'bool',
+      'emberCount': {
+        'label': 'Ember Count',
+        'description': 'Controls the number of flying embers.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
+      },
+      'heatDistortion': {
+        'label': 'Heat Distortion',
+        'description': 'Controls heat wave distortion effects.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
       },
       'baseTemperature': {
         'label': 'Base Temperature',
-        'description': 'Sets the base temperature for the fire, affecting color.',
+        'description': 'Controls the base heat level, affecting fire color.',
         'type': 'slider',
         'min': 0.0,
         'max': 1.0,
+        'divisions': 100,
+      },
+      'windDirection': {
+        'label': 'Wind Direction',
+        'description': 'Controls wind direction affecting flame lean.',
+        'type': 'slider',
+        'min': 0.0,
+        'max': 1.0,
+        'divisions': 100,
       },
     };
   }
 
   @override
   Uint32List apply(Uint32List pixels, int width, int height) {
-    final result = Uint32List(width * height);
+    // Get parameters
     final intensity = parameters['intensity'] as double;
     final flameHeight = parameters['flameHeight'] as double;
-    final animationSeed = parameters['animationSeed'] as int;
-    final colorVariation = parameters['colorVariation'] as double;
-    final sparkles = parameters['sparkles'] as bool;
+    final turbulence = parameters['turbulence'] as double;
+    final emberCount = parameters['emberCount'] as double;
+    final heatDistortion = parameters['heatDistortion'] as double;
     final baseTemperature = parameters['baseTemperature'] as double;
+    final windDirection = parameters['windDirection'] as double;
 
-    final random = Random(animationSeed);
+    // Create result buffer
+    final result = Uint32List(pixels.length);
 
-    // Create noise maps for fire simulation
-    final noise1 = _generateNoise(width, height, random, 4.0);
-    final noise2 = _generateNoise(width, height, random, 8.0);
-    final noise3 = _generateNoise(width, height, random, 16.0);
+    // Initialize random with fixed seed for consistent results
+    final random = Random(42);
 
+    // Create fire heightmap based on original pixel brightness
+    final fireMap = _createFireHeightMap(pixels, width, height, baseTemperature);
+
+    // Apply turbulence to create flame distortion
+    final distortedFireMap = _applyTurbulence(fireMap, width, height, turbulence, random);
+
+    // Generate fire colors based on height and temperature
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
         final index = y * width + x;
         final originalPixel = pixels[index];
+        final originalAlpha = (originalPixel >> 24) & 0xFF;
 
-        // Skip transparent pixels unless we're generating pure fire
-        if (originalPixel == 0 && intensity < 1.0) {
+        // Skip completely transparent pixels
+        if (originalAlpha == 0) {
           result[index] = 0;
           continue;
         }
 
-        // Normalize coordinates
-        final nx = x / width.toDouble();
-        final ny = y / height.toDouble();
+        // Get fire height at this position
+        final fireHeight = distortedFireMap[index];
 
-        // Create flame shape - stronger at bottom, weaker at top
-        final flameStrength = _calculateFlameStrength(nx, ny, flameHeight);
+        // Calculate flame position (0 = bottom, 1 = top)
+        final normalizedY = y / height;
+        final flamePosition = 1.0 - (normalizedY / flameHeight).clamp(0.0, 1.0);
 
-        if (flameStrength <= 0) {
-          result[index] = originalPixel;
-          continue;
+        // Apply wind direction to flame position
+        final windInfluence = _calculateWindInfluence(x, y, width, height, windDirection);
+        final adjustedFlamePos = (flamePosition + windInfluence * 0.3).clamp(0.0, 1.0);
+
+        // Calculate fire intensity at this position
+        final fireIntensity = _calculateFireIntensity(
+          adjustedFlamePos,
+          fireHeight,
+          baseTemperature,
+          intensity,
+        );
+
+        // Generate fire color
+        final fireColor = _generateFireColor(fireIntensity, baseTemperature);
+
+        // Apply heat distortion if enabled
+        Color finalColor = fireColor;
+        if (heatDistortion > 0) {
+          finalColor = _applyHeatDistortion(
+            fireColor,
+            x,
+            y,
+            width,
+            height,
+            heatDistortion,
+            random,
+          );
         }
 
-        // Combine noise layers for complex fire patterns
-        final noiseValue = (noise1[index] * 0.5 + noise2[index] * 0.3 + noise3[index] * 0.2);
+        // Blend with original alpha
+        final blendedAlpha = (originalAlpha * fireIntensity).round().clamp(0, 255);
+        result[index] = (blendedAlpha << 24) | (finalColor.value & 0x00FFFFFF);
+      }
+    }
 
-        // Calculate fire temperature based on position and noise
-        var temperature = _calculateTemperature(nx, ny, noiseValue, flameStrength, baseTemperature);
+    // Add flying embers
+    if (emberCount > 0) {
+      _addEmbers(result, width, height, emberCount, intensity, random);
+    }
 
-        // Add sparkles/embers
-        if (sparkles && random.nextDouble() < 0.05 * intensity) {
-          temperature = min(1.0, temperature + 0.3);
+    return result;
+  }
+
+  /// Create a height map for fire based on original pixel brightness
+  List<double> _createFireHeightMap(Uint32List pixels, int width, int height, double baseTemp) {
+    final fireMap = List<double>.filled(pixels.length, 0.0);
+
+    for (int i = 0; i < pixels.length; i++) {
+      final pixel = pixels[i];
+      final alpha = ((pixel >> 24) & 0xFF) / 255.0;
+
+      if (alpha > 0) {
+        // Calculate brightness
+        final r = (pixel >> 16) & 0xFF;
+        final g = (pixel >> 8) & 0xFF;
+        final b = pixel & 0xFF;
+        final brightness = (0.299 * r + 0.587 * g + 0.114 * b) / 255.0;
+
+        // Fire height based on brightness and base temperature
+        fireMap[i] = (brightness * alpha + baseTemp * 0.3).clamp(0.0, 1.0);
+      }
+    }
+
+    return fireMap;
+  }
+
+  /// Apply turbulence to create realistic flame movement
+  List<double> _applyTurbulence(
+    List<double> fireMap,
+    int width,
+    int height,
+    double turbulence,
+    Random random,
+  ) {
+    if (turbulence <= 0) return fireMap;
+
+    final result = List<double>.from(fireMap);
+    final turbulenceStrength = turbulence * 0.3;
+
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        final index = y * width + x;
+
+        if (fireMap[index] > 0) {
+          // Generate multi-octave noise for more realistic turbulence
+          final noise1 = _perlinNoise(x * 0.1, y * 0.1, random) * turbulenceStrength;
+          final noise2 = _perlinNoise(x * 0.05, y * 0.05, random) * turbulenceStrength * 0.5;
+          final noise3 = _perlinNoise(x * 0.2, y * 0.2, random) * turbulenceStrength * 0.25;
+
+          final totalNoise = noise1 + noise2 + noise3;
+
+          // Apply turbulence - higher flames are more affected by wind
+          final turbulenceMultiplier = fireMap[index] * 0.7 + 0.3;
+          result[index] = (fireMap[index] + totalNoise * turbulenceMultiplier).clamp(0.0, 1.0);
         }
-
-        // Apply intensity
-        temperature *= intensity;
-
-        // Convert temperature to fire color
-        final fireColor = _temperatureToColor(temperature, colorVariation, random);
-
-        // Blend with original pixel if not pure fire effect
-        Color finalColor;
-        if (intensity >= 1.0 || originalPixel == 0) {
-          finalColor = fireColor;
-        } else {
-          final originalColor = Color(originalPixel);
-          finalColor = Color.lerp(originalColor, fireColor, temperature * intensity)!;
-        }
-
-        result[index] = finalColor.value;
       }
     }
 
     return result;
   }
 
-  List<double> _generateNoise(int width, int height, Random random, double frequency) {
-    final noise = List<double>.filled(width * height, 0.0);
+  /// Calculate wind influence on flame position
+  double _calculateWindInfluence(int x, int y, int width, int height, double windDirection) {
+    // Convert wind direction to influence (-1 to 1, where -1 is left wind, 1 is right wind)
+    final windForce = (windDirection - 0.5) * 2;
 
-    for (int y = 0; y < height; y++) {
-      for (int x = 0; x < width; x++) {
-        final index = y * width + x;
+    // Wind affects flames more at the top
+    final heightFactor = 1.0 - (y / height);
 
-        // Simple noise generation
-        final nx = x * frequency / width;
-        final ny = y * frequency / height;
+    // Create horizontal wind influence
+    final horizontalInfluence = windForce * heightFactor * 0.3;
 
-        // Create turbulent noise
-        var value = 0.0;
-        var amplitude = 1.0;
-        var freq = 1.0;
-
-        for (int octave = 0; octave < 4; octave++) {
-          value += _noise(nx * freq, ny * freq, random) * amplitude;
-          amplitude *= 0.5;
-          freq *= 2.0;
-        }
-
-        noise[index] = (value + 1.0) * 0.5; // Normalize to 0-1
-      }
-    }
-
-    return noise;
+    return horizontalInfluence;
   }
 
-  double _noise(double x, double y, Random random) {
-    // Simple pseudo-noise function
-    final seed = ((x * 12.9898 + y * 78.233) * 43758.5453).floor();
-    final localRandom = Random(seed);
-    return localRandom.nextDouble() * 2.0 - 1.0;
+  /// Calculate fire intensity based on position and parameters
+  double _calculateFireIntensity(
+    double flamePosition,
+    double fireHeight,
+    double baseTemperature,
+    double intensity,
+  ) {
+    if (fireHeight <= 0) return 0.0;
+
+    // Fire is hottest at the base and cools towards the top
+    final temperatureGradient = 1.0 - pow(flamePosition, 1.5);
+
+    // Combine with base temperature and intensity
+    final finalIntensity = (temperatureGradient * fireHeight * intensity + baseTemperature * 0.2).clamp(0.0, 1.0);
+
+    return finalIntensity;
   }
 
-  double _calculateFlameStrength(double nx, double ny, double flameHeight) {
-    // Create flame shape - wide at bottom, narrow at top
-    final heightFactor = 1.0 - ny;
-    if (heightFactor <= 0) return 0.0;
+  /// Generate realistic fire colors based on temperature
+  Color _generateFireColor(double intensity, double baseTemperature) {
+    if (intensity <= 0) return Colors.transparent;
 
-    // Create flame silhouette
-    final centerDistance = (nx - 0.5).abs();
-    final maxWidth = 0.4 * heightFactor; // Flame gets narrower towards top
+    // Fire color temperature scale
+    // Cool fire: deep red/orange
+    // Hot fire: bright yellow/white
+    final temperature = (intensity + baseTemperature * 0.3).clamp(0.0, 1.0);
 
-    if (centerDistance > maxWidth) return 0.0;
-
-    // Smooth falloff towards edges
-    final widthFactor = 1.0 - (centerDistance / maxWidth);
-
-    // Overall flame height limit
-    if (ny > flameHeight) {
-      final fadeZone = 0.2;
-      if (ny > flameHeight + fadeZone) return 0.0;
-      final fadeFactor = 1.0 - ((ny - flameHeight) / fadeZone);
-      return heightFactor * widthFactor * fadeFactor;
-    }
-
-    return heightFactor * widthFactor;
-  }
-
-  double _calculateTemperature(double nx, double ny, double noise, double flameStrength, double baseTemp) {
-    // Fire is hotter at the base and center
-    final heightFactor = 1.0 - ny;
-    final centerFactor = 1.0 - (nx - 0.5).abs() * 2.0;
-
-    var temperature = baseTemp;
-    temperature += heightFactor * 0.3;
-    temperature += centerFactor * 0.2;
-    temperature += noise * 0.3;
-    temperature *= flameStrength;
-
-    return temperature.clamp(0.0, 1.0);
-  }
-
-  Color _temperatureToColor(double temperature, double variation, Random random) {
-    if (temperature <= 0) return Colors.transparent;
-
-    // Fire color palette based on temperature
-    Color baseColor;
+    int r, g, b;
 
     if (temperature < 0.2) {
-      // Dark red/black (cool fire)
-      baseColor = Color.lerp(Colors.black, const Color(0xFF8B0000), temperature * 5)!;
+      // Very cool - dark red/black
+      r = (100 * temperature / 0.2).round();
+      g = 0;
+      b = 0;
     } else if (temperature < 0.4) {
-      // Red to orange
-      baseColor = Color.lerp(const Color(0xFF8B0000), const Color(0xFFFF4500), (temperature - 0.2) * 5)!;
+      // Cool - red
+      r = (100 + 155 * (temperature - 0.2) / 0.2).round();
+      g = (30 * (temperature - 0.2) / 0.2).round();
+      b = 0;
     } else if (temperature < 0.6) {
-      // Orange to yellow
-      baseColor = Color.lerp(const Color(0xFFFF4500), const Color(0xFFFFD700), (temperature - 0.4) * 5)!;
+      // Medium - red-orange
+      r = 255;
+      g = (30 + 125 * (temperature - 0.4) / 0.2).round();
+      b = (10 * (temperature - 0.4) / 0.2).round();
     } else if (temperature < 0.8) {
-      // Yellow to white
-      baseColor = Color.lerp(const Color(0xFFFFD700), const Color(0xFFFFFFAA), (temperature - 0.6) * 5)!;
+      // Hot - orange-yellow
+      r = 255;
+      g = (155 + 100 * (temperature - 0.6) / 0.2).round();
+      b = (10 + 40 * (temperature - 0.6) / 0.2).round();
     } else {
-      // Hot white/blue
-      baseColor = Color.lerp(const Color(0xFFFFFFAA), const Color(0xFFAAFFFF), (temperature - 0.8) * 5)!;
+      // Very hot - yellow-white
+      r = 255;
+      g = 255;
+      b = (50 + 205 * (temperature - 0.8) / 0.2).round();
     }
 
-    // Add color variation
-    if (variation > 0 && random.nextDouble() < 0.3) {
-      final hue = HSVColor.fromColor(baseColor).hue;
-      final newHue = (hue + (random.nextDouble() - 0.5) * variation * 60).clamp(0.0, 360.0);
-      baseColor = HSVColor.fromAHSV(
-        baseColor.alpha / 255.0,
-        newHue,
-        HSVColor.fromColor(baseColor).saturation,
-        HSVColor.fromColor(baseColor).value,
-      ).toColor();
-    }
+    // Apply intensity to alpha
+    final alpha = (intensity * 255).round().clamp(0, 255);
 
-    return baseColor;
+    return Color.fromARGB(alpha, r.clamp(0, 255), g.clamp(0, 255), b.clamp(0, 255));
+  }
+
+  /// Apply heat distortion effects
+  Color _applyHeatDistortion(
+    Color baseColor,
+    int x,
+    int y,
+    int width,
+    int height,
+    double distortionAmount,
+    Random random,
+  ) {
+    if (distortionAmount <= 0) return baseColor;
+
+    // Create heat shimmer effect by slightly varying the color
+    final shimmer = (random.nextDouble() - 0.5) * distortionAmount * 0.2;
+
+    // Adjust brightness for shimmer
+    final hsv = HSVColor.fromColor(baseColor);
+    final newValue = (hsv.value + shimmer).clamp(0.0, 1.0);
+    final newSaturation = (hsv.saturation + shimmer * 0.1).clamp(0.0, 1.0);
+
+    return hsv.withValue(newValue).withSaturation(newSaturation).toColor();
+  }
+
+  /// Add flying embers to the fire effect
+  void _addEmbers(
+    Uint32List pixels,
+    int width,
+    int height,
+    double emberCount,
+    double intensity,
+    Random random,
+  ) {
+    final numEmbers = (emberCount * width * height * 0.001).round();
+
+    for (int i = 0; i < numEmbers; i++) {
+      final x = random.nextInt(width);
+      final y = random.nextInt(height);
+      final index = y * width + x;
+
+      // Embers are more likely to appear in upper areas
+      final emberProbability = 1.0 - (y / height) * 0.7;
+      if (random.nextDouble() > emberProbability) continue;
+
+      // Create ember color (bright orange/yellow)
+      final emberIntensity = (0.7 + random.nextDouble() * 0.3) * intensity;
+      final emberSize = random.nextInt(2) + 1; // 1-2 pixel embers
+
+      final emberColor = Color.fromARGB(
+        (emberIntensity * 255).round(),
+        255,
+        (200 + random.nextInt(55)).clamp(0, 255), // Orange to yellow
+        (50 + random.nextInt(100)).clamp(0, 255),
+      );
+
+      // Draw ember with small size
+      for (int ey = -emberSize; ey <= emberSize; ey++) {
+        for (int ex = -emberSize; ex <= emberSize; ex++) {
+          final emberX = x + ex;
+          final emberY = y + ey;
+
+          if (emberX >= 0 && emberX < width && emberY >= 0 && emberY < height) {
+            final emberIndex = emberY * width + emberX;
+            final distance = sqrt(ex * ex + ey * ey);
+
+            if (distance <= emberSize) {
+              // Blend ember with existing pixel
+              final existingPixel = pixels[emberIndex];
+              final existingAlpha = (existingPixel >> 24) & 0xFF;
+
+              if (existingAlpha < emberColor.alpha) {
+                pixels[emberIndex] = emberColor.value;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /// Simple Perlin-like noise function for turbulence
+  double _perlinNoise(double x, double y, Random random) {
+    // Simple pseudo-random noise based on position
+    final seed = ((x * 12.9898 + y * 78.233) * 43758.5453).floor();
+    final seededRandom = Random(seed);
+    return seededRandom.nextDouble() * 2.0 - 1.0; // -1 to 1
   }
 }
