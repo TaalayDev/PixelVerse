@@ -2,27 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:pixelverse/ui/screens/subscription_screen.dart';
 
 import '../../core/theme/theme.dart';
 import '../../providers/ad/reward_video_ad_controller.dart';
 import '../../providers/subscription_provider.dart';
+import '../screens/subscription_screen.dart';
 import 'reward_dialog.dart';
 
 final themeProvider = ChangeNotifierProvider((ref) => ThemeProvider());
-
-final _lockedThemeTypes = [
-  ThemeType.ocean,
-  ThemeType.monochrome,
-  ThemeType.neon,
-  ThemeType.cosmic,
-  ThemeType.purpleRain,
-  ThemeType.goldenHour,
-  ThemeType.cyberpunk,
-  ThemeType.cherryBlossom,
-  ThemeType.retroWave,
-  ThemeType.volcanic,
-];
 
 class ThemeSelector extends HookConsumerWidget {
   const ThemeSelector({super.key});
@@ -35,7 +22,7 @@ class ThemeSelector extends HookConsumerWidget {
     final isAdLoaded = ref.watch(rewardVideoAdProvider);
 
     final unlockedThemeTypes = useState(
-      ThemeType.values.where((type) => !_lockedThemeTypes.contains(type) || subscription.isPro).toList(),
+      ThemeType.values.where((type) => !type.isLocked || subscription.isPro).toList(),
     );
 
     return PopupMenuButton<ThemeType>(

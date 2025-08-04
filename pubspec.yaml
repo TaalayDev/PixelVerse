@@ -92,6 +92,7 @@ dependencies:
 
   google_mobile_ads: ^5.2.0
   flutter_box_transform: ^0.4.7
+  animated_glitch: ^2.0.0+2
 
 
 dependency_overrides:
