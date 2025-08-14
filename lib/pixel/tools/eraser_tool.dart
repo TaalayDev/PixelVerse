@@ -125,9 +125,3 @@ class EraserTool extends Tool {
     return points;
   }
 }
-
-extension PixelPointCopyWith on PixelPoint<int> {
-  PixelPoint<int> copyWith({int? color}) {
-    return PixelPoint(x, y, color: color ?? this.color);
-  }
-}

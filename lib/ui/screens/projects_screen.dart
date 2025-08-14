@@ -32,6 +32,7 @@ import '../widgets/project_upload_dialog.dart';
 import '../widgets/subscription/subscription_menu.dart';
 import '../widgets/theme_selector.dart';
 import '../widgets.dart';
+import '../widgets/theme_selector_sheet.dart';
 import 'subscription_screen.dart';
 import 'about_screen.dart';
 import 'pixel_draw_screen.dart';
@@ -52,6 +53,8 @@ class ProjectsScreen extends HookConsumerWidget {
 
     final authState = ref.watch(authProvider);
     final showProfileIcon = useState(false);
+
+    final currentTheme = ref.watch(themeProvider).theme;
 
     final tabController = useTabController(initialLength: 2);
 
@@ -153,7 +156,14 @@ class ProjectsScreen extends HookConsumerWidget {
               ),
               const SizedBox(width: 8),
             ],
-            const ThemeSelector(),
+            IconButton(
+              tooltip: 'Choose Theme',
+              icon: Icon(
+                Icons.palette_outlined,
+                color: currentTheme.activeIcon,
+              ),
+              onPressed: () => ThemeSelectorBottomSheet.show(context),
+            ),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               child: showProfileIcon.value && authState.isSignedIn

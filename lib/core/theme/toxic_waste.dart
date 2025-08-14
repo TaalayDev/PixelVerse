@@ -65,19 +65,30 @@ AppTheme buildToxicWasteTheme() {
 }
 
 class ToxicWasteBackground extends HookWidget {
-  final AnimationController controller;
   final AppTheme theme;
   final double intensity;
+  final bool enableAnimation;
 
   const ToxicWasteBackground({
     super.key,
-    required this.controller,
     required this.theme,
     required this.intensity,
+    this.enableAnimation = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final controller = useAnimationController(duration: theme.type.animationDuration);
+
+    useEffect(() {
+      if (enableAnimation) {
+        controller.repeat();
+      } else {
+        controller.stop();
+      }
+      return null;
+    }, [enableAnimation]);
+
     final bubbleAnimation = useAnimation(
       Tween<double>(begin: 0, end: 1).animate(controller),
     );
@@ -152,23 +163,6 @@ class _ToxicWastePainter extends CustomPainter {
         paint.color = paint.color.withOpacity(paint.color.opacity * 0.3);
         canvas.drawCircle(Offset(floatX, floatY), crystalSize * 1.8, paint);
       }
-    }
-
-    // Draw toxic steam/vapor
-    for (int i = 0; i < (10 * intensity).round(); i++) {
-      final steamX = (i / 10) * size.width + math.sin(animation * 2 * math.pi + i * 0.7) * 25 * intensity;
-      final steamY = liquidLevel - (20 + i * 15) * intensity;
-      final steamSize = (15 + i * 5 + math.cos(animation * 3 * math.pi + i) * 8) * intensity;
-
-      final vaporIntensity = math.sin(animation * 4 * math.pi + i * 0.6) * 0.4 + 0.6;
-
-      paint.color = Color.lerp(
-        primaryColor.withOpacity(0.04 * vaporIntensity * intensity),
-        accentColor.withOpacity(0.06 * vaporIntensity * intensity),
-        i / 9.0,
-      )!;
-
-      canvas.drawCircle(Offset(steamX, steamY), steamSize * vaporIntensity, paint);
     }
 
     // Draw radioactive particles

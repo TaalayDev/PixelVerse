@@ -57,18 +57,30 @@ AppTheme buildOceanTheme() {
 
 // Ocean theme background with wave effects
 class OceanBackground extends HookWidget {
-  final AnimationController controller;
   final AppTheme theme;
   final double intensity;
+  final bool enableAnimation;
 
   const OceanBackground({
-    required this.controller,
+    super.key,
     required this.theme,
     required this.intensity,
+    this.enableAnimation = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final controller = useAnimationController(duration: theme.type.animationDuration);
+
+    useEffect(() {
+      if (enableAnimation) {
+        controller.repeat();
+      } else {
+        controller.stop();
+      }
+      return null;
+    }, [enableAnimation]);
+
     final waveAnimation = useAnimation(
       Tween<double>(begin: 0, end: 2 * math.pi).animate(controller),
     );

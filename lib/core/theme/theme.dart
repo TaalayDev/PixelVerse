@@ -19,6 +19,7 @@ import 'pastel.dart';
 import 'prismatic.dart';
 import 'purple_rain.dart';
 import 'retro_wave.dart';
+import 'rose_quartz_garden.dart';
 import 'sunset.dart';
 import 'theme_type.dart';
 
@@ -27,6 +28,7 @@ import 'deep_sea.dart';
 import 'dream_scape.dart';
 import 'toxic_waste.dart';
 import 'volcanic.dart';
+import 'emerald_forest.dart';
 
 export 'theme_type.dart';
 
@@ -158,6 +160,10 @@ class AppTheme {
         return buildCopperSteampunkTheme();
       case ThemeType.prismatic:
         return buildPrismaticTheme();
+      case ThemeType.emeraldForest:
+        return buildEmeraldForestTheme();
+      case ThemeType.roseQuartzGarden:
+        return buildRoseQuartzGardenTheme();
     }
   }
 

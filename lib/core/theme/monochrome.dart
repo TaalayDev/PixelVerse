@@ -57,19 +57,30 @@ AppTheme buildMonochromeTheme() {
 
 // Monochrome theme background with minimal geometric patterns
 class MonochromeBackground extends HookWidget {
-  final AnimationController controller;
   final AppTheme theme;
   final double intensity;
+  final bool enableAnimation;
 
   const MonochromeBackground({
     super.key,
-    required this.controller,
     required this.theme,
     required this.intensity,
+    this.enableAnimation = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final controller = useAnimationController(duration: theme.type.animationDuration);
+
+    useEffect(() {
+      if (enableAnimation) {
+        controller.repeat();
+      } else {
+        controller.stop();
+      }
+      return null;
+    }, [enableAnimation]);
+
     final rotationAnimation = useAnimation(
       Tween<double>(begin: 0, end: 2 * math.pi).animate(controller),
     );

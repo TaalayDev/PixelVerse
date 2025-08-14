@@ -5,12 +5,10 @@ import '../pixel_point.dart';
 import 'canvas_controller.dart';
 import 'tool_drawing_manager.dart';
 
-/// Handles all gesture input for the pixel canvas
 class CanvasGestureHandler {
   final PixelCanvasController controller;
   final ToolDrawingManager toolManager;
 
-  // Callbacks
   final VoidCallback onStartDrawing;
   final VoidCallback onFinishDrawing;
   final Function(List<PixelPoint<int>>) onDrawShape;
@@ -19,7 +17,6 @@ class CanvasGestureHandler {
   final Function(double, Offset)? onDragEnd;
   final VoidCallback? onUndo;
 
-  // Gesture state
   int _pointerCount = 0;
   Offset? _panStartPosition;
   Offset? _twoFingerStartFocalPoint;
@@ -28,11 +25,13 @@ class CanvasGestureHandler {
   bool _isTwoFingerPotentiallyUndo = false;
   Offset _normalizedOffset = Offset.zero;
 
-  // Drawing state
   bool _isDrawingActive = false;
 
   final Map<int, PointerEvent> _activePointers = {};
   bool _isRawPointerDrawing = false;
+
+  bool get hasActivePointers => _activePointers.isNotEmpty;
+  int get activePointerCount => _activePointers.length;
 
   CanvasGestureHandler({
     required this.controller,
@@ -116,16 +115,19 @@ class CanvasGestureHandler {
     } else if (currentTool == PixelTool.pen) {
       toolManager.handlePenTap(drawDetails, controller);
     } else if (currentTool == PixelTool.curve) {
-      // Handle curve tool clicks
       toolManager.handleCurveTap(drawDetails, controller);
 
       // Check if curve is complete (3 clicks)
       if (!toolManager.isCurveActive) {
-        // Curve was completed, finish drawing
         _finishDrawing();
       }
     } else if (currentTool == PixelTool.select) {
       toolManager.handleSelectionStart(drawDetails);
+    } else if (currentTool == PixelTool.lasso) {
+      // Handle lasso tool - start lasso selection
+      toolManager.handleLassoStart(drawDetails);
+      _isDrawingActive = true;
+      onStartDrawing();
     } else if (currentTool != PixelTool.drag) {
       _startDrawing(currentTool, drawDetails);
     }
@@ -140,6 +142,12 @@ class CanvasGestureHandler {
       _finishDrawing();
     } else if (currentTool == PixelTool.select) {
       toolManager.handleSelectionEnd(drawDetails);
+    } else if (currentTool == PixelTool.lasso) {
+      // For lasso, we handle ending differently because it might be closed via proximity
+      if (!toolManager.isDrawingLasso) {
+        _finishDrawing();
+        _isDrawingActive = false;
+      }
     }
   }
 
@@ -193,6 +201,9 @@ class CanvasGestureHandler {
       if (toolManager.isCurveDefining) {
         toolManager.handleCurveMove(drawDetails, controller);
       }
+    } else if (currentTool == PixelTool.lasso && _isDrawingActive) {
+      // Handle lasso drawing
+      toolManager.handleLassoMove(drawDetails);
     } else if (_isDrawingActive) {
       toolManager.continueDrawing(currentTool, drawDetails);
     }
@@ -204,6 +215,10 @@ class CanvasGestureHandler {
   ) {
     if (currentTool == PixelTool.drag) {
       onDragEnd?.call(controller.zoomLevel, controller.offset);
+    } else if (currentTool == PixelTool.lasso && _isDrawingActive) {
+      // Handle lasso end
+      toolManager.handleLassoEnd(drawDetails);
+      _finishDrawing();
     } else if (_isDrawingActive) {
       toolManager.endDrawing(currentTool, drawDetails);
       _finishDrawing();
@@ -255,7 +270,6 @@ class CanvasGestureHandler {
 
   void _finishDrawing() {
     final previewPixels = List<PixelPoint<int>>.from(controller.previewPixels);
-
     if (previewPixels.isNotEmpty) {
       onDrawShape(previewPixels);
     }
@@ -330,7 +344,6 @@ class CanvasGestureHandler {
     if (pointerCount == 0) {
       _handleAllPointersUp(event, currentTool, drawDetails);
     } else if (pointerCount == 1) {
-      // Switched from multi-touch to single touch
       _handleMultiToSinglePointer(currentTool);
     }
   }
@@ -344,7 +357,6 @@ class CanvasGestureHandler {
       _panStartPosition = event.position - controller.offset;
       onStartDrag?.call(controller.zoomLevel, controller.offset);
     } else if (_shouldHandleDirectTap(currentTool)) {
-      // Immediate tools like fill, eyedropper
       onStartDrawing();
       toolManager.handleSelectionEnd(drawDetails);
       toolManager.handleTap(currentTool, drawDetails);
@@ -362,8 +374,13 @@ class CanvasGestureHandler {
       );
     } else if (currentTool == PixelTool.select) {
       toolManager.handleSelectionStart(drawDetails);
+    } else if (currentTool == PixelTool.lasso) {
+      // Handle lasso tool
+      onStartDrawing();
+      toolManager.handleSelectionEnd(drawDetails);
+      toolManager.handleLassoStart(drawDetails);
+      _isRawPointerDrawing = true;
     } else {
-      // Drawing tools - start immediately
       onStartDrawing();
       toolManager.handleSelectionEnd(drawDetails);
       toolManager.startDrawing(currentTool, drawDetails);
@@ -381,14 +398,15 @@ class CanvasGestureHandler {
       controller.setOffset(newOffset);
       onDrag?.call(controller.zoomLevel, newOffset);
     } else if (currentTool == PixelTool.curve) {
-      // Handle curve control point movement
       if (toolManager.isCurveDefining) {
         toolManager.handleCurveMove(drawDetails, controller);
       }
+    } else if (currentTool == PixelTool.lasso && _isRawPointerDrawing) {
+      // Handle lasso drawing
+      toolManager.handleLassoMove(drawDetails);
     } else if (_isRawPointerDrawing) {
       toolManager.continueDrawing(currentTool, drawDetails);
     } else if (currentTool == PixelTool.select) {
-      // Handle selection dragging
       toolManager.handleSelectionUpdate(drawDetails);
     }
   }
@@ -397,7 +415,6 @@ class CanvasGestureHandler {
     PointerDownEvent event,
     PixelTool currentTool,
   ) {
-    // Stop any ongoing drawing when second finger touches
     if (_isRawPointerDrawing) {
       _finishRawPointerDrawing();
     }
@@ -430,7 +447,6 @@ class CanvasGestureHandler {
     final pointer1 = pointers[0];
     final pointer2 = pointers[1];
 
-    // Calculate current focal point and scale
     final currentFocalPoint = Offset(
       (pointer1.position.dx + pointer2.position.dx) / 2,
       (pointer1.position.dy + pointer2.position.dy) / 2,
@@ -443,7 +459,6 @@ class CanvasGestureHandler {
       final distanceMoved = (currentFocalPoint - _twoFingerStartFocalPoint!).distance;
       final scaleChange = initialDistance > 0 ? (currentDistance / initialDistance - 1.0).abs() : 0.0;
 
-      // Cancel undo potential if significant movement or scaling
       if (distanceMoved > 20.0 || scaleChange > 0.05) {
         _isTwoFingerPotentiallyUndo = false;
       }
@@ -466,7 +481,6 @@ class CanvasGestureHandler {
     PixelTool currentTool,
     PixelDrawDetails drawDetails,
   ) {
-    // Check for undo gesture
     if (_isTwoFingerPotentiallyUndo && _twoFingerStartTimeMs != null) {
       if (_handleUndoGesture(_twoFingerStartTimeMs!)) {
         _resetPointerState();
@@ -474,9 +488,12 @@ class CanvasGestureHandler {
       }
     }
 
-    // Handle single-finger tool completion
     if (currentTool == PixelTool.drag) {
       onDragEnd?.call(controller.zoomLevel, controller.offset);
+    } else if (currentTool == PixelTool.lasso && _isRawPointerDrawing) {
+      // Handle lasso completion
+      toolManager.handleLassoEnd(drawDetails);
+      _finishRawPointerDrawing();
     } else if (_isRawPointerDrawing) {
       toolManager.endDrawing(currentTool, drawDetails);
       _finishRawPointerDrawing();
@@ -488,11 +505,7 @@ class CanvasGestureHandler {
   }
 
   void _handleMultiToSinglePointer(PixelTool currentTool) {
-    // Reset two-finger state when going from 2+ fingers to 1
     _resetTwoFingerState();
-
-    // Could potentially restart single-finger operation here if needed
-    debugPrint("Switched from multi-touch to single touch");
   }
 
   void _finishRawPointerDrawing() {
@@ -521,7 +534,6 @@ class CanvasGestureHandler {
     return (pointers[0].position - pointers[1].position).distance;
   }
 
-  // Helper method to handle pointer cancel events
   void handlePointerCancel(
     PointerCancelEvent event,
     PixelTool currentTool,
@@ -529,10 +541,8 @@ class CanvasGestureHandler {
   ) {
     _activePointers.remove(event.pointer);
 
-    // Clean up any ongoing operations
     if (_activePointers.isEmpty) {
       if (_isRawPointerDrawing) {
-        // Don't finish drawing on cancel - just clean up
         controller.clearPreviewPixels();
         onFinishDrawing();
         _isRawPointerDrawing = false;
@@ -545,10 +555,4 @@ class CanvasGestureHandler {
     toolManager.resetCurveTool();
     controller.clearCurvePoints();
   }
-
-  // Helper method to check if there are active drawing operations
-  bool get hasActivePointers => _activePointers.isNotEmpty;
-
-  // Helper method to get current pointer count
-  int get activePointerCount => _activePointers.length;
 }

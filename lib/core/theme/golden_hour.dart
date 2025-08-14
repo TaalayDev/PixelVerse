@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -64,181 +65,529 @@ AppTheme buildGoldenHourTheme() {
   );
 }
 
-// Golden Hour theme background with warm sunlight effects
+// Enhanced Golden Hour theme background with cinematic sunset effects
 class GoldenHourBackground extends HookWidget {
-  final AnimationController controller;
   final AppTheme theme;
   final double intensity;
+  final bool enableAnimation;
 
   const GoldenHourBackground({
-    required this.controller,
+    super.key,
     required this.theme,
     required this.intensity,
+    this.enableAnimation = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    final sunAnimation = useAnimation(
-      Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(parent: controller, curve: Curves.easeInOut),
-      ),
-    );
+    final controller = useAnimationController(duration: theme.type.animationDuration);
 
-    return CustomPaint(
-      painter: _GoldenHourPainter(
-        animation: sunAnimation,
-        primaryColor: theme.primaryColor,
-        accentColor: theme.accentColor,
-        intensity: intensity,
+    useEffect(() {
+      if (enableAnimation) {
+        controller.repeat();
+      } else {
+        controller.stop();
+        controller.value = 0.0;
+      }
+      return null;
+    }, [enableAnimation]);
+
+    final t = useAnimation(Tween<double>(begin: 0, end: 1).animate(controller));
+
+    return RepaintBoundary(
+      child: CustomPaint(
+        painter: _EnhancedGoldenHourPainter(
+          t: t,
+          primaryColor: theme.primaryColor,
+          accentColor: theme.accentColor,
+          intensity: intensity.clamp(0.3, 2.0),
+        ),
+        size: Size.infinite,
+        isComplex: true,
+        willChange: enableAnimation,
       ),
-      size: Size.infinite,
     );
   }
 }
 
-class _GoldenHourPainter extends CustomPainter {
-  final double animation;
+class _EnhancedGoldenHourPainter extends CustomPainter {
+  final double t;
   final Color primaryColor;
   final Color accentColor;
   final double intensity;
 
-  _GoldenHourPainter({
-    required this.animation,
+  _EnhancedGoldenHourPainter({
+    required this.t,
     required this.primaryColor,
     required this.accentColor,
     required this.intensity,
   });
 
+  // Animation helpers for smooth looping
+  double get _phase => 2 * math.pi * t;
+  double _wave(double speed, [double offset = 0]) => math.sin(_phase * speed + offset);
+  double _norm(double speed, [double offset = 0]) => 0.5 * (1 + _wave(speed, offset));
+
+  // Golden hour color palette
+  late final Color _deepGold = const Color(0xFFB8860B);
+  late final Color _sunsetOrange = const Color(0xFFFF8C00);
+  late final Color _warmAmber = const Color(0xFFFFBF00);
+  late final Color _honeyglow = const Color(0xFFFFC649);
+  late final Color _peach = const Color(0xFFFFDAB9);
+  late final Color _rosyGold = const Color(0xFFEEC591);
+  late final Color _burnishedGold = const Color(0xFFCD7F32);
+  late final Color _creamGold = const Color(0xFFFFF8DC);
+
+  // Element counts based on intensity
+  int get _sunrayCount => (32 * intensity).round().clamp(16, 48);
+  int get _cloudLayers => (5 * intensity).round().clamp(3, 8);
+  int get _dustParticleCount => (60 * intensity).round().clamp(30, 90);
+  int get _lensFlareCount => (8 * intensity).round().clamp(4, 12);
+
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-    final random = math.Random(333); // Fixed seed for consistent effects
+    _paintGoldenSky(canvas, size);
+    _paintSun(canvas, size);
+    _paintSunRays(canvas, size);
+    _paintGoldenClouds(canvas, size);
+    _paintAtmosphericHaze(canvas, size);
+    _paintFloatingDust(canvas, size);
+    _paintLensFlares(canvas, size);
+    _paintWarmGlow(canvas, size);
+  }
 
-    // Draw sun rays emanating from top-right corner
-    final sunPosition = Offset(size.width * 0.85, size.height * 0.15);
-    final rayCount = (24 * intensity).round();
+  void _paintGoldenSky(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
 
-    for (int i = 0; i < rayCount; i++) {
-      final angle = (i / rayCount) * math.pi + math.pi * 0.5; // Only bottom half rays
-      final rayLength = (size.width * 0.7 + math.sin(animation * 2 * math.pi + i * 0.3) * 50) * intensity;
-      final rayWidth = (3 + math.sin(animation * 3 * math.pi + i * 0.5) * 2) * intensity;
+    // Cinematic golden hour sky gradient
+    final skyGradient = Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(size.width * 0.5, 0),
+        Offset(size.width * 0.5, size.height),
+        [
+          _creamGold.withOpacity(0.3), // High sky
+          _peach.withOpacity(0.4), // Upper atmosphere
+          _honeyglow.withOpacity(0.6), // Mid sky
+          primaryColor.withOpacity(0.7), // Lower atmosphere
+          accentColor.withOpacity(0.5), // Horizon area
+          _burnishedGold.withOpacity(0.3), // Ground level
+        ],
+        [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+      );
 
-      final endX = sunPosition.dx + math.cos(angle) * rayLength;
-      final endY = sunPosition.dy + math.sin(angle) * rayLength;
+    canvas.drawRect(rect, skyGradient);
 
-      // Create gradient ray
-      paint.shader = RadialGradient(
-        center: Alignment.topRight,
-        radius: 0.8,
-        colors: [
-          primaryColor.withOpacity(0.08 * intensity),
-          primaryColor.withOpacity(0.02 * intensity),
+    // Add subtle color temperature shifts
+    final tempShift = _norm(0.02);
+    final tempPaint = Paint()
+      ..shader = ui.Gradient.radial(
+        Offset(size.width * 0.75, size.height * 0.25),
+        size.width * 0.8,
+        [
+          _warmAmber.withOpacity(0.08 * tempShift * intensity),
           Colors.transparent,
         ],
-      ).createShader(Rect.fromLTWH(sunPosition.dx - 50, sunPosition.dy - 50, 100, 100));
+        [0.0, 1.0],
+      );
 
-      paint.strokeWidth = rayWidth;
-      paint.style = PaintingStyle.stroke;
+    canvas.drawRect(rect, tempPaint);
+  }
 
-      canvas.drawLine(sunPosition, Offset(endX, endY), paint);
-    }
+  void _paintSun(Canvas canvas, Size size) {
+    final sunCenter = Offset(size.width * 0.82, size.height * 0.22);
+    final sunRadius = 45 * intensity;
+    final sunPulse = 0.95 + 0.05 * _wave(0.08);
 
-    // Draw floating dust particles/light motes
-    paint.shader = null;
-    paint.style = PaintingStyle.fill;
+    // Sun's corona/outer glow
+    final coronaPaint = Paint()
+      ..shader = ui.Gradient.radial(
+        sunCenter,
+        sunRadius * 3,
+        [
+          _warmAmber.withOpacity(0.4 * intensity),
+          _honeyglow.withOpacity(0.25 * intensity),
+          _sunsetOrange.withOpacity(0.1 * intensity),
+          Colors.transparent,
+        ],
+        [0.0, 0.3, 0.6, 1.0],
+      );
 
-    for (int i = 0; i < (25 * intensity).round(); i++) {
-      final baseX = random.nextDouble() * size.width;
-      final baseY = random.nextDouble() * size.height;
+    canvas.drawCircle(sunCenter, sunRadius * 3 * sunPulse, coronaPaint);
 
-      // Gentle floating motion
-      final floatX = baseX + math.sin(animation * 2 * math.pi + i * 0.4) * 20 * intensity;
-      final floatY = baseY + math.cos(animation * 1.5 * math.pi + i * 0.6) * 15 * intensity;
+    // Sun's main glow
+    final sunGlowPaint = Paint()
+      ..shader = ui.Gradient.radial(
+        sunCenter,
+        sunRadius * 2,
+        [
+          Colors.white.withOpacity(0.9),
+          _warmAmber.withOpacity(0.8),
+          _sunsetOrange.withOpacity(0.6),
+          accentColor.withOpacity(0.3),
+        ],
+        [0.0, 0.4, 0.7, 1.0],
+      );
 
-      final particleSize = (1.5 + random.nextDouble() * 3) * intensity;
-      final opacity = (0.1 + math.sin(animation * 4 * math.pi + i * 0.8) * 0.05) * intensity;
+    canvas.drawCircle(sunCenter, sunRadius * 1.8 * sunPulse, sunGlowPaint);
 
-      paint.color = Color.lerp(
-        primaryColor.withOpacity(opacity),
-        accentColor.withOpacity(opacity * 0.8),
-        math.sin(animation * math.pi + i) * 0.5 + 0.5,
-      )!;
+    // Sun's core
+    final sunCorePaint = Paint()
+      ..shader = ui.Gradient.radial(
+        sunCenter,
+        sunRadius,
+        [
+          Colors.white.withOpacity(0.95),
+          _warmAmber.withOpacity(0.9),
+          _deepGold.withOpacity(0.7),
+        ],
+        [0.0, 0.6, 1.0],
+      );
 
-      canvas.drawCircle(Offset(floatX, floatY), particleSize, paint);
-    }
+    canvas.drawCircle(sunCenter, sunRadius * sunPulse, sunCorePaint);
 
-    // Draw warm glow clouds
+    // Sun's surface details (solar flares)
+    final flarePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2 * intensity
+      ..color = Colors.white.withOpacity(0.6);
+
     for (int i = 0; i < 6; i++) {
-      final cloudX = size.width * (0.1 + i * 0.15);
-      final cloudY = size.height * (0.3 + math.sin(animation * math.pi + i * 0.7) * 0.2);
-      final cloudSize = (35 + i * 8 + math.sin(animation * 2 * math.pi + i) * 12) * intensity;
+      final flareIntensity = _norm(0.12, i * 0.3);
+      if (flareIntensity > 0.7) {
+        final flareAngle = i * math.pi / 3 + _phase * 0.1;
+        final flareLength = sunRadius * (0.3 + flareIntensity * 0.2);
 
-      final glowIntensity = 0.02 + math.cos(animation * 1.5 * math.pi + i * 0.5) * 0.01;
+        final startPoint = Offset(
+          sunCenter.dx + math.cos(flareAngle) * sunRadius * 0.7,
+          sunCenter.dy + math.sin(flareAngle) * sunRadius * 0.7,
+        );
 
-      // Multiple overlapping circles for cloud effect
-      paint.color = primaryColor.withOpacity(glowIntensity * intensity);
-      canvas.drawCircle(Offset(cloudX, cloudY), cloudSize, paint);
+        final endPoint = Offset(
+          sunCenter.dx + math.cos(flareAngle) * (sunRadius * 0.7 + flareLength),
+          sunCenter.dy + math.sin(flareAngle) * (sunRadius * 0.7 + flareLength),
+        );
 
-      paint.color = accentColor.withOpacity(glowIntensity * 0.6 * intensity);
-      canvas.drawCircle(Offset(cloudX - cloudSize * 0.3, cloudY + cloudSize * 0.2), cloudSize * 0.8, paint);
-      canvas.drawCircle(Offset(cloudX + cloudSize * 0.4, cloudY - cloudSize * 0.1), cloudSize * 0.6, paint);
+        canvas.drawLine(startPoint, endPoint, flarePaint);
+      }
     }
+  }
 
-    // Draw warm atmospheric haze
-    final hazeCount = (8 * intensity).round();
-    for (int i = 0; i < hazeCount; i++) {
-      final hazeX = size.width * (i / (hazeCount - 1));
-      final hazeY = size.height * (0.7 + math.sin(animation * 1.5 * math.pi + i) * 0.1);
-      final hazeWidth = (60 + i * 10) * intensity;
-      final hazeHeight = (20 + math.sin(animation * 2 * math.pi + i * 0.3) * 8) * intensity;
+  void _paintSunRays(Canvas canvas, Size size) {
+    final sunPosition = Offset(size.width * 0.82, size.height * 0.22);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
 
-      paint.color = Color.lerp(
-        primaryColor.withOpacity(0.015),
-        accentColor.withOpacity(0.01),
-        i / (hazeCount - 1),
-      )!;
+    // Dynamic sun rays
+    for (int i = 0; i < _sunrayCount; i++) {
+      final rayAngle = (i / _sunrayCount) * 2 * math.pi + _phase * 0.02;
+      final rayIntensity = _norm(0.15, i * 0.1);
+      final rayLength = (120 + rayIntensity * 80 + _wave(0.05, i * 0.2) * 40) * intensity;
 
+      // Vary ray thickness and opacity
+      final rayThickness = (2 + rayIntensity * 3) * intensity;
+      final rayOpacity = (0.15 + rayIntensity * 0.2) * intensity;
+
+      if (rayOpacity > 0.1) {
+        final endPoint = Offset(
+          sunPosition.dx + math.cos(rayAngle) * rayLength,
+          sunPosition.dy + math.sin(rayAngle) * rayLength,
+        );
+
+        // Main ray
+        paint
+          ..strokeWidth = rayThickness
+          ..shader = ui.Gradient.linear(
+            sunPosition,
+            endPoint,
+            [
+              _warmAmber.withOpacity(rayOpacity),
+              _honeyglow.withOpacity(rayOpacity * 0.6),
+              Colors.transparent,
+            ],
+            [0.0, 0.7, 1.0],
+          );
+
+        canvas.drawLine(sunPosition, endPoint, paint);
+
+        // Secondary ray glow
+        paint
+          ..strokeWidth = rayThickness * 2
+          ..shader = ui.Gradient.linear(
+            sunPosition,
+            endPoint,
+            [
+              _peach.withOpacity(rayOpacity * 0.3),
+              Colors.transparent,
+            ],
+            [0.0, 1.0],
+          );
+
+        canvas.drawLine(sunPosition, endPoint, paint);
+      }
+    }
+  }
+
+  void _paintGoldenClouds(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+    final random = math.Random(123);
+
+    // Layered golden clouds
+    for (int layer = 0; layer < _cloudLayers; layer++) {
+      final cloudY = size.height * (0.15 + layer * 0.12);
+      final cloudDrift = _wave(0.01, layer.toDouble()) * 30 * intensity;
+
+      for (int i = 0; i < 4; i++) {
+        final baseX = size.width * (0.1 + i * 0.25) + cloudDrift;
+        final cloudSize = (40 + layer * 8 + random.nextDouble() * 20) * intensity;
+        final cloudHeight = cloudSize * (0.6 + random.nextDouble() * 0.4);
+
+        final breathe = 0.9 + 0.1 * _norm(0.03, layer + i.toDouble());
+        final currentSize = cloudSize * breathe;
+
+        // Cloud illumination varies by position relative to sun
+        final sunPosition = Offset(size.width * 0.82, size.height * 0.22);
+        final cloudCenter = Offset(baseX, cloudY);
+        final distanceToSun = (cloudCenter - sunPosition).distance;
+        final sunInfluence = math.max(0.0, 1.0 - (distanceToSun / (size.width * 0.5)));
+
+        // Cloud colors based on sun illumination
+        final cloudColors = [
+          Color.lerp(_creamGold, _warmAmber, sunInfluence * 0.7)!,
+          Color.lerp(_peach, _honeyglow, sunInfluence * 0.6)!,
+          Color.lerp(_rosyGold, accentColor, sunInfluence * 0.5)!,
+        ];
+
+        final cloudColor = cloudColors[layer % cloudColors.length];
+        final opacity = (0.08 + sunInfluence * 0.15 + layer * 0.02) * intensity;
+
+        paint.color = cloudColor.withOpacity(opacity);
+
+        // Create organic cloud shape
+        _drawCloudShape(canvas, paint, cloudCenter, currentSize, cloudHeight);
+      }
+    }
+  }
+
+  void _drawCloudShape(Canvas canvas, Paint paint, Offset center, double width, double height) {
+    // Main cloud body
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: width, height: height),
+      paint,
+    );
+
+    // Additional cloud puffs for organic shape
+    final puffOffsets = [
+      Offset(-width * 0.3, -height * 0.2),
+      Offset(width * 0.35, -height * 0.1),
+      Offset(width * 0.15, height * 0.3),
+      Offset(-width * 0.25, height * 0.2),
+      Offset(width * 0.45, height * 0.1),
+    ];
+
+    final puffSizes = [
+      width * 0.6,
+      width * 0.5,
+      width * 0.4,
+      width * 0.55,
+      width * 0.35,
+    ];
+
+    for (int i = 0; i < puffOffsets.length; i++) {
+      canvas.drawCircle(
+        center + puffOffsets[i],
+        puffSizes[i],
+        paint,
+      );
+    }
+  }
+
+  void _paintAtmosphericHaze(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    // Layered atmospheric haze
+    for (int i = 0; i < 6; i++) {
+      final hazeY = size.height * (0.5 + i * 0.08) + _wave(0.02, i.toDouble()) * 15 * intensity;
+      final hazeWidth = size.width * (0.8 + i * 0.1);
+      final hazeHeight = (25 + i * 8 + _wave(0.04, i * 0.5) * 10) * intensity;
+
+      final hazeIntensity = _norm(0.06, i * 0.7);
+      final hazeColors = [_peach, _honeyglow, _warmAmber, _rosyGold];
+      final hazeColor = hazeColors[i % hazeColors.length];
+
+      paint.color = hazeColor.withOpacity(0.05 * hazeIntensity * intensity);
+
+      // Create horizontal haze layers
       canvas.drawOval(
         Rect.fromCenter(
-          center: Offset(hazeX, hazeY),
+          center: Offset(size.width * 0.5, hazeY),
           width: hazeWidth,
           height: hazeHeight,
         ),
         paint,
       );
     }
+  }
 
-    // Draw golden sparkles
-    for (int i = 0; i < (15 * intensity).round(); i++) {
-      final sparkleX = random.nextDouble() * size.width;
-      final sparkleY = random.nextDouble() * size.height;
-      final sparkleIntensity = math.sin(animation * 6 * math.pi + i * 0.4) * 0.5 + 0.5;
+  void _paintFloatingDust(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+    final random = math.Random(456);
 
-      if (sparkleIntensity > 0.8) {
-        final sparkleSize = (4 + sparkleIntensity * 3) * intensity;
-        paint.color = Colors.amber.withOpacity(0.2 * sparkleIntensity * intensity);
+    // Golden dust motes floating in sunlight
+    for (int i = 0; i < _dustParticleCount; i++) {
+      final baseX = random.nextDouble() * size.width;
+      final baseY = random.nextDouble() * size.height;
 
-        // Draw cross-shaped sparkle
-        canvas.drawCircle(Offset(sparkleX, sparkleY), sparkleSize, paint);
+      // Dust particles drift lazily
+      final driftX = baseX + _wave(0.03, i * 0.1) * 20 * intensity;
+      final driftY = baseY + _wave(0.025, i * 0.15) * 15 * intensity;
 
-        paint.strokeWidth = 1 * intensity;
-        paint.style = PaintingStyle.stroke;
-        canvas.drawLine(
-          Offset(sparkleX - sparkleSize * 2, sparkleY),
-          Offset(sparkleX + sparkleSize * 2, sparkleY),
-          paint,
-        );
-        canvas.drawLine(
-          Offset(sparkleX, sparkleY - sparkleSize * 2),
-          Offset(sparkleX, sparkleY + sparkleSize * 2),
-          paint,
-        );
+      final particleSize = (1 + random.nextDouble() * 3) * intensity;
+      final shimmer = _norm(0.2, i * 0.05);
 
-        paint.style = PaintingStyle.fill;
+      // Particles catch the light at different intensities
+      final catchesLight = shimmer > 0.6;
+
+      if (catchesLight) {
+        final lightIntensity = (shimmer - 0.6) / 0.4;
+
+        // Dust particle colors
+        final dustColors = [_warmAmber, _honeyglow, _creamGold, Colors.white];
+        final dustColor = dustColors[i % dustColors.length];
+
+        paint.color = dustColor.withOpacity(0.4 * lightIntensity * intensity);
+        canvas.drawCircle(Offset(driftX, driftY), particleSize * lightIntensity, paint);
+
+        // Bright particles get extra glow
+        if (lightIntensity > 0.8) {
+          paint.color = Colors.white.withOpacity(0.6 * lightIntensity * intensity);
+          canvas.drawCircle(Offset(driftX, driftY), particleSize * 0.5, paint);
+        }
       }
     }
   }
 
+  void _paintLensFlares(Canvas canvas, Size size) {
+    final sunPosition = Offset(size.width * 0.82, size.height * 0.22);
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    // Lens flare effects
+    for (int i = 0; i < _lensFlareCount; i++) {
+      final flareProgress = i / (_lensFlareCount - 1);
+      final flareIntensity = _norm(0.08, i * 0.4);
+
+      if (flareIntensity > 0.5) {
+        // Position flares along line from sun to opposite corner
+        final flareX = sunPosition.dx - (sunPosition.dx * flareProgress * 1.2);
+        final flareY = sunPosition.dy + ((size.height - sunPosition.dy) * flareProgress * 0.8);
+
+        final flareSize = (8 + i * 3 + flareIntensity * 10) * intensity;
+        final brightness = (flareIntensity - 0.5) / 0.5;
+
+        // Different flare shapes and colors
+        switch (i % 4) {
+          case 0: // Circular flare
+            paint.color = _warmAmber.withOpacity(0.3 * brightness * intensity);
+            canvas.drawCircle(Offset(flareX, flareY), flareSize, paint);
+            break;
+
+          case 1: // Hexagonal flare
+            paint.color = _honeyglow.withOpacity(0.25 * brightness * intensity);
+            _drawHexagon(canvas, paint, Offset(flareX, flareY), flareSize);
+            break;
+
+          case 2: // Ring flare
+            paint
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 2 * intensity
+              ..color = _peach.withOpacity(0.4 * brightness * intensity);
+            canvas.drawCircle(Offset(flareX, flareY), flareSize, paint);
+            paint.style = PaintingStyle.fill;
+            break;
+
+          case 3: // Star flare
+            paint.color = Colors.white.withOpacity(0.5 * brightness * intensity);
+            _drawStarFlare(canvas, paint, Offset(flareX, flareY), flareSize);
+            break;
+        }
+      }
+    }
+  }
+
+  void _drawHexagon(Canvas canvas, Paint paint, Offset center, double radius) {
+    final path = Path();
+    for (int i = 0; i < 6; i++) {
+      final angle = i * math.pi / 3;
+      final x = center.dx + math.cos(angle) * radius;
+      final y = center.dy + math.sin(angle) * radius;
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  void _drawStarFlare(Canvas canvas, Paint paint, Offset center, double radius) {
+    final path = Path();
+    for (int i = 0; i < 8; i++) {
+      final angle = i * math.pi / 4;
+      final r = (i % 2 == 0) ? radius : radius * 0.4;
+      final x = center.dx + math.cos(angle) * r;
+      final y = center.dy + math.sin(angle) * r;
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  void _paintWarmGlow(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+
+    // Overall warm atmospheric glow
+    final warmGlowPaint = Paint()
+      ..shader = ui.Gradient.radial(
+        Offset(size.width * 0.75, size.height * 0.3),
+        size.width * 0.9,
+        [
+          _warmAmber.withOpacity(0.06 * intensity),
+          _honeyglow.withOpacity(0.04 * intensity),
+          _peach.withOpacity(0.02 * intensity),
+          Colors.transparent,
+        ],
+        [0.0, 0.4, 0.7, 1.0],
+      );
+
+    canvas.drawRect(rect, warmGlowPaint);
+
+    // Subtle edge warming
+    final edgeWarmth = _norm(0.03);
+    final edgePaint = Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(0, 0),
+        Offset(size.width, size.height),
+        [
+          Colors.transparent,
+          accentColor.withOpacity(0.03 * edgeWarmth * intensity),
+          Colors.transparent,
+        ],
+        [0.0, 0.5, 1.0],
+      );
+
+    canvas.drawRect(rect, edgePaint);
+  }
+
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _EnhancedGoldenHourPainter oldDelegate) {
+    return oldDelegate.t != t ||
+        oldDelegate.primaryColor != primaryColor ||
+        oldDelegate.accentColor != accentColor ||
+        oldDelegate.intensity != intensity;
+  }
 }

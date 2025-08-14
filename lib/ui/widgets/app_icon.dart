@@ -19,7 +19,8 @@ enum AppIcons {
   home,
   magic_stick,
   album,
-  archive_down
+  archive_down,
+  lasso
 }
 
 class AppIcon extends StatelessWidget {

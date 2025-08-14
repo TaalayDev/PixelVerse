@@ -6,7 +6,7 @@ import '../pixel_point.dart';
 import '../tools.dart';
 
 class LassoTool extends Tool {
-  LassoTool() : super(PixelTool.select);
+  LassoTool() : super(PixelTool.lasso);
 
   List<Offset> _points = [];
   List<PixelPoint<int>> _selectedPixels = [];

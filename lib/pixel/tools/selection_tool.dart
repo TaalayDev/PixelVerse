@@ -1,11 +1,11 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:pixelverse/pixel/pixel_point.dart';
-import 'package:pixelverse/pixel/tools/shape_tool.dart';
 
 import '../../data/models/selection_model.dart';
+import '../pixel_point.dart';
 import '../tools.dart';
+import 'shape_tool.dart';
 
 /// A utility class for handling selection operations in the PixelCanvas
 class SelectionUtils {

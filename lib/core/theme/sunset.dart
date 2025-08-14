@@ -57,18 +57,30 @@ AppTheme buildSunsetTheme() {
 
 // Sunset theme background with warm gradient shifts
 class SunsetBackground extends HookWidget {
-  final AnimationController controller;
   final AppTheme theme;
   final double intensity;
+  final bool enableAnimation;
 
   const SunsetBackground({
-    required this.controller,
+    super.key,
     required this.theme,
     required this.intensity,
+    this.enableAnimation = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final controller = useAnimationController(duration: theme.type.animationDuration);
+
+    useEffect(() {
+      if (enableAnimation) {
+        controller.forward();
+      } else {
+        controller.stop();
+      }
+      return null;
+    }, [enableAnimation]);
+
     final sunAnimation = useAnimation(
       Tween<double>(begin: 0, end: 1).animate(controller),
     );

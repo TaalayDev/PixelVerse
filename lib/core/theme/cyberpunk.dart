@@ -66,18 +66,30 @@ AppTheme buildCyberpunkTheme() {
 
 // Cyberpunk theme background with digital matrix effects
 class CyberpunkBackground extends HookWidget {
-  final AnimationController controller;
   final AppTheme theme;
   final double intensity;
+  final bool enableAnimation;
 
   const CyberpunkBackground({
-    required this.controller,
+    super.key,
     required this.theme,
     required this.intensity,
+    this.enableAnimation = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final controller = useAnimationController(duration: theme.type.animationDuration);
+
+    useEffect(() {
+      if (enableAnimation) {
+        controller.repeat();
+      } else {
+        controller.stop();
+      }
+      return null;
+    }, [enableAnimation]);
+
     final matrixAnimation = useAnimation(
       Tween<double>(begin: 0, end: 1).animate(controller),
     );

@@ -5,7 +5,7 @@ import '../utils/screen_size.dart';
 extension ContextExtensions on BuildContext {
   NavigatorState get navigator => Navigator.of(this);
 
-  ScreenSize get screenSize => MediaQuery.of(this).size.adaptiveValue(
+  ScreenSize get screenSize => MediaQuery.sizeOf(this).adaptiveValue(
         ScreenSize.md,
         {
           ScreenSize.xxs: ScreenSize.xs,

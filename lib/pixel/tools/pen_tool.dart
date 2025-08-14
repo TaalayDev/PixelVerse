@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:math';
 
 import '../pixel_point.dart';
 import '../tools.dart';
@@ -32,10 +33,12 @@ class PenTool extends Tool {
       } else {
         // Add new point to the path
         _pathPoints.add(position);
+        _updatePathPreview(details);
       }
     } else {
       // First point in the path
       _pathPoints.add(position);
+      _updatePathPreview(details);
     }
   }
 
@@ -63,41 +66,103 @@ class PenTool extends Tool {
     }
   }
 
-  void _finalizePath(PixelDrawDetails details) {
-    if (_pathPoints.length < 3) return; // Need at least 3 points for a path
+  void _updatePathPreview(PixelDrawDetails details) {
+    if (_pathPoints.length < 2) {
+      // Single point - just show the point
+      final pixelPos = details.pixelPosition;
+      if (_isValidPoint(pixelPos, details.width, details.height)) {
+        _currentPixels = [PixelPoint(pixelPos.x, pixelPos.y, color: details.color.value)];
+        details.onPixelsUpdated(_currentPixels);
+      }
+      return;
+    }
 
-    // Convert path to pixel points using ShapeUtils
-    final updatedShapeUtils = ShapeUtils(
+    // Generate preview of the current path
+    final shapeUtils = ShapeUtils(
       width: details.width,
       height: details.height,
     );
 
-    _currentPixels = updatedShapeUtils.getPenPathPixels(
+    _currentPixels = shapeUtils.getPenPathPixels(
+      _pathPoints,
+      close: false,
+      size: details.size,
+    );
+
+    // Apply color to pixels
+    final coloredPixels =
+        _currentPixels.map((point) => PixelPoint(point.x, point.y, color: details.color.value)).toList();
+
+    // Apply stroke width if needed
+    List<PixelPoint<int>> finalPixels;
+    if (details.strokeWidth > 1) {
+      finalPixels = _applyStrokeWidth(coloredPixels, details);
+    } else {
+      finalPixels = coloredPixels;
+    }
+
+    // Apply modifiers if needed
+    if (details.modifier != null) {
+      final modifiedPixels = <PixelPoint<int>>[];
+      for (final point in finalPixels) {
+        modifiedPixels.add(point);
+        final modPoints = details.modifier!.apply(
+          point,
+          details.width,
+          details.height,
+        );
+        modifiedPixels.addAll(modPoints);
+      }
+      finalPixels = modifiedPixels;
+    }
+
+    _currentPixels = finalPixels;
+    details.onPixelsUpdated(_currentPixels);
+  }
+
+  void _finalizePath(PixelDrawDetails details) {
+    if (_pathPoints.length < 3) return; // Need at least 3 points for a path
+
+    // Convert path to pixel points using improved ShapeUtils
+    final shapeUtils = ShapeUtils(
+      width: details.width,
+      height: details.height,
+    );
+
+    _currentPixels = shapeUtils.getPenPathPixels(
       _pathPoints,
       close: true,
       size: details.size,
     );
 
+    // Apply color to pixels
+    final coloredPixels =
+        _currentPixels.map((point) => PixelPoint(point.x, point.y, color: details.color.value)).toList();
+
+    // Apply stroke width if needed
+    List<PixelPoint<int>> finalPixels;
+    if (details.strokeWidth > 1) {
+      finalPixels = _applyStrokeWidth(coloredPixels, details);
+    } else {
+      finalPixels = coloredPixels;
+    }
+
     // Apply modifiers if needed
     if (details.modifier != null) {
-      final modifier = details.modifier!;
-      List<PixelPoint<int>> modifiedPixels = [];
-
-      for (final point in _currentPixels) {
+      final modifiedPixels = <PixelPoint<int>>[];
+      for (final point in finalPixels) {
         modifiedPixels.add(point);
-
-        final modPoints = modifier.apply(
+        final modPoints = details.modifier!.apply(
           point,
           details.width,
           details.height,
         );
-
         modifiedPixels.addAll(modPoints);
       }
-
-      _currentPixels = modifiedPixels;
+      finalPixels = modifiedPixels;
     }
 
+    _currentPixels = finalPixels;
     details.onPixelsUpdated(_currentPixels);
 
     // Reset state
@@ -105,5 +170,82 @@ class PenTool extends Tool {
     _isClosingPath = false;
     _pathPoints = [];
     _currentPixels = [];
+  }
+
+  /// Apply stroke width to the path pixels
+  List<PixelPoint<int>> _applyStrokeWidth(
+    List<PixelPoint<int>> pathPixels,
+    PixelDrawDetails details,
+  ) {
+    if (details.strokeWidth <= 1) return pathPixels;
+
+    final thickenedPoints = <PixelPoint<int>>[];
+    final halfStroke = details.strokeWidth ~/ 2;
+    final added = <String>{};
+
+    for (final point in pathPixels) {
+      // Create a circular brush pattern for more natural strokes
+      final radius = halfStroke;
+
+      for (int dy = -radius; dy <= radius; dy++) {
+        for (int dx = -radius; dx <= radius; dx++) {
+          // Use circular pattern instead of square
+          if (dx * dx + dy * dy <= radius * radius) {
+            final newX = point.x + dx;
+            final newY = point.y + dy;
+            final key = '$newX,$newY';
+
+            if (!added.contains(key) &&
+                _isValidPoint(PixelPoint(newX, newY, color: 0), details.width, details.height)) {
+              added.add(key);
+              thickenedPoints.add(PixelPoint(
+                newX,
+                newY,
+                color: point.color,
+              ));
+            }
+          }
+        }
+      }
+    }
+
+    return thickenedPoints;
+  }
+
+  /// Get current path points for preview rendering
+  List<Offset> get pathPoints => List.unmodifiable(_pathPoints);
+
+  /// Check if currently drawing a path
+  bool get isDrawing => _isDrawing;
+
+  /// Check if close to starting point
+  bool get isClosingPath => _isClosingPath;
+
+  /// Get close threshold distance
+  double get closeThreshold => _closeThreshold;
+
+  /// Force close the current path
+  void forceClosePath(PixelDrawDetails details) {
+    if (_isDrawing && _pathPoints.length > 2) {
+      _pathPoints.add(_pathPoints[0]);
+      _finalizePath(details);
+    }
+  }
+
+  /// Cancel current path without finalizing
+  void cancelPath() {
+    _isDrawing = false;
+    _isClosingPath = false;
+    _pathPoints.clear();
+    _currentPixels.clear();
+  }
+
+  /// Reset tool state
+  void reset() {
+    cancelPath();
+  }
+
+  bool _isValidPoint(PixelPoint<int> point, int width, int height) {
+    return point.x >= 0 && point.x < width && point.y >= 0 && point.y < height;
   }
 }

@@ -11,6 +11,7 @@ import '../../core/theme/cosmic.dart';
 import '../../core/theme/cyberpunk.dart';
 import '../../core/theme/deep_sea.dart';
 import '../../core/theme/dream_scape.dart';
+import '../../core/theme/emerald_forest.dart';
 import '../../core/theme/forest.dart';
 import '../../core/theme/golden_hour.dart';
 import '../../core/theme/ice_crystal.dart';
@@ -22,6 +23,7 @@ import '../../core/theme/pastel.dart';
 import '../../core/theme/prismatic.dart';
 import '../../core/theme/purple_rain.dart';
 import '../../core/theme/retro_wave.dart';
+import '../../core/theme/rose_quartz_garden.dart';
 import '../../core/theme/sunset.dart';
 import '../../core/theme/toxic_waste.dart';
 import '../../core/theme/volcanic.dart';
@@ -31,43 +33,28 @@ class AnimatedBackground extends HookConsumerWidget {
   final Widget child;
   final double intensity;
   final bool enableAnimation;
+  final AppTheme? appTheme;
 
   const AnimatedBackground({
     super.key,
     required this.child,
     this.intensity = 1.0,
     this.enableAnimation = true,
+    this.appTheme,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = ref.watch(themeProvider).theme;
-    final animationController = useAnimationController(
-      duration: theme.type.animationDuration,
-    );
-
-    useEffect(() {
-      if (enableAnimation) {
-        animationController.repeat();
-      } else {
-        animationController.stop();
-      }
-      return null;
-    }, [enableAnimation]);
+    final theme = appTheme ?? ref.watch(themeProvider).theme;
 
     return Stack(
       children: [
-        // Base background
         Container(
           decoration: BoxDecoration(
             gradient: _getBaseGradient(theme),
           ),
         ),
-
-        // Animated layer
-        if (enableAnimation) _buildAnimatedLayer(theme, animationController),
-
-        // Child content
+        if (enableAnimation) _buildAnimatedLayer(theme),
         child,
       ],
     );
@@ -314,6 +301,32 @@ class AnimatedBackground extends HookConsumerWidget {
           stops: const [0.0, 0.3, 0.7, 1.0],
         );
 
+      case ThemeType.emeraldForest:
+        return RadialGradient(
+          center: Alignment.topLeft,
+          radius: 1.8,
+          colors: [
+            Color.lerp(theme.background, theme.primaryColor, 0.04)!,
+            theme.background,
+            Color.lerp(theme.background, theme.accentColor, 0.02)!,
+            theme.background,
+          ],
+          stops: const [0.0, 0.4, 0.8, 1.0],
+        );
+
+      case ThemeType.roseQuartzGarden:
+        return RadialGradient(
+          center: Alignment.topCenter,
+          radius: 1.5,
+          colors: [
+            Color.lerp(theme.background, theme.primaryColor, 0.04)!,
+            theme.background,
+            Color.lerp(theme.background, theme.accentColor, 0.02)!,
+            theme.background,
+          ],
+          stops: const [0.0, 0.4, 0.8, 1.0],
+        );
+
       default:
         return LinearGradient(
           begin: Alignment.topLeft,
@@ -326,179 +339,205 @@ class AnimatedBackground extends HookConsumerWidget {
     }
   }
 
-  Widget _buildAnimatedLayer(AppTheme theme, AnimationController controller) {
+  Widget _buildAnimatedLayer(AppTheme theme) {
     switch (theme.type) {
       case ThemeType.volcanic:
         return VolcanicBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
         );
 
       case ThemeType.iceCrystal:
         return IceCrystalBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
         );
 
       case ThemeType.retroWave:
         return RetroWaveBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
         );
 
       case ThemeType.cherryBlossom:
         return CherryBlossomBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
         );
 
       case ThemeType.cyberpunk:
         return CyberpunkBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
         );
 
       case ThemeType.goldenHour:
         return GoldenHourBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
         );
 
       case ThemeType.purpleRain:
         return PurpleRainBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
         );
 
       case ThemeType.pastel:
         return PastelBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
         );
 
       case ThemeType.cosmic:
         return CosmicBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
         );
 
       case ThemeType.midnight:
         return MidnightBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
         );
 
       case ThemeType.ocean:
         return OceanBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
         );
 
       case ThemeType.forest:
         return ForestBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
         );
 
       case ThemeType.sunset:
         return SunsetBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
         );
 
       case ThemeType.neon:
         return NeonBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
         );
 
       case ThemeType.monochrome:
         return MonochromeBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
         );
 
       case ThemeType.arcticAurora:
         return ArcticAuroraBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
         );
 
       case ThemeType.toxicWaste:
         return ToxicWasteBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
         );
 
       case ThemeType.dreamscape:
         return DreamscapeBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
         );
 
       case ThemeType.deepSea:
         return DeepSeaBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
         );
 
       case ThemeType.copperSteampunk:
         return CopperSteampunkBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
         );
 
       case ThemeType.prismatic:
         return PrismaticBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
+        );
+
+      case ThemeType.emeraldForest:
+        return EmeraldForestBackground(
+          theme: theme,
+          intensity: intensity,
+          enableAnimation: enableAnimation,
+        );
+
+      case ThemeType.roseQuartzGarden:
+        return RoseQuartzGardenBackground(
+          theme: theme,
+          intensity: intensity,
+          enableAnimation: enableAnimation,
         );
 
       default:
         return _DefaultBackground(
-          controller: controller,
           theme: theme,
           intensity: intensity,
+          enableAnimation: enableAnimation,
         );
     }
   }
 }
 
-// Default background for other themes
 class _DefaultBackground extends HookWidget {
-  final AnimationController controller;
   final AppTheme theme;
   final double intensity;
+  final bool enableAnimation;
 
   const _DefaultBackground({
-    required this.controller,
     required this.theme,
     required this.intensity,
+    required this.enableAnimation,
   });
 
   @override
   Widget build(BuildContext context) {
+    final controller = useAnimationController(
+      duration: theme.type.animationDuration,
+    );
+
+    useEffect(() {
+      if (enableAnimation) {
+        controller.repeat();
+      } else {
+        controller.stop();
+      }
+      return null;
+    }, [enableAnimation]);
+
     final floatAnimation = useAnimation(
       Tween<double>(begin: 0, end: 1).animate(controller),
     );
@@ -533,7 +572,6 @@ class _DefaultPainter extends CustomPainter {
     final paint = Paint()..style = PaintingStyle.fill;
     final random = math.Random(456);
 
-    // Draw floating bubbles
     for (int i = 0; i < (15 * intensity).round(); i++) {
       final baseX = random.nextDouble() * size.width;
       final baseY = random.nextDouble() * size.height;
@@ -557,7 +595,6 @@ class _DefaultPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
-// Convenience extension for easy usage
 extension AnimatedBackgroundExtension on Widget {
   Widget withAnimatedBackground({
     required AppTheme theme,

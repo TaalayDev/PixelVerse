@@ -44,6 +44,8 @@ enum PixelTool {
       case PixelTool.curve:
       case PixelTool.line:
         return SystemMouseCursors.cell;
+      case PixelTool.lasso:
+        return SystemMouseCursors.precise;
       case PixelTool.gradient:
         return SystemMouseCursors.click;
       case PixelTool.sprayPaint:
@@ -84,7 +86,7 @@ abstract class Modifier {
 abstract class Tool {
   final PixelTool type;
 
-  Tool(this.type);
+  const Tool(this.type);
 
   bool get isPencil => type == PixelTool.pencil;
   bool get isFill => type == PixelTool.fill;

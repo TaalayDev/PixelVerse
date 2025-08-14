@@ -2,9 +2,7 @@ import 'dart:typed_data';
 
 import '../data/models/layer.dart';
 
-class PixelUtils {
-  const PixelUtils._();
-
+abstract final class PixelUtils {
   static Uint32List mergeLayersPixels({
     required int width,
     required int height,

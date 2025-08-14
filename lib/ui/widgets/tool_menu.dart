@@ -85,6 +85,16 @@ class ToolMenu extends StatelessWidget {
                 show: !subscription.isPro,
                 child: IconButton(
                   icon: AppIcon(
+                    AppIcons.lasso,
+                    color: tool == PixelTool.lasso ? Colors.blue : null,
+                  ),
+                  onPressed: !subscription.isPro ? null : () => onSelectTool(PixelTool.lasso),
+                ),
+              ),
+              ProBadge(
+                show: !subscription.isPro,
+                child: IconButton(
+                  icon: AppIcon(
                     AppIcons.pen,
                     color: tool == PixelTool.pen ? Colors.blue : null,
                   ),

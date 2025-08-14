@@ -11,13 +11,14 @@ import '../../pixel/tools/eyedropper_tool.dart';
 import '../../pixel/tools/pen_tool.dart';
 import '../../pixel/tools/shape_tool.dart';
 import '../../pixel/tools/shape_util.dart';
+import '../../pixel/tools/lasso_tool.dart';
 import '../../data.dart';
 import '../pixel_point.dart';
 import '../tools/curve_tool.dart';
 import '../tools/spray_tool.dart';
 import 'canvas_controller.dart';
 
-/// Manages tool-specific drawing operations
+/// Manages tool-specific drawing operations with pixel-perfect generation
 class ToolDrawingManager {
   final int width;
   final int height;
@@ -37,10 +38,20 @@ class ToolDrawingManager {
   late final RectangleTool _rectangleTool;
   late final OvalToolBresenham _circleTool;
   late final SelectionTool _selectionTool;
+  late final LassoTool _lassoTool;
   late final EyedropperTool _eyedropperTool;
   late final SprayTool _sprayTool;
 
-  final Random _random = Random();
+  final _random = Random();
+
+  bool get isCurveActive => _curveTool.hasStartPoint;
+  bool get isCurveDefining => _curveTool.isDefiningCurve;
+  Offset? get curveStartPoint => _curveTool.startPoint;
+  Offset? get curveEndPoint => _curveTool.endPoint;
+  Offset? get curveControlPoint => _curveTool.controlPoint;
+
+  List<Offset> get lassoPreviewPoints => _lassoTool.previewPoints;
+  bool get isDrawingLasso => _lassoTool.isDrawing;
 
   ToolDrawingManager({
     required this.width,
@@ -77,6 +88,7 @@ class ToolDrawingManager {
     _rectangleTool = RectangleTool();
     _circleTool = OvalToolBresenham();
     _selectionTool = SelectionTool(_selectionUtils, _circleTool);
+    _lassoTool = LassoTool();
     _eyedropperTool = EyedropperTool(
       onColorPicked: (color) => onColorPicked?.call(color),
     );
@@ -84,30 +96,20 @@ class ToolDrawingManager {
   }
 
   Tool _getTool(PixelTool toolType) {
-    switch (toolType) {
-      case PixelTool.pencil:
-        return _pencilTool;
-      case PixelTool.pen:
-        return _penTool;
-      case PixelTool.curve:
-        return _curveTool;
-      case PixelTool.line:
-        return _lineTool;
-      case PixelTool.rectangle:
-        return _rectangleTool;
-      case PixelTool.circle:
-        return _circleTool;
-      case PixelTool.fill:
-        return _fillTool;
-      case PixelTool.select:
-        return _selectionTool;
-      case PixelTool.eyedropper:
-        return _eyedropperTool;
-      case PixelTool.sprayPaint:
-        return _sprayTool;
-      default:
-        return _pencilTool;
-    }
+    return switch (toolType) {
+      PixelTool.pencil => _pencilTool,
+      PixelTool.pen => _penTool,
+      PixelTool.curve => _curveTool,
+      PixelTool.line => _lineTool,
+      PixelTool.rectangle => _rectangleTool,
+      PixelTool.circle => _circleTool,
+      PixelTool.fill => _fillTool,
+      PixelTool.select => _selectionTool,
+      PixelTool.lasso => _lassoTool,
+      PixelTool.eyedropper => _eyedropperTool,
+      PixelTool.sprayPaint => _sprayTool,
+      _ => _pencilTool,
+    };
   }
 
   void handleTap(PixelTool toolType, PixelDrawDetails details) {
@@ -130,6 +132,7 @@ class ToolDrawingManager {
     tool.onEnd(details);
   }
 
+  /// MARK: Curve Tool
   void handleCurveTap(PixelDrawDetails details, PixelCanvasController controller) {
     _curveTool.onStart(details);
 
@@ -155,17 +158,24 @@ class ToolDrawingManager {
   }
 
   void resetCurveTool() {
-    if (_curveTool.hasStartPoint || _curveTool.hasEndPoint) {
-      _curveTool = CurveTool();
-    }
+    _curveTool = CurveTool();
   }
 
-  bool get isCurveActive => _curveTool.hasStartPoint;
-  bool get isCurveDefining => _curveTool.isDefiningCurve;
-  Offset? get curveStartPoint => _curveTool.startPoint;
-  Offset? get curveEndPoint => _curveTool.endPoint;
-  Offset? get curveControlPoint => _curveTool.controlPoint;
+  /// MARK: Selection Tool
+  void handleSelectionStart(PixelDrawDetails details) {
+    _selectionTool.onStart(details);
+  }
 
+  void handleSelectionEnd(PixelDrawDetails details) {
+    _selectionTool.onEnd(details);
+    onSelectionEnd?.call(_selectionTool.previewPoints);
+  }
+
+  void handleSelectionUpdate(PixelDrawDetails details) {
+    _selectionTool.onMove(details);
+  }
+
+  /// MARK: Pen Tool
   void handlePenTap(
     PixelDrawDetails details,
     PixelCanvasController controller, {
@@ -179,30 +189,50 @@ class ToolDrawingManager {
       final startPoint = penPoints[0];
       if ((position - startPoint).distance <= closeThreshold) {
         penPoints.add(startPoint);
-        _finalizePenPath(penPoints, details, controller);
+        _finalizePenPath(penPoints, details, controller, close: true);
         onPathClosed?.call();
       } else {
         penPoints.add(position);
         controller.setPenPoints(penPoints);
+        _updatePenPathPreview(penPoints, details, controller);
       }
     } else {
       penPoints.add(position);
       controller.setPenPoints(penPoints);
       controller.setDrawingPenPath(true);
+      _updatePenPathPreview(penPoints, details, controller);
     }
   }
 
-  void handleSelectionStart(PixelDrawDetails details) {
-    _selectionTool.onStart(details);
-  }
+  void _updatePenPathPreview(
+    List<Offset> penPoints,
+    PixelDrawDetails details,
+    PixelCanvasController controller,
+  ) {
+    if (penPoints.length < 2) {
+      final pixelPos = details.pixelPosition;
+      if (_isValidPoint(pixelPos.x, pixelPos.y)) {
+        final pixels = [PixelPoint(pixelPos.x, pixelPos.y, color: details.color.value)];
+        controller.setPreviewPixels(pixels);
+      }
+      return;
+    }
 
-  void handleSelectionEnd(PixelDrawDetails details) {
-    _selectionTool.onEnd(details);
-    onSelectionEnd?.call(_selectionTool.previewPoints);
-  }
+    final pixels = _shapeUtils.getPenPathPixels(
+      penPoints,
+      close: false,
+      size: details.size,
+    );
 
-  void handleSelectionUpdate(PixelDrawDetails details) {
-    _selectionTool.onMove(details);
+    final coloredPixels = pixels.map((point) {
+      return PixelPoint(
+        point.x,
+        point.y,
+        color: details.color.value,
+      );
+    }).toList();
+
+    controller.setPreviewPixels(coloredPixels);
   }
 
   void _finalizePenPath(
@@ -240,7 +270,21 @@ class ToolDrawingManager {
     }
   }
 
-  /// Filter points based on current selection
+  /// MARK: Lasso Tool
+  void handleLassoStart(PixelDrawDetails details) {
+    _lassoTool.onStart(details);
+  }
+
+  void handleLassoMove(PixelDrawDetails details) {
+    _lassoTool.onMove(details);
+  }
+
+  void handleLassoEnd(PixelDrawDetails details) {
+    _lassoTool.onEnd(details);
+    // The lasso tool should call onPixelsUpdated with the selected pixels
+    // This will be handled automatically through the tool's onEnd method
+  }
+
   List<PixelPoint<int>> filterPointsBySelection(List<PixelPoint<int>> pixels) {
     if (_selectionUtils.selectionRect == null) return pixels;
 
@@ -249,7 +293,6 @@ class ToolDrawingManager {
     }).toList();
   }
 
-  /// Apply modifier effects to pixels
   List<PixelPoint<int>> applyModifier(
     PixelPoint<int> pixel,
     Modifier? modifier,
@@ -283,6 +326,7 @@ class ToolDrawingManager {
     final endY = (endPos.dy / pixelHeight).floor();
 
     final List<PixelPoint<int>> pixels = [];
+
     final linePoints = _shapeUtils.getLinePoints(startX, startY, endX, endY);
 
     for (final point in linePoints) {
@@ -315,14 +359,20 @@ class ToolDrawingManager {
     final y = (position.dy / pixelHeight).floor();
 
     final List<PixelPoint<int>> pixels = [];
+    final radius = brushSize.toDouble();
 
     for (int i = 0; i < intensity; i++) {
-      final offsetX = _random.nextInt(brushSize * 2) - brushSize;
-      final offsetY = _random.nextInt(brushSize * 2) - brushSize;
+      // Use circular distribution for more natural spray
+      final angle = _random.nextDouble() * 2 * pi;
+      final distance = sqrt(_random.nextDouble()) * radius;
+
+      final offsetX = (distance * cos(angle)).round();
+      final offsetY = (distance * sin(angle)).round();
+
       final px = x + offsetX;
       final py = y + offsetY;
 
-      if (px >= 0 && px < width && py >= 0 && py < height) {
+      if (_isValidPoint(px, py)) {
         pixels.add(PixelPoint(px, py, color: color.value));
       }
     }
@@ -368,5 +418,9 @@ class ToolDrawingManager {
               color: color.value,
             ))
         .toList());
+  }
+
+  bool _isValidPoint(int x, int y) {
+    return x >= 0 && x < width && y >= 0 && y < height;
   }
 }

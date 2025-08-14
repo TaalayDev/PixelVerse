@@ -69,36 +69,7 @@ class ShapeUtils {
   }
 
   List<PixelPoint<int>> getLinePixels(int x0, int y0, int x1, int y1) {
-    final pixels = <PixelPoint<int>>[];
-
-    int dx = (x1 - x0).abs();
-    int dy = -(y1 - y0).abs();
-    int sx = x0 < x1 ? 1 : -1;
-    int sy = y0 < y1 ? 1 : -1;
-    int err = dx + dy;
-
-    int x = x0;
-    int y = y0;
-
-    while (true) {
-      if (x >= 0 && x < width && y >= 0 && y < height) {
-        pixels.add(PixelPoint(x, y));
-      }
-
-      if (x == x1 && y == y1) break;
-
-      int e2 = 2 * err;
-      if (e2 >= dy) {
-        err += dy;
-        x += sx;
-      }
-      if (e2 <= dx) {
-        err += dx;
-        y += sy;
-      }
-    }
-
-    return pixels;
+    return _getBresenhamLine(x0, y0, x1, y1);
   }
 
   List<PixelPoint<int>> getRectanglePixels(int x0, int y0, int x1, int y1) {
@@ -194,255 +165,169 @@ class ShapeUtils {
     int x1,
     int y1,
   ) {
-    final pixels = <PixelPoint<int>>[];
-
-    int dx = x1 - x0;
-    int dy = y1 - y0;
-
-    int absDx = dx.abs();
-    int absDy = dy.abs();
-
-    int x = x0;
-    int y = y0;
-
-    int sx = dx > 0 ? 1 : -1;
-    int sy = dy > 0 ? 1 : -1;
-
-    if (absDx > absDy) {
-      int err = absDx ~/ 2;
-      for (int i = 0; i <= absDx; i++) {
-        pixels.add(PixelPoint(x, y));
-        err -= absDy;
-        if (err < 0) {
-          y += sy;
-          err += absDx;
-        }
-        x += sx;
-      }
-    } else {
-      int err = absDy ~/ 2;
-      for (int i = 0; i <= absDy; i++) {
-        pixels.add(PixelPoint(x, y));
-        err -= absDx;
-        if (err < 0) {
-          x += sx;
-          err += absDy;
-        }
-        y += sy;
-      }
-    }
-
-    // Remove diagonal steps only when the distance between points is small
-    if (absDx <= 1 && absDy <= 1) {
-      pixels.removeWhere((point) {
-        int index = pixels.indexOf(point);
-        if (index == 0) return false;
-        Point<int> prevPoint = pixels[index - 1];
-        return (point.x - prevPoint.x).abs() == 1 && (point.y - prevPoint.y).abs() == 1;
-      });
-    }
-
-    return pixels;
+    return _getBresenhamLine(x0, y0, x1, y1);
   }
 
+  /// Improved pen path generation with pixel-perfect curves and anti-aliasing
   List<PixelPoint<int>> getPenPathPixels(
     List<Offset> penPoints, {
     required Size size,
     bool close = false,
   }) {
-    final pixelSet = <String>{}; // Use Set for O(1) lookup instead of contains()
-    final pixels = <PixelPoint<int>>[];
-
-    if (penPoints.length < 2) return pixels;
-
-    Path path = Path();
-    path.moveTo(penPoints[0].dx, penPoints[0].dy);
-
-    // Improved curve generation with better control points
-    for (int i = 1; i < penPoints.length - 1; i++) {
-      final prev = penPoints[i - 1];
-      final curr = penPoints[i];
-      final next = penPoints[i + 1];
-
-      // Calculate control points for smoother curves
-      final controlPoint1 = Offset(
-        prev.dx + (curr.dx - prev.dx) * 0.5,
-        prev.dy + (curr.dy - prev.dy) * 0.5,
-      );
-      final controlPoint2 = Offset(
-        curr.dx + (next.dx - curr.dx) * 0.5,
-        curr.dy + (next.dy - curr.dy) * 0.5,
-      );
-
-      path.cubicTo(
-        controlPoint1.dx,
-        controlPoint1.dy,
-        controlPoint2.dx,
-        controlPoint2.dy,
-        (curr.dx + next.dx) / 2,
-        (curr.dy + next.dy) / 2,
-      );
-    }
-
-    // Handle the last segment
-    if (penPoints.length >= 2) {
-      final lastPoint = penPoints.last;
-      path.lineTo(lastPoint.dx, lastPoint.dy);
-    }
-
-    if (close) {
-      path.close();
-    }
-
-    // Rasterize the path into pixels with improved sampling
-    final pathMetrics = path.computeMetrics();
-    for (final metric in pathMetrics) {
-      final extractPath = metric.extractPath(0, metric.length);
-      final pathPoints = _rasterizePathSmooth(extractPath, size, pixelSet);
-      pixels.addAll(pathPoints);
-    }
-
-    return pixels;
-  }
-
-  List<PixelPoint<int>> _rasterizePathSmooth(Path path, Size size, Set<String> pixelSet) {
-    final pixels = <PixelPoint<int>>[];
-    final pathMetrics = path.computeMetrics();
+    if (penPoints.length < 2) return [];
 
     final pixelWidth = size.width / width;
     final pixelHeight = size.height / height;
 
-    for (final metric in pathMetrics) {
-      final length = metric.length;
+    // Convert screen coordinates to pixel coordinates
+    final pixelPoints = penPoints
+        .map((point) => Point<double>(
+              point.dx / pixelWidth,
+              point.dy / pixelHeight,
+            ))
+        .toList();
 
-      // Adaptive sampling: more samples for longer/more complex paths
-      // Minimum 2 samples per pixel unit to ensure smooth coverage
-      final minSamples = (length / min(pixelWidth, pixelHeight) * 2).ceil();
-      final numSamples = max(minSamples, 100); // Minimum 100 samples for smoothness
+    // Generate smooth path using improved curve generation
+    final pathPixels = _generateSmoothPixelPath(pixelPoints, close: close);
 
-      Offset? previousPixelPos;
+    // Remove duplicates while preserving order
+    final uniquePixels = _removeDuplicatePixels(pathPixels);
 
-      for (int i = 0; i <= numSamples; i++) {
-        final distance = (i / numSamples) * length;
-        final tangent = metric.getTangentForOffset(distance);
+    return uniquePixels;
+  }
 
-        if (tangent != null) {
-          final position = tangent.position;
-          final ix = (position.dx / pixelWidth).floor();
-          final iy = (position.dy / pixelHeight).floor();
+  /// Generate smooth pixel path with adaptive curve sampling
+  List<PixelPoint<int>> _generateSmoothPixelPath(List<Point<double>> points, {bool close = false}) {
+    if (points.length < 2) return [];
 
-          if (ix >= 0 && ix < width && iy >= 0 && iy < height) {
-            // Fill gaps between consecutive samples using line drawing
-            if (previousPixelPos != null) {
-              final prevIx = (previousPixelPos.dx / pixelWidth).floor();
-              final prevIy = (previousPixelPos.dy / pixelHeight).floor();
+    final pathPixels = <PixelPoint<int>>[];
 
-              // Use Bresenham's line algorithm to fill gaps
-              final linePixels = _drawLine(prevIx, prevIy, ix, iy);
-              for (final linePixel in linePixels) {
-                final key = '${linePixel.x},${linePixel.y}';
-                if (!pixelSet.contains(key) &&
-                    linePixel.x >= 0 &&
-                    linePixel.x < width &&
-                    linePixel.y >= 0 &&
-                    linePixel.y < height) {
-                  pixelSet.add(key);
-                  pixels.add(linePixel);
-                }
-              }
-            }
+    if (points.length == 2) {
+      // Straight line for two points
+      final line = _getBresenhamLine(
+        points[0].x.round(),
+        points[0].y.round(),
+        points[1].x.round(),
+        points[1].y.round(),
+      );
+      pathPixels.addAll(line);
+    } else {
+      // Smooth curves for multiple points
+      pathPixels.addAll(_generateCatmullRomSpline(points, close: close));
+    }
 
-            final key = '$ix,$iy';
-            if (!pixelSet.contains(key)) {
-              pixelSet.add(key);
-              pixels.add(PixelPoint(ix, iy));
-            }
+    return pathPixels.where((p) => p.x >= 0 && p.x < width && p.y >= 0 && p.y < height).toList();
+  }
 
-            previousPixelPos = position;
-          }
+  /// Generate smooth curve using Catmull-Rom spline with pixel-perfect sampling
+  List<PixelPoint<int>> _generateCatmullRomSpline(List<Point<double>> points, {bool close = false}) {
+    final splinePixels = <PixelPoint<int>>[];
+
+    // Add first point
+    splinePixels.add(PixelPoint(points[0].x.round(), points[0].y.round()));
+
+    for (int i = 0; i < points.length - 1; i++) {
+      final p0 = i > 0 ? points[i - 1] : points[i];
+      final p1 = points[i];
+      final p2 = points[i + 1];
+      final p3 = i < points.length - 2 ? points[i + 2] : points[i + 1];
+
+      // Generate curve segment
+      final segmentPixels = _catmullRomSegment(p0, p1, p2, p3);
+
+      // Connect segments with lines to ensure no gaps
+      if (splinePixels.isNotEmpty && segmentPixels.isNotEmpty) {
+        final connectionLine = _getBresenhamLine(
+          splinePixels.last.x,
+          splinePixels.last.y,
+          segmentPixels.first.x,
+          segmentPixels.first.y,
+        );
+        // Skip first point to avoid duplication
+        splinePixels.addAll(connectionLine.skip(1));
+      }
+
+      splinePixels.addAll(segmentPixels);
+    }
+
+    // Close path if requested
+    if (close && splinePixels.length > 2) {
+      final closingLine = _getBresenhamLine(
+        splinePixels.last.x,
+        splinePixels.last.y,
+        splinePixels.first.x,
+        splinePixels.first.y,
+      );
+      splinePixels.addAll(closingLine.skip(1));
+    }
+
+    return splinePixels;
+  }
+
+  /// Generate a single Catmull-Rom spline segment
+  List<PixelPoint<int>> _catmullRomSegment(Point<double> p0, Point<double> p1, Point<double> p2, Point<double> p3) {
+    final segmentPixels = <PixelPoint<int>>[];
+
+    // Calculate segment length for adaptive sampling
+    final segmentLength = sqrt((p1.x - p0.x) * (p1.x - p0.x) + (p1.y - p0.y) * (p1.y - p0.y)) +
+        sqrt((p2.x - p1.x) * (p2.x - p1.x) + (p2.y - p1.y) * (p2.y - p1.y)) +
+        sqrt((p3.x - p2.x) * (p3.x - p2.x) + (p3.y - p2.y) * (p3.y - p2.y));
+    final steps = max((segmentLength * 2).round(), 10); // At least 10 steps
+
+    Point<double>? lastPixelPos;
+
+    for (int step = 0; step <= steps; step++) {
+      final t = step / steps;
+      final point = _catmullRomInterpolate(p0, p1, p2, p3, t);
+
+      final pixelPos = Point<double>(point.x, point.y);
+
+      if (lastPixelPos != null) {
+        // Connect with line to ensure no gaps
+        final linePixels = _getBresenhamLine(
+          lastPixelPos.x.round(),
+          lastPixelPos.y.round(),
+          pixelPos.x.round(),
+          pixelPos.y.round(),
+        );
+
+        // Skip first point to avoid duplication
+        if (segmentPixels.isNotEmpty) {
+          segmentPixels.addAll(linePixels.skip(1));
+        } else {
+          segmentPixels.addAll(linePixels);
         }
+      } else {
+        segmentPixels.add(PixelPoint(pixelPos.x.round(), pixelPos.y.round()));
       }
+
+      lastPixelPos = pixelPos;
     }
 
-    return pixels;
+    return segmentPixels;
   }
 
-// Bresenham's line algorithm for gap filling
-  List<PixelPoint<int>> _drawLine(int x0, int y0, int x1, int y1) {
-    final points = <PixelPoint<int>>[];
+  /// Catmull-Rom spline interpolation
+  Point<double> _catmullRomInterpolate(
+      Point<double> p0, Point<double> p1, Point<double> p2, Point<double> p3, double t) {
+    final t2 = t * t;
+    final t3 = t2 * t;
 
-    final dx = (x1 - x0).abs();
-    final dy = (y1 - y0).abs();
-    final sx = x0 < x1 ? 1 : -1;
-    final sy = y0 < y1 ? 1 : -1;
-    var err = dx - dy;
+    // Catmull-Rom basis functions
+    final b0 = -0.5 * t3 + t2 - 0.5 * t;
+    final b1 = 1.5 * t3 - 2.5 * t2 + 1.0;
+    final b2 = -1.5 * t3 + 2.0 * t2 + 0.5 * t;
+    final b3 = 0.5 * t3 - 0.5 * t2;
 
-    var x = x0;
-    var y = y0;
+    final x = b0 * p0.x + b1 * p1.x + b2 * p2.x + b3 * p3.x;
+    final y = b0 * p0.y + b1 * p1.y + b2 * p2.y + b3 * p3.y;
 
-    while (true) {
-      points.add(PixelPoint(x, y));
-
-      if (x == x1 && y == y1) break;
-
-      final e2 = 2 * err;
-      if (e2 > -dy) {
-        err -= dy;
-        x += sx;
-      }
-      if (e2 < dx) {
-        err += dx;
-        y += sy;
-      }
-    }
-
-    return points;
+    return Point<double>(x, y);
   }
 
-// Alternative version with sub-pixel anti-aliasing (optional)
-  List<PixelPoint<int>> _rasterizePathAntiAliased(Path path, Size size, Set<String> pixelSet) {
+  /// Bresenham's line algorithm for pixel-perfect lines
+  List<PixelPoint<int>> _getBresenhamLine(int x0, int y0, int x1, int y1) {
     final pixels = <PixelPoint<int>>[];
-    final pathMetrics = path.computeMetrics();
-
-    final pixelWidth = size.width / width;
-    final pixelHeight = size.height / height;
-
-    for (final metric in pathMetrics) {
-      final length = metric.length;
-      final numSamples = (length * 4).ceil(); // Higher sampling for anti-aliasing
-
-      for (int i = 0; i <= numSamples; i++) {
-        final distance = (i / numSamples) * length;
-        final tangent = metric.getTangentForOffset(distance);
-
-        if (tangent != null) {
-          final position = tangent.position;
-
-          // Sample multiple sub-pixels around the main pixel
-          for (double dx = -0.5; dx <= 0.5; dx += 0.25) {
-            for (double dy = -0.5; dy <= 0.5; dy += 0.25) {
-              final subPos = Offset(position.dx + dx, position.dy + dy);
-              final ix = (subPos.dx / pixelWidth).floor();
-              final iy = (subPos.dy / pixelHeight).floor();
-
-              if (ix >= 0 && ix < width && iy >= 0 && iy < height) {
-                final key = '$ix,$iy';
-                if (!pixelSet.contains(key)) {
-                  pixelSet.add(key);
-                  pixels.add(PixelPoint(ix, iy));
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    return pixels;
-  }
-
-  List<PixelPoint<int>> getLinePoints(int x0, int y0, int x1, int y1) {
-    final points = <PixelPoint<int>>[];
 
     int dx = (x1 - x0).abs();
     int dy = -(y1 - y0).abs();
@@ -454,7 +339,7 @@ class ShapeUtils {
     int y = y0;
 
     while (true) {
-      points.add(PixelPoint(x, y));
+      pixels.add(PixelPoint(x, y));
       if (x == x1 && y == y1) break;
       int e2 = 2 * err;
       if (e2 >= dy) {
@@ -467,6 +352,26 @@ class ShapeUtils {
       }
     }
 
-    return points;
+    return pixels;
+  }
+
+  /// Remove duplicate pixels while preserving order
+  List<PixelPoint<int>> _removeDuplicatePixels(List<PixelPoint<int>> pixels) {
+    final seen = <String>{};
+    final unique = <PixelPoint<int>>[];
+
+    for (final pixel in pixels) {
+      final key = '${pixel.x},${pixel.y}';
+      if (!seen.contains(key)) {
+        seen.add(key);
+        unique.add(pixel);
+      }
+    }
+
+    return unique;
+  }
+
+  List<PixelPoint<int>> getLinePoints(int x0, int y0, int x1, int y1) {
+    return _getBresenhamLine(x0, y0, x1, y1);
   }
 }

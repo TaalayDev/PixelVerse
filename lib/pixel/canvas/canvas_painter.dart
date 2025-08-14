@@ -17,6 +17,8 @@ class PixelCanvasPainter extends CustomPainter {
   final LayerCacheManager cacheManager;
   final PixelTool currentTool;
   final Color currentColor;
+  final List<Offset>? lassoPoints;
+  final bool isDrawingLasso;
 
   PixelCanvasPainter({
     required this.width,
@@ -25,6 +27,8 @@ class PixelCanvasPainter extends CustomPainter {
     required this.cacheManager,
     required this.currentTool,
     required this.currentColor,
+    this.lassoPoints,
+    this.isDrawingLasso = false,
   }) : super(repaint: Listenable.merge([controller, cacheManager]));
 
   @override
@@ -42,6 +46,7 @@ class PixelCanvasPainter extends CustomPainter {
     _drawGradient(canvas, size);
     _drawPenPath(canvas);
     _drawCurveGuides(canvas, size);
+    _drawLassoPath(canvas, size);
 
     if (controller.previewPixels.isEmpty) {
       _drawHoverPreview(canvas, size, pixelWidth, pixelHeight);
@@ -432,6 +437,66 @@ class PixelCanvasPainter extends CustomPainter {
           ..strokeWidth = 1.5 / controller.zoomLevel;
 
         canvas.drawLine(penPoints.last, penPoints.first, dashPaint);
+      }
+    }
+  }
+
+  void _drawLassoPath(Canvas canvas, Size size) {
+    if (!isDrawingLasso || lassoPoints == null || lassoPoints!.isEmpty) return;
+
+    final lassoPaint = Paint()
+      ..color = Colors.blue.withOpacity(0.8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0 / controller.zoomLevel;
+
+    final path = Path();
+
+    if (lassoPoints!.length == 1) {
+      // Single point - draw a circle
+      canvas.drawCircle(
+        lassoPoints!.first,
+        3.0 / controller.zoomLevel,
+        Paint()
+          ..color = Colors.blue
+          ..style = PaintingStyle.fill,
+      );
+    } else {
+      // Multiple points - draw connected lines
+      path.moveTo(lassoPoints!.first.dx, lassoPoints!.first.dy);
+      for (int i = 1; i < lassoPoints!.length; i++) {
+        path.lineTo(lassoPoints![i].dx, lassoPoints![i].dy);
+      }
+
+      canvas.drawPath(path, lassoPaint);
+
+      // Show closing indicator if near start point
+      if (lassoPoints!.length > 2 && (lassoPoints!.last - lassoPoints!.first).distance <= 10) {
+        final dashPaint = Paint()
+          ..color = Colors.green.withOpacity(0.8)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.0 / controller.zoomLevel;
+
+        canvas.drawLine(lassoPoints!.last, lassoPoints!.first, dashPaint);
+
+        // Draw a small circle at the start point to indicate closing
+        canvas.drawCircle(
+          lassoPoints!.first,
+          4.0 / controller.zoomLevel,
+          Paint()
+            ..color = Colors.green.withOpacity(0.6)
+            ..style = PaintingStyle.fill,
+        );
+      }
+
+      // Draw points along the path for better visibility
+      for (final point in lassoPoints!) {
+        canvas.drawCircle(
+          point,
+          1.5 / controller.zoomLevel,
+          Paint()
+            ..color = Colors.blue.withOpacity(0.7)
+            ..style = PaintingStyle.fill,
+        );
       }
     }
   }

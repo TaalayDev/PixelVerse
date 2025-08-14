@@ -66,208 +66,282 @@ AppTheme buildRetroWaveTheme() {
 
 // Retro Wave theme background with 80s synthwave effects
 class RetroWaveBackground extends HookWidget {
-  final AnimationController controller;
   final AppTheme theme;
+
+  /// Controls the visual complexity and movement.
+  /// Recommended range: 0.0 to 1.0. Clamped between 0.0 and 2.0.
   final double intensity;
+
+  /// Toggles the animation on or off.
+  final bool enableAnimation;
 
   const RetroWaveBackground({
     super.key,
-    required this.controller,
     required this.theme,
-    required this.intensity,
+    this.intensity = 0.8,
+    this.enableAnimation = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    final synthAnimation = useAnimation(
-      Tween<double>(begin: 0, end: 1).animate(controller),
+    final controller = useAnimationController(
+      duration: theme.type.animationDuration,
     );
 
-    return CustomPaint(
-      painter: _RetroWavePainter(
-        animation: synthAnimation,
-        primaryColor: theme.primaryColor,
-        accentColor: theme.accentColor,
-        intensity: intensity,
+    useEffect(() {
+      if (enableAnimation) {
+        controller.repeat();
+      } else {
+        controller.stop();
+        controller.value = 0;
+      }
+      return null;
+    }, [enableAnimation]);
+
+    final t = useAnimation(controller);
+
+    return RepaintBoundary(
+      child: CustomPaint(
+        painter: _RetroWavePainter(
+          t: t,
+          primaryColor: theme.primaryColor,
+          accentColor: theme.accentColor,
+          intensity: intensity.clamp(0.0, 2.0),
+        ),
+        size: Size.infinite,
       ),
-      size: Size.infinite,
     );
   }
 }
 
 class _RetroWavePainter extends CustomPainter {
-  final double animation;
+  final double t; // The master animation progress, from 0.0 to 1.0.
   final Color primaryColor;
   final Color accentColor;
   final double intensity;
 
+  final Paint _paint;
+  final List<Offset> _stars;
+  final List<double> _starOpacities;
+
   _RetroWavePainter({
-    required this.animation,
+    required this.t,
     required this.primaryColor,
     required this.accentColor,
     required this.intensity,
-  });
+  })  : _paint = Paint(),
+        _stars = List.generate(50, (index) {
+          final random = math.Random(index);
+          return Offset(random.nextDouble(), random.nextDouble());
+        }),
+        _starOpacities = List.generate(50, (index) {
+          final random = math.Random(index * 2);
+          return random.nextDouble();
+        });
+
+  // --- Aesthetic & Animation constants ---
+  static const _bgTop = Color(0xFF0B0E2A);
+  static const _bgBottom = Color(0xFF160C2C);
+
+  // To ensure a perfect loop, all periodic animations must complete an
+  // integer number of cycles over the animation duration `t`.
+  static const _sunPulseCycles = 2;
+  static const _gridPulseCycles = 1;
+  static const _gridDriftCycles = 1;
+  static const _particleCycles = 3;
+
+  // --- Animation Helper Functions ---
+  double get _phase => 2 * math.pi * t;
+
+  /// Creates a periodic wave using sine, oscillating between -1.0 and 1.0.
+  /// [cycles] determines how many full waves occur during the animation loop.
+  double _wave(double cycles, [double offset = 0]) => math.sin(cycles * _phase + offset);
+
+  /// Normalizes the wave function to oscillate between 0.0 and 1.0.
+  double _norm(double cycles, [double offset = 0]) => 0.5 * (1 + _wave(cycles, offset));
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.stroke;
+    _paintBackground(canvas, size);
 
-    // Draw 80s perspective grid
-    final gridSpacing = 40.0 * intensity;
-    final horizonY = size.height * 0.6;
-    final vanishingPointX = size.width * 0.5;
+    final double horizonY = size.height * 0.72; // Lowered for a calmer feel.
+    final double vanishingX = size.width * 0.5;
 
-    // Horizontal grid lines (perspective)
-    paint.strokeWidth = 1 * intensity;
-    for (int i = 0; i < 8; i++) {
-      final progress = i / 7.0;
-      final y = horizonY + (size.height - horizonY) * progress * progress; // Perspective curve
-      final pulseIntensity = (math.sin(animation * 4 * math.pi + i * 0.5) * 0.3 + 0.7) * intensity;
+    _paintGrid(canvas, size, horizonY, vanishingX);
+    _paintSun(canvas, size, horizonY, vanishingX);
+    _paintScanLines(canvas, size);
+    _drawStars(canvas, size, horizonY);
+  }
 
-      paint.color = Color.lerp(
-        primaryColor.withOpacity(0.2 * pulseIntensity),
-        accentColor.withOpacity(0.15 * pulseIntensity),
-        math.sin(animation * 2 * math.pi + i * 0.3) * 0.5 + 0.5,
-      )!;
+  void _paintBackground(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final bgPaint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [_bgTop, _bgBottom],
+      ).createShader(rect);
+    canvas.drawRect(rect, bgPaint);
+  }
 
+  /// Paints the perspective grid.
+  ///
+  /// The grid is stabilized by simplifying the perspective calculation and
+  /// using a very subtle, slow shimmer instead of a fast wobble.
+  void _paintGrid(Canvas canvas, Size size, double horizonY, double vanishingX) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final baseAlpha = (0.23 * intensity).clamp(0.08, 0.23);
+    final strokeW = (1.1 * intensity).clamp(0.6, 1.5);
+
+    // --- Horizontal Lines ---
+    // These lines are distributed quadratically to appear closer near the horizon.
+    const rows = 10;
+    for (int i = 0; i <= rows; i++) {
+      final u = i / rows;
+      final y = horizonY + (size.height - horizonY) * u * u;
+      final pulse = _norm(_gridPulseCycles.toDouble(), i * 0.1);
+
+      paint
+        ..strokeWidth = strokeW
+        ..color = Color.lerp(
+          primaryColor.withOpacity(baseAlpha * 0.9),
+          accentColor.withOpacity(baseAlpha * 0.7),
+          0.6,
+        )!
+            .withOpacity(baseAlpha * (0.85 + 0.15 * pulse));
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
     }
 
-    // Vertical grid lines (perspective)
-    for (int i = -10; i <= 10; i++) {
-      if (i == 0) continue; // Skip center line
+    // --- Vertical Lines ---
+    const colsEachSide = 9;
+    final spacing = size.width * 0.045;
+    // Controls how much the vertical lines spread out at the bottom.
+    const perspectiveFactor = 1.8;
 
-      final baseX = vanishingPointX + i * gridSpacing;
-      final pulseOffset = math.sin(animation * 3 * math.pi + i * 0.2) * 5 * intensity;
-      final x = baseX + pulseOffset;
+    for (int i = -colsEachSide; i <= colsEachSide; i++) {
+      if (i == 0) continue; // Skip the center line.
 
-      final pulseIntensity = (math.cos(animation * 4 * math.pi + i * 0.4) * 0.2 + 0.8) * intensity;
+      // A subtle, slow shimmer for the lines.
+      final drift = 1.0 * intensity * _wave(_gridDriftCycles.toDouble(), i * 0.2);
+      final xTop = vanishingX + i * spacing + drift;
 
-      paint.color = Color.lerp(
-        primaryColor.withOpacity(0.15 * pulseIntensity),
-        accentColor.withOpacity(0.1 * pulseIntensity),
-        i.abs() / 10.0,
-      )!;
+      final p1 = Offset(xTop, horizonY);
 
-      canvas.drawLine(Offset(x, horizonY), Offset(x, size.height), paint);
-    }
+      // Project the bottom point based on the top point's distance from center.
+      final xBottom = vanishingX + (xTop - vanishingX) * perspectiveFactor;
+      final p2 = Offset(xBottom, size.height);
 
-    // Draw neon scan lines
-    paint.strokeWidth = 2 * intensity;
-    final scanLine1Y = (animation * size.height) % size.height;
-    final scanLine2Y = ((animation * 0.7 + 0.3) * size.height) % size.height;
-
-    paint.color = primaryColor.withOpacity(0.6 * intensity);
-    canvas.drawLine(Offset(0, scanLine1Y), Offset(size.width, scanLine1Y), paint);
-
-    paint.color = accentColor.withOpacity(0.4 * intensity);
-    canvas.drawLine(Offset(0, scanLine2Y), Offset(size.width, scanLine2Y), paint);
-
-    // Draw pulsing geometric shapes
-    paint.style = PaintingStyle.stroke;
-    paint.strokeWidth = 3 * intensity;
-
-    for (int i = 0; i < 3; i++) {
-      final shapeX = size.width * (0.2 + i * 0.3);
-      final shapeY = size.height * (0.2 + math.sin(animation * 2 * math.pi + i) * 0.1);
-      final shapeSize = (30 + i * 15 + math.sin(animation * 3 * math.pi + i * 0.8) * 10) * intensity;
-
-      final pulseIntensity = math.sin(animation * 4 * math.pi + i * 0.6) * 0.5 + 0.5;
-
-      paint.color = Color.lerp(
-        primaryColor.withOpacity(0.8 * pulseIntensity * intensity),
-        accentColor.withOpacity(0.6 * pulseIntensity * intensity),
-        i / 2.0,
-      )!;
-
-      // Draw different geometric shapes
-      switch (i % 3) {
-        case 0: // Triangle
-          final path = Path();
-          path.moveTo(shapeX, shapeY - shapeSize);
-          path.lineTo(shapeX - shapeSize, shapeY + shapeSize);
-          path.lineTo(shapeX + shapeSize, shapeY + shapeSize);
-          path.close();
-          canvas.drawPath(path, paint);
-          break;
-        case 1: // Diamond
-          final path = Path();
-          path.moveTo(shapeX, shapeY - shapeSize);
-          path.lineTo(shapeX + shapeSize, shapeY);
-          path.lineTo(shapeX, shapeY + shapeSize);
-          path.lineTo(shapeX - shapeSize, shapeY);
-          path.close();
-          canvas.drawPath(path, paint);
-          break;
-        case 2: // Circle
-          canvas.drawCircle(Offset(shapeX, shapeY), shapeSize, paint);
-          break;
-      }
-    }
-
-    // Draw neon glow particles
-    paint.style = PaintingStyle.fill;
-    for (int i = 0; i < (12 * intensity).round(); i++) {
-      final particleX = (i / 12) * size.width + math.sin(animation * 3 * math.pi + i * 0.5) * 30 * intensity;
-      final particleY = size.height * (0.3 + math.cos(animation * 2 * math.pi + i * 0.4) * 0.2);
-
-      final glowIntensity = math.sin(animation * 6 * math.pi + i * 0.7) * 0.5 + 0.5;
-
-      if (glowIntensity > 0.3) {
-        final particleSize = (2 + glowIntensity * 4) * intensity;
-        paint.color = Color.lerp(
-          primaryColor.withOpacity(0.8 * glowIntensity),
-          accentColor.withOpacity(0.6 * glowIntensity),
-          math.sin(animation * math.pi + i) * 0.5 + 0.5,
+      final side = (i.abs() / colsEachSide).clamp(0.0, 1.0);
+      paint
+        ..strokeWidth = strokeW
+        ..color = Color.lerp(
+          primaryColor.withOpacity(baseAlpha * (0.65 + 0.25 * (1 - side))),
+          accentColor.withOpacity(baseAlpha * (0.45 + 0.25 * side)),
+          0.4,
         )!;
+      canvas.drawLine(p1, p2, paint);
+    }
+  }
 
-        canvas.drawCircle(Offset(particleX, particleY), particleSize, paint);
+  void _paintSun(Canvas canvas, Size size, double horizonY, double vanishingX) {
+    final center = Offset(vanishingX, horizonY);
+    final baseR = 110.0 * (0.8 + 0.2 * intensity);
+    final radius = baseR * (0.95 + 0.05 * _wave(_sunPulseCycles.toDouble()));
 
-        // Add glow effect
-        paint.color = paint.color.withOpacity(paint.color.opacity * 0.3);
-        canvas.drawCircle(Offset(particleX, particleY), particleSize * 2, paint);
+    final glowPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 28);
+    final glowColor = Color.lerp(primaryColor, accentColor, 0.35)!.withOpacity((0.22 * intensity).clamp(0.06, 0.22));
+    glowPaint.color = glowColor;
+    canvas.drawCircle(center.translate(0, -radius * 0.05), radius * 1.45, glowPaint);
+
+    canvas.save();
+    canvas.clipRect(Rect.fromLTWH(0, 0, size.width, horizonY));
+
+    final bodyPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..shader = RadialGradient(
+        colors: [
+          Color.lerp(primaryColor, accentColor, 0.25)!.withOpacity(0.95),
+          Color.lerp(primaryColor, accentColor, 0.25)!.withOpacity(0.7),
+        ],
+      ).createShader(Rect.fromCircle(center: center, radius: radius));
+    canvas.drawCircle(center, radius, bodyPaint);
+
+    final stripePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = (2.0 * intensity).clamp(1.0, 3.0)
+      ..color = Colors.black.withOpacity(0.18);
+    for (int i = -4; i <= 4; i++) {
+      final y = center.dy - radius * 0.85 + (i + 4) * (radius * 0.22);
+      final halfW = math.sqrt(math.max(0, radius * radius - (y - center.dy) * (y - center.dy)));
+      canvas.drawLine(Offset(center.dx - halfW, y), Offset(center.dx + halfW, y), stripePaint);
+    }
+
+    final outlinePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = (1.8 * intensity).clamp(1.2, 2.2)
+      ..color = Color.lerp(primaryColor, accentColor, 0.25)!.withOpacity(0.9);
+    canvas.drawCircle(center, radius, outlinePaint);
+
+    canvas.restore();
+
+    final horizonPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = (1.2 * intensity).clamp(0.8, 1.6)
+      ..color = Color.lerp(primaryColor, accentColor, 0.35)!.withOpacity(0.35);
+    canvas.drawLine(Offset(0, horizonY), Offset(size.width, horizonY), horizonPaint);
+  }
+
+  /// Paints sweeping scan lines that loop perfectly.
+  void _paintScanLines(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = (1.2 * intensity).clamp(0.8, 1.5);
+
+    // Use modulo arithmetic for a seamless top-to-bottom sweep.
+    final sweep1 = (t + 0.0) % 1.0;
+    final sweep2 = (t + 0.5) % 1.0; // Second line is offset by half the screen.
+
+    final y1 = sweep1 * size.height;
+    final y2 = sweep2 * size.height;
+
+    paint.color = primaryColor.withOpacity((0.12 * intensity).clamp(0.05, 0.14));
+    canvas.drawLine(Offset(0, y1), Offset(size.width, y1), paint);
+
+    paint.color = accentColor.withOpacity((0.10 * intensity).clamp(0.04, 0.12));
+    canvas.drawLine(Offset(0, y2), Offset(size.width, y2), paint);
+  }
+
+  void _drawStars(Canvas canvas, Size size, double horizonY) {
+    _paint.style = PaintingStyle.fill;
+    for (int i = 0; i < _stars.length; i++) {
+      final starPos = _stars[i];
+      final opacity = _starOpacities[i];
+
+      final animOffset = t + opacity;
+      final twinkle = math.sin(animOffset * 2 * math.pi);
+
+      if (twinkle > 0.5) {
+        _paint.color = Colors.white.withOpacity(twinkle * 0.8);
+        canvas.drawCircle(
+          Offset(starPos.dx * size.width, starPos.dy * horizonY),
+          (twinkle * 0.8) * intensity,
+          _paint,
+        );
       }
-    }
-
-    // Draw digital sun/moon
-    final sunCenter = Offset(size.width * 0.5, size.height * 0.25);
-    final sunRadius = (40 + math.sin(animation * 2 * math.pi) * 8) * intensity;
-
-    paint.style = PaintingStyle.stroke;
-    paint.strokeWidth = 4 * intensity;
-    paint.color = primaryColor.withOpacity(0.7 * intensity);
-
-    // Draw sun outline
-    canvas.drawCircle(sunCenter, sunRadius, paint);
-
-    // Draw sun rays
-    for (int i = 0; i < 8; i++) {
-      final angle = (i / 8) * 2 * math.pi + animation * math.pi;
-      final rayStart = Offset(
-        sunCenter.dx + math.cos(angle) * sunRadius * 1.2,
-        sunCenter.dy + math.sin(angle) * sunRadius * 1.2,
-      );
-      final rayEnd = Offset(
-        sunCenter.dx + math.cos(angle) * sunRadius * 1.6,
-        sunCenter.dy + math.sin(angle) * sunRadius * 1.6,
-      );
-
-      paint.strokeWidth = 2 * intensity;
-      canvas.drawLine(rayStart, rayEnd, paint);
-    }
-
-    // Draw horizontal lines through sun for retro effect
-    paint.strokeWidth = 2 * intensity;
-    for (int i = -2; i <= 2; i++) {
-      final lineY = sunCenter.dy + i * 8 * intensity;
-      canvas.drawLine(
-        Offset(sunCenter.dx - sunRadius, lineY),
-        Offset(sunCenter.dx + sunRadius, lineY),
-        paint,
-      );
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _RetroWavePainter oldDelegate) {
+    // Repaint only if the animation time or other properties have changed.
+    return oldDelegate.t != t ||
+        oldDelegate.primaryColor != primaryColor ||
+        oldDelegate.accentColor != accentColor ||
+        oldDelegate.intensity != intensity;
+  }
 }

@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -64,252 +65,264 @@ AppTheme buildDeepSeaTheme() {
   );
 }
 
+// Enhanced Deep Sea theme background with bioluminescent creatures and ocean depths
 class DeepSeaBackground extends HookWidget {
-  final AnimationController controller;
   final AppTheme theme;
   final double intensity;
+  final bool enableAnimation;
 
   const DeepSeaBackground({
     super.key,
-    required this.controller,
     required this.theme,
     required this.intensity,
+    this.enableAnimation = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    final currentAnimation = useAnimation(
-      Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(parent: controller, curve: Curves.easeInOut),
-      ),
-    );
+    final controller = useAnimationController(duration: theme.type.animationDuration);
 
-    return CustomPaint(
-      painter: _DeepSeaPainter(
-        animation: currentAnimation,
-        primaryColor: theme.primaryColor,
-        accentColor: theme.accentColor,
-        intensity: intensity,
+    useEffect(() {
+      if (enableAnimation) {
+        controller.repeat();
+      } else {
+        controller.stop();
+        controller.value = 0.0;
+      }
+      return null;
+    }, [enableAnimation]);
+
+    final t = useAnimation(Tween<double>(begin: 0, end: 1).animate(controller));
+
+    return RepaintBoundary(
+      child: CustomPaint(
+        painter: _EnhancedDeepSeaPainter(
+          t: t,
+          primaryColor: theme.primaryColor,
+          accentColor: theme.accentColor,
+          intensity: intensity.clamp(0.3, 2.0),
+        ),
+        size: Size.infinite,
+        isComplex: true,
+        willChange: enableAnimation,
       ),
-      size: Size.infinite,
     );
   }
 }
 
-class _DeepSeaPainter extends CustomPainter {
-  final double animation;
+class _EnhancedDeepSeaPainter extends CustomPainter {
+  final double t;
   final Color primaryColor;
   final Color accentColor;
   final double intensity;
 
-  _DeepSeaPainter({
-    required this.animation,
+  _EnhancedDeepSeaPainter({
+    required this.t,
     required this.primaryColor,
     required this.accentColor,
     required this.intensity,
   });
 
+  // Animation helpers for smooth looping
+  double get _phase => 2 * math.pi * t;
+  double _wave(double speed, [double offset = 0]) => math.sin(_phase * speed + offset);
+  double _norm(double speed, [double offset = 0]) => 0.5 * (1 + _wave(speed, offset));
+
+  // Deep sea color palette
+  late final Color _abyssal = const Color(0xFF000B1A); // Deepest depths
+  late final Color _bathyal = const Color(0xFF0A1529); // Deep water
+  late final Color _mesopelagic = const Color(0xFF152238); // Twilight zone
+  late final Color _biolumBlue = const Color(0xFF00CCFF); // Bioluminescent blue
+
+  // Element counts based on intensity
+  int get _currentLayers => (6 * intensity).round().clamp(3, 9);
+
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-    final random = math.Random(777); // Deep sea seed
+    _paintAbyssalDepths(canvas, size);
+    _paintOceanCurrents(canvas, size);
+    _paintPressureDistortions(canvas, size);
+    _paintMarineSediment(canvas, size);
+    _paintAbyssalGlow(canvas, size);
+  }
 
-    // Draw gentle current waves (depth layers)
-    paint.style = PaintingStyle.stroke;
-    paint.strokeWidth = 2 * intensity;
+  void _paintAbyssalDepths(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
 
-    for (int i = 0; i < 6; i++) {
-      final path = Path();
-      final waveHeight = (8 + i * 3) * intensity;
-      final baseY = size.height * (0.15 + i * 0.12);
-      final phase = animation * 1.5 * math.pi + i * math.pi / 3;
+    // Multi-layered depth gradient representing ocean zones
+    final depthGradient = Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(size.width * 0.5, 0),
+        Offset(size.width * 0.5, size.height),
+        [
+          _mesopelagic.withOpacity(0.4), // Twilight zone remnant
+          _bathyal.withOpacity(0.8), // Bathyal zone
+          _abyssal.withOpacity(0.95), // Abyssal depths
+          const Color(0xFF000000), // True abyss
+        ],
+        [0.0, 0.3, 0.8, 1.0],
+      );
 
-      path.moveTo(0, baseY);
-      for (double x = 0; x <= size.width; x += 12) {
-        final primaryWave = math.sin(x / 150 + phase) * waveHeight;
-        final secondaryWave = math.sin(x / 90 + phase * 1.2) * waveHeight * 0.4;
-        final y = baseY + primaryWave + secondaryWave;
-        path.lineTo(x, y);
-      }
+    canvas.drawRect(rect, depthGradient);
 
-      final currentIntensity = math.sin(animation * 2 * math.pi + i * 0.5) * 0.3 + 0.4;
-      paint.color = Color.lerp(
-        primaryColor.withOpacity(0.04 * currentIntensity * intensity),
-        accentColor.withOpacity(0.03 * currentIntensity * intensity),
-        i / 5.0,
-      )!;
-
-      canvas.drawPath(path, paint);
-    }
-
-    // Draw bioluminescent plankton particles
-    paint.style = PaintingStyle.fill;
-    for (int i = 0; i < (35 * intensity).round(); i++) {
-      final baseX = random.nextDouble() * size.width;
-      final baseY = random.nextDouble() * size.height;
-
-      // Gentle floating motion affected by currents
-      final currentDrift = math.sin(animation * 1.2 * math.pi + i * 0.3) * 15 * intensity;
-      final verticalFloat = math.cos(animation * 0.8 * math.pi + i * 0.5) * 8 * intensity;
-
-      final x = baseX + currentDrift;
-      final y = baseY + verticalFloat;
-
-      final planktonSize = (1 + random.nextDouble() * 3) * intensity;
-      final glowCycle = math.sin(animation * 4 * math.pi + i * 0.7) * 0.5 + 0.5;
-
-      if (glowCycle > 0.3) {
-        // Main plankton particle
-        paint.color = Color.lerp(
-          primaryColor.withOpacity(0.8 * glowCycle * intensity),
-          accentColor.withOpacity(0.6 * glowCycle * intensity),
-          math.sin(animation * 2 * math.pi + i) * 0.5 + 0.5,
-        )!;
-
-        canvas.drawCircle(Offset(x, y), planktonSize * glowCycle, paint);
-
-        // Bioluminescent glow halo
-        paint.color = paint.color.withOpacity(paint.color.opacity * 0.2);
-        canvas.drawCircle(Offset(x, y), planktonSize * glowCycle * 2.5, paint);
-      }
-    }
-
-    // Draw jellyfish-like floating organisms
-    for (int i = 0; i < (8 * intensity).round(); i++) {
-      final jellyfishX = size.width * (0.1 + i * 0.12) + math.sin(animation * 1.5 * math.pi + i * 0.8) * 40 * intensity;
-      final jellyfishY = size.height * (0.2 + i * 0.08) + math.cos(animation * math.pi + i * 0.6) * 25 * intensity;
-
-      final jellyfishSize = (12 + i * 4) * intensity;
-      final pulseIntensity = math.sin(animation * 3 * math.pi + i * 0.9) * 0.4 + 0.6;
-
-      // Jellyfish bell/dome
-      paint.color = Color.lerp(
-        primaryColor.withOpacity(0.06 * pulseIntensity * intensity),
-        accentColor.withOpacity(0.04 * pulseIntensity * intensity),
-        i / 7.0,
-      )!;
-
-      canvas.drawCircle(Offset(jellyfishX, jellyfishY), jellyfishSize * pulseIntensity, paint);
-
-      // Jellyfish tentacles (simple trailing lines)
-      paint.style = PaintingStyle.stroke;
-      paint.strokeWidth = 1 * intensity;
-      paint.color = paint.color.withOpacity(paint.color.opacity * 0.7);
-
-      for (int j = 0; j < 4; j++) {
-        final tentacleAngle = (j / 4.0) * math.pi + animation * 0.5;
-        final tentacleLength = jellyfishSize * (1.5 + math.sin(animation * 2 * math.pi + j) * 0.5);
-
-        final tentacleEndX = jellyfishX + math.cos(tentacleAngle) * 3;
-        final tentacleEndY = jellyfishY + tentacleLength;
-
-        canvas.drawLine(
-          Offset(jellyfishX, jellyfishY + jellyfishSize * 0.5),
-          Offset(tentacleEndX, tentacleEndY),
-          paint,
-        );
-      }
-
-      paint.style = PaintingStyle.fill;
-    }
-
-    // Draw bioluminescent light trails
-    paint.style = PaintingStyle.stroke;
-    paint.strokeWidth = 1.5 * intensity;
-
+    // Pressure gradient effects
     for (int i = 0; i < 4; i++) {
-      final path = Path();
-      final trailStartX = size.width * (0.15 + i * 0.25);
-      final trailStartY = size.height * (0.1 + i * 0.2);
+      final pressureY = size.height * (0.2 + i * 0.2);
+      final pressureIntensity = _norm(0.03, i * 0.8);
 
-      path.moveTo(trailStartX, trailStartY);
+      final pressurePaint = Paint()
+        ..shader = ui.Gradient.linear(
+          Offset(0, pressureY - 30),
+          Offset(0, pressureY + 30),
+          [
+            Colors.transparent,
+            _bathyal.withOpacity(0.1 * pressureIntensity * intensity),
+            Colors.transparent,
+          ],
+          [0.0, 0.5, 1.0],
+        );
 
-      // Create organic, flowing bioluminescent trails
-      for (int j = 1; j <= 8; j++) {
-        final progress = j / 8.0;
-        final trailFlow = animation * 2 * math.pi + i * math.pi / 2;
-
-        final x =
-            trailStartX + progress * 100 * intensity + math.sin(progress * 3 * math.pi + trailFlow) * 20 * intensity;
-        final y = trailStartY +
-            progress * 60 * intensity +
-            math.cos(progress * 2 * math.pi + trailFlow * 0.8) * 15 * intensity;
-
-        path.lineTo(x, y);
-      }
-
-      final trailIntensity = math.sin(animation * 2.5 * math.pi + i * 1.1) * 0.5 + 0.5;
-      paint.color = Color.lerp(
-        primaryColor.withOpacity(0.1 * trailIntensity * intensity),
-        accentColor.withOpacity(0.08 * trailIntensity * intensity),
-        i / 3.0,
-      )!;
-
-      canvas.drawPath(path, paint);
-    }
-
-    // Draw deep water pressure distortions
-    paint.style = PaintingStyle.fill;
-    for (int i = 0; i < 5; i++) {
-      final distortionX = size.width * (0.2 + i * 0.2);
-      final distortionY = size.height * (0.4 + math.sin(animation * 1.8 * math.pi + i) * 0.3);
-
-      final distortionSize = (25 + i * 10 + math.cos(animation * 2.2 * math.pi + i) * 8) * intensity;
-      final pressureIntensity = math.sin(animation * 1.5 * math.pi + i * 0.7) * 0.2 + 0.3;
-
-      // Create subtle pressure wave distortions
-      paint.color = primaryColor.withOpacity(0.02 * pressureIntensity * intensity);
-      canvas.drawCircle(Offset(distortionX, distortionY), distortionSize, paint);
-
-      paint.color = accentColor.withOpacity(0.015 * pressureIntensity * intensity);
-      canvas.drawCircle(Offset(distortionX, distortionY), distortionSize * 1.4, paint);
-    }
-
-    // Draw bioluminescent light orbs (larger creatures)
-    for (int i = 0; i < (6 * intensity).round(); i++) {
-      final orbX = size.width * (0.1 + i * 0.15) + math.sin(animation * 1.3 * math.pi + i * 0.9) * 30 * intensity;
-      final orbY = size.height * (0.3 + i * 0.1) + math.cos(animation * 0.9 * math.pi + i * 0.7) * 20 * intensity;
-
-      final orbSize = (8 + i * 3) * intensity;
-      final orbPulse = math.sin(animation * 5 * math.pi + i * 1.3) * 0.5 + 0.5;
-
-      if (orbPulse > 0.4) {
-        // Core light
-        paint.color = Color.lerp(
-          primaryColor.withOpacity(0.9 * orbPulse * intensity),
-          accentColor.withOpacity(0.7 * orbPulse * intensity),
-          orbPulse,
-        )!;
-
-        canvas.drawCircle(Offset(orbX, orbY), orbSize * orbPulse * 0.7, paint);
-
-        // Outer glow
-        paint.color = paint.color.withOpacity(paint.color.opacity * 0.15);
-        canvas.drawCircle(Offset(orbX, orbY), orbSize * orbPulse * 2, paint);
-
-        // Extended glow field
-        paint.color = paint.color.withOpacity(paint.color.opacity * 0.3);
-        canvas.drawCircle(Offset(orbX, orbY), orbSize * orbPulse * 3.5, paint);
-      }
-    }
-
-    // Draw subtle seafloor glow (bottom illumination)
-    final seafloorY = size.height * 0.85;
-    for (int i = 0; i < (8 * intensity).round(); i++) {
-      final glowX = (i / 8) * size.width;
-      final glowSize = (15 + math.sin(animation * 2 * math.pi + i * 0.6) * 8) * intensity;
-      final seafloorGlow = math.cos(animation * 1.8 * math.pi + i * 0.4) * 0.2 + 0.3;
-
-      paint.color = Color.lerp(
-        primaryColor.withOpacity(0.03 * seafloorGlow * intensity),
-        accentColor.withOpacity(0.02 * seafloorGlow * intensity),
-        i / 7.0,
-      )!;
-
-      canvas.drawCircle(Offset(glowX, seafloorY + glowSize * 0.5), glowSize, paint);
+      canvas.drawRect(
+        Rect.fromLTWH(0, pressureY - 30, size.width, 60),
+        pressurePaint,
+      );
     }
   }
 
+  void _paintOceanCurrents(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    for (int layer = 0; layer < _currentLayers; layer++) {
+      final currentY = size.height * (0.1 + layer * 0.15);
+      final currentSpeed = 0.05 + layer * 0.01;
+      final phase = _phase * currentSpeed + layer * math.pi / 3;
+
+      final path = Path();
+      path.moveTo(0, currentY);
+
+      // Create flowing current lines
+      for (double x = 0; x <= size.width; x += 8) {
+        final primaryFlow = math.sin(x / 150 + phase) * 20 * intensity;
+        final secondaryFlow = math.sin(x / 100 + phase * 1.3) * 12 * intensity;
+        final microFlow = math.sin(x / 50 + phase * 2.1) * 6 * intensity;
+
+        final y = currentY + primaryFlow + secondaryFlow + microFlow;
+        path.lineTo(x, y);
+      }
+
+      final currentIntensity = 0.3 + 0.4 * _norm(0.08, layer * 0.6);
+      paint.strokeWidth = (1 + layer * 0.5) * intensity;
+      paint.color = Color.lerp(
+        primaryColor.withOpacity(0.15 * currentIntensity * intensity),
+        accentColor.withOpacity(0.12 * currentIntensity * intensity),
+        layer / (_currentLayers - 1),
+      )!;
+
+      canvas.drawPath(path, paint);
+
+      // Current particle trails
+      if (layer % 2 == 0) {
+        _paintCurrentParticles(canvas, size, currentY, phase, layer);
+      }
+    }
+  }
+
+  void _paintCurrentParticles(Canvas canvas, Size size, double currentY, double phase, int layer) {
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    for (int i = 0; i < 8; i++) {
+      final particleProgress = (phase * 0.1 + i * 0.15) % 1.0;
+      final particleX = particleProgress * size.width * 1.2 - size.width * 0.1;
+      final particleY = currentY + math.sin(particleProgress * 4 * math.pi) * 10 * intensity;
+
+      final particleSize = (1.5 + layer * 0.5) * intensity;
+      final particleOpacity = math.max(0.0, (1.0 - particleProgress) * 0.6) * intensity;
+
+      paint.color = primaryColor.withOpacity(particleOpacity);
+      canvas.drawCircle(Offset(particleX, particleY), particleSize, paint);
+    }
+  }
+
+  void _paintPressureDistortions(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    // Pressure wave distortions
+    for (int i = 0; i < 4; i++) {
+      final distortionX = size.width * (0.2 + i * 0.2);
+      final distortionY = size.height * (0.3 + _wave(0.02, i.toDouble()) * 0.4);
+
+      final distortionSize = (40 + i * 15 + _wave(0.08, i * 0.8) * 10) * intensity;
+      final pressureIntensity = _norm(0.06, i * 0.7);
+
+      // Create pressure wave rings
+      for (int ring = 0; ring < 3; ring++) {
+        final ringSize = distortionSize * (1 + ring * 0.3);
+        final ringOpacity = (0.03 - ring * 0.01) * pressureIntensity * intensity;
+
+        paint.color = accentColor.withOpacity(ringOpacity);
+        canvas.drawCircle(Offset(distortionX, distortionY), ringSize, paint);
+      }
+    }
+  }
+
+  void _paintMarineSediment(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    // Floating marine sediment particles
+    final random = math.Random(333);
+    for (int i = 0; i < (20 * intensity).round(); i++) {
+      final sedimentX = random.nextDouble() * size.width + _wave(0.01, i * 0.2) * 30 * intensity;
+      final sedimentY = random.nextDouble() * size.height + _wave(0.015, i * 0.3) * 20 * intensity;
+
+      final sedimentSize = (0.5 + random.nextDouble() * 1.5) * intensity;
+      final sedimentOpacity = (0.2 + random.nextDouble() * 0.3) * intensity;
+
+      paint.color = const Color(0xFF4A5568).withOpacity(sedimentOpacity);
+      canvas.drawCircle(Offset(sedimentX, sedimentY), sedimentSize, paint);
+    }
+  }
+
+  void _paintAbyssalGlow(Canvas canvas, Size size) {
+    // Final atmospheric glow effects
+    final rect = Offset.zero & size;
+
+    // Deep sea ambient glow
+    final abyssalGlow = Paint()
+      ..shader = ui.Gradient.radial(
+        Offset(size.width * 0.5, size.height * 0.8),
+        size.width * 0.6,
+        [
+          primaryColor.withOpacity(0.05 * intensity),
+          _biolumBlue.withOpacity(0.03 * intensity),
+          Colors.transparent,
+        ],
+        [0.0, 0.4, 1.0],
+      );
+
+    canvas.drawRect(rect, abyssalGlow);
+
+    // Depth pressure effect
+    final pressureGradient = Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(0, size.height * 0.6),
+        Offset(0, size.height),
+        [
+          Colors.transparent,
+          _abyssal.withOpacity(0.3 * intensity),
+        ],
+        [0.0, 1.0],
+      );
+
+    canvas.drawRect(rect, pressureGradient);
+  }
+
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _EnhancedDeepSeaPainter oldDelegate) {
+    return oldDelegate.t != t ||
+        oldDelegate.primaryColor != primaryColor ||
+        oldDelegate.accentColor != accentColor ||
+        oldDelegate.intensity != intensity;
+  }
 }

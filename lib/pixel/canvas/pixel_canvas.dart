@@ -319,7 +319,7 @@ class _PixelCanvasState extends State<PixelCanvas> {
       strokeWidth: widget.brushSize,
       modifier: _getModifier(),
       onPixelsUpdated: (pixels) {
-        if (widget.currentTool == PixelTool.select) {
+        if (widget.currentTool == PixelTool.select || widget.currentTool == PixelTool.lasso) {
           _controller.setSelection(pixels);
         } else {
           _controller.setPreviewPixels(pixels);
