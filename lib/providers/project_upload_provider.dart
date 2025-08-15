@@ -108,7 +108,7 @@ class ProjectUpload extends _$ProjectUpload {
         ref.read(analyticsProvider).logEvent(
           name: isUpdate ? 'project_update_success' : 'project_upload_success',
           parameters: {
-            'project_id': response.data!,
+            'project_id': response.data?.id.toString() ?? '',
             'project_name': title,
             'is_update': isUpdate.toString(),
           },

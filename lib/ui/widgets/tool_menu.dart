@@ -81,16 +81,16 @@ class ToolMenu extends StatelessWidget {
                   onPressed: !subscription.isPro ? null : () => onSelectTool(PixelTool.select),
                 ),
               ),
-              ProBadge(
-                show: !subscription.isPro,
-                child: IconButton(
-                  icon: AppIcon(
-                    AppIcons.lasso,
-                    color: tool == PixelTool.lasso ? Colors.blue : null,
-                  ),
-                  onPressed: !subscription.isPro ? null : () => onSelectTool(PixelTool.lasso),
-                ),
-              ),
+              // ProBadge(
+              //   show: !subscription.isPro,
+              //   child: IconButton(
+              //     icon: AppIcon(
+              //       AppIcons.lasso,
+              //       color: tool == PixelTool.lasso ? Colors.blue : null,
+              //     ),
+              //     onPressed: !subscription.isPro ? null : () => onSelectTool(PixelTool.lasso),
+              //   ),
+              // ),
               ProBadge(
                 show: !subscription.isPro,
                 child: IconButton(

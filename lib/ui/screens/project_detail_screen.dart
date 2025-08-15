@@ -65,31 +65,35 @@ class ProjectDetailScreen extends HookConsumerWidget {
       return null;
     }, [scrollController, isMobile]);
 
-    if (isDesktop) {
-      return _buildDesktopLayout(context, ref, theme, subscription, comments, currentProject);
-    } else if (isTablet) {
-      return _buildTabletLayout(
-        context,
-        ref,
-        theme,
-        subscription,
-        scrollController,
-        showAppBar,
-        comments,
-        currentProject,
-      );
-    } else {
-      return _buildMobileLayout(
-        context,
-        ref,
-        theme,
-        subscription,
-        scrollController,
-        showAppBar,
-        comments,
-        currentProject,
-      );
-    }
+    return AnimatedBackground(
+      child: Builder(builder: (context) {
+        if (isDesktop) {
+          return _buildDesktopLayout(context, ref, theme, subscription, comments, currentProject);
+        } else if (isTablet) {
+          return _buildTabletLayout(
+            context,
+            ref,
+            theme,
+            subscription,
+            scrollController,
+            showAppBar,
+            comments,
+            currentProject,
+          );
+        } else {
+          return _buildMobileLayout(
+            context,
+            ref,
+            theme,
+            subscription,
+            scrollController,
+            showAppBar,
+            comments,
+            currentProject,
+          );
+        }
+      }),
+    );
   }
 
   Widget _buildDesktopLayout(
@@ -101,9 +105,9 @@ class ProjectDetailScreen extends HookConsumerWidget {
     ApiProject currentProject,
   ) {
     return Scaffold(
-      backgroundColor: theme.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: theme.toolbarColor,
+        backgroundColor: theme.toolbarColor.withOpacity(0.8),
         title: Text(
           currentProject.title,
           style: TextStyle(color: theme.textPrimary, fontSize: 20),
@@ -119,7 +123,7 @@ class ProjectDetailScreen extends HookConsumerWidget {
           Expanded(
             flex: 2,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -147,11 +151,11 @@ class ProjectDetailScreen extends HookConsumerWidget {
           Container(
             width: 400,
             decoration: BoxDecoration(
-              color: theme.surface,
+              color: theme.surface.withOpacity(0.8),
               border: Border(left: BorderSide(color: theme.divider)),
             ),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -166,7 +170,16 @@ class ProjectDetailScreen extends HookConsumerWidget {
                   const SizedBox(height: 32),
 
                   // Comments section
-                  _buildCommentsSection(context, ref, comments, theme, currentProject, isDesktop: true),
+                  SingleChildScrollView(
+                    child: _buildCommentsSection(
+                      context,
+                      ref,
+                      comments,
+                      theme,
+                      currentProject,
+                      isDesktop: true,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -186,82 +199,80 @@ class ProjectDetailScreen extends HookConsumerWidget {
     AsyncValue<List<ApiComment>> comments,
     ApiProject currentProject,
   ) {
-    return AnimatedBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: CustomScrollView(
-          controller: scrollController,
-          slivers: [
-            SliverAppBar(
-              expandedHeight: 400,
-              floating: false,
-              pinned: true,
-              backgroundColor: Colors.transparent,
-              flexibleSpace: FlexibleSpaceBar(
-                title: showAppBar.value
-                    ? null
-                    : Text(
-                        currentProject.title,
-                        style: TextStyle(color: theme.textPrimary, fontSize: 18),
-                      ),
-                background: _buildTabletProjectPreview(context, ref, currentProject, theme),
-              ),
-              actions: [
-                _buildQuickActions(context, ref, currentProject, theme, isTablet: true),
-              ],
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: CustomScrollView(
+        controller: scrollController,
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 400,
+            floating: false,
+            pinned: true,
+            backgroundColor: Colors.transparent,
+            flexibleSpace: FlexibleSpaceBar(
+              title: showAppBar.value
+                  ? null
+                  : Text(
+                      currentProject.title,
+                      style: TextStyle(color: theme.textPrimary, fontSize: 18),
+                    ),
+              background: _buildTabletProjectPreview(context, ref, currentProject, theme),
             ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Left column
-                    Expanded(
-                      flex: 2,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Project info
-                          _buildProjectInfo(context, ref, currentProject, theme, isTablet: true),
+            actions: [
+              _buildQuickActions(context, ref, currentProject, theme, isTablet: true),
+            ],
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Left column
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Project info
+                        _buildProjectInfo(context, ref, currentProject, theme, isTablet: true),
 
+                        const SizedBox(height: 24),
+
+                        // Tags
+                        if (currentProject.tags.isNotEmpty) ...[
+                          _buildTags(context, currentProject, theme, isTablet: true),
                           const SizedBox(height: 24),
-
-                          // Tags
-                          if (currentProject.tags.isNotEmpty) ...[
-                            _buildTags(context, currentProject, theme, isTablet: true),
-                            const SizedBox(height: 24),
-                          ],
-
-                          // Comments on tablet (below main content)
-                          _buildCommentsSection(context, ref, comments, theme, currentProject, isTablet: true),
                         ],
-                      ),
+
+                        // Comments on tablet (below main content)
+                        _buildCommentsSection(context, ref, comments, theme, currentProject, isTablet: true),
+                      ],
                     ),
+                  ),
 
-                    const SizedBox(width: 24),
+                  const SizedBox(width: 24),
 
-                    // Right column
-                    Expanded(
-                      flex: 1,
-                      child: Column(
-                        children: [
-                          // Author info
-                          _buildAuthorInfo(context, ref, currentProject, theme, isTablet: true),
+                  // Right column
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      children: [
+                        // Author info
+                        _buildAuthorInfo(context, ref, currentProject, theme, isTablet: true),
 
-                          const SizedBox(height: 20),
+                        const SizedBox(height: 20),
 
-                          // Project actions
-                          _buildProjectActions(context, ref, currentProject, theme, isTablet: true),
-                        ],
-                      ),
+                        // Project actions
+                        _buildProjectActions(context, ref, currentProject, theme, isTablet: true),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -277,7 +288,7 @@ class ProjectDetailScreen extends HookConsumerWidget {
     ApiProject currentProject,
   ) {
     return Scaffold(
-      backgroundColor: theme.background,
+      backgroundColor: Colors.transparent,
       body: CustomScrollView(
         controller: scrollController,
         slivers: [
@@ -285,7 +296,7 @@ class ProjectDetailScreen extends HookConsumerWidget {
             expandedHeight: 300,
             floating: false,
             pinned: true,
-            backgroundColor: theme.toolbarColor,
+            backgroundColor: theme.toolbarColor.withOpacity(0.6),
             flexibleSpace: FlexibleSpaceBar(
               title: showAppBar.value
                   ? null
@@ -360,7 +371,6 @@ class ProjectDetailScreen extends HookConsumerWidget {
 
       final result = await ref.read(communityProjectsProvider.notifier).deleteProject(currentProject);
       if (!context.mounted) return;
-      print('Delete result: $result');
 
       if (result) {
         Navigator.of(context).pop();
@@ -462,128 +472,128 @@ class ProjectDetailScreen extends HookConsumerWidget {
         ],
 
         // More options
-        PopupMenuButton<String>(
-          icon: Icon(Icons.more_vert, color: theme.activeIcon),
-          tooltip: 'More Options',
-          itemBuilder: (context) => [
-            if (!isAuthor) ...[
-              const PopupMenuItem(
-                value: 'download',
-                child: Row(
-                  children: [
-                    Icon(Icons.download),
-                    SizedBox(width: 8),
-                    Text('Download'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'save',
-                child: Row(
-                  children: [
-                    Icon(Icons.bookmark_border),
-                    SizedBox(width: 8),
-                    Text('Save to Favorites'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'follow',
-                child: Row(
-                  children: [
-                    Icon(Icons.person_add),
-                    SizedBox(width: 8),
-                    Text('Follow Artist'),
-                  ],
-                ),
-              ),
-              const PopupMenuDivider(),
-              const PopupMenuItem(
-                value: 'report',
-                child: Row(
-                  children: [
-                    Icon(Icons.flag, color: Colors.orange),
-                    SizedBox(width: 8),
-                    Text('Report'),
-                  ],
-                ),
-              ),
-            ] else ...[
-              const PopupMenuItem(
-                value: 'edit',
-                child: Row(
-                  children: [
-                    Icon(Icons.edit),
-                    SizedBox(width: 8),
-                    Text('Edit Project'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'analytics',
-                child: Row(
-                  children: [
-                    Icon(Icons.analytics),
-                    SizedBox(width: 8),
-                    Text('View Analytics'),
-                  ],
-                ),
-              ),
-              const PopupMenuDivider(),
-              PopupMenuItem(
-                value: 'visibility',
-                child: Row(
-                  children: [
-                    Icon(currentProject.isPublic ? Icons.lock : Icons.public),
-                    const SizedBox(width: 8),
-                    Text(currentProject.isPublic ? 'Make Private' : 'Make Public'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Delete Project', style: TextStyle(color: Colors.red)),
-                  ],
-                ),
-              ),
-            ],
-          ],
-          onSelected: (value) async {
-            switch (value) {
-              case 'download':
-                _downloadProject(context, ref, currentProject, ref.read(subscriptionStateProvider));
-                break;
-              case 'save':
-                _saveToFavorites(context, ref, currentProject);
-                break;
-              case 'follow':
-                _followArtist(context, ref, currentProject);
-                break;
-              case 'report':
-                _showReportDialog(context);
-                break;
-              case 'edit':
-                _editProject(context, ref, currentProject);
-                break;
-              case 'analytics':
-                _showAnalytics(context, ref, currentProject);
-                break;
-              case 'visibility':
-                _toggleVisibility(context, ref, currentProject);
-                break;
-              case 'delete':
-                final result = await _showDeleteDialog(context, ref, currentProject);
-                if (result == true) {
-                  _deleteProject(context, ref, currentProject);
-                }
-                break;
-            }
-          },
-        ),
+        // PopupMenuButton<String>(
+        //   icon: Icon(Icons.more_vert, color: theme.activeIcon),
+        //   tooltip: 'More Options',
+        //   itemBuilder: (context) => [
+        //     if (!isAuthor) ...[
+        //       const PopupMenuItem(
+        //         value: 'download',
+        //         child: Row(
+        //           children: [
+        //             Icon(Icons.download),
+        //             SizedBox(width: 8),
+        //             Text('Download'),
+        //           ],
+        //         ),
+        //       ),
+        //       const PopupMenuItem(
+        //         value: 'save',
+        //         child: Row(
+        //           children: [
+        //             Icon(Icons.bookmark_border),
+        //             SizedBox(width: 8),
+        //             Text('Save to Favorites'),
+        //           ],
+        //         ),
+        //       ),
+        //       const PopupMenuItem(
+        //         value: 'follow',
+        //         child: Row(
+        //           children: [
+        //             Icon(Icons.person_add),
+        //             SizedBox(width: 8),
+        //             Text('Follow Artist'),
+        //           ],
+        //         ),
+        //       ),
+        //       const PopupMenuDivider(),
+        //       const PopupMenuItem(
+        //         value: 'report',
+        //         child: Row(
+        //           children: [
+        //             Icon(Icons.flag, color: Colors.orange),
+        //             SizedBox(width: 8),
+        //             Text('Report'),
+        //           ],
+        //         ),
+        //       ),
+        //     ] else ...[
+        //       const PopupMenuItem(
+        //         value: 'edit',
+        //         child: Row(
+        //           children: [
+        //             Icon(Icons.edit),
+        //             SizedBox(width: 8),
+        //             Text('Edit Project'),
+        //           ],
+        //         ),
+        //       ),
+        //       const PopupMenuItem(
+        //         value: 'analytics',
+        //         child: Row(
+        //           children: [
+        //             Icon(Icons.analytics),
+        //             SizedBox(width: 8),
+        //             Text('View Analytics'),
+        //           ],
+        //         ),
+        //       ),
+        //       const PopupMenuDivider(),
+        //       PopupMenuItem(
+        //         value: 'visibility',
+        //         child: Row(
+        //           children: [
+        //             Icon(currentProject.isPublic ? Icons.lock : Icons.public),
+        //             const SizedBox(width: 8),
+        //             Text(currentProject.isPublic ? 'Make Private' : 'Make Public'),
+        //           ],
+        //         ),
+        //       ),
+        //       const PopupMenuItem(
+        //         value: 'delete',
+        //         child: Row(
+        //           children: [
+        //             Icon(Icons.delete, color: Colors.red),
+        //             SizedBox(width: 8),
+        //             Text('Delete Project', style: TextStyle(color: Colors.red)),
+        //           ],
+        //         ),
+        //       ),
+        //     ],
+        //   ],
+        //   onSelected: (value) async {
+        //     switch (value) {
+        //       case 'download':
+        //         _downloadProject(context, ref, currentProject, ref.read(subscriptionStateProvider));
+        //         break;
+        //       case 'save':
+        //         _saveToFavorites(context, ref, currentProject);
+        //         break;
+        //       case 'follow':
+        //         _followArtist(context, ref, currentProject);
+        //         break;
+        //       case 'report':
+        //         _showReportDialog(context);
+        //         break;
+        //       case 'edit':
+        //         _editProject(context, ref, currentProject);
+        //         break;
+        //       case 'analytics':
+        //         _showAnalytics(context, ref, currentProject);
+        //         break;
+        //       case 'visibility':
+        //         _toggleVisibility(context, ref, currentProject);
+        //         break;
+        //       case 'delete':
+        //         final result = await _showDeleteDialog(context, ref, currentProject);
+        //         if (result == true) {
+        //           _deleteProject(context, ref, currentProject);
+        //         }
+        //         break;
+        //     }
+        //   },
+        // ),
       ],
     );
   }
@@ -597,7 +607,7 @@ class ProjectDetailScreen extends HookConsumerWidget {
     return Container(
       height: 500,
       decoration: BoxDecoration(
-        color: theme.surface,
+        color: theme.surface.withOpacity(0.8),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -995,10 +1005,10 @@ class ProjectDetailScreen extends HookConsumerWidget {
     required Color color,
     bool isLarge = false,
   }) {
-    final iconSize = isLarge ? 20.0 : 16.0;
+    final iconSize = isLarge ? 14.0 : 12.0;
     final labelSize = isLarge ? 12.0 : 10.0;
-    final valueSize = isLarge ? 16.0 : 14.0;
-    final padding = isLarge ? 16.0 : 12.0;
+    final valueSize = isLarge ? 14.0 : 10.0;
+    final padding = isLarge ? 12.0 : 8.0;
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding * 0.75),

@@ -267,8 +267,7 @@ class Auth extends _$Auth {
       }
     } catch (e) {
       _logger.severe('API authentication failed: $e');
-      // We'll still allow the Google sign-in to succeed
-      // The user can use basic features without API authentication
+      rethrow;
     }
   }
 
