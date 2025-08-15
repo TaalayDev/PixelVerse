@@ -68,14 +68,19 @@ class LayersPanel extends HookConsumerWidget {
             items: layers,
             controller: scrollController,
             onReorder: (oldIndex, newIndex) {
-              onLayerReordered(newIndex, oldIndex);
+              final reversedLength = layers.length;
+              final actualOldIndex = reversedLength - 1 - oldIndex;
+              final actualNewIndex = reversedLength - 1 - newIndex;
+              onLayerReordered(actualNewIndex, actualOldIndex);
             },
             itemBuilder: (context, index) {
-              final layer = layers[index];
+              final reversedLayers = layers.reversed.toList();
+              final layer = reversedLayers[index];
+              final actualIndex = layers.length - 1 - index; // Convert back to actual index
               return _buildLayerTile(
                 context,
                 layer,
-                index,
+                actualIndex, // Pass actual index for selection logic
                 subscription,
               );
             },
