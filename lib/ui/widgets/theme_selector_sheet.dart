@@ -131,36 +131,14 @@ class ThemeSelectorBottomSheet extends HookConsumerWidget {
                         FilledButton(
                           onPressed: () {
                             final type = selectedTheme.value!;
-                            if (!unlockedThemeTypes.value.contains(type) && !subscription.isPro) {
-                              if (!isAdLoaded) {
-                                Navigator.of(context).pop();
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => const SubscriptionOfferScreen(),
-                                  ),
-                                );
-                                return;
-                              }
+                            if (type.isLocked && !subscription.isPro) {
                               Navigator.of(context).pop();
-                              RewardDialog.show(
-                                context,
-                                title: 'Unlock ${type.displayName} Theme',
-                                subtitle: 'Watch a video ad to unlock this theme.',
-                                onRewardEarned: () {
-                                  ref.read(themeProvider).setTheme(type);
-                                  unlockedThemeTypes.value = [
-                                    ...unlockedThemeTypes.value,
-                                    type,
-                                  ];
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('${type.displayName} theme unlocked!'),
-                                      backgroundColor: Colors.green,
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
-                                },
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const SubscriptionOfferScreen(),
+                                ),
                               );
+
                               return;
                             }
                             themeManager.setTheme(type);
@@ -609,6 +587,7 @@ class ThemeShowcase extends StatelessWidget {
                   ClipRRect(
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                     child: AnimatedBackground(
+                      appTheme: theme,
                       intensity: 0.8,
                       enableAnimation: true,
                       child: Container(color: Colors.transparent),

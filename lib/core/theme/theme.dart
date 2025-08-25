@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'autumn_harvest.dart';
 import 'cherry_blossom.dart';
 import 'copper_steampunk.dart';
 import 'cosmic.dart';
@@ -29,11 +30,12 @@ import 'dream_scape.dart';
 import 'toxic_waste.dart';
 import 'volcanic.dart';
 import 'emerald_forest.dart';
+import 'winter_wonderland.dart';
 
 export 'theme_type.dart';
 
 class AppTheme {
-  static const defaultType = ThemeType.lightMode;
+  static const defaultType = ThemeType.emeraldForest;
   static final defaultTheme = AppTheme.fromType(defaultType);
 
   final ThemeType type;
@@ -164,6 +166,10 @@ class AppTheme {
         return buildEmeraldForestTheme();
       case ThemeType.roseQuartzGarden:
         return buildRoseQuartzGardenTheme();
+      case ThemeType.winterWonderland:
+        return buildWinterWonderlandTheme();
+      case ThemeType.autumnHarvest:
+        return buildAutumnHarvestTheme();
     }
   }
 

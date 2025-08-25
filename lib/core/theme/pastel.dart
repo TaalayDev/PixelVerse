@@ -64,7 +64,7 @@ AppTheme buildPastelTheme() {
   );
 }
 
-// Enhanced Pastel theme background with layered soft elements
+// Enhanced Pastel theme background with scenic landscape
 class PastelBackground extends HookWidget {
   final AppTheme theme;
   final double intensity;
@@ -95,7 +95,7 @@ class PastelBackground extends HookWidget {
 
     return RepaintBoundary(
       child: CustomPaint(
-        painter: _EnhancedPastelPainter(
+        painter: _ScenicPastelPainter(
           t: t,
           primaryColor: theme.primaryColor,
           accentColor: theme.accentColor,
@@ -107,13 +107,13 @@ class PastelBackground extends HookWidget {
   }
 }
 
-class _EnhancedPastelPainter extends CustomPainter {
+class _ScenicPastelPainter extends CustomPainter {
   final double t;
   final Color primaryColor;
   final Color accentColor;
   final double intensity;
 
-  _EnhancedPastelPainter({
+  _ScenicPastelPainter({
     required this.t,
     required this.primaryColor,
     required this.accentColor,
@@ -125,240 +125,275 @@ class _EnhancedPastelPainter extends CustomPainter {
   double _wave(double speed, [double offset = 0]) => math.sin(_phase * speed + offset);
   double _norm(double speed, [double offset = 0]) => 0.5 * (1 + _wave(speed, offset));
 
-  // Extended pastel palette
+  // Pastel landscape palette
+  late final Color _skyBlue = const Color(0xFFE6F3FF); // Very light blue
   late final Color _softMint = const Color(0xFFB8E6B8); // Soft mint green
   late final Color _softPeach = const Color(0xFFFFDAB9); // Soft peach
-  late final Color _softYellow = const Color(0xFFFFF8DC); // Cream yellow
-  late final Color _softBlue = const Color(0xFFE6F3FF); // Powder blue
-  late final Color _softCoral = const Color(0xFFFFE4E1); // Misty rose
+  late final Color _lavenderMist = const Color(0xFFE6E6FA); // Lavender
+  late final Color _hillGreen = const Color(0xFFC8E6C9); // Light sage green
+  late final Color _sunYellow = const Color(0xFFFFFACD); // Lemon chiffon
+  late final Color _flowerPink = const Color(0xFFFFB6C1); // Light pink
 
   // Element counts based on intensity
-  int get _cloudCount => (6 * intensity).round().clamp(3, 9);
-  int get _bubbleCount => (25 * intensity).round().clamp(12, 40);
-  int get _particleCount => (40 * intensity).round().clamp(20, 60);
-  int get _waveCount => (4 * intensity).round().clamp(2, 6);
+  int get _hillLayers => (4 * intensity).round().clamp(2, 6);
+  int get _cloudCount => (5 * intensity).round().clamp(3, 8);
+  int get _treeCount => (8 * intensity).round().clamp(4, 12);
+  int get _flowerCount => (20 * intensity).round().clamp(10, 30);
 
   @override
   void paint(Canvas canvas, Size size) {
-    _paintSkyGradient(canvas, size);
-    _paintSoftClouds(canvas, size);
-    _paintGentleWaves(canvas, size);
-    _paintFloatingBubbles(canvas, size);
-    _paintSparklingParticles(canvas, size);
-    _paintDreamyWisps(canvas, size);
-    _paintSoftVignette(canvas, size);
+    _paintSky(canvas, size);
+    _paintSun(canvas, size);
+    _paintClouds(canvas, size);
+    _paintDistantHills(canvas, size);
+    _paintTrees(canvas, size);
+    _paintMeadow(canvas, size);
+    _paintFlowers(canvas, size);
+    _paintAtmosphere(canvas, size);
   }
 
-  void _paintSkyGradient(Canvas canvas, Size size) {
+  void _paintSky(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
     final skyGradient = Paint()
       ..shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
         colors: [
-          _softBlue.withOpacity(0.3),
-          _softYellow.withOpacity(0.2),
-          _softPeach.withOpacity(0.25),
-          _softMint.withOpacity(0.2),
+          _skyBlue.withOpacity(0.6),
+          _lavenderMist.withOpacity(0.4),
+          _softPeach.withOpacity(0.3),
+          Colors.white.withOpacity(0.8),
         ],
-        stops: const [0.0, 0.3, 0.7, 1.0],
+        stops: const [0.0, 0.3, 0.6, 1.0],
       ).createShader(rect);
     canvas.drawRect(rect, skyGradient);
   }
 
-  void _paintSoftClouds(Canvas canvas, Size size) {
+  void _paintSun(Canvas canvas, Size size) {
+    final sunCenter = Offset(size.width * 0.75, size.height * 0.25);
+    final sunRadius = 40 * intensity;
+    final sunPulse = 0.95 + 0.05 * _wave(0.05);
+
     final paint = Paint()..style = PaintingStyle.fill;
-    final random = math.Random(789);
+
+    // Sun glow
+    paint
+      ..color = _sunYellow.withOpacity(0.6 * intensity)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15);
+    canvas.drawCircle(sunCenter, sunRadius * 2.5 * sunPulse, paint);
+
+    // Sun body
+    paint
+      ..color = _sunYellow.withOpacity(0.8 * intensity)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+    canvas.drawCircle(sunCenter, sunRadius * sunPulse, paint);
+
+    // Sun core
+    paint
+      ..color = Colors.white.withOpacity(0.9 * intensity)
+      ..maskFilter = null;
+    canvas.drawCircle(sunCenter, sunRadius * 0.6 * sunPulse, paint);
+  }
+
+  void _paintClouds(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
 
     for (int i = 0; i < _cloudCount; i++) {
       final baseX = size.width * (0.1 + i * 0.15);
-      final baseY = size.height * (0.15 + (i % 3) * 0.25);
+      final baseY = size.height * (0.1 + (i % 3) * 0.08);
 
-      // Gentle drift motion
-      final driftX = baseX + _wave(0.08, i.toDouble()) * 25 * intensity;
-      final driftY = baseY + _wave(0.12, i * 0.7) * 15 * intensity;
+      // Gentle cloud drift
+      final driftX = baseX + _wave(0.02, i.toDouble()) * 30 * intensity;
+      final driftY = baseY + _wave(0.03, i * 0.7) * 8 * intensity;
 
-      final cloudSize = (35 + i * 8 + _wave(0.15, i * 0.5) * 12) * intensity;
-      final breathe = 0.85 + 0.15 * _norm(0.2, i * 0.3);
-      final currentSize = cloudSize * breathe;
+      final cloudSize = (25 + i * 6 + _wave(0.04, i * 0.5) * 8) * intensity;
+      final opacity = (0.4 + _norm(0.06, i * 0.4) * 0.2) * intensity;
 
-      // Cloud color with slight variation
-      final cloudHue = [_softPeach, primaryColor, accentColor, _softMint, _softBlue][i % 5];
-      final opacity = (0.03 + _norm(0.1, i * 0.4) * 0.02) * intensity;
+      paint.color = Colors.white.withOpacity(opacity);
 
-      paint.color = cloudHue.withOpacity(opacity);
-
-      // Main cloud body with multiple overlapping circles for organic shape
-      _drawCloudShape(canvas, paint, Offset(driftX, driftY), currentSize);
+      // Draw puffy cloud shape
+      _drawCloud(canvas, paint, Offset(driftX, driftY), cloudSize);
     }
   }
 
-  void _drawCloudShape(Canvas canvas, Paint paint, Offset center, double size) {
-    // Main cloud circle
+  void _drawCloud(Canvas canvas, Paint paint, Offset center, double size) {
+    // Main cloud body with multiple overlapping circles
     canvas.drawCircle(center, size, paint);
-
-    // Additional puffs for natural cloud shape
-    final offsets = [
-      Offset(-size * 0.4, -size * 0.2),
-      Offset(size * 0.3, -size * 0.3),
-      Offset(size * 0.1, size * 0.4),
-      Offset(-size * 0.2, size * 0.3),
-    ];
-
-    final sizes = [size * 0.7, size * 0.6, size * 0.65, size * 0.5];
-
-    for (int i = 0; i < offsets.length; i++) {
-      canvas.drawCircle(center + offsets[i], sizes[i], paint);
-    }
+    canvas.drawCircle(center + Offset(-size * 0.4, -size * 0.2), size * 0.8, paint);
+    canvas.drawCircle(center + Offset(size * 0.3, -size * 0.1), size * 0.7, paint);
+    canvas.drawCircle(center + Offset(size * 0.1, size * 0.3), size * 0.6, paint);
+    canvas.drawCircle(center + Offset(-size * 0.2, size * 0.2), size * 0.5, paint);
   }
 
-  void _paintGentleWaves(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+  void _paintDistantHills(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
 
-    for (int i = 0; i < _waveCount; i++) {
-      final baseY = size.height * (0.6 + i * 0.08);
-      final waveHeight = (8 + i * 3) * intensity;
-      final strokeWidth = (1.5 + i * 0.5) * intensity;
+    for (int layer = 0; layer < _hillLayers; layer++) {
+      final hillHeight = size.height * (0.3 + layer * 0.1);
+      final baseY = size.height - hillHeight;
 
       final path = Path();
-      path.moveTo(0, baseY);
+      path.moveTo(0, size.height);
+      path.lineTo(0, baseY);
 
-      for (double x = 0; x <= size.width; x += 8) {
-        final primaryWave = _wave(0.08, x * 0.01 + i * 0.3) * waveHeight;
-        final secondaryWave = _wave(0.12, x * 0.015 + i * 0.5) * waveHeight * 0.5;
-        final y = baseY + primaryWave + secondaryWave;
-        path.lineTo(x, y);
-      }
+      // Create rolling hills
+      for (int i = 0; i <= 10; i++) {
+        final x = (i / 10) * size.width;
+        final hillVariation = _wave(0.03, i * 0.8 + layer) * 40 * intensity;
+        final y = baseY + hillVariation;
 
-      final waveColor = [primaryColor, accentColor, _softMint, _softCoral][i % 4];
-      final waveIntensity = _norm(0.25, i * 0.6);
-
-      paint
-        ..strokeWidth = strokeWidth
-        ..color = waveColor.withOpacity(0.06 * waveIntensity * intensity);
-
-      canvas.drawPath(path, paint);
-    }
-  }
-
-  void _paintFloatingBubbles(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-    final random = math.Random(456);
-
-    for (int i = 0; i < _bubbleCount; i++) {
-      final baseX = random.nextDouble() * size.width;
-      final baseY = random.nextDouble() * size.height;
-
-      // Gentle floating motion with different speeds
-      final floatSpeed = 0.05 + (i % 3) * 0.03;
-      final floatX = baseX + _wave(floatSpeed, i * 0.2) * 18 * intensity;
-      final floatY = baseY + _wave(floatSpeed * 0.7, i * 0.4) * 12 * intensity;
-
-      final bubbleSize = (4 + random.nextDouble() * 16) * intensity;
-      final pulseSize = bubbleSize * (0.9 + 0.1 * _norm(0.3, i * 0.1));
-
-      // Color cycling through pastel palette
-      final colors = [primaryColor, accentColor, _softMint, _softPeach, _softBlue, _softCoral];
-      final bubbleColor = colors[i % colors.length];
-      final opacity = (0.02 + _norm(0.2, i * 0.3) * 0.01) * intensity;
-
-      paint.color = bubbleColor.withOpacity(opacity);
-      canvas.drawCircle(Offset(floatX, floatY), pulseSize, paint);
-
-      // Inner highlight for dimension
-      if (bubbleSize > 8) {
-        paint.color = Colors.white.withOpacity(opacity * 0.6);
-        canvas.drawCircle(Offset(floatX - pulseSize * 0.3, floatY - pulseSize * 0.3), pulseSize * 0.2, paint);
-      }
-    }
-  }
-
-  void _paintSparklingParticles(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-    final random = math.Random(123);
-
-    for (int i = 0; i < _particleCount; i++) {
-      final x = random.nextDouble() * size.width;
-      final y = random.nextDouble() * size.height;
-
-      // Twinkling effect with varying phases
-      final twinklePhase = _norm(0.4, i * 0.15);
-      final twinkleThreshold = 0.7;
-
-      if (twinklePhase > twinkleThreshold) {
-        final sparkleIntensity = (twinklePhase - twinkleThreshold) / (1.0 - twinkleThreshold);
-        final particleSize = (0.8 + sparkleIntensity * 2.5) * intensity;
-
-        final colors = [Colors.white, primaryColor, accentColor, _softYellow];
-        final sparkleColor = colors[i % colors.length];
-
-        paint.color = sparkleColor.withOpacity(0.3 * sparkleIntensity * intensity);
-        canvas.drawCircle(Offset(x, y), particleSize, paint);
-
-        // Soft glow around sparkle
-        paint.color = sparkleColor.withOpacity(0.1 * sparkleIntensity * intensity);
-        canvas.drawCircle(Offset(x, y), particleSize * 2.5, paint);
-      }
-    }
-  }
-
-  void _paintDreamyWisps(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    for (int i = 0; i < 4; i++) {
-      final startX = size.width * (0.1 + i * 0.25);
-      final startY = size.height * (0.2 + _wave(0.1, i.toDouble()) * 0.15);
-
-      final path = Path();
-      path.moveTo(startX, startY);
-
-      // Create flowing, organic wisp paths
-      for (int j = 1; j <= 8; j++) {
-        final progress = j / 8.0;
-        final x = startX + progress * 120 * intensity + _wave(0.15, progress * 3 + i) * 30 * intensity;
-        final y = startY + _wave(0.12, progress * 2.5 + i * 0.7) * 40 * intensity;
-
-        if (j == 1) {
-          path.quadraticBezierTo(startX + 20 * intensity, startY + 10 * intensity, x, y);
-        } else {
+        if (i == 0) {
           path.lineTo(x, y);
+        } else {
+          // Create smooth curves
+          final prevX = ((i - 1) / 10) * size.width;
+          final prevY = baseY + _wave(0.03, (i - 1) * 0.8 + layer) * 40 * intensity;
+          final controlX = (prevX + x) / 2;
+          final controlY = (prevY + y) / 2 - 10;
+          path.quadraticBezierTo(controlX, controlY, x, y);
         }
       }
 
-      final wispColors = [primaryColor, accentColor, _softMint, _softCoral];
-      final wispIntensity = _norm(0.18, i * 0.8);
+      path.lineTo(size.width, size.height);
+      path.close();
 
-      paint
-        ..strokeWidth = (1.5 + i * 0.3) * intensity
-        ..color = wispColors[i].withOpacity(0.04 * wispIntensity * intensity);
+      // Hill colors get lighter with distance
+      final hillOpacity = (0.6 - layer * 0.1) * intensity;
+      final hillColors = [_hillGreen, _softMint, primaryColor.withOpacity(0.3), _lavenderMist];
+      paint.color = hillColors[layer % hillColors.length].withOpacity(hillOpacity);
 
       canvas.drawPath(path, paint);
     }
   }
 
-  void _paintSoftVignette(Canvas canvas, Size size) {
-    final center = Offset(size.width * 0.5, size.height * 0.45);
-    final radius = size.longestSide * 0.9;
+  void _paintTrees(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
 
-    final vignette = Paint()
+    for (int i = 0; i < _treeCount; i++) {
+      final treeX = size.width * (0.1 + i * 0.1);
+      final treeY = size.height * (0.6 + (i % 3) * 0.05);
+
+      // Gentle tree sway
+      final swayX = treeX + _wave(0.08, i.toDouble()) * 3 * intensity;
+
+      final treeSize = (12 + i * 2) * intensity;
+      final treeOpacity = (0.5 + _norm(0.1, i * 0.3) * 0.2) * intensity;
+
+      // Tree colors
+      final treeColors = [_hillGreen, _softMint, primaryColor.withOpacity(0.4)];
+      paint.color = treeColors[i % treeColors.length].withOpacity(treeOpacity);
+
+      // Simple tree shape
+      _drawSimpleTree(canvas, paint, Offset(swayX, treeY), treeSize);
+    }
+  }
+
+  void _drawSimpleTree(Canvas canvas, Paint paint, Offset base, double size) {
+    // Tree crown (circle)
+    canvas.drawCircle(base + Offset(0, -size), size * 0.8, paint);
+
+    // Tree trunk
+    paint.color = const Color(0xFFD2B48C).withOpacity(0.3 * intensity); // Tan
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: base + Offset(0, -size * 0.3),
+        width: size * 0.2,
+        height: size * 0.6,
+      ),
+      paint,
+    );
+  }
+
+  void _paintMeadow(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    // Ground layer
+    final meadowY = size.height * 0.75;
+    final meadowRect = Rect.fromLTWH(0, meadowY, size.width, size.height - meadowY);
+
+    paint.color = _softMint.withOpacity(0.3 * intensity);
+    canvas.drawRect(meadowRect, paint);
+
+    // Grass texture with gentle waves
+    paint.style = PaintingStyle.stroke;
+    paint.strokeWidth = 1 * intensity;
+
+    for (int i = 0; i < (size.width / 8).round(); i++) {
+      final x = i * 8.0;
+      final grassHeight = 10 + _wave(0.1, i * 0.2) * 5 * intensity;
+      final grassY = meadowY + _wave(0.05, i * 0.1) * 3 * intensity;
+
+      paint.color = _hillGreen.withOpacity(0.4 * intensity);
+      canvas.drawLine(
+        Offset(x, grassY),
+        Offset(x, grassY + grassHeight),
+        paint,
+      );
+    }
+  }
+
+  void _paintFlowers(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+    final random = math.Random(456);
+
+    for (int i = 0; i < _flowerCount; i++) {
+      final flowerX = random.nextDouble() * size.width;
+      final flowerY = size.height * (0.75 + random.nextDouble() * 0.2);
+
+      // Gentle flower sway
+      final swayX = flowerX + _wave(0.12, i * 0.2) * 2 * intensity;
+
+      final flowerSize = (2 + random.nextDouble() * 4) * intensity;
+      final bloom = _norm(0.15, i * 0.1);
+
+      if (bloom > 0.3) {
+        final flowerColors = [_flowerPink, accentColor, primaryColor, _softPeach];
+        paint.color = flowerColors[i % flowerColors.length].withOpacity(0.6 * bloom * intensity);
+
+        // Simple flower (small circle)
+        canvas.drawCircle(Offset(swayX, flowerY), flowerSize * bloom, paint);
+
+        // Flower center
+        paint.color = _sunYellow.withOpacity(0.8 * bloom * intensity);
+        canvas.drawCircle(Offset(swayX, flowerY), flowerSize * 0.3 * bloom, paint);
+      }
+    }
+  }
+
+  void _paintAtmosphere(Canvas canvas, Size size) {
+    // Soft atmospheric haze
+    final rect = Offset.zero & size;
+
+    final atmosphereGradient = Paint()
       ..shader = RadialGradient(
+        center: Alignment.topCenter,
+        radius: 1.2,
         colors: [
+          Colors.white.withOpacity(0.2 * intensity),
+          _lavenderMist.withOpacity(0.1 * intensity),
           Colors.transparent,
-          primaryColor.withOpacity(0.02 * intensity),
-          accentColor.withOpacity(0.015 * intensity),
         ],
-        stops: const [0.7, 0.9, 1.0],
-      ).createShader(Rect.fromCircle(center: center, radius: radius));
+        stops: const [0.0, 0.6, 1.0],
+      ).createShader(rect);
 
-    canvas.drawRect(Offset.zero & size, vignette);
+    canvas.drawRect(rect, atmosphereGradient);
+
+    // Gentle morning mist
+    for (int i = 0; i < 3; i++) {
+      final mistX = size.width * (0.2 + i * 0.3) + _wave(0.02, i.toDouble()) * 20 * intensity;
+      final mistY = size.height * (0.6 + i * 0.1);
+      final mistSize = (60 + i * 20) * intensity;
+
+      final mistPaint = Paint()
+        ..color = Colors.white.withOpacity(0.15 * intensity)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
+
+      canvas.drawCircle(Offset(mistX, mistY), mistSize, mistPaint);
+    }
   }
 
   @override
-  bool shouldRepaint(covariant _EnhancedPastelPainter oldDelegate) {
+  bool shouldRepaint(covariant _ScenicPastelPainter oldDelegate) {
     return oldDelegate.t != t ||
         oldDelegate.primaryColor != primaryColor ||
         oldDelegate.accentColor != accentColor ||

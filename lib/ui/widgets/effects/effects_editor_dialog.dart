@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:pixelverse/core/extensions/primitive_extensions.dart';
+import 'package:pixelverse/ui/widgets/animated_background.dart';
 
 import '../../../pixel/effects/effects.dart';
 import '../dialogs.dart';
@@ -67,78 +68,85 @@ class _EffectEditorDialogState extends State<EffectEditorDialog> {
   @override
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 600;
-    final effectName = widget.effect.name.capitalize();
+    final effectName = widget.effect.getName(context);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox(
         width: isMobile ? double.infinity : 700,
         height: isMobile ? double.infinity : 600,
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Header
-            Row(
+        child: AnimatedBackground(
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.6),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
               children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                Expanded(
-                  child: Text(
-                    'Edit $effectName Effect',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  onPressed: _resetToDefaults,
-                  tooltip: 'Reset to defaults',
-                ),
-                IconButton(
-                  icon: const Icon(Icons.help_outline),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          _getEffectDescription(widget.effect.type),
-                        ),
+                // Header
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                    Expanded(
+                      child: Text(
+                        'Edit $effectName Effect',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                        textAlign: TextAlign.center,
                       ),
-                    );
-                  },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.refresh),
+                      onPressed: _resetToDefaults,
+                      tooltip: 'Reset to defaults',
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.help_outline),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(widget.effect.getDescription(context)),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+
+                const Divider(),
+
+                // Content - Different layouts for mobile and desktop
+                Expanded(
+                  child: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+                ),
+
+                // Action buttons
+                Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Cancel'),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: _applyChanges,
+                        child: const Text('Apply Changes'),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-
-            const Divider(),
-
-            // Content - Different layouts for mobile and desktop
-            Expanded(
-              child: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
-            ),
-
-            // Action buttons
-            Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancel'),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: _applyChanges,
-                    child: const Text('Apply Changes'),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -300,53 +308,52 @@ class _EffectEditorDialogState extends State<EffectEditorDialog> {
     }
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    label,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                ),
-                if (type != 'bool') // Boolean already shows its value
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      _formatValue(value, type),
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            if (description.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(
-                description,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+      margin: const EdgeInsets.only(bottom: 6),
+      elevation: 0,
+      color: Colors.transparent,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
+              if (type != 'bool') // Boolean already shows its value
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    _formatValue(value, type),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
             ],
-            const SizedBox(height: 12),
-            parameterControl,
+          ),
+          if (description.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              description,
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              ),
+            ),
           ],
-        ),
+          const SizedBox(height: 12),
+          parameterControl,
+        ],
       ),
     );
   }
@@ -743,59 +750,6 @@ class _EffectEditorDialogState extends State<EffectEditorDialog> {
         return 10.0;
       default:
         return 1.0;
-    }
-  }
-
-  String _getEffectDescription(EffectType type) {
-    switch (type) {
-      case EffectType.brightness:
-        return 'Adjust the brightness of pixels. Positive values make the image brighter, negative values make it darker.';
-      case EffectType.contrast:
-        return 'Adjust the contrast between light and dark areas. Positive values increase contrast, negative values decrease it.';
-      case EffectType.invert:
-        return 'Invert all pixel colors, creating a negative image effect.';
-      case EffectType.grayscale:
-        return 'Convert the image to grayscale, removing all color information.';
-      case EffectType.sepia:
-        return 'Apply a vintage sepia tone effect, giving the image a warm, brownish tint.';
-      case EffectType.threshold:
-        return 'Create a high-contrast black and white image based on a threshold value.';
-      case EffectType.pixelate:
-        return 'Create larger blocks of pixels, reducing detail and creating a retro 8-bit look.';
-      case EffectType.blur:
-        return 'Apply a blur effect to soften the image by averaging neighboring pixels.';
-      case EffectType.sharpen:
-        return 'Enhance the edges in an image by increasing contrast between adjacent pixels.';
-      case EffectType.emboss:
-        return 'Create a 3D embossed effect by highlighting edges in a specific direction.';
-      case EffectType.vignette:
-        return 'Darken the edges of the image, drawing attention to the center.';
-      case EffectType.noise:
-        return 'Add random noise to pixels, creating a grainy or textured look.';
-      case EffectType.colorBalance:
-        return 'Adjust the balance of red, green, and blue channels in the image.';
-      case EffectType.dithering:
-        return 'Apply a dithering pattern to create the illusion of more colors using a limited palette.';
-      case EffectType.outline:
-        return 'Add an outline to shapes by detecting edges and tracing them.';
-      case EffectType.paletteReduction:
-        return 'Reduce the image to a limited color palette, great for creating retro pixel art.';
-      case EffectType.watercolor:
-        return 'Create a soft, blended watercolor effect by simulating brush strokes.';
-      case EffectType.halftone:
-        return 'Simulate comic book or newspaper printing with patterns of dots.';
-      case EffectType.glow:
-        return 'Add light halo around bright areas of the image.';
-      case EffectType.oilPaint:
-        return 'Simulate oil painting with textured brush strokes.';
-      case EffectType.gradient:
-        return 'Apply gradient color effect with distinct pixel art color bands.';
-      case EffectType.fire:
-        return 'Create realistic fire effects with flames and embers.';
-      case EffectType.wood:
-        return 'Apply realistic wood grain textures with various wood types.';
-      default:
-        return 'Apply effect to layer';
     }
   }
 

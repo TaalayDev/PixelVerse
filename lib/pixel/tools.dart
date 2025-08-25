@@ -15,7 +15,6 @@ enum PixelTool {
   select,
   eyedropper,
   brush,
-  // mirror,
   gradient,
   rotate,
   pixelPerfectLine,
@@ -24,7 +23,21 @@ enum PixelTool {
   contour,
   pen,
   lasso,
-  curve;
+  curve,
+  textureBrush,
+  textureFill,
+  smartSelect,
+
+  // Extra Shapes
+  heart,
+  diamond,
+  arrow,
+  hexagon,
+  lightning,
+  cross,
+  triangle,
+  spiral,
+  cloud;
 
   MouseCursor get cursor {
     switch (this) {
@@ -43,6 +56,15 @@ enum PixelTool {
       case PixelTool.circle:
       case PixelTool.curve:
       case PixelTool.line:
+      case PixelTool.heart:
+      case PixelTool.diamond:
+      case PixelTool.arrow:
+      case PixelTool.hexagon:
+      case PixelTool.lightning:
+      case PixelTool.cross:
+      case PixelTool.triangle:
+      case PixelTool.spiral:
+      case PixelTool.cloud:
         return SystemMouseCursors.cell;
       case PixelTool.lasso:
         return SystemMouseCursors.precise;
@@ -52,6 +74,10 @@ enum PixelTool {
         return SystemMouseCursors.precise;
       case PixelTool.drag:
         return SystemMouseCursors.grab;
+      case PixelTool.textureBrush:
+        return SystemMouseCursors.precise;
+      case PixelTool.smartSelect:
+        return SystemMouseCursors.click;
       default:
         return SystemMouseCursors.basic;
     }
@@ -106,6 +132,8 @@ abstract class Tool {
   bool get isPen => type == PixelTool.pen;
   bool get isLasso => type == PixelTool.lasso;
   bool get isCurve => type == PixelTool.curve;
+  bool get isTextureBrush => type == PixelTool.textureBrush;
+  bool get isSmartSelect => type == PixelTool.smartSelect;
 
   void onStart(PixelDrawDetails details);
   void onMove(PixelDrawDetails details);
@@ -124,6 +152,25 @@ abstract class Tool {
     }
 
     return previewPixels;
+  }
+}
+
+abstract class DrawTool extends Tool {
+  const DrawTool(super.type);
+
+  @override
+  void onStart(PixelDrawDetails details) {
+    // Implement drawing logic
+  }
+
+  @override
+  void onMove(PixelDrawDetails details) {
+    // Implement drawing logic
+  }
+
+  @override
+  void onEnd(PixelDrawDetails details) {
+    // Implement drawing logic
   }
 }
 

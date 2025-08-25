@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:pixelverse/core/extensions/primitive_extensions.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../data/models/subscription_model.dart';
 import '../../../pixel/effects/effects.dart';
+import '../../../providers/subscription_provider.dart';
+import '../../screens/subscription_screen.dart';
+import '../animated_background.dart';
+import '../subscription/feature_gate.dart';
 
-class EffectSelectorDialog extends StatefulWidget {
+class EffectSelectorDialog extends ConsumerStatefulWidget {
   final Function(Effect) onEffectSelected;
 
   const EffectSelectorDialog({
@@ -12,19 +17,24 @@ class EffectSelectorDialog extends StatefulWidget {
   });
 
   @override
-  State<EffectSelectorDialog> createState() => _EffectSelectorDialogState();
+  ConsumerState<EffectSelectorDialog> createState() => _EffectSelectorDialogState();
 }
 
-class _EffectSelectorDialogState extends State<EffectSelectorDialog> {
+class _EffectSelectorDialogState extends ConsumerState<EffectSelectorDialog> {
   String _searchQuery = '';
   int _selectedCategoryIndex = 0;
 
   final _categories = [
     'All',
-    'Color',
+    'Color & Tone',
     'Blur & Sharpen',
     'Artistic',
-    'Special',
+    'Animation',
+    'Nature',
+    'Particles',
+    'Distortion',
+    'Textures',
+    'Special FX',
   ];
 
   List<EffectType> get _filteredEffects {
@@ -34,7 +44,7 @@ class _EffectSelectorDialogState extends State<EffectSelectorDialog> {
     List<EffectType> categoryFiltered;
 
     switch (_selectedCategoryIndex) {
-      case 1: // Color
+      case 1: // Color & Tone
         categoryFiltered = [
           EffectType.brightness,
           EffectType.contrast,
@@ -44,6 +54,7 @@ class _EffectSelectorDialogState extends State<EffectSelectorDialog> {
           EffectType.colorBalance,
           EffectType.threshold,
           EffectType.gradient,
+          EffectType.paletteReduction,
         ];
         break;
       case 2: // Blur & Sharpen
@@ -59,16 +70,71 @@ class _EffectSelectorDialogState extends State<EffectSelectorDialog> {
           EffectType.vignette,
           EffectType.outline,
           EffectType.dithering,
-          EffectType.paletteReduction,
           EffectType.watercolor,
           EffectType.halftone,
-          EffectType.glow,
           EffectType.oilPaint,
+          EffectType.stainedGlass,
         ];
         break;
-      case 4: // Special
+      case 4: // Animation
         categoryFiltered = [
+          EffectType.pulse,
+          EffectType.wave,
+          EffectType.rotate,
+          EffectType.float,
+          EffectType.simpleFloat,
+          EffectType.physicsFloat,
+          EffectType.shake,
+          EffectType.quickShake,
+          EffectType.cameraShake,
+          EffectType.jello,
+        ];
+        break;
+      case 5: // Nature
+        categoryFiltered = [
+          EffectType.fire,
+          EffectType.wood,
+          EffectType.rain,
+          EffectType.ice,
+          EffectType.stone,
+          EffectType.mountainRange,
+          EffectType.oceanWaves,
+          EffectType.forest,
+          EffectType.ocean,
+          EffectType.cloudFormation,
+          EffectType.clouds,
+          EffectType.treeBark,
+          EffectType.leafVenation,
+          EffectType.fog,
+        ];
+        break;
+      case 6: // Particles
+        categoryFiltered = [
+          EffectType.sparkle,
+          EffectType.particle,
+          EffectType.explosion,
+          EffectType.glow,
+        ];
+        break;
+      case 7: // Distortion
+        categoryFiltered = [
+          EffectType.glitch,
+          EffectType.dissolve,
+          EffectType.fadeDissolve,
+          EffectType.melt,
+          EffectType.wipe,
+        ];
+        break;
+      case 8: // Textures
+        categoryFiltered = [
+          EffectType.crystal,
+          EffectType.metal,
           EffectType.noise,
+        ];
+        break;
+      case 9: // Special FX
+        categoryFiltered = [
+          EffectType.city,
         ];
         break;
       default: // All
@@ -89,132 +155,149 @@ class _EffectSelectorDialogState extends State<EffectSelectorDialog> {
   @override
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 600;
+    final subscriptionState = ref.watch(subscriptionStateProvider);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
+      backgroundColor: Colors.transparent,
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox(
         width: isMobile ? double.infinity : 600,
         height: isMobile ? double.infinity : 500,
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Header
-            Row(
+        child: AnimatedBackground(
+          child: Container(
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.6),
+            padding: const EdgeInsets.all(16),
+            child: Column(
               children: [
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.of(context).pop(),
+                // Header
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                    Expanded(
+                      child: Text(
+                        'Select Effect',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(width: 48), // Balance the close button
+                  ],
                 ),
-                Expanded(
-                  child: Text(
-                    'Select Effect',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                    textAlign: TextAlign.center,
+
+                const Divider(),
+
+                // Search bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search effects...',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
                   ),
                 ),
-                const SizedBox(width: 48), // Balance the close button
-              ],
-            ),
 
-            const Divider(),
-
-            // Search bar
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search effects...',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value;
-                  });
-                },
-              ),
-            ),
-
-            // Categories
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: SizedBox(
-                height: 40,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _categories.length,
-                  itemBuilder: (context, index) {
-                    final isSelected = _selectedCategoryIndex == index;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: ChoiceChip(
-                        label: Text(_categories[index]),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          if (selected) {
-                            setState(() {
-                              _selectedCategoryIndex = index;
-                            });
-                          }
-                        },
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-
-            // Effects grid
-            Expanded(
-              child: _filteredEffects.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.filter_list_off,
-                            size: 48,
-                            color: Theme.of(context).disabledColor,
-                          ),
-                          const SizedBox(height: 16),
-                          const Text('No effects match your search'),
-                        ],
-                      ),
-                    )
-                  : GridView.builder(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: isMobile ? 2 : 3,
-                        childAspectRatio: 1.2,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        mainAxisExtent: 150,
-                      ),
-                      itemCount: _filteredEffects.length,
+                // Categories
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: SizedBox(
+                    height: 40,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _categories.length,
                       itemBuilder: (context, index) {
-                        final effectType = _filteredEffects[index];
-                        final name = effectType.toString().split('.').last.capitalize();
-                        final effect = EffectsManager.createEffect(effectType);
-
-                        return _buildEffectCard(context, name, effectType, effect);
+                        final isSelected = _selectedCategoryIndex == index;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: ChoiceChip(
+                            label: Text(_categories[index]),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              if (selected) {
+                                setState(() {
+                                  _selectedCategoryIndex = index;
+                                });
+                              }
+                            },
+                          ),
+                        );
                       },
                     ),
+                  ),
+                ),
+
+                // Effects grid
+                Expanded(
+                  child: _filteredEffects.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.filter_list_off,
+                                size: 48,
+                                color: Theme.of(context).disabledColor,
+                              ),
+                              const SizedBox(height: 16),
+                              const Text('No effects match your search'),
+                            ],
+                          ),
+                        )
+                      : GridView.builder(
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: isMobile ? 2 : 3,
+                            childAspectRatio: 1.2,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            mainAxisExtent: 150,
+                          ),
+                          itemCount: _filteredEffects.length,
+                          itemBuilder: (context, index) {
+                            final effectType = _filteredEffects[index];
+                            final effect = EffectsManager.createEffect(effectType);
+                            final name = effect.getName(context);
+                            final hasProAccess = subscriptionState.hasFeatureAccess(SubscriptionFeature.advancedTools);
+
+                            return _buildEffectCard(context, name, effectType, effect, hasProAccess);
+                          },
+                        ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildEffectCard(BuildContext context, String name, EffectType type, Effect effect) {
-    final icon = _getEffectIcon(type);
-    final color = _getEffectColor(type, context);
+  Widget _buildEffectCard(
+    BuildContext context,
+    String name,
+    EffectType type,
+    Effect effect,
+    bool hasProAccess,
+  ) {
+    final color = effect.getColor(context);
+    final icon = effect.getIcon(size: 28, color: color);
+    final isPremium = effect.isPremium;
+    final isLocked = isPremium && !hasProAccess;
 
-    return Card(
+    final content = Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -225,8 +308,12 @@ class _EffectSelectorDialogState extends State<EffectSelectorDialog> {
       ),
       child: InkWell(
         onTap: () {
-          widget.onEffectSelected(effect);
-          Navigator.of(context).pop();
+          if (isLocked) {
+            _showUpgradePrompt(context);
+          } else {
+            widget.onEffectSelected(effect);
+            Navigator.of(context).pop();
+          }
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -237,7 +324,7 @@ class _EffectSelectorDialogState extends State<EffectSelectorDialog> {
               CircleAvatar(
                 radius: 24,
                 backgroundColor: color.withOpacity(0.2),
-                child: Icon(icon, color: color, size: 28),
+                child: icon,
               ),
               const SizedBox(height: 12),
               FittedBox(
@@ -250,7 +337,7 @@ class _EffectSelectorDialogState extends State<EffectSelectorDialog> {
               ),
               const SizedBox(height: 4),
               Text(
-                _getEffectDescription(type),
+                effect.getDescription(context),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                     ),
@@ -263,151 +350,66 @@ class _EffectSelectorDialogState extends State<EffectSelectorDialog> {
         ),
       ),
     );
+
+    if (isLocked) {
+      return ProBadge(child: content);
+    }
+
+    return content;
   }
 
-  IconData _getEffectIcon(EffectType type) {
-    switch (type) {
-      case EffectType.brightness:
-        return Icons.brightness_6;
-      case EffectType.contrast:
-        return Icons.contrast;
-      case EffectType.invert:
-        return Icons.invert_colors;
-      case EffectType.grayscale:
-        return Icons.monochrome_photos;
-      case EffectType.sepia:
-        return Icons.filter_vintage;
-      case EffectType.threshold:
-        return Icons.tonality;
-      case EffectType.pixelate:
-        return Icons.grid_on;
-      case EffectType.blur:
-        return Icons.blur_on;
-      case EffectType.sharpen:
-        return Icons.blur_linear;
-      case EffectType.emboss:
-        return Icons.layers;
-      case EffectType.vignette:
-        return Icons.vignette;
-      case EffectType.noise:
-        return Icons.grain;
-      case EffectType.colorBalance:
-        return Icons.tune;
-      case EffectType.dithering:
-        return Icons.texture;
-      case EffectType.outline:
-        return Icons.border_style;
-      case EffectType.paletteReduction:
-        return Icons.palette;
-      case EffectType.halftone:
-        return Icons.grid_3x3;
-      case EffectType.glow:
-        return Icons.light_mode;
-      case EffectType.watercolor:
-        return Icons.water_drop;
-      case EffectType.oilPaint:
-        return Icons.brush;
-      case EffectType.gradient:
-        return Icons.gradient;
-      case EffectType.rain:
-        return Icons.umbrella;
-      case EffectType.crystal:
-        return Icons.diamond;
-      case EffectType.fire:
-        return Icons.local_fire_department;
-      case EffectType.wood:
-        return Icons.nature_people;
-      default:
-        return Icons.auto_fix_high;
-    }
-  }
-
-  Color _getEffectColor(EffectType type, BuildContext context) {
-    switch (type) {
-      case EffectType.brightness:
-      case EffectType.contrast:
-        return Colors.amber;
-      case EffectType.invert:
-      case EffectType.grayscale:
-      case EffectType.sepia:
-      case EffectType.threshold:
-        return Colors.purple;
-      case EffectType.pixelate:
-      case EffectType.blur:
-      case EffectType.sharpen:
-        return Colors.blue;
-      case EffectType.emboss:
-      case EffectType.vignette:
-        return Colors.teal;
-      case EffectType.noise:
-      case EffectType.dithering:
-        return Colors.orange;
-      case EffectType.colorBalance:
-      case EffectType.paletteReduction:
-        return Colors.green;
-      case EffectType.outline:
-        return Colors.red;
-      case EffectType.halftone:
-        return Colors.indigo;
-      case EffectType.glow:
-        return Colors.cyan;
-      case EffectType.watercolor:
-        return Colors.teal;
-      case EffectType.oilPaint:
-        return Colors.brown;
-      case EffectType.gradient:
-        return Colors.pink;
-      default:
-        return Theme.of(context).colorScheme.primary;
-    }
-  }
-
-  String _getEffectDescription(EffectType type) {
-    switch (type) {
-      case EffectType.brightness:
-        return 'Adjust pixel brightness';
-      case EffectType.contrast:
-        return 'Adjust pixel contrast';
-      case EffectType.invert:
-        return 'Invert pixel colors';
-      case EffectType.grayscale:
-        return 'Convert to grayscale';
-      case EffectType.sepia:
-        return 'Apply vintage sepia tone';
-      case EffectType.threshold:
-        return 'Create high-contrast black and white';
-      case EffectType.pixelate:
-        return 'Create larger blocks of pixels';
-      case EffectType.blur:
-        return 'Apply blur effect';
-      case EffectType.sharpen:
-        return 'Enhance pixel edges';
-      case EffectType.emboss:
-        return 'Create a 3D embossed effect';
-      case EffectType.vignette:
-        return 'Darken edges of the layer';
-      case EffectType.noise:
-        return 'Add random noise to pixels';
-      case EffectType.colorBalance:
-        return 'Adjust color channels';
-      case EffectType.dithering:
-        return 'Apply dithering pattern';
-      case EffectType.outline:
-        return 'Add outline to shapes';
-      case EffectType.paletteReduction:
-        return 'Reduce to limited color palette';
-      case EffectType.watercolor:
-        return 'Create soft, blended watercolor effect';
-      case EffectType.halftone:
-        return 'Simulate comic book or newspaper printing';
-      case EffectType.glow:
-        return 'Add light halo around bright areas';
-      case EffectType.oilPaint:
-        return 'Simulate oil painting with brush strokes';
-      case EffectType.gradient:
-        return 'Apply gradient color effect';
-      default:
-        return 'Apply effect to layer';
-    }
+  void _showUpgradePrompt(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.star, color: Colors.amber),
+            SizedBox(width: 8),
+            Text('Premium Effect'),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'This effect is available in the Pro version.',
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 12),
+            Text(
+              'Pro features include:',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text('• Advanced effects and tools'),
+            Text('• Unlimited projects'),
+            Text('• Cloud backup'),
+            Text('• Priority support'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Maybe Later'),
+          ),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pop(); // Close the effects dialog too
+              SubscriptionOfferScreen.show(
+                context,
+                featurePrompt: SubscriptionFeature.advancedTools,
+              );
+            },
+            icon: const Icon(Icons.upgrade),
+            label: const Text('Upgrade to Pro'),
+          ),
+        ],
+      ),
+    );
   }
 }

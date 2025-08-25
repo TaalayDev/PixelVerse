@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:pixelverse/ui/widgets/shortcuts_wrapper.dart';
 
 import '../../pixel/pixel_draw_state.dart';
 import '../../pixel/providers/pixel_notifier_provider.dart';
 import '../../pixel/tools.dart';
+import 'shortcuts_wrapper.dart';
 
 class PixelDrawShortcutsWrapper extends HookConsumerWidget {
   const PixelDrawShortcutsWrapper({

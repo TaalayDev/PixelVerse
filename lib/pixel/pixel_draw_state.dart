@@ -7,6 +7,7 @@ import 'tools.dart';
 import '../data/models/animation_frame_model.dart';
 import '../data/models/layer.dart';
 import '../data/models/selection_model.dart';
+import 'tools/texture_brush_tool.dart';
 
 part 'pixel_draw_state.freezed.dart';
 
@@ -65,4 +66,11 @@ sealed class PixelDrawEvent {
 
 class ClosePenPathEvent extends PixelDrawEvent {
   const ClosePenPathEvent();
+}
+
+class TextureBrushPatternEvent extends PixelDrawEvent {
+  final TexturePattern texture;
+  final BlendMode blendMode;
+
+  const TextureBrushPatternEvent(this.texture, {this.blendMode = BlendMode.srcOver});
 }

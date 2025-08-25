@@ -25,7 +25,9 @@ enum ThemeType {
   copperSteampunk,
   prismatic,
   emeraldForest,
-  roseQuartzGarden;
+  roseQuartzGarden,
+  winterWonderland,
+  autumnHarvest;
 
   static List<ThemeType> lockedThemeTypes = [
     ThemeType.ocean,
@@ -44,8 +46,7 @@ enum ThemeType {
     ThemeType.deepSea,
     ThemeType.copperSteampunk,
     ThemeType.prismatic,
-    ThemeType.emeraldForest,
-    ThemeType.roseQuartzGarden,
+    ThemeType.autumnHarvest,
   ];
 
   bool get isDark => [
@@ -118,6 +119,10 @@ enum ThemeType {
         return 'Emerald Forest';
       case ThemeType.roseQuartzGarden:
         return 'Rose Quartz Garden';
+      case ThemeType.winterWonderland:
+        return 'Winter Wonderland';
+      case ThemeType.autumnHarvest:
+        return 'Autumn Harvest';
     }
   }
 
@@ -164,6 +169,10 @@ enum ThemeType {
         return const Duration(seconds: 20);
       case ThemeType.emeraldForest:
         return const Duration(seconds: 16);
+      case ThemeType.winterWonderland:
+        return const Duration(seconds: 18);
+      case ThemeType.autumnHarvest:
+        return const Duration(seconds: 20);
       default:
         return const Duration(seconds: 10);
     }

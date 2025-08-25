@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../core.dart';
 import '../../core/theme/arctic_aurora.dart';
+import '../../core/theme/autumn_harvest.dart';
 import '../../core/theme/cherry_blossom.dart';
 import '../../core/theme/copper_steampunk.dart';
 import '../../core/theme/cosmic.dart';
@@ -27,6 +28,7 @@ import '../../core/theme/rose_quartz_garden.dart';
 import '../../core/theme/sunset.dart';
 import '../../core/theme/toxic_waste.dart';
 import '../../core/theme/volcanic.dart';
+import '../../core/theme/winter_wonderland.dart';
 import 'theme_selector.dart';
 
 class AnimatedBackground extends HookConsumerWidget {
@@ -327,6 +329,32 @@ class AnimatedBackground extends HookConsumerWidget {
           stops: const [0.0, 0.4, 0.8, 1.0],
         );
 
+      case ThemeType.winterWonderland:
+        return RadialGradient(
+          center: Alignment.topCenter,
+          radius: 1.5,
+          colors: [
+            Color.lerp(theme.background, theme.primaryColor, 0.04)!,
+            theme.background,
+            Color.lerp(theme.background, theme.accentColor, 0.02)!,
+            theme.background,
+          ],
+          stops: const [0.0, 0.4, 0.8, 1.0],
+        );
+
+      case ThemeType.autumnHarvest:
+        return RadialGradient(
+          center: Alignment.topCenter,
+          radius: 1.5,
+          colors: [
+            Color.lerp(theme.background, theme.primaryColor, 0.04)!,
+            theme.background,
+            Color.lerp(theme.background, theme.accentColor, 0.02)!,
+            theme.background,
+          ],
+          stops: const [0.0, 0.4, 0.8, 1.0],
+        );
+
       default:
         return LinearGradient(
           begin: Alignment.topLeft,
@@ -497,6 +525,20 @@ class AnimatedBackground extends HookConsumerWidget {
 
       case ThemeType.roseQuartzGarden:
         return RoseQuartzGardenBackground(
+          theme: theme,
+          intensity: intensity,
+          enableAnimation: enableAnimation,
+        );
+
+      case ThemeType.winterWonderland: // ADD THIS CASE
+        return WinterWonderlandBackground(
+          theme: theme,
+          intensity: intensity,
+          enableAnimation: enableAnimation,
+        );
+
+      case ThemeType.autumnHarvest:
+        return AutumnHarvestBackground(
           theme: theme,
           intensity: intensity,
           enableAnimation: enableAnimation,

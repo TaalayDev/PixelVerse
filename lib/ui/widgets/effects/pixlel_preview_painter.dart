@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class PixelPreviewPainter extends CustomPainter {
@@ -13,11 +14,13 @@ class PixelPreviewPainter extends CustomPainter {
     required this.height,
   });
 
+  final _drawPaint = Paint()..style = PaintingStyle.fill;
+  final _checkerPaint1 = Paint()..color = Colors.grey.shade200;
+  final _checkerPaint2 = Paint()..color = Colors.grey.shade100;
+
   @override
   void paint(Canvas canvas, Size size) {
     // Create a checkerboard background for transparent areas
-    final checkerPaint1 = Paint()..color = Colors.grey.shade200;
-    final checkerPaint2 = Paint()..color = Colors.grey.shade100;
 
     final checkerSize = size.width / 10;
     for (int y = 0; y < 10; y++) {
@@ -29,13 +32,12 @@ class PixelPreviewPainter extends CustomPainter {
             checkerSize,
             checkerSize,
           ),
-          (x + y) % 2 == 0 ? checkerPaint1 : checkerPaint2,
+          (x + y) % 2 == 0 ? _checkerPaint1 : _checkerPaint2,
         );
       }
     }
 
     // Draw the pixels
-    final paint = Paint()..style = PaintingStyle.fill;
     final pixelWidth = size.width / width;
     final pixelHeight = size.height / height;
 
@@ -46,7 +48,7 @@ class PixelPreviewPainter extends CustomPainter {
           final color = Color(pixels[index]);
           if (color.alpha == 0) continue;
 
-          paint.color = color;
+          _drawPaint.color = color;
           canvas.drawRect(
             Rect.fromLTWH(
               x * pixelWidth,
@@ -54,7 +56,7 @@ class PixelPreviewPainter extends CustomPainter {
               pixelWidth,
               pixelHeight,
             ),
-            paint,
+            _drawPaint,
           );
         }
       }
@@ -63,6 +65,6 @@ class PixelPreviewPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant PixelPreviewPainter oldDelegate) {
-    return oldDelegate.pixels != pixels;
+    return !listEquals(oldDelegate.pixels, pixels) || oldDelegate.width != width || oldDelegate.height != height;
   }
 }

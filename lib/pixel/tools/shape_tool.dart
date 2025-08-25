@@ -2,6 +2,7 @@ import 'dart:math';
 
 import '../pixel_point.dart';
 import '../tools.dart';
+import 'shape_util.dart';
 
 abstract class ShapeTool extends Tool {
   List<PixelPoint<int>> _previewPoints = [];
@@ -484,6 +485,489 @@ class StarTool extends ShapeTool {
     }
 
     return points;
+  }
+}
+
+// Heart shape tool - perfect for pixel art characters and decorations
+class HeartTool extends ShapeTool {
+  HeartTool() : super(PixelTool.contour); // Using contour as base type
+
+  @override
+  List<PixelPoint<int>> generateShapePoints(
+    PixelPoint<int> start,
+    PixelPoint<int> end,
+    int width,
+    int height,
+  ) {
+    final points = <PixelPoint<int>>[];
+
+    final centerX = (start.x + end.x) / 2;
+    final centerY = (start.y + end.y) / 2;
+    final scale = max((end.x - start.x).abs(), (end.y - start.y).abs()) / 20.0;
+
+    // Heart equation: (x²+y²-1)³ - x²y³ = 0
+    // Modified for pixel art with proper scaling
+    for (double t = 0; t <= 2 * pi; t += 0.1) {
+      final x = 16 * pow(sin(t), 3);
+      final y = 13 * cos(t) - 5 * cos(2 * t) - 2 * cos(3 * t) - cos(4 * t);
+
+      final pixelX = (centerX + x * scale).round();
+      final pixelY = (centerY - y * scale).round(); // Negative for correct orientation
+
+      if (_isValidCoord(pixelX, pixelY, width, height)) {
+        points.add(PixelPoint(pixelX, pixelY, color: start.color));
+      }
+    }
+
+    return _removeDuplicates(points);
+  }
+}
+
+// Diamond/rhombus shape tool
+class DiamondTool extends ShapeTool {
+  DiamondTool() : super(PixelTool.contour);
+
+  @override
+  List<PixelPoint<int>> generateShapePoints(
+    PixelPoint<int> start,
+    PixelPoint<int> end,
+    int width,
+    int height,
+  ) {
+    final points = <PixelPoint<int>>[];
+
+    final centerX = (start.x + end.x) / 2;
+    final centerY = (start.y + end.y) / 2;
+    final radiusX = (end.x - start.x).abs() / 2;
+    final radiusY = (end.y - start.y).abs() / 2;
+
+    // Diamond vertices
+    final top = PixelPoint(centerX.round(), (centerY - radiusY).round(), color: start.color);
+    final right = PixelPoint((centerX + radiusX).round(), centerY.round(), color: start.color);
+    final bottom = PixelPoint(centerX.round(), (centerY + radiusY).round(), color: start.color);
+    final left = PixelPoint((centerX - radiusX).round(), centerY.round(), color: start.color);
+
+    // Draw diamond edges
+    points.addAll(_drawLine(top, right, width, height));
+    points.addAll(_drawLine(right, bottom, width, height));
+    points.addAll(_drawLine(bottom, left, width, height));
+    points.addAll(_drawLine(left, top, width, height));
+
+    return _removeDuplicates(points);
+  }
+}
+
+// Arrow shape tool - great for UI elements and indicators
+class ArrowTool extends ShapeTool {
+  ArrowTool() : super(PixelTool.arrow);
+
+  @override
+  List<PixelPoint<int>> generateShapePoints(
+    PixelPoint<int> start,
+    PixelPoint<int> end,
+    int width,
+    int height,
+  ) {
+    final points = <PixelPoint<int>>[];
+
+    final dx = end.x - start.x;
+    final dy = end.y - start.y;
+    final length = sqrt(dx * dx + dy * dy);
+
+    if (length < 2) {
+      if (_isValidCoord(start.x, start.y, width, height)) {
+        points.add(PixelPoint(start.x, start.y, color: start.color));
+      }
+      return points;
+    }
+
+    // Normalize direction vector
+    final unitX = dx / length;
+    final unitY = dy / length;
+
+    // Threshold to switch between single-line and thick arrow
+    const thicknessThreshold = 30.0;
+
+    if (length < thicknessThreshold) {
+      // --- Single-line arrow ---
+      points.addAll(_drawLine(start, end, width, height));
+
+      // Arrowhead
+      final headLength = max(3.0, length * 0.4);
+      const angle = pi / 6; // 30 degrees
+
+      // Vector for first part of arrowhead
+      final headX1 = end.x - headLength * (unitX * cos(angle) - unitY * sin(angle));
+      final headY1 = end.y - headLength * (unitY * cos(angle) + unitX * sin(angle));
+      points.addAll(_drawLine(end, PixelPoint(headX1.round(), headY1.round(), color: start.color), width, height));
+
+      // Vector for second part of arrowhead
+      final headX2 = end.x - headLength * (unitX * cos(-angle) - unitY * sin(-angle));
+      final headY2 = end.y - headLength * (unitY * cos(-angle) + unitX * sin(-angle));
+      points.addAll(_drawLine(end, PixelPoint(headX2.round(), headY2.round(), color: start.color), width, height));
+    } else {
+      // --- Thick arrow ---
+      final headLength = length * 0.3;
+      final headWidth = headLength * 0.6;
+      final shaftWidth = max(1.0, length * 0.08); // Thickness scaling
+
+      // Calculate arrow points
+      final shaftEndX = start.x + unitX * (length - headLength);
+      final shaftEndY = start.y + unitY * (length - headLength);
+
+      // Perpendicular vector for width
+      final perpX = -unitY;
+      final perpY = unitX;
+
+      // Shaft points defining the polygon
+      final shaftPoints = [
+        PixelPoint((start.x + perpX * shaftWidth / 2).round(), (start.y + perpY * shaftWidth / 2).round(),
+            color: start.color),
+        PixelPoint((shaftEndX + perpX * shaftWidth / 2).round(), (shaftEndY + perpY * shaftWidth / 2).round(),
+            color: start.color),
+        PixelPoint((shaftEndX + perpX * headWidth / 2).round(), (shaftEndY + perpY * headWidth / 2).round(),
+            color: start.color),
+        PixelPoint(end.x, end.y, color: start.color), // Arrow tip
+        PixelPoint((shaftEndX - perpX * headWidth / 2).round(), (shaftEndY - perpY * headWidth / 2).round(),
+            color: start.color),
+        PixelPoint((shaftEndX - perpX * shaftWidth / 2).round(), (shaftEndY - perpY * shaftWidth / 2).round(),
+            color: start.color),
+        PixelPoint((start.x - perpX * shaftWidth / 2).round(), (start.y - perpY * shaftWidth / 2).round(),
+            color: start.color),
+      ];
+
+      // Connect all points to form arrow outline
+      for (int i = 0; i < shaftPoints.length; i++) {
+        final current = shaftPoints[i];
+        final next = shaftPoints[(i + 1) % shaftPoints.length];
+        points.addAll(_drawLine(current, next, width, height));
+      }
+    }
+
+    return _removeDuplicates(points);
+  }
+}
+
+// Hexagon shape tool - perfect for game tiles and geometric patterns
+class HexagonTool extends ShapeTool {
+  HexagonTool() : super(PixelTool.contour);
+
+  @override
+  List<PixelPoint<int>> generateShapePoints(
+    PixelPoint<int> start,
+    PixelPoint<int> end,
+    int width,
+    int height,
+  ) {
+    final points = <PixelPoint<int>>[];
+
+    final centerX = (start.x + end.x) / 2;
+    final centerY = (start.y + end.y) / 2;
+    final radius = sqrt((end.x - start.x) * (end.x - start.x) + (end.y - start.y) * (end.y - start.y)) / 2;
+
+    final hexPoints = <PixelPoint<int>>[];
+
+    // Generate 6 vertices of hexagon
+    for (int i = 0; i < 6; i++) {
+      final angle = i * pi / 3; // 60 degrees between each vertex
+      final x = centerX + radius * cos(angle);
+      final y = centerY + radius * sin(angle);
+      hexPoints.add(PixelPoint(x.round(), y.round(), color: start.color));
+    }
+
+    // Connect all vertices
+    for (int i = 0; i < hexPoints.length; i++) {
+      final current = hexPoints[i];
+      final next = hexPoints[(i + 1) % hexPoints.length];
+      points.addAll(_drawLine(current, next, width, height));
+    }
+
+    return _removeDuplicates(points);
+  }
+}
+
+// Lightning bolt shape tool - great for effects and power-ups
+class LightningTool extends ShapeTool {
+  LightningTool() : super(PixelTool.contour);
+
+  @override
+  List<PixelPoint<int>> generateShapePoints(
+    PixelPoint<int> start,
+    PixelPoint<int> end,
+    int width,
+    int height,
+  ) {
+    final points = <PixelPoint<int>>[];
+
+    final dx = end.x - start.x;
+    final dy = end.y - start.y;
+
+    // Create lightning bolt points as fractions of the total distance
+    final lightningPoints = [
+      PixelPoint(start.x, start.y, color: start.color),
+      PixelPoint((start.x + dx * 0.2).round(), (start.y + dy * 0.3).round(), color: start.color),
+      PixelPoint((start.x + dx * 0.6).round(), (start.y + dy * 0.25).round(), color: start.color),
+      PixelPoint((start.x + dx * 0.4).round(), (start.y + dy * 0.5).round(), color: start.color),
+      PixelPoint((start.x + dx * 0.8).round(), (start.y + dy * 0.45).round(), color: start.color),
+      PixelPoint((start.x + dx * 0.5).round(), (start.y + dy * 0.7).round(), color: start.color),
+      PixelPoint((start.x + dx * 0.9).round(), (start.y + dy * 0.75).round(), color: start.color),
+      PixelPoint(end.x, end.y, color: start.color),
+    ];
+
+    // Connect lightning points
+    for (int i = 0; i < lightningPoints.length - 1; i++) {
+      points.addAll(_drawLine(lightningPoints[i], lightningPoints[i + 1], width, height));
+    }
+
+    return _removeDuplicates(points);
+  }
+}
+
+// Cross/plus shape tool - useful for markers and UI elements
+class CrossTool extends ShapeTool {
+  CrossTool() : super(PixelTool.contour);
+
+  @override
+  List<PixelPoint<int>> generateShapePoints(
+    PixelPoint<int> start,
+    PixelPoint<int> end,
+    int width,
+    int height,
+  ) {
+    final points = <PixelPoint<int>>[];
+
+    final centerX = (start.x + end.x) / 2;
+    final centerY = (start.y + end.y) / 2;
+    final radiusX = (end.x - start.x).abs() / 2;
+    final radiusY = (end.y - start.y).abs() / 2;
+
+    // Vertical line of cross
+    final top = PixelPoint(centerX.round(), (centerY - radiusY).round(), color: start.color);
+    final bottom = PixelPoint(centerX.round(), (centerY + radiusY).round(), color: start.color);
+    points.addAll(_drawLine(top, bottom, width, height));
+
+    // Horizontal line of cross
+    final left = PixelPoint((centerX - radiusX).round(), centerY.round(), color: start.color);
+    final right = PixelPoint((centerX + radiusX).round(), centerY.round(), color: start.color);
+    points.addAll(_drawLine(left, right, width, height));
+
+    return _removeDuplicates(points);
+  }
+}
+
+// Triangle shape tool with proper pixel art rendering
+class TriangleTool extends ShapeTool {
+  TriangleTool() : super(PixelTool.contour);
+
+  @override
+  List<PixelPoint<int>> generateShapePoints(
+    PixelPoint<int> start,
+    PixelPoint<int> end,
+    int width,
+    int height,
+  ) {
+    final points = <PixelPoint<int>>[];
+
+    // Create equilateral triangle
+    final centerX = (start.x + end.x) / 2;
+    final centerY = (start.y + end.y) / 2;
+    final radius = sqrt((end.x - start.x) * (end.x - start.x) + (end.y - start.y) * (end.y - start.y)) / 2;
+
+    // Triangle vertices (pointing up)
+    final top = PixelPoint(centerX.round(), (centerY - radius).round(), color: start.color);
+    final bottomLeft = PixelPoint((centerX - radius * cos(pi / 6)).round(), (centerY + radius * sin(pi / 6)).round(),
+        color: start.color);
+    final bottomRight = PixelPoint((centerX + radius * cos(pi / 6)).round(), (centerY + radius * sin(pi / 6)).round(),
+        color: start.color);
+
+    // Draw triangle edges
+    points.addAll(_drawLine(top, bottomLeft, width, height));
+    points.addAll(_drawLine(bottomLeft, bottomRight, width, height));
+    points.addAll(_drawLine(bottomRight, top, width, height));
+
+    return _removeDuplicates(points);
+  }
+}
+
+// Spiral shape tool - creates interesting decorative patterns
+class SpiralTool extends ShapeTool {
+  SpiralTool() : super(PixelTool.contour);
+
+  @override
+  List<PixelPoint<int>> generateShapePoints(
+    PixelPoint<int> start,
+    PixelPoint<int> end,
+    int width,
+    int height,
+  ) {
+    final points = <PixelPoint<int>>[];
+
+    final centerX = (start.x + end.x) / 2;
+    final centerY = (start.y + end.y) / 2;
+    final maxRadius = sqrt((end.x - start.x) * (end.x - start.x) + (end.y - start.y) * (end.y - start.y)) / 2;
+
+    const turns = 3; // Number of spiral turns
+    const steps = 100; // Resolution of spiral
+
+    for (int i = 0; i < steps; i++) {
+      final t = i / (steps - 1); // 0 to 1
+      final angle = turns * 2 * pi * t;
+      final radius = maxRadius * t;
+
+      final x = centerX + radius * cos(angle);
+      final y = centerY + radius * sin(angle);
+
+      if (_isValidCoord(x.round(), y.round(), width, height)) {
+        points.add(PixelPoint(x.round(), y.round(), color: start.color));
+      }
+    }
+
+    return _removeDuplicates(points);
+  }
+}
+
+// Pixel Cloud shape tool - organic, cloud-like shapes
+class CloudTool extends ShapeTool {
+  CloudTool() : super(PixelTool.cloud);
+
+  @override
+  List<PixelPoint<int>> generateShapePoints(
+    PixelPoint<int> start,
+    PixelPoint<int> end,
+    int width,
+    int height,
+  ) {
+    // Calculate bounding box
+    final left = min(start.x, end.x);
+    final top = min(start.y, end.y);
+    final cloudWidth = (end.x - start.x).abs() + 1;
+    final cloudHeight = (end.y - start.y).abs() + 1;
+    final centerX = left + cloudWidth / 2;
+    final centerY = top + cloudHeight / 2;
+
+    // Improved cloud shape: more horizontal, puffy, with varied bump sizes
+    final baseRadius = max(cloudWidth * 0.2, cloudHeight * 0.3);
+    final cloudCenters = <List<double>>[
+      [centerX - baseRadius * 1.2, centerY, baseRadius * 0.8], // Left bump
+      [centerX, centerY, baseRadius * 1.2], // Center bump (larger)
+      [centerX + baseRadius * 1.2, centerY, baseRadius * 0.8], // Right bump
+      [centerX - baseRadius * 0.6, centerY - baseRadius * 0.5, baseRadius * 0.6], // Top-left small bump
+      [centerX + baseRadius * 0.6, centerY - baseRadius * 0.5, baseRadius * 0.6], // Top-right small bump
+      [centerX, centerY - baseRadius * 0.8, baseRadius * 0.7], // Top center bump
+    ];
+
+    // Create ShapeUtils instance to get filled circle points
+    final shapeUtils = ShapeUtils(width: width, height: height);
+
+    // Collect all filled pixels from overlapping circles (union)
+    final filledPixels = <String>{};
+    for (final center in cloudCenters) {
+      final cx = center[0].round();
+      final cy = center[1].round();
+      final r = center[2].round();
+      final bumpPixels = shapeUtils.getCirclePoints(cx, cy, r);
+      for (final pixel in bumpPixels) {
+        final key = '${pixel.x},${pixel.y}';
+        filledPixels.add(key);
+      }
+    }
+
+    // Extract border pixels: pixels with at least one empty neighbor
+    final borderPoints = <PixelPoint<int>>[];
+    for (final key in filledPixels) {
+      final parts = key.split(',');
+      final x = int.parse(parts[0]);
+      final y = int.parse(parts[1]);
+
+      // Check 4-directional neighbors
+      final neighbors = [
+        '${x - 1},$y',
+        '${x + 1},$y',
+        '$x,${y - 1}',
+        '$x,${y + 1}',
+      ];
+
+      bool isBorder = false;
+      for (final neighbor in neighbors) {
+        if (!filledPixels.contains(neighbor)) {
+          isBorder = true;
+          break;
+        }
+      }
+
+      // Also consider edges of canvas as border
+      if (x == 0 || x == width - 1 || y == 0 || y == height - 1) {
+        isBorder = true;
+      }
+
+      if (isBorder && _isValidCoord(x, y, width, height)) {
+        borderPoints.add(PixelPoint(x, y, color: start.color));
+      }
+    }
+
+    return borderPoints;
+  }
+}
+
+// Shared utility methods for all shape tools
+extension ShapeToolUtils on ShapeTool {
+  List<PixelPoint<int>> _drawLine(
+    PixelPoint<int> start,
+    PixelPoint<int> end,
+    int width,
+    int height,
+  ) {
+    final points = <PixelPoint<int>>[];
+
+    int x0 = start.x;
+    int y0 = start.y;
+    int x1 = end.x;
+    int y1 = end.y;
+
+    final dx = (x1 - x0).abs();
+    final dy = (y1 - y0).abs();
+    final sx = x0 < x1 ? 1 : -1;
+    final sy = y0 < y1 ? 1 : -1;
+    var err = dx - dy;
+
+    while (true) {
+      if (_isValidCoord(x0, y0, width, height)) {
+        points.add(PixelPoint(x0, y0, color: start.color));
+      }
+
+      if (x0 == x1 && y0 == y1) break;
+
+      final e2 = 2 * err;
+      if (e2 > -dy) {
+        err -= dy;
+        x0 += sx;
+      }
+      if (e2 < dx) {
+        err += dx;
+        y0 += sy;
+      }
+    }
+
+    return points;
+  }
+
+  bool _isValidCoord(int x, int y, int width, int height) {
+    return x >= 0 && x < width && y >= 0 && y < height;
+  }
+
+  List<PixelPoint<int>> _removeDuplicates(List<PixelPoint<int>> points) {
+    final seen = <String>{};
+    final unique = <PixelPoint<int>>[];
+
+    for (final point in points) {
+      final key = '${point.x},${point.y}';
+      if (!seen.contains(key)) {
+        seen.add(key);
+        unique.add(point);
+      }
+    }
+
+    return unique;
   }
 }
 

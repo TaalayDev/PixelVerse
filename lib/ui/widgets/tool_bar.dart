@@ -7,9 +7,10 @@ import '../../l10n/strings.dart';
 import '../../config/assets.dart';
 import '../../data/models/subscription_model.dart';
 import '../../pixel/tools.dart';
-import 'subscription/feature_gate.dart';
+import '../../pixel/tools/texture_brush_tool.dart';
 import 'app_icon.dart';
 import 'menu_value_field.dart';
+import 'texture_brush_panel.dart';
 
 class ToolBar extends StatelessWidget {
   final ValueNotifier<PixelTool> currentTool;
@@ -27,7 +28,8 @@ class ToolBar extends StatelessWidget {
   final VoidCallback? export;
   final VoidCallback? exportAsImage;
   final VoidCallback? onShare;
-  final VoidCallback? onEffects; // Added effects callback
+  final VoidCallback? onEffects;
+  final Function(TexturePattern, BlendMode)? onTextureSelected;
   final Color currentColor;
   final Function() onColorPicker;
   final Function()? showPrevFramesOpacity;
@@ -52,6 +54,7 @@ class ToolBar extends StatelessWidget {
     this.exportAsImage,
     this.onShare,
     this.onEffects,
+    this.onTextureSelected,
     required this.currentColor,
     required this.onColorPicker,
     this.showPrevFramesOpacity,
@@ -61,10 +64,6 @@ class ToolBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final canUseEffects = subscription.hasFeatureAccess(
-      SubscriptionFeature.advancedTools,
-    );
-
     return Container(
       height: 45,
       width: double.infinity,
@@ -168,30 +167,27 @@ class ToolBar extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       // effects button
-                      ProBadge(
-                        show: !canUseEffects,
-                        child: IconButton(
-                          icon: Stack(
-                            children: [
-                              const Icon(Icons.auto_fix_high),
-                              if (currentLayerHasEffects)
-                                Positioned(
-                                  right: 0,
-                                  top: 0,
-                                  child: Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).colorScheme.primary,
-                                      shape: BoxShape.circle,
-                                    ),
+                      IconButton(
+                        icon: Stack(
+                          children: [
+                            const Icon(Icons.auto_fix_high),
+                            if (currentLayerHasEffects)
+                              Positioned(
+                                right: 0,
+                                top: 0,
+                                child: Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.primary,
+                                    shape: BoxShape.circle,
                                   ),
                                 ),
-                            ],
-                          ),
-                          tooltip: 'Layer Effects',
-                          onPressed: canUseEffects ? onEffects : null,
+                              ),
+                          ],
                         ),
+                        tooltip: 'Layer Effects',
+                        onPressed: onEffects,
                       ),
                       const SizedBox(width: 8),
                       // zoom in and out

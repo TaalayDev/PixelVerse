@@ -3,19 +3,21 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../../pixel/tools.dart';
-import '../../pixel/tools/fill_tool.dart';
-import '../../pixel/tools/pencil_tool.dart';
-import '../../pixel/tools/selection_tool.dart';
-import '../../pixel/tools/eyedropper_tool.dart';
-import '../../pixel/tools/pen_tool.dart';
-import '../../pixel/tools/shape_tool.dart';
-import '../../pixel/tools/shape_util.dart';
-import '../../pixel/tools/lasso_tool.dart';
 import '../../data.dart';
+import '../tools.dart';
+import '../tools/fill_tool.dart';
+import '../tools/pencil_tool.dart';
+import '../tools/selection_tool.dart';
+import '../tools/eyedropper_tool.dart';
+import '../tools/pen_tool.dart';
+import '../tools/shape_tool.dart';
+import '../tools/shape_util.dart';
+import '../tools/lasso_tool.dart';
 import '../pixel_point.dart';
 import '../tools/curve_tool.dart';
 import '../tools/spray_tool.dart';
+import '../tools/smart_selection_tool.dart';
+import '../tools/texture_brush_tool.dart';
 import 'canvas_controller.dart';
 
 /// Manages tool-specific drawing operations with pixel-perfect generation
@@ -38,9 +40,29 @@ class ToolDrawingManager {
   late final RectangleTool _rectangleTool;
   late final OvalToolBresenham _circleTool;
   late final SelectionTool _selectionTool;
+  late final SmartSelectionTool _smartSelectionTool;
   late final LassoTool _lassoTool;
   late final EyedropperTool _eyedropperTool;
   late final SprayTool _sprayTool;
+
+  // Extra shape tools
+  late final HeartTool _heartTool;
+  late final DiamondTool _diamondTool;
+  late final ArrowTool _arrowTool;
+  late final HexagonTool _hexagonTool;
+  late final LightningTool _lightningTool;
+  late final CrossTool _crossTool;
+  late final TriangleTool _triangleTool;
+  late final SpiralTool _spiralTool;
+  late final CloudTool _cloudTool;
+
+  // Texture tools
+  TextureBrushTool? _currentTextureBrush;
+  int? _selectedTextureId;
+  BlendMode _textureBlendMode = BlendMode.srcOver;
+  TextureBrushMode _textureMode = TextureBrushMode.brush;
+  TextureFillMode _textureFillMode = TextureFillMode.tile;
+  double _textureSpacingMultiplier = 1.0;
 
   final _random = Random();
 
@@ -52,6 +74,11 @@ class ToolDrawingManager {
 
   List<Offset> get lassoPreviewPoints => _lassoTool.previewPoints;
   bool get isDrawingLasso => _lassoTool.isDrawing;
+
+  // Texture brush getters
+  TextureBrushTool? get currentTextureBrush => _currentTextureBrush;
+  int? get selectedTextureId => _selectedTextureId;
+  BlendMode get textureBlendMode => _textureBlendMode;
 
   ToolDrawingManager({
     required this.width,
@@ -93,6 +120,17 @@ class ToolDrawingManager {
       onColorPicked: (color) => onColorPicked?.call(color),
     );
     _sprayTool = SprayTool();
+    _smartSelectionTool = SmartSelectionTool();
+
+    _heartTool = HeartTool();
+    _diamondTool = DiamondTool();
+    _arrowTool = ArrowTool();
+    _hexagonTool = HexagonTool();
+    _lightningTool = LightningTool();
+    _crossTool = CrossTool();
+    _triangleTool = TriangleTool();
+    _spiralTool = SpiralTool();
+    _cloudTool = CloudTool();
   }
 
   Tool _getTool(PixelTool toolType) {
@@ -108,6 +146,18 @@ class ToolDrawingManager {
       PixelTool.lasso => _lassoTool,
       PixelTool.eyedropper => _eyedropperTool,
       PixelTool.sprayPaint => _sprayTool,
+      PixelTool.smartSelect => _smartSelectionTool,
+      PixelTool.heart => _heartTool,
+      PixelTool.diamond => _diamondTool,
+      PixelTool.arrow => _arrowTool,
+      PixelTool.hexagon => _hexagonTool,
+      PixelTool.lightning => _lightningTool,
+      PixelTool.cross => _crossTool,
+      PixelTool.triangle => _triangleTool,
+      PixelTool.spiral => _spiralTool,
+      PixelTool.cloud => _cloudTool,
+      PixelTool.textureBrush => _currentTextureBrush ?? _pencilTool,
+      PixelTool.textureFill => _currentTextureBrush ?? _pencilTool,
       _ => _pencilTool,
     };
   }
@@ -130,6 +180,64 @@ class ToolDrawingManager {
   void endDrawing(PixelTool toolType, PixelDrawDetails details) {
     final tool = _getTool(toolType);
     tool.onEnd(details);
+  }
+
+  /// MARK: Texture Brush Tool Methods
+  Future<bool> setTextureBrush({
+    int? textureId,
+    String? textureName,
+    BlendMode? blendMode,
+    TextureBrushMode? mode,
+    TextureFillMode? fillMode,
+    double? spacingMultiplier,
+  }) async {
+    try {
+      _selectedTextureId = textureId;
+      _textureBlendMode = blendMode ?? _textureBlendMode;
+      _textureMode = mode ?? _textureMode;
+      _textureFillMode = fillMode ?? _textureFillMode;
+      _textureSpacingMultiplier = spacingMultiplier ?? _textureSpacingMultiplier;
+
+      _currentTextureBrush = await TextureManager().createTextureBrush(
+        textureId: textureId,
+        textureName: textureName,
+        blendMode: _textureBlendMode,
+        mode: _textureMode,
+        fillMode: _textureFillMode,
+        spacingMultiplier: _textureSpacingMultiplier,
+      );
+
+      return _currentTextureBrush != null;
+    } catch (e) {
+      print('Error setting texture brush: $e');
+      _currentTextureBrush = null;
+      return false;
+    }
+  }
+
+  void setTextureBlendMode(BlendMode blendMode) {
+    _textureBlendMode = blendMode;
+
+    // Update current texture brush if it exists
+    if (_selectedTextureId != null) {
+      setTextureBrush(
+        textureId: _selectedTextureId,
+        blendMode: blendMode,
+      );
+    }
+  }
+
+  void setTextureFill(bool isFill) {
+    setTextureBrush(
+      mode: isFill ? TextureBrushMode.fill : TextureBrushMode.brush,
+      spacingMultiplier: _textureSpacingMultiplier,
+      fillMode: TextureFillMode.stretch,
+    );
+  }
+
+  void clearTextureBrush() {
+    _currentTextureBrush = null;
+    _selectedTextureId = null;
   }
 
   /// MARK: Curve Tool

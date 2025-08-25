@@ -22,7 +22,8 @@ final subscriptionServiceProvider = Provider<SubscriptionService>((ref) {
 class SubscriptionState extends _$SubscriptionState {
   @override
   UserSubscription build() {
-    if (kIsWeb || Platform.isAndroid || Platform.isWindows || const bool.fromEnvironment('TESTING')) {
+    const testing = bool.fromEnvironment('TESTING');
+    if (kIsWeb || Platform.isAndroid || Platform.isWindows || testing) {
       return UserSubscription(
         plan: SubscriptionPlan.proPurchase,
         status: AppPurchaseStatus.purchased,

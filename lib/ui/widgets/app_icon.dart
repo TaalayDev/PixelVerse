@@ -20,7 +20,32 @@ enum AppIcons {
   magic_stick,
   album,
   archive_down,
-  lasso
+  lasso,
+  settings_2,
+  image_broken,
+  church_window,
+  metal_plate,
+  sparkles,
+  particle,
+  wave,
+  rotate_right,
+  float,
+  shake_camera,
+  face_melt,
+  explosion,
+  jelly,
+  wipe,
+  fog,
+  stone_sphere,
+  ice,
+  mountain_top,
+  ocean_sea_water,
+  cloud,
+  tree_branch,
+  leaf,
+  city,
+  fold_up,
+  unfold
 }
 
 class AppIcon extends StatelessWidget {

@@ -96,6 +96,8 @@ class _PixelCanvasState extends State<PixelCanvas> {
       widget.eventStream?.listen((event) {
         if (event is ClosePenPathEvent) {
           _finishPenPath();
+        } else if (event is TextureBrushPatternEvent) {
+          _toolManager.setTextureBrush(textureId: event.texture.id, blendMode: event.blendMode);
         }
       });
     });
@@ -172,6 +174,9 @@ class _PixelCanvasState extends State<PixelCanvas> {
 
     if (widget.currentTool != oldWidget.currentTool) {
       _controller.setCurrentTool(widget.currentTool);
+      if (widget.currentTool == PixelTool.textureFill || widget.currentTool == PixelTool.textureBrush) {
+        _toolManager.setTextureFill(widget.currentTool == PixelTool.textureFill);
+      }
     }
 
     if (widget.zoomLevel != oldWidget.zoomLevel) {

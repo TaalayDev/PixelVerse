@@ -265,6 +265,42 @@ class PixelDrawController extends _$PixelDrawController {
     state = state.copyWith(currentLayerIndex: newLayerIndex);
   }
 
+  Future<int> duplicateLayer(int index) async {
+    _saveState();
+    final layerToDuplicate = currentFrame.layers[index];
+    final insertIndex = index + 1;
+
+    final newLayerData = await _layerService.createLayer(
+      projectId: project.id,
+      frameId: currentFrame.id,
+      name: 'Copy of ${layerToDuplicate.name}',
+      width: state.width,
+      height: state.height,
+      order: _layerService.calculateNextLayerOrder(currentFrame.layers),
+    );
+
+    final newLayerWithContent = newLayerData.copyWith(
+      pixels: Uint32List.fromList(layerToDuplicate.pixels),
+      isVisible: layerToDuplicate.isVisible,
+    );
+
+    final tempLayers = [...currentFrame.layers, newLayerWithContent];
+
+    final reorderedLayers = _layerService.reorderLayers(
+      tempLayers,
+      tempLayers.length - 1,
+      insertIndex,
+    );
+
+    final updatedFrame = currentFrame.copyWith(layers: reorderedLayers);
+    _updateCurrentFrame(updatedFrame);
+
+    state = state.copyWith(currentLayerIndex: insertIndex);
+    _updateProject();
+
+    return insertIndex;
+  }
+
   void selectLayer(int index) {
     if (index < 0 || index >= currentFrame.layers.length) return;
     state = state.copyWith(currentLayerIndex: index);

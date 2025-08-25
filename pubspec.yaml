@@ -1,7 +1,7 @@
 name: pixelverse
 description: "A new Flutter project."
 
-version: 1.2.7+16
+version: 1.2.8+17
 
 environment:
   sdk: ">=3.4.4 <4.0.0"
@@ -119,6 +119,7 @@ flutter:
     - assets/vectors/
     - assets/images/
     - assets/animations/
+    - assets/data/
 
   # fonts:
   #   - family: Schyler

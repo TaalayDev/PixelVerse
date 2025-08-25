@@ -26,10 +26,11 @@ class LayersPanel extends HookConsumerWidget {
   final Function(int) onLayerDeleted;
   final Function(int) onLayerVisibilityChanged;
   final Function(int) onLayerLockedChanged;
-  final Function(int, String) onLayerNameChanged;
+  final Function(int) onLayerDuplicated;
   final Function(int oldIndex, int newIndex) onLayerReordered;
   final Function(int, double) onLayerOpacityChanged;
   final Function(Layer)? onLayerEffectsChanged;
+  final Function(Layer) onLayerUpdated;
   final ScrollController? scrollController;
 
   const LayersPanel({
@@ -43,9 +44,10 @@ class LayersPanel extends HookConsumerWidget {
     required this.onLayerDeleted,
     required this.onLayerVisibilityChanged,
     required this.onLayerLockedChanged,
-    required this.onLayerNameChanged,
+    required this.onLayerDuplicated,
     required this.onLayerReordered,
     required this.onLayerOpacityChanged,
+    required this.onLayerUpdated,
     this.onLayerEffectsChanged,
     this.scrollController,
   });
@@ -57,11 +59,16 @@ class LayersPanel extends HookConsumerWidget {
 
     return Column(
       children: [
-        Divider(color: Theme.of(context).dividerColor.withOpacity(0.2), height: 0),
         const SizedBox(height: 4),
-        _buildActionButtonsBar(context, subscription),
+        _ActionButtonsBar(
+          layers: layers,
+          activeLayerIndex: activeLayerIndex,
+          onLayerAdded: onLayerAdded,
+          onLayerDeleted: onLayerDeleted,
+          onLayerDuplicated: onLayerDuplicated,
+          onLayerUpdated: onLayerUpdated,
+        ),
         const SizedBox(height: 4),
-        Divider(color: Theme.of(context).dividerColor.withOpacity(0.2), height: 0),
         const SizedBox(height: 4),
         Expanded(
           child: AnimatedReorderableListView(
@@ -76,12 +83,14 @@ class LayersPanel extends HookConsumerWidget {
             itemBuilder: (context, index) {
               final reversedLayers = layers.reversed.toList();
               final layer = reversedLayers[index];
-              final actualIndex = layers.length - 1 - index; // Convert back to actual index
-              return _buildLayerTile(
-                context,
-                layer,
-                actualIndex, // Pass actual index for selection logic
-                subscription,
+              final actualIndex = layers.length - 1 - index;
+              return _LayerTile(
+                key: ValueKey(layer.id),
+                layer: layer,
+                index: actualIndex,
+                isSelected: actualIndex == activeLayerIndex,
+                onLayerSelected: onLayerSelected,
+                onLayerVisibilityChanged: onLayerVisibilityChanged,
               );
             },
             enterTransition: [FlipInX(), ScaleIn()],
@@ -91,13 +100,36 @@ class LayersPanel extends HookConsumerWidget {
             isSameItem: (a, b) => a.id == b.id,
           ),
         ),
-        if (backgroundImage.image != null) _buildBackgroundImageTile(context, ref, backgroundImage),
+        if (backgroundImage.image != null)
+          _BackgroundImageTile(
+            width: width,
+            height: height,
+          ),
         const SizedBox(height: 8),
       ],
     );
   }
+}
 
-  Widget _buildActionButtonsBar(BuildContext context, UserSubscription subscription) {
+class _ActionButtonsBar extends StatelessWidget {
+  final List<Layer> layers;
+  final int activeLayerIndex;
+  final Function(String) onLayerAdded;
+  final Function(int) onLayerDeleted;
+  final Function(int) onLayerDuplicated;
+  final Function(Layer) onLayerUpdated;
+
+  const _ActionButtonsBar({
+    required this.layers,
+    required this.activeLayerIndex,
+    required this.onLayerAdded,
+    required this.onLayerDeleted,
+    required this.onLayerDuplicated,
+    required this.onLayerUpdated,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final hasSelectedLayer = activeLayerIndex >= 0 && activeLayerIndex < layers.length;
     final selectedLayer = hasSelectedLayer ? layers[activeLayerIndex] : null;
 
@@ -109,43 +141,94 @@ class LayersPanel extends HookConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          // Add Layer Button
-          _buildActionButton(
-            context: context,
+          _ActionButton(
             icon: Icons.add,
             label: 'Add',
             color: Colors.green,
-            onPressed: () async {
-              onLayerAdded('Layer ${layers.length + 1}');
-            },
+            onPressed: () => onLayerAdded('Layer ${layers.length + 1}'),
           ),
           const SizedBox(width: 8),
-
-          // Delete Button
-          _buildActionButton(
-            context: context,
+          _ActionButton(
+            icon: Icons.copy,
+            label: 'Copy',
+            color: Colors.blue,
+            onPressed: hasSelectedLayer ? () => onLayerDuplicated(activeLayerIndex) : null,
+          ),
+          const SizedBox(width: 8),
+          _ActionButton(
+            icon: Icons.edit,
+            label: 'Edit',
+            color: Colors.orange,
+            onPressed: hasSelectedLayer ? () => _showEditLayerDialog(context, selectedLayer!) : null,
+          ),
+          const SizedBox(width: 8),
+          _ActionButton(
             icon: Icons.delete_outline,
             label: 'Remove',
             color: Colors.red,
-            onPressed: hasSelectedLayer && layers.length > 1
-                ? () {
-                    _showDeleteConfirmation(context, activeLayerIndex);
-                  }
-                : null,
+            onPressed:
+                hasSelectedLayer && layers.length > 1 ? () => _showDeleteConfirmation(context, activeLayerIndex) : null,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildActionButton({
-    required BuildContext context,
-    required IconData icon,
-    required Color color,
-    String? label,
-    required VoidCallback? onPressed,
-    bool badge = false,
-  }) {
+  void _showDeleteConfirmation(BuildContext context, int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(Strings.of(context).deleteLayer),
+          content: Text(Strings.of(context).areYouSureWantToDeleteLayer),
+          actions: <Widget>[
+            TextButton(
+              child: Text(Strings.of(context).cancel),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: Text(Strings.of(context).delete),
+              onPressed: () {
+                Navigator.of(context).pop();
+                onLayerDeleted(index);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showEditLayerDialog(BuildContext context, Layer layer) async {
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (context) => _EditLayerDialog(layer: layer),
+    );
+
+    if (newName != null && newName.isNotEmpty) {
+      onLayerUpdated(layer.copyWith(name: newName));
+    }
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback? onPressed;
+  final bool badge;
+
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    this.onPressed,
+    this.badge = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final isEnabled = onPressed != null;
 
     return Material(
@@ -154,7 +237,7 @@ class LayersPanel extends HookConsumerWidget {
         onTap: onPressed,
         borderRadius: BorderRadius.circular(8),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
@@ -165,7 +248,6 @@ class LayersPanel extends HookConsumerWidget {
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Stack(
                 clipBehavior: Clip.none,
@@ -182,33 +264,146 @@ class LayersPanel extends HookConsumerWidget {
                       child: Container(
                         width: 6,
                         height: 6,
-                        decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
-                        ),
+                        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
                       ),
                     ),
                 ],
               ),
-              if (label != null) ...[
-                const SizedBox(width: 4),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: isEnabled ? color : Colors.grey.shade400,
-                  ),
-                ),
-              ]
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildBackgroundImageTile(BuildContext context, WidgetRef ref, BackgroundImageState backgroundImage) {
+class _LayerTile extends StatelessWidget {
+  final Layer layer;
+  final int index;
+  final bool isSelected;
+  final Function(int) onLayerSelected;
+  final Function(int) onLayerVisibilityChanged;
+
+  const _LayerTile({
+    super.key,
+    required this.layer,
+    required this.index,
+    required this.isSelected,
+    required this.onLayerSelected,
+    required this.onLayerVisibilityChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final contentColor = isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface;
+    return SizedBox(
+      height: 40,
+      child: Card(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        elevation: isSelected ? 3 : 1,
+        color: isSelected ? Colors.blue.withOpacity(0.7) : null,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: isSelected ? BorderSide(color: Colors.blue.shade300, width: 2) : BorderSide.none,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: InkWell(
+            onTap: () => onLayerSelected(index),
+            child: Row(
+              children: [
+                IconButton(
+                  onPressed: () => onLayerVisibilityChanged(index),
+                  icon: Icon(
+                    layer.isVisible ? Icons.visibility : Icons.visibility_off,
+                    size: 14,
+                    color: contentColor,
+                  ),
+                ),
+                Text(
+                  layer.name,
+                  style: TextStyle(
+                    color: contentColor,
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EditLayerDialog extends StatefulWidget {
+  final Layer layer;
+
+  const _EditLayerDialog({required this.layer});
+
+  @override
+  State<_EditLayerDialog> createState() => _EditLayerDialogState();
+}
+
+class _EditLayerDialogState extends State<_EditLayerDialog> {
+  late final TextEditingController _nameController;
+  final _nameFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.layer.name);
+    // Automatically focus the text field when the dialog appears
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _nameFocusNode.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Edit Layer', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+      content: TextField(
+        controller: _nameController,
+        decoration: const InputDecoration(
+          labelText: 'Layer Name',
+          border: OutlineInputBorder(),
+        ),
+        focusNode: _nameFocusNode,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.of(context).pop(_nameController.text),
+          child: const Text('Save'),
+        ),
+      ],
+    );
+  }
+}
+
+class _BackgroundImageTile extends ConsumerWidget {
+  final int width;
+  final int height;
+
+  const _BackgroundImageTile({required this.width, required this.height});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final backgroundImage = ref.watch(backgroundImageProvider);
+    if (backgroundImage.image == null) {
+      return const SizedBox.shrink();
+    }
     return Card(
       elevation: 1,
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -226,7 +421,6 @@ class LayersPanel extends HookConsumerWidget {
           children: [
             Row(
               children: [
-                // Background preview
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: Container(
@@ -243,20 +437,13 @@ class LayersPanel extends HookConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          const Text(
-                            'BG',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
+                          const Text('BG', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -264,21 +451,13 @@ class LayersPanel extends HookConsumerWidget {
                               color: Colors.amber.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: Text(
-                              'Reference',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.amber.shade800,
-                              ),
-                            ),
+                            child: Text('Reference', style: TextStyle(fontSize: 10, color: Colors.amber.shade800)),
                           ),
                         ],
                       ),
                       const SizedBox(height: 4),
-                      // Transform controls
                       Row(
                         children: [
-                          // Reset button
                           InkWell(
                             onTap: () => ref.read(backgroundImageProvider.notifier).resetTransform(),
                             child: Container(
@@ -287,17 +466,10 @@ class LayersPanel extends HookConsumerWidget {
                                 color: Colors.grey.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(4),
                               ),
-                              child: Text(
-                                'Reset',
-                                style: TextStyle(
-                                  fontSize: 9,
-                                  color: Colors.grey.shade700,
-                                ),
-                              ),
+                              child: Text('Reset', style: TextStyle(fontSize: 9, color: Colors.grey.shade700)),
                             ),
                           ),
                           const SizedBox(width: 8),
-                          // Fit button
                           InkWell(
                             onTap: () => ref
                                 .read(backgroundImageProvider.notifier)
@@ -308,13 +480,7 @@ class LayersPanel extends HookConsumerWidget {
                                 color: Colors.grey.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(4),
                               ),
-                              child: Text(
-                                'Fit',
-                                style: TextStyle(
-                                  fontSize: 9,
-                                  color: Colors.grey.shade700,
-                                ),
-                              ),
+                              child: Text('Fit', style: TextStyle(fontSize: 9, color: Colors.grey.shade700)),
                             ),
                           ),
                         ],
@@ -322,8 +488,6 @@ class LayersPanel extends HookConsumerWidget {
                     ],
                   ),
                 ),
-
-                // Delete button
                 IconButton(
                   icon: Icon(Icons.delete_outline, size: 15, color: Colors.red.shade400),
                   padding: EdgeInsets.zero,
@@ -333,133 +497,69 @@ class LayersPanel extends HookConsumerWidget {
                 ),
               ],
             ),
-
-            // Opacity slider
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.opacity, size: 14, color: Colors.grey.shade600),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      trackHeight: 4,
-                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
-                      activeTrackColor: Colors.amber.shade300,
-                      inactiveTrackColor: Colors.grey.shade300,
-                      thumbColor: Colors.amber.shade500,
-                    ),
-                    child: Slider(
-                      value: backgroundImage.opacity,
-                      min: 0.0,
-                      max: 1.0,
-                      divisions: 10,
-                      onChanged: (value) {
-                        ref.read(backgroundImageProvider.notifier).update((state) => state.copyWith(opacity: value));
-                      },
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: 32,
-                  child: Text(
-                    '${(backgroundImage.opacity * 100).toInt()}%',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-                ),
-              ],
+            _buildSliderRow(
+              context,
+              icon: Icons.opacity,
+              value: backgroundImage.opacity,
+              onChanged: (value) =>
+                  ref.read(backgroundImageProvider.notifier).update((state) => state.copyWith(opacity: value)),
+              activeColor: Colors.amber,
+              label: '${(backgroundImage.opacity * 100).toInt()}%',
             ),
-
-            Row(
-              children: [
-                Icon(Icons.zoom_in, size: 14, color: Colors.grey.shade600),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      trackHeight: 4,
-                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
-                      activeTrackColor: Colors.blue.shade300,
-                      inactiveTrackColor: Colors.grey.shade300,
-                      thumbColor: Colors.blue.shade500,
-                    ),
-                    child: Slider(
-                      value: backgroundImage.scale,
-                      min: 0.1,
-                      max: 1,
-                      onChanged: (value) {
-                        ref.read(backgroundImageProvider.notifier).setScale(value);
-                      },
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: 32,
-                  child: Text(
-                    '${(backgroundImage.scale * 100).toInt()}%',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            Row(
-              children: [
-                Icon(Feather.move, size: 14, color: Colors.grey.shade600),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      trackHeight: 4,
-                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
-                      activeTrackColor: Colors.green.shade300,
-                      inactiveTrackColor: Colors.grey.shade300,
-                      thumbColor: Colors.green.shade500,
-                    ),
-                    child: Slider(
-                      value: backgroundImage.offset.dx,
-                      min: 0,
-                      max: 1,
-                      onChanged: (value) {
-                        ref.read(backgroundImageProvider.notifier).setOffset(Offset(value, backgroundImage.offset.dy));
-                      },
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      trackHeight: 4,
-                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
-                      activeTrackColor: Colors.green.shade300,
-                      inactiveTrackColor: Colors.grey.shade300,
-                      thumbColor: Colors.green.shade500,
-                    ),
-                    child: Slider(
-                      value: backgroundImage.offset.dy,
-                      min: 0,
-                      max: 1,
-                      onChanged: (value) {
-                        ref.read(backgroundImageProvider.notifier).setOffset(Offset(backgroundImage.offset.dx, value));
-                      },
-                    ),
-                  ),
-                ),
-              ],
+            _buildSliderRow(
+              context,
+              icon: Icons.zoom_in,
+              value: backgroundImage.scale,
+              min: 0.1,
+              max: 1,
+              onChanged: (value) => ref.read(backgroundImageProvider.notifier).setScale(value),
+              activeColor: Colors.blue,
+              label: '${(backgroundImage.scale * 100).toInt()}%',
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSliderRow(
+    BuildContext context, {
+    required IconData icon,
+    required double value,
+    required ValueChanged<double> onChanged,
+    required Color activeColor,
+    required String label,
+    double min = 0.0,
+    double max = 1.0,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: Colors.grey.shade600),
+        const SizedBox(width: 8),
+        Expanded(
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 4,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+              activeTrackColor: activeColor.withOpacity(0.7),
+              inactiveTrackColor: Colors.grey.shade300,
+              thumbColor: activeColor.withOpacity(0.9),
+            ),
+            child: Slider(
+              value: value,
+              min: min,
+              max: max,
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+        SizedBox(
+          width: 32,
+          child: Text(label, style: TextStyle(fontSize: 10, color: Colors.grey.shade700)),
+        ),
+      ],
     );
   }
 
@@ -484,188 +584,7 @@ class LayersPanel extends HookConsumerWidget {
               child: const Text('Remove'),
               onPressed: () {
                 Navigator.of(context).pop();
-                // Call function to remove background
                 ref.read(backgroundImageProvider.notifier).update((state) => state.copyWith(image: null));
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildLayersPanelHeader(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            Strings.of(context).layers,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-          Text(
-            '${layers.length} layers',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLayerTile(
-    BuildContext context,
-    Layer layer,
-    int index,
-    UserSubscription subscription,
-  ) {
-    final isSelected = index == activeLayerIndex;
-    final contentColor = isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface;
-
-    return SizedBox(
-      key: ValueKey(layer.id),
-      height: 40,
-      child: Card(
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        elevation: isSelected ? 3 : 1,
-        color: isSelected ? Colors.blue.withOpacity(0.7) : null,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: isSelected ? BorderSide(color: Colors.blue.shade300, width: 2) : BorderSide.none,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.only(right: 8),
-          child: InkWell(
-            child: Row(
-              children: [
-                IconButton(
-                  onPressed: () {
-                    onLayerVisibilityChanged(index);
-                  },
-                  icon: Icon(
-                    layer.isVisible ? Icons.visibility : Icons.visibility_off,
-                    size: 14,
-                    color: contentColor,
-                  ),
-                ),
-                Text(
-                  layer.name,
-                  style: TextStyle(
-                    color: contentColor,
-                    fontSize: 12,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  ),
-                ),
-              ],
-            ),
-            onTap: () {
-              onLayerSelected(index);
-            },
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLayerPreview(Layer layer, int width, int height) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        color: Colors.white.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: LayersPreview(
-        width: width,
-        height: height,
-        layers: [layer],
-        builder: (context, image) {
-          return image != null
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(5),
-                  child: CustomPaint(painter: ImagePainter(image)),
-                )
-              : const ColoredBox(color: Colors.white);
-        },
-      ),
-    );
-  }
-
-  void _showDeleteConfirmation(BuildContext context, int index) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(Strings.of(context).deleteLayer),
-          content: Text(Strings.of(context).areYouSureWantToDeleteLayer),
-          actions: <Widget>[
-            TextButton(
-              child: Text(Strings.of(context).cancel),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.red,
-              ),
-              child: Text(Strings.of(context).delete),
-              onPressed: () {
-                Navigator.of(context).pop();
-                onLayerDeleted(index);
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // Show effects dialog for the selected layer
-  void _showEffectsDialog(BuildContext context, Layer layer) {
-    context.showEffectsPanel(
-      layer: layer,
-      width: width,
-      height: height,
-      onLayerUpdated: (updatedLayer) {
-        if (onLayerEffectsChanged != null) {
-          onLayerEffectsChanged!(updatedLayer);
-        }
-      },
-    );
-  }
-
-  Future<String?> _showRenameDialog(BuildContext context, String? name) async {
-    final TextEditingController controller = TextEditingController(text: name);
-    return showDialog<String>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(name == null ? 'Create New Layer' : 'Rename Layer'),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(
-              labelText: 'Layer Name',
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: name == null ? const Text('Create') : const Text('Rename'),
-              onPressed: () {
-                Navigator.of(context).pop(controller.text);
               },
             ),
           ],

@@ -1,9 +1,6 @@
-import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:flutter_vector_icons/flutter_vector_icons.dart';
-import 'package:pixelverse/ui/widgets/app_expandable.dart';
 
 import '../../data/models/subscription_model.dart';
 import '../../pixel/pixel_draw_state.dart';
@@ -52,7 +49,7 @@ class ToolsBottomBar extends HookWidget {
       PixelTool.line: (AppIcons.line, 'Line'),
       PixelTool.circle: (AppIcons.circle, 'Circle'),
       PixelTool.rectangle: (AppIcons.rectangle, 'Rectangle'),
-      PixelTool.pen: (AppIcons.pencil, 'Pen'),
+      PixelTool.pen: (AppIcons.pen, 'Pen'),
       PixelTool.select: (AppIcons.select, 'Select'),
       PixelTool.curve: (AppIcons.curved_connector, 'Curve'),
     };
@@ -175,6 +172,9 @@ class ToolsBottomBar extends HookWidget {
                                 onLayerAdded: (name) {
                                   notifier.addLayer(name);
                                 },
+                                onLayerUpdated: (updatedLayer) {
+                                  notifier.updateLayer(updatedLayer);
+                                },
                                 onLayerVisibilityChanged: (index) {
                                   notifier.toggleLayerVisibility(index);
                                 },
@@ -185,7 +185,9 @@ class ToolsBottomBar extends HookWidget {
                                   notifier.removeLayer(index);
                                 },
                                 onLayerLockedChanged: (index) {},
-                                onLayerNameChanged: (index, name) {},
+                                onLayerDuplicated: (index) {
+                                  notifier.duplicateLayer(index);
+                                },
                                 onLayerReordered: (oldIndex, newIndex) {
                                   notifier.reorderLayers(
                                     newIndex,
@@ -206,9 +208,9 @@ class ToolsBottomBar extends HookWidget {
                   IconButton(
                     color: extraTools.containsKey(currentTool.value) ? Colors.blue : null,
                     onPressed: () async {
-                      showExtraTools.value = !showExtraTools.value;
+                      showStyledToolBottomSheet(context, currentTool);
                     },
-                    icon: const Icon(Icons.style),
+                    icon: const AppIcon(AppIcons.unfold),
                   ),
                 ],
               ),

@@ -7,9 +7,6 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:pixelverse/ui/widgets/animated_background.dart';
-import 'package:pixelverse/ui/widgets/effects/effects_side_panel.dart';
-import 'package:pixelverse/ui/widgets/pixel_draw_shortcuts.dart';
 
 import '../../l10n/strings.dart';
 import '../../pixel/canvas/pixel_canvas.dart';
@@ -21,11 +18,13 @@ import '../../pixel/animation_frame_controller.dart' hide AnimationController;
 import '../../pixel/tools.dart';
 import '../../data.dart';
 import '../../providers/subscription_provider.dart';
+import '../widgets/animated_background.dart';
+import '../widgets/effects/effects_side_panel.dart';
+import '../widgets/pixel_draw_shortcuts.dart';
 import '../widgets/animation_preview_dialog.dart';
 import '../widgets/animation_timeline.dart';
 import '../widgets/effects/effects_panel.dart';
 import '../widgets/grid_painter.dart';
-import '../widgets/shortcuts_wrapper.dart';
 import '../widgets/dialogs.dart';
 import '../widgets.dart';
 import '../widgets/tool_bar.dart';
@@ -353,7 +352,6 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerPr
                   showPrevFramesOpacity: () {
                     showPrevFrames.value = !showPrevFrames.value;
                   },
-                  // Add these properties for effects support
                   onEffects: () => handleEffects(context, notifier),
                   currentLayerHasEffects: notifier.getCurrentLayer().effects.isNotEmpty,
                 ),
@@ -372,6 +370,10 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerPr
                             },
                             currentColor: state.currentColor,
                             subscription: subscription,
+                            onTextureSelected: (texture, blendMode, isFill) {
+                              currentTool.value = isFill ? PixelTool.textureFill : PixelTool.textureBrush;
+                              notifier.pushEvent(TextureBrushPatternEvent(texture, blendMode: blendMode));
+                            },
                             // onColorSelected: (color) {},
                           ),
                         ),
@@ -726,6 +728,9 @@ class _DesktopSidePanelState extends ConsumerState<_DesktopSidePanel> with Singl
                       height: widget.height,
                       layers: widget.state.currentFrame.layers,
                       activeLayerIndex: widget.state.currentLayerIndex,
+                      onLayerUpdated: (layer) {
+                        widget.notifier.updateLayer(layer);
+                      },
                       onLayerAdded: (name) {
                         widget.notifier.addLayer(name);
                       },
@@ -739,7 +744,6 @@ class _DesktopSidePanelState extends ConsumerState<_DesktopSidePanel> with Singl
                         widget.notifier.removeLayer(index);
                       },
                       onLayerLockedChanged: (index) {},
-                      onLayerNameChanged: (index, name) {},
                       onLayerReordered: (oldIndex, newIndex) {
                         widget.notifier.reorderLayers(
                           newIndex,
@@ -750,21 +754,22 @@ class _DesktopSidePanelState extends ConsumerState<_DesktopSidePanel> with Singl
                       onLayerEffectsChanged: (updatedLayer) {
                         widget.notifier.updateLayer(updatedLayer);
                       },
+                      onLayerDuplicated: (index) {
+                        widget.notifier.duplicateLayer(index);
+                      },
                     ),
                   ),
-                  if (subscription.isPro) ...[
-                    Divider(height: 0, color: Colors.grey.withOpacity(0.5)),
-                    Expanded(
-                      child: EffectsSidePanel(
-                        layer: widget.state.layers[widget.state.currentLayerIndex],
-                        width: widget.width,
-                        height: widget.height,
-                        onLayerUpdated: (updatedLayer) {
-                          widget.notifier.updateLayer(updatedLayer);
-                        },
-                      ),
+                  Divider(height: 0, color: Colors.grey.withOpacity(0.5)),
+                  Expanded(
+                    child: EffectsSidePanel(
+                      layer: widget.state.layers[widget.state.currentLayerIndex],
+                      width: widget.width,
+                      height: widget.height,
+                      onLayerUpdated: (updatedLayer) {
+                        widget.notifier.updateLayer(updatedLayer);
+                      },
                     ),
-                  ],
+                  ),
                   Divider(height: 0, color: Colors.grey.withOpacity(0.5)),
                   Expanded(
                     child: ColorPalettePanel(

@@ -49,15 +49,13 @@ class _CustomzedDropdownMenuState<T> extends State<CustomizedDropdownMenu> {
   final _key = GlobalKey();
 
   void openMenu() async {
-    final RenderBox renderBox =
-        _key.currentContext!.findRenderObject() as RenderBox;
+    final RenderBox renderBox = _key.currentContext!.findRenderObject() as RenderBox;
     final position = renderBox.localToGlobal(Offset.zero);
     await showCustomizedMenu(
       context: context,
       builder: (context) {
         return SizedBox(
-          width:
-              widget.wrapContentWidth ? renderBox.size.width : widget.menuWidth,
+          width: widget.wrapContentWidth ? renderBox.size.width : widget.menuWidth,
           child: widget.menuBuilder(context),
         );
       },
@@ -112,8 +110,7 @@ class CustomizedPopupRoute<T> extends PopupRoute<T> {
   bool get maintainState => false;
 
   @override
-  Widget buildPage(BuildContext context, Animation<double> animation,
-      Animation<double> secondaryAnimation) {
+  Widget buildPage(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
     return this.builder(context);
   }
 
@@ -128,7 +125,6 @@ class CustomizedPopupRoute<T> extends PopupRoute<T> {
     final animationCurve = animation.drive(curveTween);
     final secondaryAnimationCurve = secondaryAnimation.drive(curveTween);
 
-    final MediaQueryData mediaQuery = MediaQuery.of(context);
     return MediaQuery.removePadding(
       context: context,
       removeTop: true,

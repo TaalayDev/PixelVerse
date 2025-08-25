@@ -132,7 +132,6 @@ class ColorPaletteGenerator {
   }
 }
 
-/// An enhanced color palette panel with palette generation features
 class ColorPalettePanel extends HookWidget {
   final Color currentColor;
   final Function(Color) onColorSelected;
@@ -151,13 +150,9 @@ class ColorPalettePanel extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    // State for custom colors and selected tab
     final customColors = useState<List<Color>>([]);
     final selectedTab = useState(0);
 
-    // Basic colors palette
-
-    // Define tabs with icons
     final tabs = [
       const _PaletteTab(icon: Icons.palette, label: 'Basic'),
       const _PaletteTab(icon: Icons.tonality, label: 'Shades'),
@@ -168,7 +163,6 @@ class ColorPalettePanel extends HookWidget {
       const _PaletteTab(icon: Icons.bookmark, label: 'Custom'),
     ];
 
-    // Get colors for the selected tab
     List<Color> getTabColors() {
       switch (selectedTab.value) {
         case 0:
@@ -195,7 +189,6 @@ class ColorPalettePanel extends HookWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Current color display with hex value
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

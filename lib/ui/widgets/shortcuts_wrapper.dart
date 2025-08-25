@@ -154,14 +154,14 @@ class _ShortcutsWrapperState extends State<ShortcutsWrapper> {
             canRequestFocus: true,
             skipTraversal: false,
             onFocusChange: (hasFocus) {
-              if (!hasFocus) {
-                // Try to regain focus after a short delay
-                Future.delayed(const Duration(milliseconds: 100), () {
-                  if (mounted && _focusNode.canRequestFocus) {
-                    _focusNode.requestFocus();
-                  }
-                });
-              }
+              // if (!hasFocus) {
+              //   // Try to regain focus after a short delay
+              //   Future.delayed(const Duration(milliseconds: 100), () {
+              //     if (mounted && _focusNode.canRequestFocus) {
+              //       _focusNode.requestFocus();
+              //     }
+              //   });
+              // }
             },
             child: widget.child,
           ),

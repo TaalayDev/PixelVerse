@@ -4,13 +4,16 @@ import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import '../../data/models/subscription_model.dart';
 import '../../l10n/strings.dart';
 import '../../pixel/tools.dart';
+import '../../pixel/tools/texture_brush_tool.dart';
 import 'app_icon.dart';
 import 'subscription/feature_gate.dart';
+import 'texture_brush_panel.dart';
 
 class ToolMenu extends StatelessWidget {
   final ValueNotifier<PixelTool> currentTool;
   final Function(PixelTool) onSelectTool;
   final Function() onColorPicker;
+  final Function(TexturePattern, BlendMode, bool isFill)? onTextureSelected;
   final Color currentColor;
   final UserSubscription subscription;
 
@@ -19,6 +22,7 @@ class ToolMenu extends StatelessWidget {
     required this.currentTool,
     required this.onSelectTool,
     required this.onColorPicker,
+    required this.onTextureSelected,
     required this.currentColor,
     required this.subscription,
   });
@@ -52,6 +56,52 @@ class ToolMenu extends StatelessWidget {
                 ),
                 onPressed: () => onSelectTool(PixelTool.brush),
               ),
+              ProBadge(
+                show: !subscription.isPro,
+                child: Stack(
+                  fit: StackFit.passthrough,
+                  clipBehavior: Clip.none,
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.texture,
+                        color: tool == PixelTool.textureBrush || tool == PixelTool.textureFill ? Colors.blue : null,
+                      ),
+                      onPressed: !subscription.isPro
+                          ? null
+                          : () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => Dialog(
+                                  child: TextureBrushPanel(
+                                    isFill: tool == PixelTool.textureFill,
+                                    onTextureSelected: (texture, blendMode, isFill) {
+                                      Navigator.of(context).pop();
+                                      if (texture != null) {
+                                        onTextureSelected?.call(texture, blendMode, isFill);
+                                      }
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                      tooltip: 'Texture Brush',
+                    ),
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Transform.rotate(
+                        angle: -0.785398,
+                        child: const Icon(
+                          Icons.arrow_drop_down,
+                          color: Colors.grey,
+                          size: 16,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               IconButton(
                 icon: AppIcon(
                   AppIcons.fill,
@@ -72,25 +122,15 @@ class ToolMenu extends StatelessWidget {
               ),
               // selection tool
               ProBadge(
-                show: !subscription.isPro,
+                show: false,
                 child: IconButton(
                   icon: AppIcon(
                     AppIcons.select,
                     color: tool == PixelTool.select ? Colors.blue : null,
                   ),
-                  onPressed: !subscription.isPro ? null : () => onSelectTool(PixelTool.select),
+                  onPressed: () => onSelectTool(PixelTool.select),
                 ),
               ),
-              // ProBadge(
-              //   show: !subscription.isPro,
-              //   child: IconButton(
-              //     icon: AppIcon(
-              //       AppIcons.lasso,
-              //       color: tool == PixelTool.lasso ? Colors.blue : null,
-              //     ),
-              //     onPressed: !subscription.isPro ? null : () => onSelectTool(PixelTool.lasso),
-              //   ),
-              // ),
               ProBadge(
                 show: !subscription.isPro,
                 child: IconButton(
@@ -197,6 +237,72 @@ class ShapesMenuButton extends StatelessWidget {
           child: ListTile(
             leading: const Icon(Icons.radio_button_unchecked),
             title: Text(Strings.of(context).circleTool),
+          ),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem<PixelTool>(
+          value: PixelTool.triangle,
+          child: ListTile(
+            leading: Icon(Icons.change_history),
+            title: Text('Triangle'),
+          ),
+        ),
+        const PopupMenuItem<PixelTool>(
+          value: PixelTool.diamond,
+          child: ListTile(
+            leading: Icon(Icons.diamond_outlined),
+            title: Text('Diamond'),
+          ),
+        ),
+        const PopupMenuItem<PixelTool>(
+          value: PixelTool.hexagon,
+          child: ListTile(
+            leading: Icon(Icons.hexagon_outlined),
+            title: Text('Hexagon'),
+          ),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem<PixelTool>(
+          value: PixelTool.heart,
+          child: ListTile(
+            leading: Icon(Icons.favorite_border),
+            title: Text('Heart'),
+          ),
+        ),
+        const PopupMenuItem<PixelTool>(
+          value: PixelTool.arrow,
+          child: ListTile(
+            leading: Icon(Icons.arrow_forward),
+            title: Text('Arrow'),
+          ),
+        ),
+        const PopupMenuItem<PixelTool>(
+          value: PixelTool.lightning,
+          child: ListTile(
+            leading: Icon(Icons.flash_on),
+            title: Text('Lightning'),
+          ),
+        ),
+        const PopupMenuItem<PixelTool>(
+          value: PixelTool.cross,
+          child: ListTile(
+            leading: Icon(Icons.add),
+            title: Text('Cross'),
+          ),
+        ),
+        const PopupMenuDivider(),
+        const PopupMenuItem<PixelTool>(
+          value: PixelTool.spiral,
+          child: ListTile(
+            leading: Icon(Icons.sync),
+            title: Text('Spiral'),
+          ),
+        ),
+        const PopupMenuItem<PixelTool>(
+          value: PixelTool.cloud,
+          child: ListTile(
+            leading: Icon(Icons.cloud_outlined),
+            title: Text('Cloud'),
           ),
         ),
       ],
