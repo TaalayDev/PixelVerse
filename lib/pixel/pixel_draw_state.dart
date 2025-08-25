@@ -71,6 +71,7 @@ class ClosePenPathEvent extends PixelDrawEvent {
 class TextureBrushPatternEvent extends PixelDrawEvent {
   final TexturePattern texture;
   final BlendMode blendMode;
+  final bool isFill;
 
-  const TextureBrushPatternEvent(this.texture, {this.blendMode = BlendMode.srcOver});
+  const TextureBrushPatternEvent(this.texture, {this.blendMode = BlendMode.srcOver, this.isFill = false});
 }

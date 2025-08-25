@@ -9,6 +9,7 @@ import '../../data.dart';
 import '../pixel_draw_state.dart';
 import '../pixel_point.dart';
 
+import '../tools/texture_brush_tool.dart';
 import 'canvas_controller.dart';
 import 'canvas_gesture_handler.dart';
 import 'canvas_painter.dart';
@@ -97,7 +98,12 @@ class _PixelCanvasState extends State<PixelCanvas> {
         if (event is ClosePenPathEvent) {
           _finishPenPath();
         } else if (event is TextureBrushPatternEvent) {
-          _toolManager.setTextureBrush(textureId: event.texture.id, blendMode: event.blendMode);
+          _toolManager.setTextureBrush(
+            textureId: event.texture.id,
+            blendMode: event.blendMode,
+            mode: event.isFill ? TextureBrushMode.fill : TextureBrushMode.brush,
+            fillMode: event.isFill ? TextureFillMode.stretch : TextureFillMode.center,
+          );
         }
       });
     });
@@ -174,9 +180,6 @@ class _PixelCanvasState extends State<PixelCanvas> {
 
     if (widget.currentTool != oldWidget.currentTool) {
       _controller.setCurrentTool(widget.currentTool);
-      if (widget.currentTool == PixelTool.textureFill || widget.currentTool == PixelTool.textureBrush) {
-        _toolManager.setTextureFill(widget.currentTool == PixelTool.textureFill);
-      }
     }
 
     if (widget.zoomLevel != oldWidget.zoomLevel) {

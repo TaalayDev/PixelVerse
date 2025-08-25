@@ -372,7 +372,11 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerPr
                             subscription: subscription,
                             onTextureSelected: (texture, blendMode, isFill) {
                               currentTool.value = isFill ? PixelTool.textureFill : PixelTool.textureBrush;
-                              notifier.pushEvent(TextureBrushPatternEvent(texture, blendMode: blendMode));
+                              notifier.pushEvent(TextureBrushPatternEvent(
+                                texture,
+                                blendMode: blendMode,
+                                isFill: isFill,
+                              ));
                             },
                             // onColorSelected: (color) {},
                           ),

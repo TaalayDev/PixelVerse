@@ -989,14 +989,36 @@ extension EffectPanelDialogExtension on BuildContext {
     required int height,
     required Function(Layer) onLayerUpdated,
   }) {
+    final size = MediaQuery.sizeOf(this);
+    final isSmallScreen = size.width < 600;
+    if (isSmallScreen) {
+      return showModalBottomSheet(
+        context: this,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        builder: (context) => SizedBox(
+          height: size.height * 0.95,
+          child: EffectsPanel(
+            layer: layer,
+            width: width,
+            height: height,
+            onLayerUpdated: onLayerUpdated,
+            isDialog: true,
+          ),
+        ),
+      );
+    }
+
     return showDialog(
       context: this,
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Container(
           constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width < 600 ? double.infinity : 900,
-            maxHeight: MediaQuery.of(context).size.width < 600 ? double.infinity : 900,
+            maxWidth: size.width < 600 ? double.infinity : 900,
+            maxHeight: size.width < 600 ? double.infinity : 900,
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),

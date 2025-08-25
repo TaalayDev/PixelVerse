@@ -4,6 +4,10 @@
     "name": "Dots",
     "width": 4,
     "height": 4,
+    "rotationRandomness": false,
+    "scaleRandomness": false,
+    "rotationRandomnessAmount": 0.0,
+    "scaleRandomnessAmount": 0.0,
     "data": [
       4278190080, 0, 4278190080, 0,
       0, 0, 0, 0,
@@ -16,6 +20,10 @@
     "name": "Cross",
     "width": 5,
     "height": 5,
+    "rotationRandomness": true,
+    "scaleRandomness": false,
+    "rotationRandomnessAmount": 1.0,
+    "scaleRandomnessAmount": 0.0,
     "data": [
       0, 0, 4278190080, 0, 0,
       0, 0, 4278190080, 0, 0,
@@ -29,6 +37,10 @@
     "name": "Diagonal Lines",
     "width": 4,
     "height": 4,
+    "rotationRandomness": false,
+    "scaleRandomness": true,
+    "rotationRandomnessAmount": 0.0,
+    "scaleRandomnessAmount": 0.3,
     "data": [
       4278190080, 0, 0, 0,
       0, 4278190080, 0, 0,
@@ -41,6 +53,10 @@
     "name": "Checkerboard",
     "width": 4,
     "height": 4,
+    "rotationRandomness": false,
+    "scaleRandomness": false,
+    "rotationRandomnessAmount": 0.0,
+    "scaleRandomnessAmount": 0.0,
     "data": [
       4278190080, 0, 4278190080, 0,
       0, 4278190080, 0, 4278190080,
@@ -53,6 +69,10 @@
     "name": "Noise",
     "width": 8,
     "height": 8,
+    "rotationRandomness": true,
+    "scaleRandomness": true,
+    "rotationRandomnessAmount": 0.5,
+    "scaleRandomnessAmount": 0.4,
     "data": [
       4278190080, 0, 4278190080, 0, 0, 4278190080, 0, 4278190080,
       0, 4278190080, 0, 4278190080, 4278190080, 0, 4278190080, 0,
@@ -69,6 +89,10 @@
     "name": "Grid",
     "width": 6,
     "height": 6,
+    "rotationRandomness": false,
+    "scaleRandomness": false,
+    "rotationRandomnessAmount": 0.0,
+    "scaleRandomnessAmount": 0.0,
     "data": [
       4278190080, 4278190080, 4278190080, 4278190080, 4278190080, 4278190080,
       4278190080, 0, 0, 0, 0, 4278190080,
@@ -83,6 +107,10 @@
     "name": "Circles",
     "width": 7,
     "height": 7,
+    "rotationRandomness": false,
+    "scaleRandomness": true,
+    "rotationRandomnessAmount": 0.0,
+    "scaleRandomnessAmount": 0.3,
     "data": [
       0, 0, 4278190080, 4278190080, 4278190080, 0, 0,
       0, 4278190080, 0, 0, 0, 4278190080, 0,
@@ -98,6 +126,10 @@
     "name": "Brick",
     "width": 8,
     "height": 6,
+    "rotationRandomness": false,
+    "scaleRandomness": false,
+    "rotationRandomnessAmount": 0.0,
+    "scaleRandomnessAmount": 0.0,
     "data": [
       4278190080, 4278190080, 4278190080, 4278190080, 0, 4278190080, 4278190080, 4278190080,
       4278190080, 0, 0, 0, 0, 0, 0, 4278190080,
@@ -112,6 +144,10 @@
     "name": "Stars",
     "width": 5,
     "height": 5,
+    "rotationRandomness": true,
+    "scaleRandomness": true,
+    "rotationRandomnessAmount": 1.0,
+    "scaleRandomnessAmount": 0.5,
     "data": [
       0, 0, 4278190080, 0, 0,
       0, 4278190080, 4278190080, 4278190080, 0,
@@ -125,11 +161,289 @@
     "name": "Waves",
     "width": 8,
     "height": 4,
+    "rotationRandomness": false,
+    "scaleRandomness": true,
+    "rotationRandomnessAmount": 0.0,
+    "scaleRandomnessAmount": 0.2,
     "data": [
       0, 4278190080, 4278190080, 0, 0, 4278190080, 4278190080, 0,
       4278190080, 0, 0, 4278190080, 4278190080, 0, 0, 4278190080,
       4278190080, 0, 0, 4278190080, 4278190080, 0, 0, 4278190080,
       0, 4278190080, 4278190080, 0, 0, 4278190080, 4278190080, 0
+    ]
+  },
+  {
+    "id": 11,
+    "name": "Diamond",
+    "width": 5,
+    "height": 5,
+    "rotationRandomness": true,
+    "scaleRandomness": false,
+    "rotationRandomnessAmount": 0.5,
+    "scaleRandomnessAmount": 0.0,
+    "data": [
+      0, 0, 4278190080, 0, 0,
+      0, 4278190080, 0, 4278190080, 0,
+      4278190080, 0, 0, 0, 4278190080,
+      0, 4278190080, 0, 4278190080, 0,
+      0, 0, 4278190080, 0, 0
+    ]
+  },
+  {
+    "id": 12,
+    "name": "Hexagon",
+    "width": 6,
+    "height": 7,
+    "rotationRandomness": true,
+    "scaleRandomness": true,
+    "rotationRandomnessAmount": 0.3,
+    "scaleRandomnessAmount": 0.2,
+    "data": [
+      0, 4278190080, 4278190080, 4278190080, 4278190080, 0,
+      4278190080, 0, 0, 0, 0, 4278190080,
+      4278190080, 0, 0, 0, 0, 4278190080,
+      4278190080, 0, 0, 0, 0, 4278190080,
+      4278190080, 0, 0, 0, 0, 4278190080,
+      4278190080, 0, 0, 0, 0, 4278190080,
+      0, 4278190080, 4278190080, 4278190080, 4278190080, 0
+    ]
+  },
+  {
+    "id": 13,
+    "name": "Triangle",
+    "width": 5,
+    "height": 5,
+    "rotationRandomness": true,
+    "scaleRandomness": false,
+    "rotationRandomnessAmount": 1.0,
+    "scaleRandomnessAmount": 0.0,
+    "data": [
+      0, 0, 4278190080, 0, 0,
+      0, 4278190080, 0, 4278190080, 0,
+      4278190080, 0, 0, 0, 4278190080,
+      4278190080, 4278190080, 4278190080, 4278190080, 4278190080,
+      0, 0, 0, 0, 0
+    ]
+  },
+  {
+    "id": 14,
+    "name": "Arrow",
+    "width": 5,
+    "height": 7,
+    "rotationRandomness": true,
+    "scaleRandomness": true,
+    "rotationRandomnessAmount": 1.0,
+    "scaleRandomnessAmount": 0.3,
+    "data": [
+      0, 0, 4278190080, 0, 0,
+      0, 4278190080, 4278190080, 4278190080, 0,
+      4278190080, 0, 4278190080, 0, 4278190080,
+      0, 0, 4278190080, 0, 0,
+      0, 0, 4278190080, 0, 0,
+      0, 0, 4278190080, 0, 0,
+      0, 0, 4278190080, 0, 0
+    ]
+  },
+  {
+    "id": 15,
+    "name": "Crosshatch",
+    "width": 6,
+    "height": 6,
+    "rotationRandomness": true,
+    "scaleRandomness": false,
+    "rotationRandomnessAmount": 0.25,
+    "scaleRandomnessAmount": 0.0,
+    "data": [
+      4278190080, 0, 0, 0, 0, 4278190080,
+      0, 4278190080, 0, 0, 4278190080, 0,
+      0, 0, 4278190080, 4278190080, 0, 0,
+      0, 0, 4278190080, 4278190080, 0, 0,
+      0, 4278190080, 0, 0, 4278190080, 0,
+      4278190080, 0, 0, 0, 0, 4278190080
+    ]
+  },
+  {
+    "id": 16,
+    "name": "Plus",
+    "width": 3,
+    "height": 3,
+    "rotationRandomness": true,
+    "scaleRandomness": true,
+    "rotationRandomnessAmount": 1.0,
+    "scaleRandomnessAmount": 0.4,
+    "data": [
+      0, 4278190080, 0,
+      4278190080, 4278190080, 4278190080,
+      0, 4278190080, 0
+    ]
+  },
+  {
+    "id": 17,
+    "name": "Zigzag",
+    "width": 8,
+    "height": 4,
+    "rotationRandomness": false,
+    "scaleRandomness": true,
+    "rotationRandomnessAmount": 0.0,
+    "scaleRandomnessAmount": 0.3,
+    "data": [
+      4278190080, 4278190080, 0, 0, 0, 0, 4278190080, 4278190080,
+      0, 0, 4278190080, 4278190080, 4278190080, 4278190080, 0, 0,
+      0, 0, 4278190080, 4278190080, 4278190080, 4278190080, 0, 0,
+      4278190080, 4278190080, 0, 0, 0, 0, 4278190080, 4278190080
+    ]
+  },
+  {
+    "id": 18,
+    "name": "Spiral",
+    "width": 7,
+    "height": 7,
+    "rotationRandomness": true,
+    "scaleRandomness": true,
+    "rotationRandomnessAmount": 1.0,
+    "scaleRandomnessAmount": 0.3,
+    "data": [
+      4278190080, 4278190080, 4278190080, 4278190080, 4278190080, 4278190080, 0,
+      4278190080, 0, 0, 0, 0, 4278190080, 0,
+      4278190080, 0, 4278190080, 4278190080, 0, 4278190080, 0,
+      4278190080, 0, 4278190080, 0, 0, 4278190080, 0,
+      4278190080, 0, 0, 0, 4278190080, 4278190080, 0,
+      4278190080, 0, 0, 0, 0, 0, 0,
+      4278190080, 4278190080, 4278190080, 4278190080, 4278190080, 4278190080, 4278190080
+    ]
+  },
+  {
+    "id": 19,
+    "name": "Concentric Circles",
+    "width": 9,
+    "height": 9,
+    "rotationRandomness": false,
+    "scaleRandomness": true,
+    "rotationRandomnessAmount": 0.0,
+    "scaleRandomnessAmount": 0.2,
+    "data": [
+      0, 0, 0, 4278190080, 4278190080, 4278190080, 0, 0, 0,
+      0, 4278190080, 4278190080, 0, 0, 0, 4278190080, 4278190080, 0,
+      0, 4278190080, 0, 4278190080, 4278190080, 4278190080, 0, 4278190080, 0,
+      4278190080, 0, 4278190080, 4278190080, 0, 4278190080, 4278190080, 0, 4278190080,
+      4278190080, 0, 4278190080, 0, 4278190080, 0, 4278190080, 0, 4278190080,
+      4278190080, 0, 4278190080, 4278190080, 0, 4278190080, 4278190080, 0, 4278190080,
+      0, 4278190080, 0, 4278190080, 4278190080, 4278190080, 0, 4278190080, 0,
+      0, 4278190080, 4278190080, 0, 0, 0, 4278190080, 4278190080, 0,
+      0, 0, 0, 4278190080, 4278190080, 4278190080, 0, 0, 0
+    ]
+  },
+  {
+    "id": 20,
+    "name": "Lightning",
+    "width": 4,
+    "height": 8,
+    "rotationRandomness": true,
+    "scaleRandomness": true,
+    "rotationRandomnessAmount": 1.0,
+    "scaleRandomnessAmount": 0.4,
+    "data": [
+      0, 4278190080, 0, 0,
+      4278190080, 4278190080, 0, 0,
+      4278190080, 0, 0, 0,
+      4278190080, 4278190080, 4278190080, 0,
+      0, 0, 4278190080, 0,
+      0, 0, 4278190080, 4278190080,
+      0, 0, 0, 4278190080,
+      0, 0, 4278190080, 0
+    ]
+  },
+  {
+    "id": 21,
+    "name": "Honeycomb",
+    "width": 8,
+    "height": 7,
+    "rotationRandomness": false,
+    "scaleRandomness": true,
+    "rotationRandomnessAmount": 0.0,
+    "scaleRandomnessAmount": 0.2,
+    "data": [
+      0, 4278190080, 4278190080, 0, 0, 4278190080, 4278190080, 0,
+      4278190080, 0, 0, 4278190080, 4278190080, 0, 0, 4278190080,
+      4278190080, 0, 0, 4278190080, 4278190080, 0, 0, 4278190080,
+      4278190080, 0, 0, 4278190080, 4278190080, 0, 0, 4278190080,
+      4278190080, 0, 0, 4278190080, 4278190080, 0, 0, 4278190080,
+      0, 4278190080, 4278190080, 0, 0, 4278190080, 4278190080, 0,
+      0, 0, 0, 0, 0, 0, 0, 0
+    ]
+  },
+  {
+    "id": 22,
+    "name": "Scales",
+    "width": 6,
+    "height": 8,
+    "rotationRandomness": true,
+    "scaleRandomness": true,
+    "rotationRandomnessAmount": 0.2,
+    "scaleRandomnessAmount": 0.3,
+    "data": [
+      0, 0, 4278190080, 4278190080, 0, 0,
+      0, 4278190080, 0, 0, 4278190080, 0,
+      4278190080, 0, 0, 0, 0, 4278190080,
+      4278190080, 0, 0, 0, 0, 4278190080,
+      0, 4278190080, 0, 0, 4278190080, 0,
+      0, 0, 4278190080, 4278190080, 0, 0,
+      4278190080, 4278190080, 0, 0, 4278190080, 4278190080,
+      0, 0, 0, 0, 0, 0
+    ]
+  },
+  {
+    "id": 23,
+    "name": "Chain",
+    "width": 7,
+    "height": 5,
+    "rotationRandomness": false,
+    "scaleRandomness": true,
+    "rotationRandomnessAmount": 0.0,
+    "scaleRandomnessAmount": 0.25,
+    "data": [
+      4278190080, 4278190080, 0, 4278190080, 4278190080, 0, 4278190080,
+      4278190080, 0, 4278190080, 0, 4278190080, 4278190080, 0,
+      0, 4278190080, 4278190080, 0, 0, 4278190080, 0,
+      4278190080, 0, 4278190080, 0, 4278190080, 4278190080, 0,
+      4278190080, 4278190080, 0, 4278190080, 4278190080, 0, 4278190080
+    ]
+  },
+  {
+    "id": 24,
+    "name": "Flower",
+    "width": 7,
+    "height": 7,
+    "rotationRandomness": true,
+    "scaleRandomness": true,
+    "rotationRandomnessAmount": 1.0,
+    "scaleRandomnessAmount": 0.4,
+    "data": [
+      0, 4278190080, 0, 4278190080, 0, 4278190080, 0,
+      4278190080, 0, 4278190080, 4278190080, 4278190080, 0, 4278190080,
+      0, 4278190080, 4278190080, 4278190080, 4278190080, 4278190080, 0,
+      4278190080, 4278190080, 4278190080, 4278190080, 4278190080, 4278190080, 4278190080,
+      0, 4278190080, 4278190080, 4278190080, 4278190080, 4278190080, 0,
+      4278190080, 0, 4278190080, 4278190080, 4278190080, 0, 4278190080,
+      0, 4278190080, 0, 4278190080, 0, 4278190080, 0
+    ]
+  },
+  {
+    "id": 25,
+    "name": "Organic Blob",
+    "width": 6,
+    "height": 6,
+    "rotationRandomness": true,
+    "scaleRandomness": true,
+    "rotationRandomnessAmount": 1.0,
+    "scaleRandomnessAmount": 0.5,
+    "data": [
+      0, 4278190080, 4278190080, 4278190080, 0, 0,
+      4278190080, 4278190080, 0, 4278190080, 4278190080, 0,
+      4278190080, 0, 0, 0, 4278190080, 4278190080,
+      4278190080, 0, 0, 0, 0, 4278190080,
+      0, 4278190080, 0, 0, 4278190080, 0,
+      0, 0, 4278190080, 4278190080, 0, 0
     ]
   }
 ]

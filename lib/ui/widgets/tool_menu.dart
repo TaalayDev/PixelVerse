@@ -56,52 +56,7 @@ class ToolMenu extends StatelessWidget {
                 ),
                 onPressed: () => onSelectTool(PixelTool.brush),
               ),
-              ProBadge(
-                show: !subscription.isPro,
-                child: Stack(
-                  fit: StackFit.passthrough,
-                  clipBehavior: Clip.none,
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        Icons.texture,
-                        color: tool == PixelTool.textureBrush || tool == PixelTool.textureFill ? Colors.blue : null,
-                      ),
-                      onPressed: !subscription.isPro
-                          ? null
-                          : () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => Dialog(
-                                  child: TextureBrushPanel(
-                                    isFill: tool == PixelTool.textureFill,
-                                    onTextureSelected: (texture, blendMode, isFill) {
-                                      Navigator.of(context).pop();
-                                      if (texture != null) {
-                                        onTextureSelected?.call(texture, blendMode, isFill);
-                                      }
-                                    },
-                                  ),
-                                ),
-                              );
-                            },
-                      tooltip: 'Texture Brush',
-                    ),
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Transform.rotate(
-                        angle: -0.785398,
-                        child: const Icon(
-                          Icons.arrow_drop_down,
-                          color: Colors.grey,
-                          size: 16,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+
               IconButton(
                 icon: AppIcon(
                   AppIcons.fill,
@@ -167,6 +122,53 @@ class ToolMenu extends StatelessWidget {
                   color: tool == PixelTool.sprayPaint ? Colors.blue : null,
                 ),
                 onPressed: () => onSelectTool(PixelTool.sprayPaint),
+              ),
+              Stack(
+                fit: StackFit.passthrough,
+                clipBehavior: Clip.none,
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.texture,
+                      color: tool == PixelTool.textureBrush || tool == PixelTool.textureFill ? Colors.blue : null,
+                    ),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => Dialog(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: 400,
+                              maxHeight: 500,
+                            ),
+                            child: TextureBrushPanel(
+                              isFill: tool == PixelTool.textureFill,
+                              onTextureSelected: (texture, blendMode, isFill) {
+                                Navigator.of(context).pop();
+                                if (texture != null) {
+                                  onTextureSelected?.call(texture, blendMode, isFill);
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    tooltip: 'Texture Brush',
+                  ),
+                  Positioned(
+                    right: 0,
+                    bottom: 0,
+                    child: Transform.rotate(
+                      angle: -0.785398,
+                      child: const Icon(
+                        Icons.arrow_drop_down,
+                        color: Colors.grey,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
