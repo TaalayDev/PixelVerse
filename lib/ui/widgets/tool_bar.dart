@@ -10,7 +10,6 @@ import '../../pixel/tools.dart';
 import '../../pixel/tools/texture_brush_tool.dart';
 import 'app_icon.dart';
 import 'menu_value_field.dart';
-import 'texture_brush_panel.dart';
 
 class ToolBar extends StatelessWidget {
   final ValueNotifier<PixelTool> currentTool;
@@ -29,6 +28,7 @@ class ToolBar extends StatelessWidget {
   final VoidCallback? exportAsImage;
   final VoidCallback? onShare;
   final VoidCallback? onEffects;
+  final VoidCallback? onTemplates;
   final Function(TexturePattern, BlendMode)? onTextureSelected;
   final Color currentColor;
   final Function() onColorPicker;
@@ -55,6 +55,7 @@ class ToolBar extends StatelessWidget {
     this.onShare,
     this.onEffects,
     this.onTextureSelected,
+    this.onTemplates,
     required this.currentColor,
     required this.onColorPicker,
     this.showPrevFramesOpacity,
@@ -248,6 +249,11 @@ class ToolBar extends StatelessWidget {
                           const SizedBox(width: 8),
                         ],
                       ],
+                      IconButton(
+                        onPressed: onTemplates,
+                        icon: const AppIcon(AppIcons.retro_game),
+                        tooltip: 'Templates',
+                      ),
                     ],
                   );
                 },

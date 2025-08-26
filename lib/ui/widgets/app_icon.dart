@@ -45,7 +45,9 @@ enum AppIcons {
   leaf,
   city,
   fold_up,
-  unfold
+  unfold,
+  film_strip,
+  retro_game
 }
 
 class AppIcon extends StatelessWidget {

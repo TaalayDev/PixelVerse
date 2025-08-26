@@ -198,6 +198,7 @@ class ToolsBottomBar extends HookWidget {
                                 onLayerEffectsChanged: (updatedLayer) {
                                   notifier.updateLayer(updatedLayer);
                                 },
+                                onLayerToTemplate: (layer) {},
                               ),
                             ),
                           ),

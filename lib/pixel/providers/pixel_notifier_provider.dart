@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../data/models/template.dart';
 import '../pixel_point.dart';
 import '../../data.dart';
 import '../effects/effects.dart';
@@ -70,7 +71,6 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   void prevFrame() => _controller.previousFrame();
 
   Future<void> updateFrame(int index, AnimationFrame frame) => _controller.updateFrame(index, frame);
-
   Future<void> reorderFrames(int oldIndex, int newIndex) => _controller.reorderFrames(oldIndex, newIndex);
 
   // Animation state operations
@@ -81,6 +81,8 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
   // Selection operations
   void setSelection(List<PixelPoint<int>>? selection) => _controller.setSelection(selection);
   void moveSelection(List<PixelPoint<int>> selection, Point delta) => _controller.moveSelection(selection, delta);
+
+  void addTemplate(Template template) => _controller.addTemplate(template);
 
   // Undo/Redo operations
   void undo() => _controller.undo();

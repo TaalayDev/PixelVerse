@@ -543,7 +543,3 @@ class FadeDissolveEffect extends Effect {
     return result;
   }
 }
-
-// Add these to your EffectType enum:
-// dissolve,
-// fadeDissolve,

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
-import '../../../core/extensions/primitive_extensions.dart';
 import '../../../pixel/effects/effects.dart';
 import '../app_icon.dart';
 
@@ -12,6 +11,7 @@ class EffectListItem extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback onRemove;
   final VoidCallback? onApply;
+  final VoidCallback? onAnimate;
   final bool showDragHandle;
   final bool showRemoveButton;
   final bool showApplyButton;
@@ -24,6 +24,7 @@ class EffectListItem extends StatelessWidget {
     required this.onEdit,
     required this.onRemove,
     this.onApply,
+    this.onAnimate,
     this.showDragHandle = false,
     this.showRemoveButton = true,
     this.showApplyButton = false,

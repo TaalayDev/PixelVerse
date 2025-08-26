@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 import 'dart:async';
 import 'dart:math';
 
@@ -27,9 +28,11 @@ import '../widgets/effects/effects_panel.dart';
 import '../widgets/grid_painter.dart';
 import '../widgets/dialogs.dart';
 import '../widgets.dart';
+import '../widgets/templates_dialog.dart';
 import '../widgets/tool_bar.dart';
 import '../widgets/tool_menu.dart';
 import '../widgets/tools_bottom_bar.dart';
+import 'animation_screen.dart';
 
 class PixelDrawScreen extends StatefulHookConsumerWidget {
   const PixelDrawScreen({
@@ -353,6 +356,11 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerPr
                     showPrevFrames.value = !showPrevFrames.value;
                   },
                   onEffects: () => handleEffects(context, notifier),
+                  onTemplates: () {
+                    TemplatesDialog.show(context, (template) {
+                      notifier.addTemplate(template);
+                    });
+                  },
                   currentLayerHasEffects: notifier.getCurrentLayer().effects.isNotEmpty,
                 ),
                 Expanded(
@@ -760,6 +768,9 @@ class _DesktopSidePanelState extends ConsumerState<_DesktopSidePanel> with Singl
                       },
                       onLayerDuplicated: (index) {
                         widget.notifier.duplicateLayer(index);
+                      },
+                      onLayerToTemplate: (layer) {
+                        dev.log(layer.pixels.toString());
                       },
                     ),
                   ),

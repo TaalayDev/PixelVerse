@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:universal_html/html.dart';
 
+import '../../data/models/template.dart';
 import '../pixel_point.dart';
 import '../../data.dart';
 import '../../providers/providers.dart';
@@ -14,6 +15,7 @@ import '../services/frame_service.dart';
 import '../services/import_export_service.dart';
 import '../services/layer_service.dart';
 import '../services/selection_service.dart';
+import '../services/template_service.dart';
 import '../services/undo_redo_service.dart';
 import '../pixel_draw_state.dart';
 import '../tools.dart';
@@ -30,6 +32,7 @@ class PixelDrawController extends _$PixelDrawController {
   late final SelectionService _selectionService;
   late final UndoRedoService _undoRedoService;
   late final ImportExportService _importExportService;
+  late final TemplateService _templateService;
 
   // Current project reference
 
@@ -43,6 +46,7 @@ class PixelDrawController extends _$PixelDrawController {
     _selectionService = SelectionService(width: project.width, height: project.height);
     _undoRedoService = UndoRedoService();
     _importExportService = ImportExportService();
+    _templateService = TemplateService();
 
     return PixelDrawState(
       width: project.width,
@@ -468,6 +472,35 @@ class PixelDrawController extends _$PixelDrawController {
       currentFrameIndex: 0,
       currentLayerIndex: 0,
     );
+  }
+
+  void addTemplate(Template template) async {
+    final order = _layerService.calculateNextLayerOrder(currentFrame.layers);
+
+    var newLayer = await _layerService.createLayer(
+      projectId: project.id,
+      frameId: currentFrame.id,
+      name: template.name,
+      width: state.width,
+      height: state.height,
+      order: order,
+    );
+
+    final pixels = _templateService.applyTemplateToLayer(
+      template: template,
+      layerPixels: newLayer.pixels,
+      layerWidth: state.width,
+      layerHeight: state.height,
+    );
+
+    newLayer = newLayer.copyWith(pixels: pixels);
+
+    final updatedLayers = [...currentFrame.layers, newLayer]..sort((a, b) => a.order.compareTo(b.order));
+
+    final updatedFrame = currentFrame.copyWith(layers: updatedLayers);
+    _updateCurrentFrame(updatedFrame);
+
+    state = state.copyWith(currentLayerIndex: updatedLayers.length - 1);
   }
 
   void selectAnimationState(int stateId) {

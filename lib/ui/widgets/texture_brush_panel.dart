@@ -117,7 +117,7 @@ class _TextureBrushPanelState extends State<TextureBrushPanel> {
         // Settings Panel
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16.0),
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             border: Border.all(

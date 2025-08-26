@@ -519,8 +519,3 @@ class PhysicsFloatEffect extends Effect {
     return result;
   }
 }
-
-// Add these to your EffectType enum:
-// float,
-// simpleFloat,
-// physicsFloat,

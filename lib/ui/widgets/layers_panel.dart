@@ -1,20 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_vector_icons/flutter_vector_icons.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:animated_reorderable_list/animated_reorderable_list.dart';
 
 import '../../data.dart';
 import '../../l10n/strings.dart';
-import '../../pixel/image_painter.dart';
-import '../../pixel/pixel_draw_state.dart';
-import '../../data/models/subscription_model.dart';
 import '../../providers/subscription_provider.dart';
 import '../../providers/background_image_provider.dart';
-import 'subscription/feature_gate.dart';
-import 'effects/effects_panel.dart';
-import 'layers_preview.dart';
 
 class LayersPanel extends HookConsumerWidget {
   final int width;
@@ -31,6 +25,7 @@ class LayersPanel extends HookConsumerWidget {
   final Function(int, double) onLayerOpacityChanged;
   final Function(Layer)? onLayerEffectsChanged;
   final Function(Layer) onLayerUpdated;
+  final Function(Layer) onLayerToTemplate;
   final ScrollController? scrollController;
 
   const LayersPanel({
@@ -48,6 +43,7 @@ class LayersPanel extends HookConsumerWidget {
     required this.onLayerReordered,
     required this.onLayerOpacityChanged,
     required this.onLayerUpdated,
+    required this.onLayerToTemplate,
     this.onLayerEffectsChanged,
     this.scrollController,
   });
@@ -67,6 +63,7 @@ class LayersPanel extends HookConsumerWidget {
           onLayerDeleted: onLayerDeleted,
           onLayerDuplicated: onLayerDuplicated,
           onLayerUpdated: onLayerUpdated,
+          onLayerToTemplate: onLayerToTemplate,
         ),
         const SizedBox(height: 4),
         const SizedBox(height: 4),
@@ -111,13 +108,14 @@ class LayersPanel extends HookConsumerWidget {
   }
 }
 
-class _ActionButtonsBar extends StatelessWidget {
+class _ActionButtonsBar extends HookWidget {
   final List<Layer> layers;
   final int activeLayerIndex;
   final Function(String) onLayerAdded;
   final Function(int) onLayerDeleted;
   final Function(int) onLayerDuplicated;
   final Function(Layer) onLayerUpdated;
+  final Function(Layer) onLayerToTemplate;
 
   const _ActionButtonsBar({
     required this.layers,
@@ -126,12 +124,15 @@ class _ActionButtonsBar extends StatelessWidget {
     required this.onLayerDeleted,
     required this.onLayerDuplicated,
     required this.onLayerUpdated,
+    required this.onLayerToTemplate,
   });
 
   @override
   Widget build(BuildContext context) {
     final hasSelectedLayer = activeLayerIndex >= 0 && activeLayerIndex < layers.length;
     final selectedLayer = hasSelectedLayer ? layers[activeLayerIndex] : null;
+
+    final menuKey = useState(GlobalKey());
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -168,6 +169,39 @@ class _ActionButtonsBar extends StatelessWidget {
             color: Colors.red,
             onPressed:
                 hasSelectedLayer && layers.length > 1 ? () => _showDeleteConfirmation(context, activeLayerIndex) : null,
+          ),
+          const SizedBox(width: 8),
+          _ActionButton(
+            key: menuKey.value,
+            icon: Icons.more_vert,
+            label: 'Menu',
+            color: Colors.blue,
+            onPressed: hasSelectedLayer
+                ? () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text(
+                          'More Actions',
+                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+                        ),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ListTile(
+                              leading: const Icon(Icons.checklist_outlined, color: Colors.green),
+                              title: const Text('Add to Template'),
+                              onTap: () {
+                                Navigator.of(context).pop();
+                                onLayerToTemplate(selectedLayer!);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                : null,
           ),
         ],
       ),
@@ -220,6 +254,7 @@ class _ActionButton extends StatelessWidget {
   final bool badge;
 
   const _ActionButton({
+    super.key,
     required this.icon,
     required this.label,
     required this.color,

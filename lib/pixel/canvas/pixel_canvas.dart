@@ -9,7 +9,7 @@ import '../../data.dart';
 import '../pixel_draw_state.dart';
 import '../pixel_point.dart';
 
-import '../tools/texture_brush_tool.dart';
+import '../tools/texture_brush_tool.dart' hide TextureBrushPatternEvent;
 import 'canvas_controller.dart';
 import 'canvas_gesture_handler.dart';
 import 'canvas_painter.dart';

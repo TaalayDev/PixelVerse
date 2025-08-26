@@ -3,6 +3,57 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../data.dart';
 import '../pixel_point.dart';
+import '../pixel_utils.dart';
+
+enum TransformMode {
+  none,
+  move,
+  scale,
+  rotate,
+}
+
+enum ScaleHandle {
+  topLeft,
+  topCenter,
+  topRight,
+  rightCenter,
+  bottomRight,
+  bottomCenter,
+  bottomLeft,
+  leftCenter,
+}
+
+class TransformationState {
+  final Offset centerPoint;
+  final double scale;
+  final double rotation;
+  final Offset translation;
+  final TransformMode mode;
+
+  const TransformationState({
+    this.centerPoint = Offset.zero,
+    this.scale = 1.0,
+    this.rotation = 0.0,
+    this.translation = Offset.zero,
+    this.mode = TransformMode.none,
+  });
+
+  TransformationState copyWith({
+    Offset? centerPoint,
+    double? scale,
+    double? rotation,
+    Offset? translation,
+    TransformMode? mode,
+  }) {
+    return TransformationState(
+      centerPoint: centerPoint ?? this.centerPoint,
+      scale: scale ?? this.scale,
+      rotation: rotation ?? this.rotation,
+      translation: translation ?? this.translation,
+      mode: mode ?? this.mode,
+    );
+  }
+}
 
 class SelectionService {
   final int width;
@@ -12,9 +63,18 @@ class SelectionService {
   List<PixelPoint<int>>? _originalSelectionRect;
   List<PixelPoint<int>> _selectedPixels = [];
   Uint32List _cachedPixels = Uint32List(0);
+  Uint32List? _originalSelectedPixels;
+
+  // Transformation state
+  TransformationState _transformState = const TransformationState();
+  bool _isTransforming = false;
+  Offset? _customCenterPoint;
 
   List<PixelPoint<int>>? get currentSelection => _selectionRect;
   bool get hasSelection => _selectionRect != null && _selectionRect!.isNotEmpty;
+  TransformationState get transformState => _transformState;
+  bool get isTransforming => _isTransforming;
+  Offset? get customCenterPoint => _customCenterPoint;
 
   SelectionService({required this.width, required this.height});
 
@@ -25,11 +85,276 @@ class SelectionService {
     if (selection != null && selection.isNotEmpty) {
       _cachedPixels = Uint32List.fromList(layerPixels);
       _selectedPixels = _getSelectedPixels(selection, layerPixels);
+      _originalSelectedPixels = Uint32List.fromList(layerPixels);
+
+      // Reset transformation state
+      _transformState = const TransformationState();
+      _isTransforming = false;
+      _customCenterPoint = null;
+
       // Remove selected pixels from the cache
       _removeSelectedPixelsFromCache();
     } else {
       _selectedPixels = [];
       _cachedPixels = Uint32List(0);
+      _originalSelectedPixels = null;
+      _transformState = const TransformationState();
+      _isTransforming = false;
+      _customCenterPoint = null;
+    }
+  }
+
+  Offset getSelectionCenter() {
+    if (_selectionRect == null || _selectionRect!.isEmpty) return Offset.zero;
+
+    final bounds = _getSelectionBounds(_selectionRect!);
+    return Offset(
+      bounds.minX + (bounds.maxX - bounds.minX) / 2,
+      bounds.minY + (bounds.maxY - bounds.minY) / 2,
+    );
+  }
+
+  Offset getTransformCenter() {
+    return _customCenterPoint ?? getSelectionCenter();
+  }
+
+  void setCustomCenterPoint(Offset? centerPoint) {
+    _customCenterPoint = centerPoint;
+  }
+
+  void startTransformation(TransformMode mode) {
+    if (!hasSelection) return;
+
+    _isTransforming = true;
+    _transformState = _transformState.copyWith(mode: mode);
+  }
+
+  void updateTransformation({
+    double? scale,
+    double? rotation,
+    Offset? translation,
+  }) {
+    if (!_isTransforming) return;
+
+    _transformState = _transformState.copyWith(
+      scale: scale ?? _transformState.scale,
+      rotation: rotation ?? _transformState.rotation,
+      translation: translation ?? _transformState.translation,
+      centerPoint: getTransformCenter(),
+    );
+
+    _applyTransformation();
+  }
+
+  void _applyTransformation() {
+    if (_originalSelectedPixels == null || _selectedPixels.isEmpty) return;
+
+    final bounds = _getSelectionBounds(_originalSelectionRect!);
+    final selectionWidth = bounds.maxX - bounds.minX + 1;
+    final selectionHeight = bounds.maxY - bounds.minY + 1;
+
+    // Create a temporary image with the selected pixels
+    final selectionPixels = Uint32List(selectionWidth * selectionHeight);
+
+    for (final pixel in _selectedPixels) {
+      final localX = pixel.x - bounds.minX;
+      final localY = pixel.y - bounds.minY;
+
+      if (localX >= 0 && localX < selectionWidth && localY >= 0 && localY < selectionHeight) {
+        final index = localY * selectionWidth + localX;
+        if (index < selectionPixels.length) {
+          selectionPixels[index] = pixel.color;
+        }
+      }
+    }
+
+    // Apply transformations
+    Uint32List transformedPixels = selectionPixels;
+
+    if (_transformState.scale != 1.0) {
+      transformedPixels = PixelUtils.applyScale(
+        transformedPixels,
+        selectionWidth,
+        selectionHeight,
+        _transformState.scale,
+        selectionWidth / 2,
+        selectionHeight / 2,
+        1, // bilinear interpolation
+        0, // transparent background
+      );
+    }
+
+    if (_transformState.rotation != 0.0) {
+      transformedPixels = PixelUtils.applyRotation(
+        transformedPixels,
+        selectionWidth,
+        selectionHeight,
+        _transformState.rotation,
+        selectionWidth / 2,
+        selectionHeight / 2,
+        1.0, // zoom
+        1, // bilinear interpolation
+        0, // transparent background
+      );
+    }
+
+    // Convert back to PixelPoint list with translation applied
+    final transformedPixelPoints = <PixelPoint<int>>[];
+    final centerOffset = getTransformCenter();
+    final translationX = _transformState.translation.dx;
+    final translationY = _transformState.translation.dy;
+
+    for (int y = 0; y < selectionHeight; y++) {
+      for (int x = 0; x < selectionWidth; x++) {
+        final index = y * selectionWidth + x;
+        if (index < transformedPixels.length) {
+          final color = transformedPixels[index];
+          if (color != 0) {
+            // Skip transparent pixels
+            final worldX = (bounds.minX + x - centerOffset.dx + translationX + centerOffset.dx).round();
+            final worldY = (bounds.minY + y - centerOffset.dy + translationY + centerOffset.dy).round();
+
+            if (worldX >= 0 && worldX < width && worldY >= 0 && worldY < height) {
+              transformedPixelPoints.add(PixelPoint(worldX, worldY, color: color));
+            }
+          }
+        }
+      }
+    }
+
+    // Update selection bounds to match transformed area
+    if (transformedPixelPoints.isNotEmpty) {
+      _selectionRect = _createSelectionBounds(transformedPixelPoints);
+    }
+  }
+
+  List<PixelPoint<int>> _createSelectionBounds(List<PixelPoint<int>> pixels) {
+    if (pixels.isEmpty) return [];
+
+    int minX = pixels.first.x;
+    int minY = pixels.first.y;
+    int maxX = pixels.first.x;
+    int maxY = pixels.first.y;
+
+    for (final pixel in pixels) {
+      minX = min(minX, pixel.x);
+      maxX = max(maxX, pixel.x);
+      minY = min(minY, pixel.y);
+      maxY = max(maxY, pixel.y);
+    }
+
+    final selection = <PixelPoint<int>>[];
+    for (int y = minY; y <= maxY; y++) {
+      for (int x = minX; x <= maxX; x++) {
+        selection.add(PixelPoint(x, y));
+      }
+    }
+
+    return selection;
+  }
+
+  Uint32List applyTransformationToPixels(Uint32List currentLayerPixels) {
+    if (!_isTransforming || _selectedPixels.isEmpty) {
+      return currentLayerPixels;
+    }
+
+    final result = Uint32List.fromList(_cachedPixels);
+
+    // Apply the transformed pixels
+    final bounds = _getSelectionBounds(_originalSelectionRect!);
+    final selectionWidth = bounds.maxX - bounds.minX + 1;
+    final selectionHeight = bounds.maxY - bounds.minY + 1;
+
+    // Create selection pixel array
+    final selectionPixels = Uint32List(selectionWidth * selectionHeight);
+    for (final pixel in _selectedPixels) {
+      final localX = pixel.x - bounds.minX;
+      final localY = pixel.y - bounds.minY;
+
+      if (localX >= 0 && localX < selectionWidth && localY >= 0 && localY < selectionHeight) {
+        final index = localY * selectionWidth + localX;
+        if (index < selectionPixels.length) {
+          selectionPixels[index] = pixel.color;
+        }
+      }
+    }
+
+    // Apply transformations
+    Uint32List transformedPixels = selectionPixels;
+
+    if (_transformState.scale != 1.0) {
+      transformedPixels = PixelUtils.applyScale(
+        transformedPixels,
+        selectionWidth,
+        selectionHeight,
+        _transformState.scale,
+        selectionWidth / 2,
+        selectionHeight / 2,
+        1, // bilinear interpolation
+        0, // transparent background
+      );
+    }
+
+    if (_transformState.rotation != 0.0) {
+      transformedPixels = PixelUtils.applyRotation(
+        transformedPixels,
+        selectionWidth,
+        selectionHeight,
+        _transformState.rotation,
+        selectionWidth / 2,
+        selectionHeight / 2,
+        1.0, // zoom
+        1, // bilinear interpolation
+        0, // transparent background
+      );
+    }
+
+    // Apply transformed pixels to result
+    final centerOffset = getTransformCenter();
+    final translationX = _transformState.translation.dx;
+    final translationY = _transformState.translation.dy;
+
+    for (int y = 0; y < selectionHeight; y++) {
+      for (int x = 0; x < selectionWidth; x++) {
+        final index = y * selectionWidth + x;
+        if (index < transformedPixels.length) {
+          final color = transformedPixels[index];
+          if (color != 0) {
+            final worldX = (bounds.minX + x - centerOffset.dx + translationX + centerOffset.dx).round();
+            final worldY = (bounds.minY + y - centerOffset.dy + translationY + centerOffset.dy).round();
+
+            if (worldX >= 0 && worldX < width && worldY >= 0 && worldY < height) {
+              final worldIndex = worldY * width + worldX;
+              if (worldIndex < result.length) {
+                result[worldIndex] = color;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return result;
+  }
+
+  void confirmTransformation() {
+    if (!_isTransforming) return;
+
+    _isTransforming = false;
+    _transformState = const TransformationState();
+    _customCenterPoint = null;
+  }
+
+  void cancelTransformation() {
+    if (!_isTransforming) return;
+
+    _isTransforming = false;
+    _transformState = const TransformationState();
+    _customCenterPoint = null;
+
+    // Restore original selection
+    if (_originalSelectionRect != null) {
+      _selectionRect = List<PixelPoint<int>>.from(_originalSelectionRect!);
     }
   }
 
@@ -70,6 +395,10 @@ class SelectionService {
     _originalSelectionRect = null;
     _selectedPixels = [];
     _cachedPixels = Uint32List(0);
+    _originalSelectedPixels = null;
+    _transformState = const TransformationState();
+    _isTransforming = false;
+    _customCenterPoint = null;
   }
 
   bool isPointInSelection(int x, int y) {
@@ -145,11 +474,6 @@ class SelectionService {
     }
   }
 
-  bool _isPointInOriginalSelection(int x, int y) {
-    if (_originalSelectionRect == null || _originalSelectionRect!.isEmpty) return false;
-    return _isPointInSelection(x, y, _originalSelectionRect!);
-  }
-
   List<PixelPoint<int>> fromPointsToSelection(List<Point<int>> points) {
     if (points.isEmpty) {
       return [];
@@ -158,7 +482,6 @@ class SelectionService {
     return points.map((point) => PixelPoint<int>(point.x, point.y)).toList();
   }
 
-  // Helper method to get bounds of a selection
   _SelectionBounds _getSelectionBounds(List<PixelPoint<int>> selection) {
     if (selection.isEmpty) {
       return _SelectionBounds(minX: 0, minY: 0, maxX: 0, maxY: 0);
@@ -179,7 +502,6 @@ class SelectionService {
     return _SelectionBounds(minX: minX, minY: minY, maxX: maxX, maxY: maxY);
   }
 
-  // Create selection from two points (for rectangle selection)
   List<PixelPoint<int>>? createSelectionFromPoints({
     required Offset startPoint,
     required Offset endPoint,
@@ -215,7 +537,6 @@ class SelectionService {
     return selection;
   }
 
-  // Create rectangular selection from bounds
   List<PixelPoint<int>> createRectangularSelection({
     required int x,
     required int y,
@@ -238,7 +559,6 @@ class SelectionService {
   }
 }
 
-// Helper class for selection bounds
 class _SelectionBounds {
   final int minX;
   final int minY;

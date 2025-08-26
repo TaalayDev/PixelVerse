@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -6,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
 import '../../ui/widgets/app_icon.dart';
+import '../pixel_utils.dart';
 
 part 'brightness_effect.dart';
 part 'contrast_effect.dart';

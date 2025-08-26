@@ -534,8 +534,3 @@ class CameraShakeEffect extends Effect {
     return result;
   }
 }
-
-// Add these to your EffectType enum:
-// shake,
-// quickShake,
-// cameraShake,
