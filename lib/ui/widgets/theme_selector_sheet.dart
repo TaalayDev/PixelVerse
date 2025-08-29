@@ -38,6 +38,8 @@ class ThemeSelectorBottomSheet extends HookConsumerWidget {
     final selectedTheme = useState<ThemeType?>(null);
     final previewTheme = selectedTheme.value != null ? AppTheme.fromType(selectedTheme.value!) : currentTheme;
 
+    final isSmallScreen = MediaQuery.sizeOf(context).width < 600;
+
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
       minChildSize: 0.5,
@@ -86,7 +88,7 @@ class ThemeSelectorBottomSheet extends HookConsumerWidget {
                             Text(
                               'Choose Theme',
                               style: TextStyle(
-                                fontSize: 24,
+                                fontSize: isSmallScreen ? 20 : 24,
                                 fontWeight: FontWeight.bold,
                                 color: previewTheme.textPrimary,
                               ),
@@ -96,24 +98,27 @@ class ThemeSelectorBottomSheet extends HookConsumerWidget {
                                   ? 'Previewing ${selectedTheme.value!.displayName}'
                                   : 'Current: ${currentTheme.type.displayName}',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: isSmallScreen ? 12 : 14,
                                 color: previewTheme.textSecondary,
                               ),
                             ),
                           ],
                         ),
                       ),
+                      const SizedBox(height: 8),
                       if (selectedTheme.value != null) ...[
-                        TextButton(
-                          onPressed: () {
-                            selectedTheme.value = null;
-                          },
-                          child: Text(
-                            'Cancel',
-                            style: TextStyle(color: previewTheme.textSecondary),
+                        if (!isSmallScreen) ...[
+                          TextButton(
+                            onPressed: () {
+                              selectedTheme.value = null;
+                            },
+                            child: Text(
+                              'Cancel',
+                              style: TextStyle(color: previewTheme.textSecondary),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
+                          const SizedBox(width: 8),
+                        ],
                         OutlinedButton(
                           onPressed: () {
                             showDialog(

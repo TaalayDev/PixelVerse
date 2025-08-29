@@ -1,20 +1,18 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
 import '../../core.dart';
 import '../../data/models/template.dart';
-import '../../pixel/services/template_service.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/providers.dart';
+import '../../providers/template_provider.dart';
 import 'animated_background.dart';
 import 'app_icon.dart';
 
 /// Dialog for selecting and applying templates to the canvas
-class TemplatesDialog extends HookConsumerWidget {
+class TemplatesDialog extends ConsumerStatefulWidget {
   final Function(Template template) onTemplateSelected;
 
   const TemplatesDialog({
@@ -32,78 +30,82 @@ class TemplatesDialog extends HookConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final templateService = ref.watch(templateServiceProvider);
-    final authState = ref.watch(authProvider);
-    final searchController = useTextEditingController();
+  ConsumerState createState() => _TemplatesDialogState();
+}
 
-    // State management
-    final currentTab = useState<TemplateTab>(TemplateTab.all);
-    final localTemplates = useState<List<Template>>([]);
-    final apiTemplates = useState<List<Template>>([]);
-    final filteredTemplates = useState<List<Template>>([]);
-    final categories = useState<List<TemplateCategory>>([]);
-    final selectedCategory = useState<String?>('All');
+class _TemplatesDialogState extends ConsumerState<TemplatesDialog> {
+  late TextEditingController searchController;
+  TemplateTab currentTab = TemplateTab.all;
+  String? selectedCategory = 'All';
+  List<Template> filteredTemplates = [];
+  late ScrollController scrollController;
 
-    final isLoading = useState(false);
-    final isLoadingMore = useState(false);
-    final errorMessage = useState<String?>(null);
-    final currentPage = useState(1);
-    final hasMorePages = useState(true);
-    final totalCount = useState(0);
+  @override
+  void initState() {
+    super.initState();
+    searchController = TextEditingController();
+    scrollController = ScrollController();
 
-    final scrollController = useScrollController();
-
-    // Load initial data
-    useEffect(() {
-      _loadInitialData(
-        templateService,
-        localTemplates,
-        apiTemplates,
-        filteredTemplates,
-        categories,
-        isLoading,
-        errorMessage,
-        authState.isSignedIn,
-      );
-      return null;
-    }, []);
+    // Initialize templates on dialog open
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(templateProvider.notifier).initialize();
+    });
 
     // Setup scroll listener for pagination
-    useEffect(() {
-      void scrollListener() {
-        if (scrollController.position.pixels >= scrollController.position.maxScrollExtent - 200) {
-          if (!isLoadingMore.value && hasMorePages.value && currentTab.value == TemplateTab.community) {
-            _loadMoreTemplates(
-              templateService,
-              apiTemplates,
-              filteredTemplates,
-              currentPage,
-              hasMorePages,
-              isLoadingMore,
-              selectedCategory.value,
-              searchController.text,
+    scrollController.addListener(_scrollListener);
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    scrollController.removeListener(_scrollListener);
+    scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollListener() {
+    final templateState = ref.read(templateProvider);
+    if (scrollController.position.pixels >= scrollController.position.maxScrollExtent - 200) {
+      if (!templateState.isLoadingMore && templateState.hasMorePages && currentTab == TemplateTab.community) {
+        ref.read(templateProvider.notifier).loadApiTemplates(
+              page: templateState.currentPage + 1,
+              append: true,
+              category: selectedCategory != 'All' ? selectedCategory : null,
+              search: searchController.text.trim().isNotEmpty ? searchController.text.trim() : null,
             );
-          }
-        }
       }
+    }
+  }
 
-      scrollController.addListener(scrollListener);
-      return () => scrollController.removeListener(scrollListener);
-    }, [scrollController]);
+  void _updateFilteredTemplates() {
+    final templateState = ref.read(templateProvider);
+    final authState = ref.read(authProvider);
 
-    // Filter templates when search or category changes
-    useEffect(() {
-      _filterTemplates(
-        currentTab.value,
-        localTemplates.value,
-        apiTemplates.value,
-        selectedCategory.value,
-        searchController.text,
-        filteredTemplates,
-      );
-      return null;
-    }, [currentTab.value, localTemplates.value, apiTemplates.value, selectedCategory.value]);
+    final baseTemplates = templateState.getTemplatesByTab(
+      currentTab,
+      currentUserId: authState.apiUser?.id.toString(),
+    );
+
+    final filtered = templateState.filterTemplates(
+      baseTemplates,
+      category: selectedCategory != 'All' ? selectedCategory : null,
+      searchQuery: searchController.text.trim().isNotEmpty ? searchController.text.trim() : null,
+    );
+
+    setState(() {
+      filteredTemplates = filtered;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final templateState = ref.watch(templateProvider);
+    final authState = ref.watch(authProvider);
+
+    // Update filtered templates when dependencies change
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateFilteredTemplates();
+    });
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -120,53 +122,62 @@ class TemplatesDialog extends HookConsumerWidget {
           child: Column(
             children: [
               // Header
-              _buildHeader(context),
+              _HeaderWidget(
+                onClose: () => Navigator.of(context).pop(),
+              ),
+              const SizedBox(height: 8),
 
               // Tab Bar
-              _buildTabBar(context, currentTab, authState.isSignedIn),
+              _TabBarWidget(
+                currentTab: currentTab,
+                isSignedIn: authState.isSignedIn,
+                onTabChanged: (tab) {
+                  setState(() {
+                    currentTab = tab;
+                  });
+                },
+              ),
 
               // Search and Filters
-              _buildSearchAndFilters(
-                context,
-                searchController,
-                categories.value,
-                selectedCategory,
-                () => _filterTemplates(
-                  currentTab.value,
-                  localTemplates.value,
-                  apiTemplates.value,
-                  selectedCategory.value,
-                  searchController.text,
-                  filteredTemplates,
-                ),
+              _SearchAndFiltersWidget(
+                searchController: searchController,
+                categories: templateState.categories,
+                selectedCategory: selectedCategory,
+                onChanged: () {
+                  _updateFilteredTemplates();
+                },
+                onCategoryChanged: (category) {
+                  setState(() {
+                    selectedCategory = category;
+                  });
+                },
               ),
 
               // Content
               Expanded(
-                child: _buildContent(
-                  context,
-                  currentTab.value,
-                  filteredTemplates.value,
-                  isLoading.value,
-                  isLoadingMore.value,
-                  errorMessage.value,
-                  scrollController,
-                  totalCount.value,
-                  () => _loadInitialData(
-                    templateService,
-                    localTemplates,
-                    apiTemplates,
-                    filteredTemplates,
-                    categories,
-                    isLoading,
-                    errorMessage,
-                    authState.isSignedIn,
-                  ),
+                child: _ContentWidget(
+                  currentTab: currentTab,
+                  templates: filteredTemplates,
+                  isLoading: templateState.isLoading,
+                  isLoadingMore: templateState.isLoadingMore,
+                  error: templateState.error,
+                  scrollController: scrollController,
+                  totalCount: templateState.totalCount,
+                  onRetry: () => ref.read(templateProvider.notifier).refresh(),
+                  currentUserId: authState.apiUser?.id.toString(),
+                  onTemplateSelected: (template) {
+                    widget.onTemplateSelected(template);
+                    Navigator.of(context).pop();
+                  },
+                  onDeleteTemplate: (template) => _showDeleteConfirmation(context, template),
                 ),
               ),
 
               // Footer with stats
-              _buildFooter(context, filteredTemplates.value.length, totalCount.value),
+              _FooterWidget(
+                displayedCount: filteredTemplates.length,
+                totalCount: templateState.totalCount,
+              ),
             ],
           ),
         ),
@@ -174,9 +185,85 @@ class TemplatesDialog extends HookConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Future<void> _showDeleteConfirmation(BuildContext context, Template template) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Template'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Are you sure you want to delete "${template.name}"?'),
+            const SizedBox(height: 8),
+            if (template.isLocal)
+              const Text(
+                'This template will be permanently removed from your local storage.',
+                style: TextStyle(fontSize: 12, color: Colors.orange),
+              )
+            else
+              const Text(
+                'This template will be removed from the cloud and can\'t be recovered.',
+                style: TextStyle(fontSize: 12, color: Colors.red),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _deleteTemplate(context, template);
+    }
+  }
+
+  Future<void> _deleteTemplate(BuildContext context, Template template) async {
+    final templateNotifier = ref.read(templateProvider.notifier);
+
+    bool success = false;
+    if (template.isLocal) {
+      success = await templateNotifier.deleteLocalTemplate(template.name);
+    } else if (template.id != null) {
+      success = await templateNotifier.deleteApiTemplate(template.id!);
+    }
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success
+              ? 'Template "${template.name}" deleted successfully'
+              : 'Failed to delete template "${template.name}"'),
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
+    }
+  }
+}
+
+/// Header widget for the templates dialog
+class _HeaderWidget extends StatelessWidget {
+  final VoidCallback onClose;
+
+  const _HeaderWidget({
+    required this.onClose,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isSmallScreen = MediaQuery.sizeOf(context).width < 600;
+
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.primaryContainer,
       ),
@@ -184,7 +271,7 @@ class TemplatesDialog extends HookConsumerWidget {
         children: [
           AppIcon(
             AppIcons.gallery_wide,
-            size: 28,
+            size: isSmallScreen ? 20 : 28,
             color: Theme.of(context).colorScheme.onPrimaryContainer,
           ),
           const SizedBox(width: 12),
@@ -193,11 +280,12 @@ class TemplatesDialog extends HookConsumerWidget {
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   color: Theme.of(context).colorScheme.onPrimaryContainer,
                   fontWeight: FontWeight.bold,
+                  fontSize: isSmallScreen ? 16 : 20,
                 ),
           ),
           const Spacer(),
           IconButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: onClose,
             icon: const Icon(Icons.close),
             color: Theme.of(context).colorScheme.onPrimaryContainer,
           ),
@@ -205,61 +293,89 @@ class TemplatesDialog extends HookConsumerWidget {
       ),
     );
   }
+}
 
-  Widget _buildTabBar(BuildContext context, ValueNotifier<TemplateTab> currentTab, bool isSignedIn) {
+/// Tab bar widget for switching between template categories
+class _TabBarWidget extends StatelessWidget {
+  final TemplateTab currentTab;
+  final bool isSignedIn;
+  final Function(TemplateTab) onTabChanged;
+
+  const _TabBarWidget({
+    required this.currentTab,
+    required this.isSignedIn,
+    required this.onTabChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
-          _buildTabButton(
-            context,
-            'All Templates',
-            TemplateTab.all,
-            currentTab,
-            Feather.grid,
+          _TabButton(
+            title: 'All Templates',
+            tab: TemplateTab.all,
+            currentTab: currentTab,
+            icon: Feather.grid,
+            onTap: onTabChanged,
           ),
           const SizedBox(width: 12),
-          _buildTabButton(
-            context,
-            'Local',
-            TemplateTab.local,
-            currentTab,
-            Feather.hard_drive,
+          _TabButton(
+            title: 'Local',
+            tab: TemplateTab.local,
+            currentTab: currentTab,
+            icon: Feather.hard_drive,
+            onTap: onTabChanged,
           ),
           const SizedBox(width: 12),
-          _buildTabButton(
-            context,
-            'Community',
-            TemplateTab.community,
-            currentTab,
-            Feather.cloud,
+          _TabButton(
+            title: 'Community',
+            tab: TemplateTab.community,
+            currentTab: currentTab,
+            icon: Feather.cloud,
+            onTap: onTabChanged,
           ),
           if (isSignedIn) ...[
             const SizedBox(width: 12),
-            _buildTabButton(
-              context,
-              'My Templates',
-              TemplateTab.mine,
-              currentTab,
-              Feather.user,
+            _TabButton(
+              title: 'My Templates',
+              tab: TemplateTab.mine,
+              currentTab: currentTab,
+              icon: Feather.user,
+              onTap: onTabChanged,
             ),
           ],
         ],
       ),
     );
   }
+}
 
-  Widget _buildTabButton(
-    BuildContext context,
-    String title,
-    TemplateTab tab,
-    ValueNotifier<TemplateTab> currentTab,
-    IconData icon,
-  ) {
-    final isSelected = currentTab.value == tab;
+/// Individual tab button widget
+class _TabButton extends StatelessWidget {
+  final String title;
+  final TemplateTab tab;
+  final TemplateTab currentTab;
+  final IconData icon;
+  final Function(TemplateTab) onTap;
+
+  const _TabButton({
+    required this.title,
+    required this.tab,
+    required this.currentTab,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isSmallScreen = MediaQuery.sizeOf(context).width < 600;
+    final isSelected = currentTab == tab;
+
     return Expanded(
       child: InkWell(
-        onTap: () => currentTab.value = tab,
+        onTap: () => onTap(tab),
         borderRadius: BorderRadius.circular(8),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -286,6 +402,7 @@ class TemplatesDialog extends HookConsumerWidget {
                     color:
                         isSelected ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurface,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontSize: isSmallScreen ? 12 : 14,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -296,14 +413,26 @@ class TemplatesDialog extends HookConsumerWidget {
       ),
     );
   }
+}
 
-  Widget _buildSearchAndFilters(
-    BuildContext context,
-    TextEditingController searchController,
-    List<TemplateCategory> categories,
-    ValueNotifier<String?> selectedCategory,
-    VoidCallback onChanged,
-  ) {
+/// Search and filters widget
+class _SearchAndFiltersWidget extends StatelessWidget {
+  final TextEditingController searchController;
+  final List<TemplateCategory> categories;
+  final String? selectedCategory;
+  final VoidCallback onChanged;
+  final Function(String?) onCategoryChanged;
+
+  const _SearchAndFiltersWidget({
+    required this.searchController,
+    required this.categories,
+    required this.selectedCategory,
+    required this.onChanged,
+    required this.onCategoryChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -340,12 +469,11 @@ class TemplatesDialog extends HookConsumerWidget {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _buildCategoryChip(
-                    context,
-                    'All',
-                    selectedCategory.value == 'All',
-                    () {
-                      selectedCategory.value = 'All';
+                  _CategoryChip(
+                    label: 'All',
+                    isSelected: selectedCategory == 'All',
+                    onTap: () {
+                      onCategoryChanged('All');
                       onChanged();
                     },
                   ),
@@ -353,12 +481,11 @@ class TemplatesDialog extends HookConsumerWidget {
                   ...categories
                       .map((category) => Padding(
                             padding: const EdgeInsets.only(right: 8),
-                            child: _buildCategoryChip(
-                              context,
-                              category.name,
-                              selectedCategory.value == category.slug,
-                              () {
-                                selectedCategory.value = category.slug;
+                            child: _CategoryChip(
+                              label: category.name,
+                              isSelected: selectedCategory == category.slug,
+                              onTap: () {
+                                onCategoryChanged(category.slug);
                                 onChanged();
                               },
                             ),
@@ -372,13 +499,24 @@ class TemplatesDialog extends HookConsumerWidget {
       ),
     );
   }
+}
 
-  Widget _buildCategoryChip(
-    BuildContext context,
-    String label,
-    bool isSelected,
-    VoidCallback onTap,
-  ) {
+/// Category filter chip widget
+class _CategoryChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _CategoryChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isSmallScreen = MediaQuery.sizeOf(context).width < 600;
+
     return FilterChip(
       label: Text(label),
       selected: isSelected,
@@ -388,21 +526,44 @@ class TemplatesDialog extends HookConsumerWidget {
       labelStyle: TextStyle(
         color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        fontSize: isSmallScreen ? 12 : 14,
       ),
     );
   }
+}
 
-  Widget _buildContent(
-    BuildContext context,
-    TemplateTab currentTab,
-    List<Template> templates,
-    bool isLoading,
-    bool isLoadingMore,
-    String? errorMessage,
-    ScrollController scrollController,
-    int totalCount,
-    VoidCallback onRetry,
-  ) {
+/// Content widget displaying templates grid or loading/error states
+class _ContentWidget extends StatelessWidget {
+  final TemplateTab currentTab;
+  final List<Template> templates;
+  final bool isLoading;
+  final bool isLoadingMore;
+  final String? error;
+  final ScrollController scrollController;
+  final int totalCount;
+  final VoidCallback onRetry;
+  final String? currentUserId;
+  final Function(Template) onTemplateSelected;
+  final Function(Template) onDeleteTemplate;
+
+  const _ContentWidget({
+    required this.currentTab,
+    required this.templates,
+    required this.isLoading,
+    required this.isLoadingMore,
+    required this.error,
+    required this.scrollController,
+    required this.totalCount,
+    required this.onRetry,
+    required this.currentUserId,
+    required this.onTemplateSelected,
+    required this.onDeleteTemplate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isSmallScreen = MediaQuery.sizeOf(context).width < 600;
+
     if (isLoading) {
       return const Center(
         child: Column(
@@ -416,7 +577,7 @@ class TemplatesDialog extends HookConsumerWidget {
       );
     }
 
-    if (errorMessage != null) {
+    if (error != null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -428,7 +589,7 @@ class TemplatesDialog extends HookConsumerWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              errorMessage,
+              error!,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Theme.of(context).colorScheme.error,
                   ),
@@ -475,26 +636,23 @@ class TemplatesDialog extends HookConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: GridView.builder(
               controller: scrollController,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: isSmallScreen ? 2 : 4,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
                 childAspectRatio: 0.8,
               ),
-              itemCount: templates.length + (isLoadingMore ? 4 : 0), // Add loading placeholders
+              itemCount: templates.length + (isLoadingMore ? 4 : 0),
               itemBuilder: (context, index) {
                 if (index >= templates.length) {
-                  // Loading placeholder
-                  return _buildLoadingPlaceholder(context);
+                  return _LoadingPlaceholder();
                 }
 
                 final template = templates[index];
                 return _TemplateCard(
                   template: template,
-                  onTap: () {
-                    onTemplateSelected(template);
-                    Navigator.of(context).pop();
-                  },
+                  onTap: () => onTemplateSelected(template),
+                  onDelete: _canDeleteTemplate(template, currentUserId) ? () => onDeleteTemplate(template) : null,
                 );
               },
             ),
@@ -508,61 +666,6 @@ class TemplatesDialog extends HookConsumerWidget {
             child: CircularProgressIndicator(),
           ),
       ],
-    );
-  }
-
-  Widget _buildLoadingPlaceholder(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Center(
-          child: CircularProgressIndicator(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFooter(BuildContext context, int displayedCount, int totalCount) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(
-          top: BorderSide(color: Theme.of(context).dividerColor),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            'Showing $displayedCount${totalCount > 0 ? ' of $totalCount' : ''} templates',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                ),
-          ),
-          Row(
-            children: [
-              Icon(
-                Icons.info_outline,
-                size: 16,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                'Click a template to apply it',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                    ),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
@@ -592,134 +695,104 @@ class TemplatesDialog extends HookConsumerWidget {
     }
   }
 
-  // Helper methods for data loading
-  Future<void> _loadInitialData(
-    TemplateService templateService,
-    ValueNotifier<List<Template>> localTemplates,
-    ValueNotifier<List<Template>> apiTemplates,
-    ValueNotifier<List<Template>> filteredTemplates,
-    ValueNotifier<List<TemplateCategory>> categories,
-    ValueNotifier<bool> isLoading,
-    ValueNotifier<String?> errorMessage,
-    bool isSignedIn,
-  ) async {
-    isLoading.value = true;
-    errorMessage.value = null;
-
-    try {
-      // Load local templates
-      final local = await templateService.getLocalTemplates();
-      localTemplates.value = local;
-
-      // Load categories
-      final cats = await templateService.getTemplateCategories();
-      categories.value = cats;
-
-      // Load API templates if available
-      if (isSignedIn) {
-        try {
-          final apiResponse = await templateService.getTemplatesFromAPI(limit: 20);
-          apiTemplates.value = apiResponse.templates;
-        } catch (e) {
-          debugPrint('Error loading API templates: $e');
-        }
-      }
-
-      // Initialize filtered templates
-      filteredTemplates.value = [...local, ...apiTemplates.value];
-    } catch (e) {
-      errorMessage.value = 'Failed to load templates: $e';
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  Future<void> _loadMoreTemplates(
-    TemplateService templateService,
-    ValueNotifier<List<Template>> apiTemplates,
-    ValueNotifier<List<Template>> filteredTemplates,
-    ValueNotifier<int> currentPage,
-    ValueNotifier<bool> hasMorePages,
-    ValueNotifier<bool> isLoadingMore,
-    String? selectedCategory,
-    String searchQuery,
-  ) async {
-    isLoadingMore.value = true;
-
-    try {
-      final response = await templateService.getTemplatesFromAPI(
-        page: currentPage.value + 1,
-        limit: 20,
-        category: selectedCategory != 'All' ? selectedCategory : null,
-        search: searchQuery.isNotEmpty ? searchQuery : null,
-      );
-
-      apiTemplates.value = [...apiTemplates.value, ...response.templates];
-      currentPage.value = response.page;
-      hasMorePages.value = response.hasMore;
-
-      // Update filtered templates
-      // This should be replaced with proper filtering logic
-      filteredTemplates.value = [...filteredTemplates.value, ...response.templates];
-    } catch (e) {
-      debugPrint('Error loading more templates: $e');
-    } finally {
-      isLoadingMore.value = false;
-    }
-  }
-
-  void _filterTemplates(
-    TemplateTab currentTab,
-    List<Template> localTemplates,
-    List<Template> apiTemplates,
-    String? selectedCategory,
-    String searchQuery,
-    ValueNotifier<List<Template>> filteredTemplates,
-  ) {
-    List<Template> baseTemplates;
-
-    switch (currentTab) {
-      case TemplateTab.local:
-        baseTemplates = localTemplates;
-        break;
-      case TemplateTab.community:
-        baseTemplates = apiTemplates.where((t) => !t.isLocal).toList();
-        break;
-      case TemplateTab.mine:
-        baseTemplates = apiTemplates.where((t) => !t.isLocal).toList(); // Filter by current user
-        break;
-      case TemplateTab.all:
-      default:
-        baseTemplates = [...localTemplates, ...apiTemplates];
-        break;
+  bool _canDeleteTemplate(Template template, String? currentUserId) {
+    if (template.isLocal && !template.isAsset) {
+      return true;
     }
 
-    List<Template> filtered = baseTemplates;
-
-    // Apply category filter
-    if (selectedCategory != null && selectedCategory != 'All') {
-      filtered = filtered.where((template) => template.category == selectedCategory).toList();
+    // User can delete their own uploaded templates
+    if (!template.isLocal && currentUserId != null && template.createdBy == currentUserId) {
+      return true;
     }
 
-    // Apply search filter
-    if (searchQuery.isNotEmpty) {
-      filtered = filtered.where((template) => template.matchesSearch(searchQuery)).toList();
-    }
-
-    filteredTemplates.value = filtered;
+    return false;
   }
 }
 
-enum TemplateTab { all, local, community, mine }
+/// Loading placeholder widget for grid items
+class _LoadingPlaceholder extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
+    );
+  }
+}
+
+/// Footer widget showing template count and info
+class _FooterWidget extends StatelessWidget {
+  final int displayedCount;
+  final int totalCount;
+
+  const _FooterWidget({
+    required this.displayedCount,
+    required this.totalCount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isSmallScreen = MediaQuery.sizeOf(context).width < 600;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          top: BorderSide(color: Theme.of(context).dividerColor),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          if (!isSmallScreen)
+            Text(
+              'Showing $displayedCount${totalCount > 0 ? ' of $totalCount' : ''} templates',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  ),
+            ),
+          Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                size: 16,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'Click a template to apply it',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                    ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 /// Individual template card widget
 class _TemplateCard extends StatefulWidget {
   final Template template;
   final VoidCallback onTap;
+  final VoidCallback? onDelete;
 
   const _TemplateCard({
     required this.template,
     required this.onTap,
+    this.onDelete,
   });
 
   @override
@@ -791,39 +864,68 @@ class _TemplateCardState extends State<_TemplateCard> {
                   ),
                   child: Stack(
                     children: [
-                      _buildPreview(),
-                      // Template source indicator
-                      Positioned(
-                        top: 6,
-                        right: 6,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color:
-                                widget.template.isLocal ? Colors.green.withOpacity(0.9) : Colors.blue.withOpacity(0.9),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                widget.template.isLocal ? Feather.hard_drive : Feather.cloud,
-                                size: 10,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(width: 2),
-                              Text(
-                                widget.template.isLocal ? 'Local' : 'Cloud',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: _PreviewWidget(
+                          template: widget.template,
+                          previewImage: _previewImage,
+                          isLoadingPreview: _isLoadingPreview,
                         ),
                       ),
+                      if (widget.template.isLocal && !widget.template.isAsset)
+                        Positioned(
+                          top: 6,
+                          right: 6,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: widget.template.isLocal
+                                  ? Colors.green.withOpacity(0.9)
+                                  : Colors.blue.withOpacity(0.9),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  widget.template.isLocal ? Feather.hard_drive : Feather.cloud,
+                                  size: 10,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 2),
+                                const Text(
+                                  'Local',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      // Delete button for deletable templates
+                      if (widget.onDelete != null)
+                        Positioned(
+                          top: 6,
+                          left: 6,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.9),
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Icons.delete, size: 16, color: Colors.white),
+                              onPressed: widget.onDelete,
+                              constraints: const BoxConstraints(
+                                minWidth: 24,
+                                minHeight: 24,
+                              ),
+                              padding: EdgeInsets.zero,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -891,18 +993,32 @@ class _TemplateCardState extends State<_TemplateCard> {
       ),
     );
   }
+}
 
-  Widget _buildPreview() {
-    if (widget.template.thumbnailImageUrl != null) {
+/// Preview widget for template card
+class _PreviewWidget extends StatelessWidget {
+  final Template template;
+  final ui.Image? previewImage;
+  final bool isLoadingPreview;
+
+  const _PreviewWidget({
+    required this.template,
+    required this.previewImage,
+    required this.isLoadingPreview,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (template.thumbnailImageUrl != null) {
       return Image.network(
-        widget.template.thumbnailImageUrl!,
+        template.thumbnailImageUrl!,
         fit: BoxFit.cover,
         width: double.infinity,
         height: double.infinity,
       );
     }
 
-    if (_isLoadingPreview) {
+    if (isLoadingPreview) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(16.0),
@@ -911,7 +1027,7 @@ class _TemplateCardState extends State<_TemplateCard> {
       );
     }
 
-    if (_previewImage == null) {
+    if (previewImage == null) {
       return Center(
         child: Icon(
           Icons.image_not_supported_outlined,
@@ -921,12 +1037,9 @@ class _TemplateCardState extends State<_TemplateCard> {
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: CustomPaint(
-        painter: _TemplatePreviewPainter(_previewImage!),
-        child: const SizedBox.expand(),
-      ),
+    return CustomPaint(
+      painter: _TemplatePreviewPainter(previewImage!),
+      child: const SizedBox.expand(),
     );
   }
 }
@@ -939,12 +1052,10 @@ class _TemplatePreviewPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..filterQuality = FilterQuality.none; // Keep pixels crisp
+    final paint = Paint()..filterQuality = FilterQuality.none;
 
-    // Draw checkerboard background for transparency
     _drawCheckerboard(canvas, size);
 
-    // Draw the template image scaled to fit
     final src = Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble());
     final dst = _calculateDestRect(size);
 
@@ -980,13 +1091,11 @@ class _TemplatePreviewPainter extends CustomPainter {
     late double width, height, left, top;
 
     if (imageAspectRatio > containerAspectRatio) {
-      // Image is wider, fit to width
       width = size.width;
       height = size.width / imageAspectRatio;
       left = 0;
       top = (size.height - height) / 2;
     } else {
-      // Image is taller, fit to height
       width = size.height * imageAspectRatio;
       height = size.height;
       left = (size.width - width) / 2;
@@ -1000,17 +1109,4 @@ class _TemplatePreviewPainter extends CustomPainter {
   bool shouldRepaint(covariant _TemplatePreviewPainter oldDelegate) {
     return oldDelegate.image != image;
   }
-}
-
-/// Show the templates dialog
-Future<void> showTemplatesDialog(
-  BuildContext context, {
-  required Function(Template template) onTemplateSelected,
-}) {
-  return showDialog(
-    context: context,
-    builder: (context) => TemplatesDialog(
-      onTemplateSelected: onTemplateSelected,
-    ),
-  );
 }

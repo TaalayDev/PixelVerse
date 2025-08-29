@@ -8,6 +8,7 @@ import '../../pixel/tools.dart';
 import '../../pixel/providers/pixel_notifier_provider.dart';
 import 'app_icon.dart';
 import 'color_palette_panel.dart';
+import 'layer_template_dialog.dart';
 import 'layers_panel.dart';
 import 'styled_tool_bottom_sheet.dart';
 
@@ -198,7 +199,15 @@ class ToolsBottomBar extends HookWidget {
                                 onLayerEffectsChanged: (updatedLayer) {
                                   notifier.updateLayer(updatedLayer);
                                 },
-                                onLayerToTemplate: (layer) {},
+                                onLayerToTemplate: (layer) {
+                                  Navigator.pop(context);
+                                  LayerToTemplateDialog.show(
+                                    context,
+                                    layer: layer,
+                                    width: state.width,
+                                    height: state.height,
+                                  );
+                                },
                               ),
                             ),
                           ),

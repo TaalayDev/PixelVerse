@@ -6,7 +6,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pixelverse/core/utils.dart';
 import 'package:logging/logging.dart';
 import 'package:uuid/uuid.dart';
 
@@ -19,10 +19,9 @@ import '../../core/utils/image_helper.dart';
 class TemplateService {
   TemplateService(this._apiRepo);
 
-  static const String _localTemplatesKey = 'local_templates';
   static const String _assetTemplatesKey = 'asset_templates_loaded';
 
-  final TemplateAPIRepo? _apiRepo;
+  final TemplateAPIRepo _apiRepo;
   final Logger _logger = Logger('TemplateService');
 
   // Cache for loaded templates
@@ -60,7 +59,7 @@ class TemplateService {
       name: templateName,
       width: width,
       height: height,
-      pixels: layer.pixels.toList(),
+      pixels: Uint32List.fromList(layer.processedPixels),
       isLocal: true,
     );
   }
@@ -98,16 +97,11 @@ class TemplateService {
     List<String> tags = const [],
     bool isPublic = true,
   }) async {
-    if (_apiRepo == null) {
-      _logger.warning('API repository not available for template upload');
-      return null;
-    }
-
     try {
       // Generate thumbnail for the template
       final thumbnail = await _generateTemplateThumbnail(template);
 
-      final response = await _apiRepo!.uploadTemplate(
+      final response = await _apiRepo.uploadTemplate(
         name: template.name,
         width: template.width,
         height: template.height,
@@ -120,10 +114,10 @@ class TemplateService {
       );
 
       _logger.info('Template "${template.name}" uploaded successfully');
-      return response.data;
+      return response.data ?? template;
     } catch (e) {
       _logger.severe('Error uploading template: $e');
-      return null;
+      return template;
     }
   }
 
@@ -136,12 +130,8 @@ class TemplateService {
     String sort = 'popular',
     List<String>? tags,
   }) async {
-    if (_apiRepo == null) {
-      throw Exception('API repository not available');
-    }
-
     try {
-      final response = await _apiRepo!.fetchTemplates(
+      final response = await _apiRepo.fetchTemplates(
         page: page,
         limit: limit,
         category: category,
@@ -271,16 +261,13 @@ class TemplateService {
 
   /// Get template categories
   Future<List<TemplateCategory>> getTemplateCategories() async {
-    if (_apiRepo != null) {
-      try {
-        final response = await _apiRepo!.getCategories();
-        _categories = response.data!;
-        return _categories;
-      } catch (e) {
-        _logger.warning('Error fetching categories from API: $e');
-      }
+    try {
+      final response = await _apiRepo.getCategories();
+      _categories = response.data!;
+      return _categories;
+    } catch (e) {
+      _logger.warning('Error fetching categories from API: $e');
     }
-
     // Return default categories if API is not available
     return [
       const TemplateCategory(id: 1, name: 'Characters', slug: 'characters', templateCount: 0),
@@ -312,10 +299,10 @@ class TemplateService {
   Future<List<Template>> loadAssetTemplates() async {
     try {
       // Try to load from assets
-      final String jsonString = await rootBundle.loadString('assets/templates/default_templates.json');
+      final String jsonString = await rootBundle.loadString('assets/data/templates.json');
       final List<dynamic> jsonList = json.decode(jsonString);
 
-      return jsonList.map((json) => Template.fromJson(json)).toList();
+      return jsonList.map((json) => Template.fromJson(json).copyWith(isAsset: true)).toList();
     } catch (e) {
       _logger.info('No asset templates found, returning empty list');
       return [];
@@ -444,7 +431,7 @@ class TemplateService {
     try {
       // Create image from template pixels
       final image = await ImageHelper.createImageFromPixels(
-        template.pixelsAsUint32List,
+        ImageHelper.fixColorChannels(Uint32List.fromList(template.pixels)),
         template.width,
         template.height,
       );
@@ -479,6 +466,21 @@ class TemplateService {
     } catch (e) {
       _logger.warning('Error generating template thumbnail: $e');
       return null;
+    }
+  }
+
+  Future<bool> deleteApiTemplate(int templateId) async {
+    try {
+      final response = await _apiRepo.deleteTemplate(templateId);
+      if (response.success) {
+        // Remove from local API templates cache
+        _apiTemplates.removeWhere((template) => template.id == templateId);
+        _logger.info('Template "$templateId" deleted from API and local cache');
+      }
+      return response.success;
+    } catch (e) {
+      _logger.severe('Error deleting API template: $e');
+      return false;
     }
   }
 

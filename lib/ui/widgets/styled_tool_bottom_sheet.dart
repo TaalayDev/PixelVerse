@@ -155,10 +155,6 @@ class StyledToolBottomSheet extends HookConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           const BottomSheetHandle(),
-          BottomSheetTitle(
-            title: 'Extra Tools',
-            theme: theme,
-          ),
           ToolGrid(
             tools: extraTools,
             currentTool: currentTool,
@@ -285,7 +281,7 @@ class ToolGrid extends StatelessWidget {
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
-          childAspectRatio: 2.5,
+          childAspectRatio: 2.2,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),
@@ -333,6 +329,7 @@ class ToolGridItem extends StatelessWidget {
                 },
           borderRadius: BorderRadius.circular(12),
           child: Container(
+            padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               color: isSelected ? theme.primaryColor.withOpacity(0.2) : theme.surfaceVariant,
               borderRadius: BorderRadius.circular(12),

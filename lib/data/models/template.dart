@@ -9,12 +9,13 @@ class Template extends Equatable {
   final String name;
   final int width;
   final int height;
-  final List<int> pixels;
+  final Uint32List pixels;
   final String? description;
   final String? category;
   final List<String> tags;
   final bool isPublic;
-  final bool isLocal; // True if stored locally, false if from server
+  final bool isLocal;
+  final bool isAsset;
   final String? authorName;
   final String? authorId;
   final String? thumbnailUrl;
@@ -23,6 +24,7 @@ class Template extends Equatable {
   final int likeCount;
   final int downloadCount;
   final bool isLiked;
+  final String? createdBy;
 
   const Template({
     this.id,
@@ -34,7 +36,8 @@ class Template extends Equatable {
     this.category,
     this.tags = const [],
     this.isPublic = true,
-    this.isLocal = true,
+    this.isLocal = false,
+    this.isAsset = false,
     this.authorName,
     this.authorId,
     this.thumbnailUrl,
@@ -43,6 +46,7 @@ class Template extends Equatable {
     this.likeCount = 0,
     this.downloadCount = 0,
     this.isLiked = false,
+    this.createdBy,
   });
 
   /// Create Template from JSON
@@ -55,11 +59,11 @@ class Template extends Equatable {
       width: width,
       height: height,
       pixels: () {
-        if (json['pixels'] == null) return List<int>.filled(width * height, 0);
+        if (json['pixels'] == null) return Uint32List(width * height);
         if (json['pixels'] is String) {
-          return (json['pixels'] as String).split(',').map((p) => int.parse(p.trim())).toList();
+          return Uint32List.fromList((json['pixels'] as String).split(',').map((p) => int.parse(p.trim())).toList());
         }
-        return List<int>.from(json['pixels'] as List);
+        return Uint32List.fromList(List<int>.from(json['pixels'] as List));
       }(),
       description: json['description'] as String?,
       category: json['category'] as String?,
@@ -76,6 +80,7 @@ class Template extends Equatable {
       likeCount: int.tryParse(json['like_count'].toString()) ?? 0,
       downloadCount: int.tryParse(json['download_count'].toString()) ?? 0,
       isLiked: int.tryParse(json['is_liked'].toString()) == 1,
+      createdBy: json['user_id']?.toString(),
     );
   }
 
@@ -100,6 +105,7 @@ class Template extends Equatable {
       'like_count': likeCount,
       'download_count': downloadCount,
       'is_liked': isLiked,
+      'user_id': createdBy,
     };
   }
 
@@ -108,12 +114,13 @@ class Template extends Equatable {
     String? name,
     int? width,
     int? height,
-    List<int>? pixels,
+    Uint32List? pixels,
     String? description,
     String? category,
     List<String>? tags,
     bool? isPublic,
     bool? isLocal,
+    bool? isAsset,
     String? authorName,
     String? authorId,
     String? thumbnailUrl,
@@ -122,6 +129,7 @@ class Template extends Equatable {
     int? likeCount,
     int? downloadCount,
     bool? isLiked,
+    String? createdBy,
   }) {
     return Template(
       id: id ?? this.id,
@@ -134,6 +142,7 @@ class Template extends Equatable {
       tags: tags ?? this.tags,
       isPublic: isPublic ?? this.isPublic,
       isLocal: isLocal ?? this.isLocal,
+      isAsset: isAsset ?? this.isAsset,
       authorName: authorName ?? this.authorName,
       authorId: authorId ?? this.authorId,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
@@ -142,6 +151,7 @@ class Template extends Equatable {
       likeCount: likeCount ?? this.likeCount,
       downloadCount: downloadCount ?? this.downloadCount,
       isLiked: isLiked ?? this.isLiked,
+      createdBy: createdBy ?? this.createdBy,
     );
   }
 
@@ -206,7 +216,9 @@ class Template extends Equatable {
         updatedAt,
         likeCount,
         downloadCount,
-        isLiked
+        isAsset,
+        isLiked,
+        createdBy
       ];
 
   @override
