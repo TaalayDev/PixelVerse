@@ -503,6 +503,8 @@ class PixelDrawController extends _$PixelDrawController {
     _updateCurrentFrame(updatedFrame);
 
     state = state.copyWith(currentLayerIndex: updatedLayers.length - 1);
+
+    _updateProject();
   }
 
   void selectAnimationState(int stateId) {

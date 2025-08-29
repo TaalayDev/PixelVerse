@@ -39,6 +39,7 @@ class _TemplatesDialogState extends ConsumerState<TemplatesDialog> {
   String? selectedCategory = 'All';
   List<Template> filteredTemplates = [];
   late ScrollController scrollController;
+  bool _isLoadingTemplate = false;
 
   @override
   void initState() {
@@ -97,6 +98,61 @@ class _TemplatesDialogState extends ConsumerState<TemplatesDialog> {
     });
   }
 
+  /// Handle template selection with cloud template fetching
+  Future<void> _handleTemplateSelection(Template template) async {
+    // If it's a local template or asset template, select it immediately
+    if (template.isLocal || template.isAsset) {
+      widget.onTemplateSelected(template);
+      Navigator.of(context).pop();
+      return;
+    }
+
+    // For cloud templates, fetch full data first
+    setState(() {
+      _isLoadingTemplate = true;
+    });
+
+    try {
+      // Use template provider to fetch full template data
+      final fullTemplate = await ref.read(templateProvider.notifier).getTemplate(template.id!);
+
+      if (fullTemplate != null) {
+        widget.onTemplateSelected(fullTemplate);
+        Navigator.of(context).pop();
+      } else {
+        // If fetch failed, show error and use existing template data as fallback
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to load template details. Using cached data.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        widget.onTemplateSelected(template);
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      // On error, show message and use existing template data as fallback
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading template: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        widget.onTemplateSelected(template);
+        Navigator.of(context).pop();
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingTemplate = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final templateState = ref.watch(templateProvider);
@@ -118,68 +174,90 @@ class _TemplatesDialogState extends ConsumerState<TemplatesDialog> {
           minWidth: 700,
           minHeight: 500,
         ),
-        child: AnimatedBackground(
-          child: Column(
-            children: [
-              // Header
-              _HeaderWidget(
-                onClose: () => Navigator.of(context).pop(),
-              ),
-              const SizedBox(height: 8),
+        child: Stack(
+          children: [
+            AnimatedBackground(
+              child: Column(
+                children: [
+                  // Header
+                  _HeaderWidget(
+                    onClose: () => Navigator.of(context).pop(),
+                  ),
+                  const SizedBox(height: 8),
 
-              // Tab Bar
-              _TabBarWidget(
-                currentTab: currentTab,
-                isSignedIn: authState.isSignedIn,
-                onTabChanged: (tab) {
-                  setState(() {
-                    currentTab = tab;
-                  });
-                },
-              ),
+                  // Tab Bar
+                  _TabBarWidget(
+                    currentTab: currentTab,
+                    isSignedIn: authState.isSignedIn,
+                    onTabChanged: (tab) {
+                      setState(() {
+                        currentTab = tab;
+                      });
+                    },
+                  ),
 
-              // Search and Filters
-              _SearchAndFiltersWidget(
-                searchController: searchController,
-                categories: templateState.categories,
-                selectedCategory: selectedCategory,
-                onChanged: () {
-                  _updateFilteredTemplates();
-                },
-                onCategoryChanged: (category) {
-                  setState(() {
-                    selectedCategory = category;
-                  });
-                },
-              ),
+                  // Search and Filters
+                  _SearchAndFiltersWidget(
+                    searchController: searchController,
+                    categories: templateState.categories,
+                    selectedCategory: selectedCategory,
+                    onChanged: () {
+                      _updateFilteredTemplates();
+                    },
+                    onCategoryChanged: (category) {
+                      setState(() {
+                        selectedCategory = category;
+                      });
+                    },
+                  ),
 
-              // Content
-              Expanded(
-                child: _ContentWidget(
-                  currentTab: currentTab,
-                  templates: filteredTemplates,
-                  isLoading: templateState.isLoading,
-                  isLoadingMore: templateState.isLoadingMore,
-                  error: templateState.error,
-                  scrollController: scrollController,
-                  totalCount: templateState.totalCount,
-                  onRetry: () => ref.read(templateProvider.notifier).refresh(),
-                  currentUserId: authState.apiUser?.id.toString(),
-                  onTemplateSelected: (template) {
-                    widget.onTemplateSelected(template);
-                    Navigator.of(context).pop();
-                  },
-                  onDeleteTemplate: (template) => _showDeleteConfirmation(context, template),
+                  // Content
+                  Expanded(
+                    child: _ContentWidget(
+                      currentTab: currentTab,
+                      templates: filteredTemplates,
+                      isLoading: templateState.isLoading,
+                      isLoadingMore: templateState.isLoadingMore,
+                      error: templateState.error,
+                      scrollController: scrollController,
+                      totalCount: templateState.totalCount,
+                      onRetry: () => ref.read(templateProvider.notifier).refresh(),
+                      currentUserId: authState.apiUser?.id.toString(),
+                      onTemplateSelected: _handleTemplateSelection,
+                      onDeleteTemplate: (template) => _showDeleteConfirmation(context, template),
+                    ),
+                  ),
+
+                  // Footer with stats
+                  _FooterWidget(
+                    displayedCount: filteredTemplates.length,
+                    totalCount: templateState.totalCount,
+                  ),
+                ],
+              ),
+            ),
+
+            // Loading overlay for template fetching
+            if (_isLoadingTemplate)
+              Container(
+                color: Colors.black54,
+                child: const Center(
+                  child: Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('Loading template...'),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
-
-              // Footer with stats
-              _FooterWidget(
-                displayedCount: filteredTemplates.length,
-                totalCount: templateState.totalCount,
-              ),
-            ],
-          ),
+          ],
         ),
       ),
     );
@@ -905,6 +983,38 @@ class _TemplateCardState extends State<_TemplateCard> {
                             ),
                           ),
                         ),
+                      // Cloud template indicator
+                      if (!widget.template.isLocal && !widget.template.isAsset)
+                        Positioned(
+                          top: 6,
+                          right: 6,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.9),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Feather.cloud,
+                                  size: 10,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(width: 2),
+                                Text(
+                                  'Cloud',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       // Delete button for deletable templates
                       if (widget.onDelete != null)
                         Positioned(
@@ -1010,11 +1120,14 @@ class _PreviewWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (template.thumbnailImageUrl != null) {
-      return Image.network(
-        template.thumbnailImageUrl!,
-        fit: BoxFit.cover,
-        width: double.infinity,
-        height: double.infinity,
+      return CustomPaint(
+        painter: _CheckerboardPainter(),
+        child: Image.network(
+          template.thumbnailImageUrl!,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+        ),
       );
     }
 
@@ -1042,6 +1155,34 @@ class _PreviewWidget extends StatelessWidget {
       child: const SizedBox.expand(),
     );
   }
+}
+
+class _CheckerboardPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    const checkerSize = 8.0;
+    final paint = Paint();
+
+    for (double y = 0; y < size.height; y += checkerSize) {
+      for (double x = 0; x < size.width; x += checkerSize) {
+        final isEven = ((x / checkerSize).floor() + (y / checkerSize).floor()) % 2 == 0;
+        paint.color = isEven ? const Color(0xFFE0E0E0) : const Color(0xFFF5F5F5);
+
+        canvas.drawRect(
+          Rect.fromLTWH(
+            x,
+            y,
+            (x + checkerSize > size.width) ? size.width - x : checkerSize,
+            (y + checkerSize > size.height) ? size.height - y : checkerSize,
+          ),
+          paint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 /// Custom painter for rendering template preview

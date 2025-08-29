@@ -20,6 +20,7 @@ class TemplateState {
   final List<TemplateCategory> categories;
   final bool isLoading;
   final bool isLoadingMore;
+  final bool isLoadingTemplate;
   final String? error;
   final int currentPage;
   final bool hasMorePages;
@@ -34,6 +35,7 @@ class TemplateState {
     this.categories = const [],
     this.isLoading = false,
     this.isLoadingMore = false,
+    this.isLoadingTemplate = false,
     this.error,
     this.currentPage = 1,
     this.hasMorePages = true,
@@ -49,6 +51,7 @@ class TemplateState {
     List<TemplateCategory>? categories,
     bool? isLoading,
     bool? isLoadingMore,
+    bool? isLoadingTemplate,
     String? error,
     int? currentPage,
     bool? hasMorePages,
@@ -64,6 +67,7 @@ class TemplateState {
       categories: categories ?? this.categories,
       isLoading: isLoading ?? this.isLoading,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      isLoadingTemplate: isLoadingTemplate ?? this.isLoadingTemplate,
       error: clearError ? null : (error ?? this.error),
       currentPage: currentPage ?? this.currentPage,
       hasMorePages: hasMorePages ?? this.hasMorePages,
@@ -243,6 +247,52 @@ class TemplateNotifier extends StateNotifier<TemplateState> {
         error: 'Failed to load API templates: $error',
       );
       _logger.severe('Error loading API templates: $error');
+    }
+  }
+
+  /// Get individual template by ID (new method)
+  Future<Template?> getTemplate(int templateId) async {
+    if (state.isLoadingTemplate) return null;
+
+    state = state.copyWith(isLoadingTemplate: true, clearError: true);
+
+    try {
+      // If not in cache, fetch from API
+      final response = await _templateService.getTemplateFromAPI(templateId);
+
+      if (response != null) {
+        // Update our API templates cache with the fetched template
+        final updatedApiTemplates = [...state.apiTemplates];
+        final existingIndex = updatedApiTemplates.indexWhere((t) => t.id == templateId);
+
+        if (existingIndex >= 0) {
+          updatedApiTemplates[existingIndex] = response;
+        } else {
+          updatedApiTemplates.add(response);
+        }
+
+        // Update allTemplates as well
+        final allTemplates = [...state.assetTemplates, ...state.localTemplates, ...updatedApiTemplates];
+
+        state = state.copyWith(
+          apiTemplates: updatedApiTemplates,
+          allTemplates: allTemplates,
+          isLoadingTemplate: false,
+        );
+
+        _logger.info('Fetched and cached template $templateId from API');
+        return response;
+      }
+
+      state = state.copyWith(isLoadingTemplate: false);
+      return null;
+    } catch (error) {
+      state = state.copyWith(
+        isLoadingTemplate: false,
+        error: 'Failed to fetch template: $error',
+      );
+      _logger.severe('Error fetching template $templateId: $error');
+      return null;
     }
   }
 
@@ -453,6 +503,11 @@ final apiTemplatesProvider = Provider<List<Template>>((ref) {
 /// Provider for all templates
 final allTemplatesProvider = Provider<List<Template>>((ref) {
   return ref.watch(templateProvider).allTemplates;
+});
+
+/// Provider for template loading state
+final templateLoadingProvider = Provider<bool>((ref) {
+  return ref.watch(templateProvider).isLoadingTemplate;
 });
 
 /// Enum for template tabs

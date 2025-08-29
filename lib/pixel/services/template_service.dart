@@ -147,6 +147,16 @@ class TemplateService {
     }
   }
 
+  Future<Template?> getTemplateFromAPI(int templateId) async {
+    try {
+      final response = await _apiRepo.fetchTemplate(templateId);
+      return response.data;
+    } catch (e) {
+      _logger.severe('Error fetching template $templateId from API: $e');
+      return null;
+    }
+  }
+
   /// Get local templates only
   Future<List<Template>> getLocalTemplates() async {
     await _loadLocalTemplates();
@@ -262,7 +272,7 @@ class TemplateService {
   /// Get template categories
   Future<List<TemplateCategory>> getTemplateCategories() async {
     try {
-      final response = await _apiRepo.getCategories();
+      final response = await _apiRepo.fetchCategories();
       _categories = response.data!;
       return _categories;
     } catch (e) {

@@ -3,6 +3,15 @@ import 'package:equatable/equatable.dart';
 
 import '../../config/constants.dart';
 
+bool? _getBool(Map<String, dynamic> json, String key) {
+  if (json[key] == null) return null;
+  return json[key]?.toString() == '1' || json[key]?.toString() == 'true';
+}
+
+int? _getInt(Map<String, dynamic> json, String key) {
+  return int.tryParse(json[key]?.toString() ?? '');
+}
+
 /// Represents a pixel art template that can be applied to the canvas
 class Template extends Equatable {
   final int? id;
@@ -70,16 +79,16 @@ class Template extends Equatable {
       tags: json['tags'] is String
           ? (json['tags'] as String).split(',').map((t) => t.trim()).toList()
           : List<String>.from(json['tags'] ?? []),
-      isPublic: json['is_public'] ?? true,
-      isLocal: json['is_local'] ?? (json['id'] == null),
+      isPublic: _getBool(json, 'is_public') ?? true,
+      isLocal: _getBool(json, 'is_local') ?? (json['id'] == null),
       authorName: json['author_name'] as String?,
       authorId: json['author_id'] as String?,
       thumbnailUrl: json['thumbnail_url'] as String?,
       createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : null,
       updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : null,
-      likeCount: int.tryParse(json['like_count'].toString()) ?? 0,
-      downloadCount: int.tryParse(json['download_count'].toString()) ?? 0,
-      isLiked: int.tryParse(json['is_liked'].toString()) == 1,
+      likeCount: _getInt(json, 'like_count') ?? 0,
+      downloadCount: _getInt(json, 'download_count') ?? 0,
+      isLiked: _getBool(json, 'is_liked') ?? false,
       createdBy: json['user_id']?.toString(),
     );
   }

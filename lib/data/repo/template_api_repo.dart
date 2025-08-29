@@ -112,7 +112,7 @@ class TemplateAPIRepo {
   }
 
   /// Get template by ID
-  Future<ApiResponse<Template>> getTemplate(int templateId) async {
+  Future<ApiResponse<Template>> fetchTemplate(int templateId) async {
     try {
       return _apiClient.get<Template>(
         '/api/v1/templates/$templateId',
@@ -125,7 +125,7 @@ class TemplateAPIRepo {
   }
 
   /// Get template categories
-  Future<ApiResponse<List<TemplateCategory>>> getCategories() async {
+  Future<ApiResponse<List<TemplateCategory>>> fetchCategories() async {
     try {
       return _apiClient.get<List<TemplateCategory>>(
         '/api/v1/templates/categories',
@@ -138,7 +138,7 @@ class TemplateAPIRepo {
   }
 
   /// Get featured templates
-  Future<ApiResponse<List<Template>>> getFeaturedTemplates({
+  Future<ApiResponse<List<Template>>> fetchFeaturedTemplates({
     int limit = 10,
   }) async {
     try {
@@ -200,7 +200,7 @@ class TemplateAPIRepo {
   }
 
   /// Get user's templates
-  Future<ApiResponse<TemplatesResponse>> getUserTemplates({
+  Future<ApiResponse<TemplatesResponse>> fetchUserTemplates({
     int page = 1,
     int limit = 20,
     String sort = 'recent',
