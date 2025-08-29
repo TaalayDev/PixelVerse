@@ -47,7 +47,10 @@ enum AppIcons {
   fold_up,
   unfold,
   film_strip,
-  retro_game
+  retro_game,
+  black_hole,
+  star,
+  gallery_wide
 }
 
 class AppIcon extends StatelessWidget {

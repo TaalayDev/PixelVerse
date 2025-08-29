@@ -9,6 +9,8 @@ import '../core/services/in_app_review_service.dart';
 import '../data.dart';
 import '../data/repo/auth_api_repo.dart';
 import '../data/repo/project_api_repo.dart';
+import '../data/repo/template_api_repo.dart';
+import '../pixel/services/template_service.dart';
 
 final analyticsProvider = Provider((ref) => FirebaseAnalytics.instance);
 final databaseProvider = Provider((ref) => AppDatabase());
@@ -43,4 +45,12 @@ final authAPIRepoProvider = Provider<AuthAPIRepo>((ref) {
 
 final projectAPIRepoProvider = Provider<ProjectAPIRepo>((ref) {
   return ProjectAPIRepo(ref.read(apiClientProvider));
+});
+
+final templateAPIRepoProvider = Provider<TemplateAPIRepo>((ref) {
+  return TemplateAPIRepo(ref.read(apiClientProvider));
+});
+
+final templateServiceProvider = Provider<TemplateService>((ref) {
+  return TemplateService(ref.read(templateAPIRepoProvider));
 });

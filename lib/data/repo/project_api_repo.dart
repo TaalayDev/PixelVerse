@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:logging/logging.dart';
 
 import '../../core/utils/api_client.dart';
+import '../models/api_models.dart';
 import '../models/project_api_models.dart';
 
 class ProjectAPIRepo {
@@ -52,7 +53,7 @@ class ProjectAPIRepo {
         ));
       }
 
-      return await _apiClient.post<ApiProject>(
+      return _apiClient.post<ApiProject>(
         '/api/v1/projects',
         data: formData,
         converter: (data) {
@@ -105,7 +106,7 @@ class ProjectAPIRepo {
         ));
       }
 
-      return await _apiClient.post<ApiProject>(
+      return _apiClient.post<ApiProject>(
         '/api/v1/projects/$projectId',
         data: formData,
         converter: (data) => ProjectConverters.project(data['project']),
@@ -124,7 +125,7 @@ class ProjectAPIRepo {
   /// Delete a project
   Future<ApiResponse<Map<String, dynamic>>> deleteProject(int projectId) async {
     try {
-      return await _apiClient.delete<Map<String, dynamic>>(
+      return _apiClient.delete<Map<String, dynamic>>(
         '/api/v1/projects/$projectId',
         converter: ProjectConverters.simpleMap,
       );
@@ -142,7 +143,7 @@ class ProjectAPIRepo {
         params['include_data'] = '1';
       }
 
-      return await _apiClient.get<ApiProject>(
+      return _apiClient.get<ApiProject>(
         '/api/v1/projects/$projectId',
         params: params,
         converter: ProjectConverters.project,
@@ -158,7 +159,7 @@ class ProjectAPIRepo {
     try {
       final params = filters?.toQueryParams() ?? {};
 
-      return await _apiClient.get<ProjectsResponse>(
+      return _apiClient.get<ProjectsResponse>(
         '/api/v1/projects',
         params: params,
         converter: ProjectConverters.projectsList,
@@ -172,7 +173,7 @@ class ProjectAPIRepo {
   /// Get featured projects
   Future<ApiResponse<List<ApiProject>>> getFeaturedProjects({int limit = 10}) async {
     try {
-      return await _apiClient.get<List<ApiProject>>(
+      return _apiClient.get<List<ApiProject>>(
         '/api/v1/projects/featured',
         params: {'limit': limit},
         converter: ProjectConverters.projects,
@@ -186,7 +187,7 @@ class ProjectAPIRepo {
   /// Get projects by username
   Future<ApiResponse<List<ApiProject>>> getUserProjects(String username) async {
     try {
-      return await _apiClient.get<List<ApiProject>>(
+      return _apiClient.get<List<ApiProject>>(
         '/api/v1/users/$username/projects',
         converter: ProjectConverters.projects,
       );
@@ -201,7 +202,7 @@ class ProjectAPIRepo {
   /// Toggle like on a project
   Future<ApiResponse<LikeResponse>> toggleLike(int projectId) async {
     try {
-      return await _apiClient.post<LikeResponse>(
+      return _apiClient.post<LikeResponse>(
         '/api/v1/projects/$projectId/like',
         converter: ProjectConverters.likeResponse,
       );
@@ -220,7 +221,7 @@ class ProjectAPIRepo {
     int limit = 20,
   }) async {
     try {
-      return await _apiClient.get<List<ApiComment>>(
+      return _apiClient.get<List<ApiComment>>(
         '/api/v1/projects/$projectId/comments',
         params: {
           'page': page,
@@ -246,7 +247,7 @@ class ProjectAPIRepo {
         if (parentId != null) 'parent_id': parentId,
       };
 
-      return await _apiClient.post<Map<String, dynamic>>(
+      return _apiClient.post<Map<String, dynamic>>(
         '/api/v1/projects/$projectId/comments',
         data: data,
         converter: ProjectConverters.simpleMap,
@@ -263,7 +264,7 @@ class ProjectAPIRepo {
     String content,
   ) async {
     try {
-      return await _apiClient.put<Map<String, dynamic>>(
+      return _apiClient.put<Map<String, dynamic>>(
         '/api/v1/comments/$commentId',
         data: {'content': content},
         converter: ProjectConverters.simpleMap,
@@ -277,7 +278,7 @@ class ProjectAPIRepo {
   /// Delete a comment
   Future<ApiResponse<Map<String, dynamic>>> deleteComment(int commentId) async {
     try {
-      return await _apiClient.delete<Map<String, dynamic>>(
+      return _apiClient.delete<Map<String, dynamic>>(
         '/api/v1/comments/$commentId',
         converter: ProjectConverters.simpleMap,
       );
@@ -292,7 +293,7 @@ class ProjectAPIRepo {
   /// Get popular tags
   Future<ApiResponse<List<ApiTag>>> getPopularTags({int limit = 20}) async {
     try {
-      return await _apiClient.get<List<ApiTag>>(
+      return _apiClient.get<List<ApiTag>>(
         '/api/v1/tags',
         params: {'limit': limit},
         converter: ProjectConverters.tags,
@@ -306,7 +307,7 @@ class ProjectAPIRepo {
   /// Search tags
   Future<ApiResponse<List<ApiTag>>> searchTags(String query, {int limit = 20}) async {
     try {
-      return await _apiClient.get<List<ApiTag>>(
+      return _apiClient.get<List<ApiTag>>(
         '/api/v1/tags/search',
         params: {
           'q': query,
@@ -330,7 +331,7 @@ class ProjectAPIRepo {
     String sort = 'popular',
   }) async {
     try {
-      return await getProjects(ProjectFilters(
+      return getProjects(ProjectFilters(
         search: query,
         page: page,
         limit: limit,
@@ -352,7 +353,7 @@ class ProjectAPIRepo {
     int limit = 20,
   }) async {
     try {
-      return await getProjects(ProjectFilters(
+      return getProjects(ProjectFilters(
         minWidth: minWidth,
         maxWidth: maxWidth,
         minHeight: minHeight,
@@ -374,7 +375,7 @@ class ProjectAPIRepo {
     String sort = 'popular',
   }) async {
     try {
-      return await getProjects(ProjectFilters(
+      return getProjects(ProjectFilters(
         tags: tags,
         page: page,
         limit: limit,
@@ -394,7 +395,7 @@ class ProjectAPIRepo {
     try {
       final oneWeekAgo = DateTime.now().subtract(const Duration(days: 7));
 
-      return await getProjects(ProjectFilters(
+      return getProjects(ProjectFilters(
         sort: 'popular',
         createdAfter: oneWeekAgo,
         page: page,
@@ -412,7 +413,7 @@ class ProjectAPIRepo {
     int limit = 20,
   }) async {
     try {
-      return await getProjects(ProjectFilters(
+      return getProjects(ProjectFilters(
         sort: 'recent',
         page: page,
         limit: limit,

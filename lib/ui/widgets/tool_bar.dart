@@ -249,17 +249,18 @@ class ToolBar extends StatelessWidget {
                           const SizedBox(width: 8),
                         ],
                       ],
-                      IconButton(
-                        onPressed: onTemplates,
-                        icon: const AppIcon(AppIcons.retro_game),
-                        tooltip: 'Templates',
-                      ),
                     ],
                   );
                 },
               ),
             ),
           ),
+          IconButton(
+            onPressed: onTemplates,
+            icon: const AppIcon(AppIcons.gallery_wide, size: 20),
+            tooltip: 'Templates',
+          ),
+          const SizedBox(width: 8),
           Row(
             children: [
               IconButton(

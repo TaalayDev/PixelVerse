@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:flutter/material.dart';
+
 import '../data/models/layer.dart';
 
 abstract final class PixelUtils {
@@ -229,5 +231,82 @@ abstract final class PixelUtils {
 
     // Interpolate along Y axis
     return v0 * (1 - wy) + v1 * wy;
+  }
+
+  static Uint32List resize(
+    Uint32List pixels,
+    int srcWidth,
+    int srcHeight,
+    int targetWidth,
+    int targetHeight,
+    int interpolation,
+    int backgroundMode,
+  ) {
+    if (targetWidth <= 0 || targetHeight <= 0) return Uint32List(0);
+
+    final result = Uint32List(targetWidth * targetHeight);
+
+    final scaleX = srcWidth / targetWidth.toDouble();
+    final scaleY = srcHeight / targetHeight.toDouble();
+
+    for (int y = 0; y < targetHeight; y++) {
+      for (int x = 0; x < targetWidth; x++) {
+        final sourceX = x * scaleX;
+        final sourceY = y * scaleY;
+
+        final color = interpolation == 0
+            ? _sampleNearest(pixels, srcWidth, srcHeight, sourceX, sourceY, backgroundMode)
+            : _sampleBilinear(pixels, srcWidth, srcHeight, sourceX, sourceY, backgroundMode);
+
+        result[y * targetWidth + x] = color;
+      }
+    }
+
+    return result;
+  }
+
+  static Uint32List applyRotationWithBounds(
+    Uint32List pixels,
+    int srcWidth,
+    int srcHeight,
+    double angle,
+    Rect originalBounds,
+    Rect rotatedBounds,
+    Offset center,
+    int interpolation,
+    int backgroundMode,
+  ) {
+    final targetWidth = rotatedBounds.width.round();
+    final targetHeight = rotatedBounds.height.round();
+    if (targetWidth <= 0 || targetHeight <= 0) return Uint32List(0);
+
+    final result = Uint32List(targetWidth * targetHeight);
+
+    final cosAngle = math.cos(angle);
+    final sinAngle = math.sin(angle);
+
+    for (int y = 0; y < targetHeight; y++) {
+      for (int x = 0; x < targetWidth; x++) {
+        final worldDestX = rotatedBounds.left + x;
+        final worldDestY = rotatedBounds.top + y;
+
+        final dx = worldDestX - center.dx;
+        final dy = worldDestY - center.dy;
+
+        final sourceWorldX = center.dx + dx * cosAngle - dy * sinAngle;
+        final sourceWorldY = center.dy + dx * sinAngle + dy * cosAngle;
+
+        final sourceX = sourceWorldX - originalBounds.left;
+        final sourceY = sourceWorldY - originalBounds.top;
+
+        final color = interpolation == 0
+            ? _sampleNearest(pixels, srcWidth, srcHeight, sourceX, sourceY, backgroundMode)
+            : _sampleBilinear(pixels, srcWidth, srcHeight, sourceX, sourceY, backgroundMode);
+
+        result[y * targetWidth + x] = color;
+      }
+    }
+
+    return result;
   }
 }

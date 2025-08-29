@@ -2,7 +2,6 @@ import 'dart:developer' as dev;
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -21,6 +20,7 @@ import '../../data.dart';
 import '../../providers/subscription_provider.dart';
 import '../widgets/animated_background.dart';
 import '../widgets/effects/effects_side_panel.dart';
+import '../widgets/layer_template_dialog.dart';
 import '../widgets/pixel_draw_shortcuts.dart';
 import '../widgets/animation_preview_dialog.dart';
 import '../widgets/animation_timeline.dart';
@@ -770,7 +770,7 @@ class _DesktopSidePanelState extends ConsumerState<_DesktopSidePanel> with Singl
                         widget.notifier.duplicateLayer(index);
                       },
                       onLayerToTemplate: (layer) {
-                        dev.log(layer.pixels.toString());
+                        LayerToTemplateDialog.show(context, layer: layer, width: widget.width, height: widget.height);
                       },
                     ),
                   ),
@@ -951,6 +951,12 @@ class PixelPainter extends HookConsumerWidget {
               },
               onMoveSelection: (selectionPoints, delta) {
                 ref.read(pixelDrawNotifierProvider(project).notifier).moveSelection(selectionPoints, delta);
+              },
+              onSelectionResize: (selection, newBounds, center) {
+                ref.read(pixelDrawNotifierProvider(project).notifier).resizeSelection(selection, newBounds, center);
+              },
+              onSelectionRotate: (selection, angle, center) {
+                ref.read(pixelDrawNotifierProvider(project).notifier).rotateSelection(selection, angle, center);
               },
               onColorPicked: (color) {
                 ref.read(pixelDrawNotifierProvider(project).notifier).currentColor =

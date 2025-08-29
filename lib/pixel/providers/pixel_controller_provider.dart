@@ -1,9 +1,11 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:universal_html/html.dart';
 
+import '../../core.dart';
 import '../../data/models/template.dart';
 import '../pixel_point.dart';
 import '../../data.dart';
@@ -46,7 +48,7 @@ class PixelDrawController extends _$PixelDrawController {
     _selectionService = SelectionService(width: project.width, height: project.height);
     _undoRedoService = UndoRedoService();
     _importExportService = ImportExportService();
-    _templateService = TemplateService();
+    _templateService = TemplateService(ref.read(templateAPIRepoProvider));
 
     return PixelDrawState(
       width: project.width,
@@ -796,5 +798,334 @@ class PixelDrawController extends _$PixelDrawController {
       updatedFrames[frameIndex] = updatedFrame;
       state = state.copyWith(frames: updatedFrames);
     }
+  }
+
+  /// MARK: Selection Resizing & Rotation
+
+  void resizeSelection(List<PixelPoint<int>> selection, Rect newBounds, Offset? center) {
+    if (selection.isEmpty || currentLayer.pixels.isEmpty) {
+      return;
+    }
+
+    _saveState();
+
+    final originalBounds = _getSelectionBounds(selection);
+    if (originalBounds == null) return;
+
+    // Ensure minimum size and constrain to canvas bounds
+    final constrainedBounds = Rect.fromLTRB(
+      newBounds.left.clamp(0, state.width.toDouble()),
+      newBounds.top.clamp(0, state.height.toDouble()),
+      newBounds.right.clamp(1, state.width.toDouble()),
+      newBounds.bottom.clamp(1, state.height.toDouble()),
+    );
+
+    final targetWidth = (constrainedBounds.width).round().clamp(1, state.width);
+    final targetHeight = (constrainedBounds.height).round().clamp(1, state.height);
+
+    // Extract selected pixels
+    final selectedPixels = _extractSelectedPixels(
+      currentLayer.pixels,
+      selection,
+      originalBounds,
+    );
+
+    // Apply resize transformation
+    final transformedPixels = PixelUtils.resize(
+      selectedPixels,
+      originalBounds.width.toInt(),
+      originalBounds.height.toInt(),
+      targetWidth,
+      targetHeight,
+      1, // bilinear interpolation
+      0, // transparent background
+    );
+
+    // Clear original selection area
+    final clearedPixels = _clearSelectionArea(
+      currentLayer.pixels,
+      selection,
+    );
+
+    // Place transformed pixels
+    final resultPixels = _placeTransformedPixels(
+      clearedPixels,
+      transformedPixels,
+      constrainedBounds,
+      targetWidth,
+      targetHeight,
+    );
+
+    _updateCurrentLayerPixels(resultPixels);
+
+    // Don't update selection here - let the calling code handle it
+  }
+
+  void rotateSelection(List<PixelPoint<int>> selection, double angle, Offset? center) {
+    if (selection.isEmpty || currentLayer.pixels.isEmpty) {
+      return;
+    }
+
+    _saveState();
+
+    final originalBounds = _getSelectionBounds(selection);
+    if (originalBounds == null) return;
+
+    // Use provided center or calculate geometric center
+    final rotationCenter = center ??
+        Offset(
+          originalBounds.left + originalBounds.width / 2,
+          originalBounds.top + originalBounds.height / 2,
+        );
+
+    // Calculate rotated bounds
+    final rotatedBounds = _calculateRotatedBounds(
+      originalBounds,
+      angle,
+      rotationCenter,
+    );
+
+    // Constrain rotated bounds to canvas
+    final constrainedBounds = Rect.fromLTRB(
+      rotatedBounds.left.clamp(0, state.width.toDouble()),
+      rotatedBounds.top.clamp(0, state.height.toDouble()),
+      rotatedBounds.right.clamp(1, state.width.toDouble()),
+      rotatedBounds.bottom.clamp(1, state.height.toDouble()),
+    );
+
+    // Extract selected pixels
+    final selectedPixels = _extractSelectedPixels(
+      currentLayer.pixels,
+      selection,
+      originalBounds,
+    );
+
+    // Apply rotation transformation
+    final transformedPixels = PixelUtils.applyRotationWithBounds(
+      selectedPixels,
+      originalBounds.width.toInt(),
+      originalBounds.height.toInt(),
+      angle,
+      originalBounds,
+      constrainedBounds,
+      rotationCenter,
+      1, // bilinear interpolation
+      0, // transparent background
+    );
+
+    // Clear original selection area
+    final clearedPixels = _clearSelectionArea(
+      currentLayer.pixels,
+      selection,
+    );
+
+    // Place transformed pixels
+    final resultPixels = _placeTransformedPixels(
+      clearedPixels,
+      transformedPixels,
+      constrainedBounds,
+      constrainedBounds.width.round(),
+      constrainedBounds.height.round(),
+    );
+
+    _updateCurrentLayerPixels(resultPixels);
+
+    // Update selection to match rotated bounds
+    final newSelection = _createSelectionFromBounds(constrainedBounds);
+    setSelection(newSelection);
+  }
+
+// Helper methods for selection transformation
+
+  Rect? _getSelectionBounds(List<PixelPoint<int>> selection) {
+    if (selection.isEmpty) return null;
+
+    int minX = selection.first.x;
+    int maxX = selection.first.x;
+    int minY = selection.first.y;
+    int maxY = selection.first.y;
+
+    for (final point in selection) {
+      minX = math.min(minX, point.x);
+      maxX = math.max(maxX, point.x);
+      minY = math.min(minY, point.y);
+      maxY = math.max(maxY, point.y);
+    }
+
+    return Rect.fromLTRB(
+      minX.toDouble(),
+      minY.toDouble(),
+      (maxX + 1).toDouble(),
+      (maxY + 1).toDouble(),
+    );
+  }
+
+  Uint32List _extractSelectedPixels(
+    Uint32List sourcePixels,
+    List<PixelPoint<int>> selection,
+    Rect bounds,
+  ) {
+    final width = bounds.width.toInt();
+    final height = bounds.height.toInt();
+    final pixels = Uint32List(width * height);
+
+    // Create a set for faster lookup
+    final selectionSet = <String>{};
+    for (final point in selection) {
+      selectionSet.add('${point.x},${point.y}');
+    }
+
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        final worldX = bounds.left.toInt() + x;
+        final worldY = bounds.top.toInt() + y;
+
+        // Check if this pixel is in the selection
+        if (selectionSet.contains('$worldX,$worldY')) {
+          final sourceIndex = worldY * state.width + worldX;
+          final destIndex = y * width + x;
+
+          if (sourceIndex >= 0 && sourceIndex < sourcePixels.length && destIndex >= 0 && destIndex < pixels.length) {
+            pixels[destIndex] = sourcePixels[sourceIndex];
+          }
+        }
+      }
+    }
+
+    return pixels;
+  }
+
+  Uint32List _clearSelectionArea(
+    Uint32List pixels,
+    List<PixelPoint<int>> selection,
+  ) {
+    final result = Uint32List.fromList(pixels);
+
+    for (final point in selection) {
+      final index = point.y * state.width + point.x;
+      if (index >= 0 && index < result.length) {
+        result[index] = 0; // Clear to transparent
+      }
+    }
+
+    return result;
+  }
+
+  Uint32List _placeTransformedPixels(
+    Uint32List targetPixels,
+    Uint32List transformedPixels,
+    Rect targetBounds,
+    int sourceWidth,
+    int sourceHeight,
+  ) {
+    final result = Uint32List.fromList(targetPixels);
+
+    final targetX = targetBounds.left.round();
+    final targetY = targetBounds.top.round();
+
+    for (int y = 0; y < sourceHeight; y++) {
+      for (int x = 0; x < sourceWidth; x++) {
+        final sourceIndex = y * sourceWidth + x;
+        if (sourceIndex >= 0 && sourceIndex < transformedPixels.length) {
+          final pixel = transformedPixels[sourceIndex];
+
+          // Skip transparent pixels
+          if (pixel == 0) continue;
+
+          final destX = targetX + x;
+          final destY = targetY + y;
+
+          if (destX >= 0 && destX < state.width && destY >= 0 && destY < state.height) {
+            final destIndex = destY * state.width + destX;
+            if (destIndex >= 0 && destIndex < result.length) {
+              result[destIndex] = pixel;
+            }
+          }
+        }
+      }
+    }
+
+    return result;
+  }
+
+  Rect _calculateRotatedBounds(Rect originalBounds, double angle, Offset center) {
+    // Calculate the four corners of the original bounds
+    final corners = [
+      Offset(originalBounds.left, originalBounds.top),
+      Offset(originalBounds.right, originalBounds.top),
+      Offset(originalBounds.right, originalBounds.bottom),
+      Offset(originalBounds.left, originalBounds.bottom),
+    ];
+
+    // Rotate each corner around the center
+    final rotatedCorners = corners.map((corner) {
+      final dx = corner.dx - center.dx;
+      final dy = corner.dy - center.dy;
+
+      final cos = math.cos(angle);
+      final sin = math.sin(angle);
+
+      final rotatedX = center.dx + dx * cos - dy * sin;
+      final rotatedY = center.dy + dx * sin + dy * cos;
+
+      return Offset(rotatedX, rotatedY);
+    }).toList();
+
+    // Find the new bounding box
+    double minX = rotatedCorners.first.dx;
+    double maxX = rotatedCorners.first.dx;
+    double minY = rotatedCorners.first.dy;
+    double maxY = rotatedCorners.first.dy;
+
+    for (final corner in rotatedCorners) {
+      minX = math.min(minX, corner.dx);
+      maxX = math.max(maxX, corner.dx);
+      minY = math.min(minY, corner.dy);
+      maxY = math.max(maxY, corner.dy);
+    }
+
+    return Rect.fromLTRB(minX, minY, maxX, maxY);
+  }
+
+  List<PixelPoint<int>> _createSelectionFromBounds(Rect bounds) {
+    final selection = <PixelPoint<int>>[];
+
+    final minX = bounds.left.round().clamp(0, state.width - 1);
+    final maxX = bounds.right.round().clamp(1, state.width);
+    final minY = bounds.top.round().clamp(0, state.height - 1);
+    final maxY = bounds.bottom.round().clamp(1, state.height);
+
+    for (int y = minY; y < maxY; y++) {
+      for (int x = minX; x < maxX; x++) {
+        if (x >= 0 && x < state.width && y >= 0 && y < state.height) {
+          selection.add(PixelPoint<int>(x, y));
+        }
+      }
+    }
+
+    return selection;
+  }
+
+  Uint32List _applyScaleTransform(
+    Uint32List pixels,
+    int width,
+    int height,
+    double scaleX,
+    double scaleY,
+  ) {
+    // Use uniform scale (average of X and Y) for now
+    // You could extend PixelUtils to support non-uniform scaling
+    final scale = (scaleX + scaleY) / 2;
+
+    return PixelUtils.applyScale(
+      pixels,
+      width,
+      height,
+      scale,
+      width / 2,
+      height / 2,
+      1, // Bilinear interpolation
+      0, // Transparent background
+    );
   }
 }

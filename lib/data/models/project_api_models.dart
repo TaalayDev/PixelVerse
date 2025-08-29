@@ -179,17 +179,6 @@ abstract class LikeResponse with _$LikeResponse {
   factory LikeResponse.fromJson(Map<String, dynamic> json) => _$LikeResponseFromJson(json);
 }
 
-@freezed
-abstract class ApiResponse<T> with _$ApiResponse<T> {
-  const factory ApiResponse({
-    required bool success,
-    T? data,
-    String? error,
-    dynamic details,
-    required int timestamp,
-  }) = _ApiResponse<T>;
-}
-
 // Custom converters for the repository
 class ProjectConverters {
   static ApiProject project(dynamic data) => ApiProject.fromJson(data as Map<String, dynamic>);

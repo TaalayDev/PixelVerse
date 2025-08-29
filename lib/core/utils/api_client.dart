@@ -3,7 +3,7 @@ import 'package:logging/logging.dart';
 import 'package:tf_dio_cache/tf_dio_cache.dart';
 
 import '../../data.dart';
-import '../../data/models/project_api_models.dart';
+import '../../data/models/api_models.dart';
 
 class ApiClient {
   final Dio _dio;
@@ -148,6 +148,11 @@ class ApiClient {
     } on DioException catch (e) {
       _logger.warning('Request failed: $method $url - ${e.response?.statusCode}');
       _logger.warning('Error data: ${e.response?.data}');
+
+      final statusCode = e.response?.statusCode;
+      if (statusCode == 401) {
+        LocalStorage().clearToken();
+      }
 
       String errorMessage = 'Network error';
       dynamic details;

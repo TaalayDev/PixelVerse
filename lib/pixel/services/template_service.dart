@@ -1,59 +1,190 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:logging/logging.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../data.dart';
 import '../../data/models/template.dart';
+import '../../data/repo/template_api_repo.dart';
+import '../../core/utils/image_helper.dart';
 
-/// Service for managing pixel art templates
+/// Enhanced service for managing pixel art templates with local storage and API support
 class TemplateService {
-  static final TemplateService _instance = TemplateService._internal();
-  factory TemplateService() => _instance;
-  TemplateService._internal();
+  TemplateService(this._apiRepo);
 
-  TemplateCollection? _templates;
-  bool _isLoading = false;
+  static const String _localTemplatesKey = 'local_templates';
+  static const String _assetTemplatesKey = 'asset_templates_loaded';
 
-  /// Get templates, loading them if necessary
+  final TemplateAPIRepo? _apiRepo;
+  final Logger _logger = Logger('TemplateService');
+
+  // Cache for loaded templates
+  TemplateCollection? _assetTemplates;
+  List<Template> _localTemplates = [];
+  List<Template> _apiTemplates = [];
+  List<TemplateCategory> _categories = [];
+  bool _isAssetLoading = false;
+  bool _isLocalLoaded = false;
+
+  /// Get templates, loading them if necessary (backward compatible method)
   Future<TemplateCollection> getTemplates() async {
-    if (_templates != null) {
-      return _templates!;
-    }
-    return await loadTemplates();
+    await _loadAssetTemplates();
+    await _loadLocalTemplates();
+
+    // Combine asset and local templates
+    final allTemplates = List<Template>.from([
+      ..._assetTemplates?.templates ?? [],
+      ..._localTemplates,
+    ]);
+
+    return TemplateCollection(templates: allTemplates);
   }
 
-  /// Load templates from assets
+  /// Load templates from assets (enhanced version of original method)
   Future<TemplateCollection> loadTemplates() async {
-    if (_isLoading) {
-      // Wait for current loading to complete
-      while (_isLoading) {
-        await Future.delayed(const Duration(milliseconds: 100));
-      }
-      return _templates ?? const TemplateCollection(templates: []);
-    }
+    return await getTemplates();
+  }
 
-    _isLoading = true;
+  /// Convert a layer to a template
+  Future<Template> convertLayerToTemplate(Layer layer, int width, int height, {String? name}) async {
+    final templateName = name ?? 'Template ${DateTime.now().millisecondsSinceEpoch}';
+
+    return Template(
+      name: templateName,
+      width: width,
+      height: height,
+      pixels: layer.pixels.toList(),
+      isLocal: true,
+    );
+  }
+
+  /// Save template locally
+  Future<bool> saveTemplateLocally(Template template) async {
     try {
-      final String jsonString = await rootBundle.loadString('assets/data/templates.json');
-      final List<dynamic> jsonList = json.decode(jsonString) as List<dynamic>;
+      await _loadLocalTemplates();
 
-      _templates = TemplateCollection.fromJson(jsonList);
-      debugPrint('Loaded ${_templates!.templates.length} templates');
+      // Check if template with same name already exists
+      final existingIndex = _localTemplates.indexWhere((t) => t.name == template.name);
 
-      return _templates!;
+      if (existingIndex >= 0) {
+        // Update existing template
+        _localTemplates[existingIndex] = template.copyWith(isLocal: true);
+      } else {
+        // Add new template
+        _localTemplates.add(template.copyWith(isLocal: true));
+      }
+
+      await _saveLocalTemplates();
+      _logger.info('Template "${template.name}" saved locally');
+      return true;
     } catch (e) {
-      debugPrint('Error loading templates: $e');
-      // Return empty collection if loading fails
-      _templates = const TemplateCollection(templates: []);
-      return _templates!;
-    } finally {
-      _isLoading = false;
+      _logger.severe('Error saving template locally: $e');
+      return false;
     }
   }
 
-  /// Create a layer from a template
+  /// Upload template to server
+  Future<Template?> uploadTemplate(
+    Template template, {
+    String? description,
+    String? category,
+    List<String> tags = const [],
+    bool isPublic = true,
+  }) async {
+    if (_apiRepo == null) {
+      _logger.warning('API repository not available for template upload');
+      return null;
+    }
+
+    try {
+      // Generate thumbnail for the template
+      final thumbnail = await _generateTemplateThumbnail(template);
+
+      final response = await _apiRepo!.uploadTemplate(
+        name: template.name,
+        width: template.width,
+        height: template.height,
+        pixels: template.pixels,
+        description: description,
+        category: category,
+        tags: tags,
+        isPublic: isPublic,
+        thumbnailBytes: thumbnail,
+      );
+
+      _logger.info('Template "${template.name}" uploaded successfully');
+      return response.data;
+    } catch (e) {
+      _logger.severe('Error uploading template: $e');
+      return null;
+    }
+  }
+
+  /// Get templates from API with pagination
+  Future<TemplatesResponse> getTemplatesFromAPI({
+    int page = 1,
+    int limit = 20,
+    String? category,
+    String? search,
+    String sort = 'popular',
+    List<String>? tags,
+  }) async {
+    if (_apiRepo == null) {
+      throw Exception('API repository not available');
+    }
+
+    try {
+      final response = await _apiRepo!.fetchTemplates(
+        page: page,
+        limit: limit,
+        category: category,
+        search: search,
+        sort: sort,
+        tags: tags,
+      );
+
+      return response.data!;
+    } catch (e) {
+      _logger.severe('Error fetching templates from API: $e');
+      rethrow;
+    }
+  }
+
+  /// Get local templates only
+  Future<List<Template>> getLocalTemplates() async {
+    await _loadLocalTemplates();
+    return List.from(_localTemplates);
+  }
+
+  /// Delete local template
+  Future<bool> deleteLocalTemplate(String templateName) async {
+    try {
+      await _loadLocalTemplates();
+
+      final initialLength = _localTemplates.length;
+      _localTemplates.removeWhere((template) => template.name == templateName);
+
+      if (_localTemplates.length < initialLength) {
+        await _saveLocalTemplates();
+        _logger.info('Template "$templateName" deleted locally');
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      _logger.severe('Error deleting local template: $e');
+      return false;
+    }
+  }
+
+  /// Create a layer from a template (enhanced version of original method)
   Future<Layer> createLayerFromTemplate({
     required Template template,
     required int projectId,
@@ -101,7 +232,7 @@ class TemplateService {
     return layer;
   }
 
-  /// Apply template directly to existing layer at specified position
+  /// Apply template directly to existing layer at specified position (original method preserved)
   Uint32List applyTemplateToLayer({
     required Template template,
     required Uint32List layerPixels,
@@ -138,55 +269,225 @@ class TemplateService {
     return newPixels;
   }
 
-  /// Get template categories for grouping
-  List<String> getTemplateCategories() {
-    if (_templates == null) return [];
-
-    final categories = <String>{};
-    for (final template in _templates!.templates) {
-      // Extract category from template name (e.g., "Character - Warrior" -> "Character")
-      final parts = template.name.split(' - ');
-      if (parts.length > 1) {
-        categories.add(parts[0]);
-      } else {
-        categories.add('General');
+  /// Get template categories
+  Future<List<TemplateCategory>> getTemplateCategories() async {
+    if (_apiRepo != null) {
+      try {
+        final response = await _apiRepo!.getCategories();
+        _categories = response.data!;
+        return _categories;
+      } catch (e) {
+        _logger.warning('Error fetching categories from API: $e');
       }
     }
 
-    return categories.toList()..sort();
+    // Return default categories if API is not available
+    return [
+      const TemplateCategory(id: 1, name: 'Characters', slug: 'characters', templateCount: 0),
+      const TemplateCategory(id: 2, name: 'Objects', slug: 'objects', templateCount: 0),
+      const TemplateCategory(id: 3, name: 'Backgrounds', slug: 'backgrounds', templateCount: 0),
+      const TemplateCategory(id: 4, name: 'UI Elements', slug: 'ui-elements', templateCount: 0),
+      const TemplateCategory(id: 5, name: 'Tiles', slug: 'tiles', templateCount: 0),
+    ];
   }
 
   /// Get templates by category
   List<Template> getTemplatesByCategory(String category) {
-    if (_templates == null) return [];
+    // For local templates, we might need to implement a simple categorization
+    // For now, return all templates
+    return _localTemplates;
+  }
 
-    return _templates!.templates.where((template) {
-      if (category == 'General') {
-        return !template.name.contains(' - ');
+  /// Search templates
+  Future<List<Template>> searchTemplates(String query) async {
+    await _loadLocalTemplates();
+
+    final searchQuery = query.toLowerCase();
+    return _localTemplates.where((template) {
+      return template.name.toLowerCase().contains(searchQuery);
+    }).toList();
+  }
+
+  /// Load built-in/asset templates
+  Future<List<Template>> loadAssetTemplates() async {
+    try {
+      // Try to load from assets
+      final String jsonString = await rootBundle.loadString('assets/templates/default_templates.json');
+      final List<dynamic> jsonList = json.decode(jsonString);
+
+      return jsonList.map((json) => Template.fromJson(json)).toList();
+    } catch (e) {
+      _logger.info('No asset templates found, returning empty list');
+      return [];
+    }
+  }
+
+  /// Check if template name is available locally
+  Future<bool> isTemplateNameAvailable(String name) async {
+    await _loadLocalTemplates();
+    return !_localTemplates.any((template) => template.name == name);
+  }
+
+  /// Generate a unique template name
+  Future<String> generateUniqueTemplateName(String baseName) async {
+    await _loadLocalTemplates();
+
+    String name = baseName;
+    int counter = 1;
+
+    while (_localTemplates.any((template) => template.name == name)) {
+      name = '$baseName ($counter)';
+      counter++;
+    }
+
+    return name;
+  }
+
+  /// Load asset templates from bundle (enhanced version of original loadTemplates)
+  Future<void> _loadAssetTemplates() async {
+    if (_assetTemplates != null || _isAssetLoading) {
+      // Wait for current loading to complete
+      while (_isAssetLoading) {
+        await Future.delayed(const Duration(milliseconds: 100));
       }
-      return template.name.startsWith('$category - ');
-    }).toList();
+      return;
+    }
+
+    _isAssetLoading = true;
+    try {
+      final String jsonString = await rootBundle.loadString('assets/data/templates.json');
+      final List<dynamic> jsonList = json.decode(jsonString) as List<dynamic>;
+
+      _assetTemplates = TemplateCollection.fromJson(jsonList);
+      _logger.info('Loaded ${_assetTemplates!.templates.length} asset templates');
+
+      // Mark asset templates as not local
+      final updatedTemplates = _assetTemplates!.templates.map((template) {
+        return template.copyWith(isLocal: false);
+      }).toList();
+
+      _assetTemplates = TemplateCollection(templates: updatedTemplates);
+    } catch (e) {
+      _logger.warning('Error loading asset templates: $e');
+      // Return empty collection if loading fails
+      _assetTemplates = const TemplateCollection(templates: []);
+    } finally {
+      _isAssetLoading = false;
+    }
   }
 
-  /// Search templates by name
-  List<Template> searchTemplates(String query) {
-    if (_templates == null || query.isEmpty) return [];
+  /// Load local templates from SharedPreferences
+  Future<void> _loadLocalTemplates() async {
+    if (_isLocalLoaded) return;
 
-    final lowercaseQuery = query.toLowerCase();
-    return _templates!.templates.where((template) {
-      return template.name.toLowerCase().contains(lowercaseQuery);
-    }).toList();
+    try {
+      final file = File('${(await getApplicationDocumentsDirectory()).path}/local_templates.json');
+
+      if (file.existsSync()) {
+        final jsonString = await file.readAsString();
+        final List<dynamic> jsonList = json.decode(jsonString);
+        _localTemplates = jsonList.map((json) => Template.fromJson(json)).toList();
+
+        // Ensure all local templates are marked as local
+        _localTemplates = _localTemplates.map((template) {
+          return template.copyWith(isLocal: true);
+        }).toList();
+      } else {
+        // Initialize with empty list
+        _localTemplates = [];
+
+        // Check if we should load asset templates into local storage on first run
+        final hasLoadedAssets = LocalStorage().getBool(_assetTemplatesKey) ?? false;
+        if (!hasLoadedAssets) {
+          await _loadAssetTemplates();
+          if (_assetTemplates != null && _assetTemplates!.templates.isNotEmpty) {
+            // Copy some asset templates to local storage as samples
+            final sampleTemplates = _assetTemplates!.templates.take(3).map((template) {
+              return template.copyWith(
+                isLocal: true,
+                name: '${template.name} (Sample)',
+              );
+            }).toList();
+
+            _localTemplates.addAll(sampleTemplates);
+            await _saveLocalTemplates();
+            LocalStorage().setBool(_assetTemplatesKey, true);
+          }
+        }
+      }
+
+      _isLocalLoaded = true;
+      _logger.info('Loaded ${_localTemplates.length} local templates');
+    } catch (e) {
+      _logger.severe('Error loading local templates: $e');
+      _localTemplates = [];
+      _isLocalLoaded = true;
+    }
   }
 
-  /// Check if templates are loaded
-  bool get isLoaded => _templates != null;
+  /// Save local templates to SharedPreferences
+  Future<void> _saveLocalTemplates() async {
+    try {
+      final jsonString = json.encode(_localTemplates.map((t) => t.toJson()).toList());
 
-  /// Get number of available templates
-  int get templateCount => _templates?.templates.length ?? 0;
+      final file = File('${(await getApplicationDocumentsDirectory()).path}/local_templates.json');
+      await file.writeAsString(jsonString);
 
-  /// Reload templates from assets
-  Future<TemplateCollection> reloadTemplates() async {
-    _templates = null;
-    return await loadTemplates();
+      _logger.info('Saved ${_localTemplates.length} local templates');
+    } catch (e) {
+      _logger.severe('Error saving local templates: $e');
+    }
+  }
+
+  /// Generate thumbnail for template
+  Future<Uint8List?> _generateTemplateThumbnail(Template template) async {
+    try {
+      // Create image from template pixels
+      final image = await ImageHelper.createImageFromPixels(
+        template.pixelsAsUint32List,
+        template.width,
+        template.height,
+      );
+
+      // Convert to thumbnail size (e.g., 64x64)
+      const thumbnailSize = 64;
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder);
+
+      // Calculate scale to fit within thumbnail size
+      final scale = thumbnailSize / (template.width > template.height ? template.width : template.height);
+      final scaledWidth = (template.width * scale).round();
+      final scaledHeight = (template.height * scale).round();
+
+      // Center the image
+      final offsetX = (thumbnailSize - scaledWidth) / 2;
+      final offsetY = (thumbnailSize - scaledHeight) / 2;
+
+      // Draw scaled image
+      canvas.drawImageRect(
+        image,
+        Rect.fromLTWH(0, 0, template.width.toDouble(), template.height.toDouble()),
+        Rect.fromLTWH(offsetX, offsetY, scaledWidth.toDouble(), scaledHeight.toDouble()),
+        Paint()..filterQuality = FilterQuality.none,
+      );
+
+      final picture = recorder.endRecording();
+      final thumbnailImage = await picture.toImage(thumbnailSize, thumbnailSize);
+      final byteData = await thumbnailImage.toByteData(format: ui.ImageByteFormat.png);
+
+      return byteData?.buffer.asUint8List();
+    } catch (e) {
+      _logger.warning('Error generating template thumbnail: $e');
+      return null;
+    }
+  }
+
+  /// Clear all cached data
+  void clearCache() {
+    _assetTemplates = null;
+    _localTemplates.clear();
+    _categories.clear();
+    _isLocalLoaded = false;
+    _isAssetLoading = false;
   }
 }

@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:image/image.dart' as img;
 
+import '../data/models/api_models.dart';
 import '../data/models/project_api_models.dart';
 import '../data.dart';
 import '../core/utils.dart';

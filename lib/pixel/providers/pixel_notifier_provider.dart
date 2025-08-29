@@ -180,4 +180,33 @@ class PixelDrawNotifier extends _$PixelDrawNotifier {
     final updatedLayer = _controller.currentLayer.copyWith(effects: []);
     updateLayer(updatedLayer);
   }
+
+  void resizeSelection(List<PixelPoint<int>> selection, Rect newBounds, Offset? center) {
+    _controller.resizeSelection(selection, newBounds, center);
+
+    // After transformation, create new selection from bounds
+    final newSelection = _createSelectionFromBounds(newBounds);
+    setSelection(newSelection);
+  }
+
+  void rotateSelection(List<PixelPoint<int>> selection, double angle, Offset? center) {
+    _controller.rotateSelection(selection, angle, center);
+  }
+
+  List<PixelPoint<int>> _createSelectionFromBounds(Rect bounds) {
+    final selection = <PixelPoint<int>>[];
+
+    final minX = bounds.left.round().clamp(0, state.width - 1);
+    final maxX = bounds.right.round().clamp(1, state.width);
+    final minY = bounds.top.round().clamp(0, state.height - 1);
+    final maxY = bounds.bottom.round().clamp(1, state.height);
+
+    for (int y = minY; y < maxY; y++) {
+      for (int x = minX; x < maxX; x++) {
+        selection.add(PixelPoint<int>(x, y));
+      }
+    }
+
+    return selection;
+  }
 }

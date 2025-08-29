@@ -17,24 +17,18 @@ class ShapeUtils {
     if (size == 1) {
       pixels.add(PixelPoint(x, y));
       return pixels;
-    } else if (size == 2) {
-      pixels.add(PixelPoint(x, y));
-      pixels.add(PixelPoint(x + 1, y));
-      pixels.add(PixelPoint(x + 1, y + 1));
-      pixels.add(PixelPoint(x, y + 1));
-
-      return pixels;
-    }
-
-    for (int i = 0; i < size; i++) {
-      for (int j = 0; j < size; j++) {
-        final px = x + i;
-        final py = y + j;
-        if (px >= 0 && px < width && py >= 0 && py < height) {
-          pixels.add(PixelPoint(px, py));
+    } else {
+      final halfSize = size ~/ 2;
+      for (int i = -halfSize; i <= halfSize; i++) {
+        for (int j = -halfSize; j <= halfSize; j++) {
+          final px = x + i;
+          final py = y + j;
+          if (px >= 0 && px < width && py >= 0 && py < height) {
+            pixels.add(PixelPoint(px, py));
+          }
         }
       }
-    }
+    } //
 
     return pixels;
   }

@@ -9,7 +9,7 @@ import '../../data.dart';
 import '../pixel_draw_state.dart';
 import '../pixel_point.dart';
 
-import '../tools/texture_brush_tool.dart' hide TextureBrushPatternEvent;
+import '../tools/texture_brush_tool.dart';
 import 'canvas_controller.dart';
 import 'canvas_gesture_handler.dart';
 import 'canvas_painter.dart';
@@ -40,6 +40,8 @@ class PixelCanvas extends StatefulWidget {
   final Function(List<PixelPoint<int>>) onDrawShape;
   final Function(List<PixelPoint<int>>?)? onSelectionChanged;
   final Function(List<PixelPoint<int>>, Point)? onMoveSelection;
+  final Function(List<PixelPoint<int>>, Rect, Offset?)? onSelectionResize;
+  final Function(List<PixelPoint<int>>, double, Offset?)? onSelectionRotate;
   final Function(Color)? onColorPicked;
   final Function(List<Color>)? onGradientApplied;
   final Function(double, Offset)? onStartDrag;
@@ -64,6 +66,8 @@ class PixelCanvas extends StatefulWidget {
     this.brushSize = 1,
     this.onSelectionChanged,
     this.onMoveSelection,
+    this.onSelectionResize,
+    this.onSelectionRotate,
     this.onGradientApplied,
     this.sprayIntensity = 5,
     this.zoomLevel = 1.0,
