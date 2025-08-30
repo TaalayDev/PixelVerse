@@ -34,7 +34,7 @@ import 'winter_wonderland.dart';
 export 'theme_type.dart';
 
 class AppTheme {
-  static const defaultType = ThemeType.emeraldForest;
+  static const defaultType = ThemeType.retroWave;
   static final defaultTheme = AppTheme.fromType(defaultType);
 
   final ThemeType type;
