@@ -132,6 +132,10 @@ bool isFeatureLocked(IsFeatureLockedRef ref, SubscriptionFeature feature) {
     case SubscriptionFeature.maxCanvasSize:
     case SubscriptionFeature.exportFormats:
       return false; // These features are never fully locked, just limited
+    case SubscriptionFeature.effects:
+    case SubscriptionFeature.templates:
+    case SubscriptionFeature.proTheme:
+      return !ref.read(subscriptionStateProvider.notifier).hasFeatureAccess(feature);
   }
 }
 
@@ -168,7 +172,7 @@ List<PurchaseOffer> purchaseOffers(PurchaseOffersRef ref) {
         isMostPopular: true,
         features: const [
           'Unlimited projects',
-          'Advanced tools & effects',
+          'Advanced tools & effects & templates',
           'Canvas up to 1024x1024 pixels',
           'Export to all formats including video',
           'Cloud backup',

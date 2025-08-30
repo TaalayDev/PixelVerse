@@ -5,9 +5,12 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
 import '../../core.dart';
+import '../../data/models/subscription_model.dart';
 import '../../data/models/template.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/subscription_provider.dart';
 import '../../providers/template_provider.dart';
+import '../screens/subscription_screen.dart';
 import 'animated_background.dart';
 import 'app_icon.dart';
 
@@ -708,42 +711,101 @@ class _ContentWidget extends StatelessWidget {
 
     return Column(
       children: [
-        // Templates Grid
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: GridView.builder(
-              controller: scrollController,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: isSmallScreen ? 2 : 4,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-                childAspectRatio: 0.8,
-              ),
-              itemCount: templates.length + (isLoadingMore ? 4 : 0),
-              itemBuilder: (context, index) {
-                if (index >= templates.length) {
-                  return _LoadingPlaceholder();
-                }
+            child: Consumer(builder: (context, ref, child) {
+              final subscriptionState = ref.watch(subscriptionStateProvider);
+              final hasTemplateAccess = subscriptionState.hasFeatureAccess(SubscriptionFeature.templates);
 
-                final template = templates[index];
-                return _TemplateCard(
-                  template: template,
-                  onTap: () => onTemplateSelected(template),
-                  onDelete: _canDeleteTemplate(template, currentUserId) ? () => onDeleteTemplate(template) : null,
-                );
-              },
-            ),
+              return GridView.builder(
+                controller: scrollController,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: isSmallScreen ? 2 : 4,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  childAspectRatio: 0.8,
+                ),
+                itemCount: templates.length + (isLoadingMore ? 4 : 0),
+                itemBuilder: (context, index) {
+                  if (index >= templates.length) {
+                    return _LoadingPlaceholder();
+                  }
+
+                  final template = templates[index];
+                  final isLocked = template.isPro && !hasTemplateAccess;
+
+                  return _TemplateCard(
+                    template: template,
+                    onTap: () => isLocked ? _showUpgradePrompt(context, ref) : onTemplateSelected(template),
+                    onDelete: _canDeleteTemplate(template, currentUserId) ? () => onDeleteTemplate(template) : null,
+                    isLocked: isLocked,
+                  );
+                },
+              );
+            }),
           ),
         ),
-
-        // Loading indicator for pagination
         if (isLoadingMore)
           const Padding(
             padding: EdgeInsets.all(16),
             child: CircularProgressIndicator(),
           ),
       ],
+    );
+  }
+
+  void _showUpgradePrompt(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.star, color: Colors.amber),
+            SizedBox(width: 8),
+            Text('Premium Template', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber)),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'This template is available in the Pro version.',
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 12),
+            Text(
+              'Pro features include:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            Text('• Premium templates'),
+            Text('• Advanced effects and tools'),
+            Text('• Unlimited projects'),
+            Text('• Cloud backup'),
+            Text('• Priority support'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Maybe Later'),
+          ),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pop(); // Close the templates dialog too
+              SubscriptionOfferScreen.show(
+                context,
+                featurePrompt: SubscriptionFeature.templates,
+              );
+            },
+            icon: const Icon(Icons.upgrade),
+            label: const Text('Upgrade to Pro'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -861,16 +923,17 @@ class _FooterWidget extends StatelessWidget {
   }
 }
 
-/// Individual template card widget
 class _TemplateCard extends StatefulWidget {
   final Template template;
   final VoidCallback onTap;
   final VoidCallback? onDelete;
+  final bool isLocked;
 
   const _TemplateCard({
     required this.template,
     required this.onTap,
     this.onDelete,
+    this.isLocked = false,
   });
 
   @override
@@ -919,7 +982,7 @@ class _TemplateCardState extends State<_TemplateCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    Widget cardContent = Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
@@ -950,73 +1013,128 @@ class _TemplateCardState extends State<_TemplateCard> {
                           isLoadingPreview: _isLoadingPreview,
                         ),
                       ),
-                      if (widget.template.isLocal && !widget.template.isAsset)
+
+                      // Lock overlay for premium templates
+                      if (widget.isLocked) ...[
                         Positioned(
-                          top: 6,
-                          right: 6,
+                          top: 5,
+                          right: 5,
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: widget.template.isLocal
-                                  ? Colors.green.withOpacity(0.9)
-                                  : Colors.blue.withOpacity(0.9),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  widget.template.isLocal ? Feather.hard_drive : Feather.cloud,
-                                  size: 10,
-                                  color: Colors.white,
-                                ),
-                                const SizedBox(width: 2),
-                                const Text(
-                                  'Local',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      // Cloud template indicator
-                      if (!widget.template.isLocal && !widget.template.isAsset)
-                        Positioned(
-                          top: 6,
-                          right: 6,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.withOpacity(0.9),
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.9),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
-                                  Feather.cloud,
-                                  size: 10,
-                                  color: Colors.white,
-                                ),
-                                SizedBox(width: 2),
+                                Icon(Icons.lock, size: 12, color: Colors.white),
+                                SizedBox(width: 4),
                                 Text(
-                                  'Cloud',
+                                  'PRO',
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.w500,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ],
                             ),
                           ),
                         ),
-                      // Delete button for deletable templates
-                      if (widget.onDelete != null)
+                      ],
+
+                      // Local/Cloud indicators
+                      if (!widget.isLocked) ...[
+                        if (widget.template.isLocal && !widget.template.isAsset)
+                          Positioned(
+                            top: 6,
+                            right: 6,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.9),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Feather.hard_drive, size: 10, color: Colors.white),
+                                  SizedBox(width: 2),
+                                  Text(
+                                    'Local',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        if (!widget.template.isLocal && !widget.template.isAsset)
+                          Positioned(
+                            top: 6,
+                            right: 6,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.withOpacity(0.9),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Feather.cloud, size: 10, color: Colors.white),
+                                  SizedBox(width: 2),
+                                  Text(
+                                    'Cloud',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+
+                      // Pro badge for premium templates
+                      if (widget.template.isPro && !widget.isLocked)
+                        Positioned(
+                          top: 6,
+                          left: 6,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Colors.purple, Colors.orange],
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.star, size: 10, color: Colors.white),
+                                SizedBox(width: 2),
+                                Text(
+                                  'PRO',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                      // Delete button for deletable templates (not shown when locked)
+                      if (widget.onDelete != null && !widget.isLocked)
                         Positioned(
                           top: 6,
                           left: 6,
@@ -1048,6 +1166,7 @@ class _TemplateCardState extends State<_TemplateCard> {
                 widget.template.name,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
+                      color: widget.isLocked ? Theme.of(context).colorScheme.onSurface.withOpacity(0.6) : null,
                     ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -1062,14 +1181,18 @@ class _TemplateCardState extends State<_TemplateCard> {
                   Text(
                     widget.template.sizeString,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.outline,
+                          color: widget.isLocked
+                              ? Theme.of(context).colorScheme.outline.withOpacity(0.5)
+                              : Theme.of(context).colorScheme.outline,
                         ),
                   ),
                   if (widget.template.category != null)
                     Text(
                       widget.template.categoryDisplayName,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
+                            color: widget.isLocked
+                                ? Theme.of(context).colorScheme.primary.withOpacity(0.5)
+                                : Theme.of(context).colorScheme.primary,
                             fontSize: 10,
                           ),
                     ),
@@ -1084,14 +1207,40 @@ class _TemplateCardState extends State<_TemplateCard> {
                     Icon(
                       Icons.favorite,
                       size: 12,
-                      color: Colors.red.withOpacity(0.7),
+                      color: widget.isLocked ? Colors.red.withOpacity(0.3) : Colors.red.withOpacity(0.7),
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '${widget.template.likeCount}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.outline,
+                            color: widget.isLocked
+                                ? Theme.of(context).colorScheme.outline.withOpacity(0.5)
+                                : Theme.of(context).colorScheme.outline,
                             fontSize: 10,
+                          ),
+                    ),
+                  ],
+                ),
+              ],
+
+              // Locked indicator text
+              if (widget.isLocked) ...[
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.lock_outline,
+                      size: 12,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Tap to Unlock',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
                           ),
                     ),
                   ],
@@ -1102,6 +1251,8 @@ class _TemplateCardState extends State<_TemplateCard> {
         ),
       ),
     );
+
+    return cardContent;
   }
 }
 

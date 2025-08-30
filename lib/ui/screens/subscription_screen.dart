@@ -497,7 +497,7 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
         icon: Icons.format_paint,
         title: 'Tools & Effects',
         free: 'Basic tools',
-        pro: 'Advanced tools & effects',
+        pro: 'Advanced tools & effects & templates',
       ),
       _FeatureComparisonItem(
         icon: Icons.download,
@@ -912,6 +912,12 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
         return 'Remove Watermark';
       case SubscriptionFeature.prioritySupport:
         return 'Get Priority Support';
+      case SubscriptionFeature.effects:
+        return 'Unlock Special Effects';
+      case SubscriptionFeature.templates:
+        return 'Unlock Templates';
+      case SubscriptionFeature.proTheme:
+        return 'Unlock Pro Theme';
     }
   }
 
@@ -931,6 +937,12 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
         return 'Export clean art without watermarks';
       case SubscriptionFeature.prioritySupport:
         return 'Get faster support for any issues';
+      case SubscriptionFeature.effects:
+        return 'Unlock Special Effects';
+      case SubscriptionFeature.templates:
+        return 'Unlock Templates';
+      case SubscriptionFeature.proTheme:
+        return 'Unlock Pro Theme';
     }
   }
 }

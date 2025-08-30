@@ -15,6 +15,9 @@ enum SubscriptionFeature {
   advancedTools,
   cloudBackup,
   noWatermark,
+  effects,
+  templates,
+  proTheme,
   prioritySupport,
 }
 
@@ -29,37 +32,46 @@ class SubscriptionFeatureConfig {
     SubscriptionPlan.proPurchase: 1024,
   };
 
-  // Available export formats
   static const Map<SubscriptionPlan, List<String>> exportFormats = {
     SubscriptionPlan.free: ['PNG', 'JPEG'],
     SubscriptionPlan.proPurchase: ['PNG', 'JPEG', 'SVG', 'GIF', 'WEBP', 'MP4'],
   };
 
-  // Advanced tools access
   static const Map<SubscriptionPlan, bool> advancedTools = {
     SubscriptionPlan.free: false,
     SubscriptionPlan.proPurchase: true,
   };
 
-  // Cloud backup access
   static const Map<SubscriptionPlan, bool> cloudBackup = {
     SubscriptionPlan.free: false,
     SubscriptionPlan.proPurchase: true,
   };
 
-  // No watermark on exports
   static const Map<SubscriptionPlan, bool> noWatermark = {
     SubscriptionPlan.free: false,
     SubscriptionPlan.proPurchase: true,
   };
 
-  // Priority support
   static const Map<SubscriptionPlan, bool> prioritySupport = {
     SubscriptionPlan.free: false,
     SubscriptionPlan.proPurchase: true,
   };
 
-  // Get feature value by plan
+  static const Map<SubscriptionPlan, bool> templates = {
+    SubscriptionPlan.free: false,
+    SubscriptionPlan.proPurchase: true,
+  };
+
+  static const Map<SubscriptionPlan, bool> effects = {
+    SubscriptionPlan.free: false,
+    SubscriptionPlan.proPurchase: true,
+  };
+
+  static const Map<SubscriptionPlan, bool> proTheme = {
+    SubscriptionPlan.free: false,
+    SubscriptionPlan.proPurchase: true,
+  };
+
   static T getFeatureValue<T>(SubscriptionFeature feature, SubscriptionPlan plan) {
     switch (feature) {
       case SubscriptionFeature.maxProjects:
@@ -76,6 +88,12 @@ class SubscriptionFeatureConfig {
         return noWatermark[plan] as T;
       case SubscriptionFeature.prioritySupport:
         return prioritySupport[plan] as T;
+      case SubscriptionFeature.effects:
+        return effects[plan] as T;
+      case SubscriptionFeature.templates:
+        return templates[plan] as T;
+      case SubscriptionFeature.proTheme:
+        return proTheme[plan] as T;
     }
   }
 }
@@ -227,10 +245,14 @@ class UserSubscription extends Equatable {
         case SubscriptionFeature.exportFormats:
           return true;
         case SubscriptionFeature.advancedTools:
-        case SubscriptionFeature.cloudBackup:
         case SubscriptionFeature.noWatermark:
         case SubscriptionFeature.prioritySupport:
           return true;
+        case SubscriptionFeature.proTheme:
+        case SubscriptionFeature.effects:
+        case SubscriptionFeature.templates:
+        case SubscriptionFeature.cloudBackup:
+          return false;
       }
     }
 
@@ -245,6 +267,9 @@ class UserSubscription extends Equatable {
       case SubscriptionFeature.cloudBackup:
       case SubscriptionFeature.noWatermark:
       case SubscriptionFeature.prioritySupport:
+      case SubscriptionFeature.proTheme:
+      case SubscriptionFeature.effects:
+      case SubscriptionFeature.templates:
         if (!isPermanentPro) return false;
         return SubscriptionFeatureConfig.getFeatureValue<bool>(
           feature,

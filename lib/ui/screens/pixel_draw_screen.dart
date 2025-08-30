@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -886,6 +887,28 @@ class PixelPainter extends HookConsumerWidget {
                 );
               }),
             ),
+          // Positioned.fill(
+          //   child: LayoutBuilder(builder: (context, constraints) {
+          //     final maXWidth = constraints.maxWidth;
+          //     final maXHeight = constraints.maxHeight;
+
+          //     return Opacity(
+          //       opacity: backgroundImage.opacity,
+          //       child: Transform(
+          //         transform: Matrix4.identity()
+          //           ..scale(backgroundImage.scale)
+          //           ..translate(
+          //             backgroundImage.offset.dx * maXWidth,
+          //             backgroundImage.offset.dy * maXHeight,
+          //           ),
+          //         child: SvgPicture.asset(
+          //           'assets/vectors/black_hole.svg',
+          //           fit: BoxFit.cover,
+          //         ),
+          //       ),
+          //     );
+          //   }),
+          // ),
           if (showPrevFrames)
             for (var i = 0; i < state.currentFrameIndex; i++)
               Positioned.fill(

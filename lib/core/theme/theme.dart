@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pixelverse/data.dart';
 
 import 'autumn_harvest.dart';
 import 'cherry_blossom.dart';
@@ -343,7 +342,7 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   Future<void> _loadTheme() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = LocalStorage();
     final themeString = prefs.getString(_themeKey);
 
     if (themeString != null) {
@@ -364,8 +363,8 @@ class ThemeProvider extends ChangeNotifier {
   Future<void> setTheme(ThemeType themeType) async {
     _currentTheme = AppTheme.fromType(themeType);
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_themeKey, themeType.toString());
+    final prefs = LocalStorage();
+    prefs.setString(_themeKey, themeType.toString());
 
     notifyListeners();
   }

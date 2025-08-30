@@ -34,6 +34,7 @@ class Template extends Equatable {
   final int downloadCount;
   final bool isLiked;
   final String? createdBy;
+  final bool isPro;
 
   const Template({
     this.id,
@@ -56,6 +57,7 @@ class Template extends Equatable {
     this.downloadCount = 0,
     this.isLiked = false,
     this.createdBy,
+    this.isPro = false,
   });
 
   /// Create Template from JSON
@@ -90,6 +92,7 @@ class Template extends Equatable {
       downloadCount: _getInt(json, 'download_count') ?? 0,
       isLiked: _getBool(json, 'is_liked') ?? false,
       createdBy: json['user_id']?.toString(),
+      isPro: _getBool(json, 'is_pro') ?? false,
     );
   }
 
@@ -115,6 +118,7 @@ class Template extends Equatable {
       'download_count': downloadCount,
       'is_liked': isLiked,
       'user_id': createdBy,
+      'is_pro': isPro,
     };
   }
 
@@ -227,7 +231,8 @@ class Template extends Equatable {
         downloadCount,
         isAsset,
         isLiked,
-        createdBy
+        createdBy,
+        isPro
       ];
 
   @override
