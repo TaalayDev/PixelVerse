@@ -48,7 +48,7 @@ Do not commit this file to version control
 
 Draw | Manage
 --- | ---
-![Project]([https://is2-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/6f/d2/d0/6fd2d0fd-0090-534f-016e-c2fde012c4cb/_U041d_U043e_U0432_U044b_U0438_U0306__U043f_U0440_U043e_U0435_U043a_U0442__U00286_U0029.png/0x0ss.png]) | ![Projects]([https://is2-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/da/11/e9/da11e953-8fd6-597b-7715-9ad2dcc0e8b8/_U041d_U043e_U0432_U044b_U0438_U0306__U043f_U0440_U043e_U0435_U043a_U0442__U00289_U0029.png/0x0ss.png])
+![Project](https://is2-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/6f/d2/d0/6fd2d0fd-0090-534f-016e-c2fde012c4cb/_U041d_U043e_U0432_U044b_U0438_U0306__U043f_U0440_U043e_U0435_U043a_U0442__U00286_U0029.png/0x0ss.png) | ![Projects](https://is2-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/da/11/e9/da11e953-8fd6-597b-7715-9ad2dcc0e8b8/_U041d_U043e_U0432_U044b_U0438_U0306__U043f_U0440_U043e_U0435_U043a_U0442__U00289_U0029.png/0x0ss.png)
 
 ## Usage
 
