@@ -24,10 +24,38 @@ class TemplatesDialog extends ConsumerStatefulWidget {
   });
 
   static Future<void> show(BuildContext context, Function(Template template) onTemplateSelected) async {
-    showDialog(
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
+    if (isMobile) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) {
+          return SizedBox(
+            height: MediaQuery.sizeOf(context).height * 0.9,
+            child: TemplatesDialog(onTemplateSelected: onTemplateSelected),
+          );
+        },
+      );
+      return;
+    }
+
+    return showDialog(
       context: context,
       builder: (context) {
-        return TemplatesDialog(onTemplateSelected: onTemplateSelected);
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.85,
+            height: MediaQuery.of(context).size.height * 0.85,
+            constraints: const BoxConstraints(
+              maxWidth: 900,
+              maxHeight: 700,
+              minWidth: 700,
+              minHeight: 500,
+            ),
+            child: TemplatesDialog(onTemplateSelected: onTemplateSelected),
+          ),
+        );
       },
     );
   }
@@ -166,103 +194,90 @@ class _TemplatesDialogState extends ConsumerState<TemplatesDialog> {
       _updateFilteredTemplates();
     });
 
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        width: MediaQuery.of(context).size.width * 0.85,
-        height: MediaQuery.of(context).size.height * 0.85,
-        constraints: const BoxConstraints(
-          maxWidth: 900,
-          maxHeight: 700,
-          minWidth: 700,
-          minHeight: 500,
-        ),
-        child: Stack(
-          children: [
-            AnimatedBackground(
-              child: Column(
-                children: [
-                  // Header
-                  _HeaderWidget(
-                    onClose: () => Navigator.of(context).pop(),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Tab Bar
-                  _TabBarWidget(
-                    currentTab: currentTab,
-                    isSignedIn: authState.isSignedIn,
-                    onTabChanged: (tab) {
-                      setState(() {
-                        currentTab = tab;
-                      });
-                    },
-                  ),
-
-                  // Search and Filters
-                  _SearchAndFiltersWidget(
-                    searchController: searchController,
-                    categories: templateState.categories,
-                    selectedCategory: selectedCategory,
-                    onChanged: () {
-                      _updateFilteredTemplates();
-                    },
-                    onCategoryChanged: (category) {
-                      setState(() {
-                        selectedCategory = category;
-                      });
-                    },
-                  ),
-
-                  // Content
-                  Expanded(
-                    child: _ContentWidget(
-                      currentTab: currentTab,
-                      templates: filteredTemplates,
-                      isLoading: templateState.isLoading,
-                      isLoadingMore: templateState.isLoadingMore,
-                      error: templateState.error,
-                      scrollController: scrollController,
-                      totalCount: templateState.totalCount,
-                      onRetry: () => ref.read(templateProvider.notifier).refresh(),
-                      currentUserId: authState.apiUser?.id.toString(),
-                      onTemplateSelected: _handleTemplateSelection,
-                      onDeleteTemplate: (template) => _showDeleteConfirmation(context, template),
-                    ),
-                  ),
-
-                  // Footer with stats
-                  _FooterWidget(
-                    displayedCount: filteredTemplates.length,
-                    totalCount: templateState.totalCount,
-                  ),
-                ],
+    return Stack(
+      children: [
+        AnimatedBackground(
+          child: Column(
+            children: [
+              // Header
+              _HeaderWidget(
+                onClose: () => Navigator.of(context).pop(),
               ),
-            ),
+              const SizedBox(height: 8),
 
-            // Loading overlay for template fetching
-            if (_isLoadingTemplate)
-              Container(
-                color: Colors.black54,
-                child: const Center(
-                  child: Card(
-                    child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          CircularProgressIndicator(),
-                          SizedBox(height: 16),
-                          Text('Loading template...'),
-                        ],
-                      ),
-                    ),
+              // Tab Bar
+              _TabBarWidget(
+                currentTab: currentTab,
+                isSignedIn: authState.isSignedIn,
+                onTabChanged: (tab) {
+                  setState(() {
+                    currentTab = tab;
+                  });
+                },
+              ),
+
+              // Search and Filters
+              _SearchAndFiltersWidget(
+                searchController: searchController,
+                categories: templateState.categories,
+                selectedCategory: selectedCategory,
+                onChanged: () {
+                  _updateFilteredTemplates();
+                },
+                onCategoryChanged: (category) {
+                  setState(() {
+                    selectedCategory = category;
+                  });
+                },
+              ),
+
+              // Content
+              Expanded(
+                child: _ContentWidget(
+                  currentTab: currentTab,
+                  templates: filteredTemplates,
+                  isLoading: templateState.isLoading,
+                  isLoadingMore: templateState.isLoadingMore,
+                  error: templateState.error,
+                  scrollController: scrollController,
+                  totalCount: templateState.totalCount,
+                  onRetry: () => ref.read(templateProvider.notifier).refresh(),
+                  currentUserId: authState.apiUser?.id.toString(),
+                  onTemplateSelected: _handleTemplateSelection,
+                  onDeleteTemplate: (template) => _showDeleteConfirmation(context, template),
+                ),
+              ),
+
+              // Footer with stats
+              _FooterWidget(
+                displayedCount: filteredTemplates.length,
+                totalCount: templateState.totalCount,
+              ),
+            ],
+          ),
+        ),
+
+        // Loading overlay for template fetching
+        if (_isLoadingTemplate)
+          Container(
+            color: Colors.black54,
+            child: const Center(
+              child: Card(
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('Loading template...'),
+                    ],
                   ),
                 ),
               ),
-          ],
-        ),
-      ),
+            ),
+          ),
+      ],
     );
   }
 

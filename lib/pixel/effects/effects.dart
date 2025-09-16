@@ -59,6 +59,9 @@ part 'clouds_effect.dart';
 part 'bark_effect.dart';
 part 'leaf_venation_effect.dart';
 part 'city_effect.dart';
+part 'sky_effect.dart';
+part 'ground_texture_effect.dart';
+part 'wall_texture_effect.dart';
 
 enum EffectType {
   brightness,
@@ -117,7 +120,10 @@ enum EffectType {
   clouds,
   treeBark,
   leafVenation,
-  city
+  city,
+  sky,
+  groundTexture,
+  wallTexture
 }
 
 /// Base abstract class for all effects
@@ -192,6 +198,9 @@ abstract class Effect {
         EffectType.treeBark => 'Tree Bark',
         EffectType.leafVenation => 'Leaf Venation',
         EffectType.city => 'City',
+        EffectType.sky => 'Sky',
+        EffectType.groundTexture => 'Ground Texture',
+        EffectType.wallTexture => 'Wall Texture',
       };
 
   String getDescription(BuildContext context) => switch (type) {
@@ -248,6 +257,7 @@ abstract class Effect {
         EffectType.treeBark => 'Detailed tree bark texture',
         EffectType.leafVenation => 'Leaf vein pattern overlay',
         EffectType.fog => 'Misty fog atmosphere',
+        EffectType.sky => 'Beautiful sky gradient',
 
         // Particle Effects
         EffectType.sparkle => 'Magical sparkle particles',
@@ -266,6 +276,8 @@ abstract class Effect {
         EffectType.crystal => 'Crystalline surface texture',
         EffectType.metal => 'Metallic surface finish',
         EffectType.noise => 'Random noise texture',
+        EffectType.groundTexture => 'Natural ground surface',
+        EffectType.wallTexture => 'Various wall surface textures',
 
         // Special FX
         EffectType.city => 'Urban cityscape backdrop',
@@ -295,6 +307,7 @@ abstract class Effect {
       case EffectType.fire:
       case EffectType.oceanWaves:
       case EffectType.clouds:
+      case EffectType.sky:
         return true;
 
       // Static effects that don't animate
@@ -334,6 +347,8 @@ abstract class Effect {
       case EffectType.leafVenation:
       case EffectType.city:
       case EffectType.fog:
+      case EffectType.groundTexture:
+      case EffectType.wallTexture:
         return false;
     }
   }
@@ -376,6 +391,9 @@ abstract class Effect {
       case EffectType.jello:
       case EffectType.wipe:
       case EffectType.rain:
+      case EffectType.sky:
+      case EffectType.groundTexture:
+      case EffectType.wallTexture:
         return true;
 
       case EffectType.brightness:
@@ -465,6 +483,9 @@ abstract class Effect {
       EffectType.pulse => Icon(MaterialCommunityIcons.heart_pulse, size: size, color: color),
       EffectType.dissolve || EffectType.fadeDissolve => Icon(MaterialCommunityIcons.blur, size: size, color: color),
       EffectType.forest => Icon(MaterialCommunityIcons.forest, size: size, color: color),
+      EffectType.sky => Icon(MaterialCommunityIcons.weather_partly_cloudy, size: size, color: color),
+      EffectType.groundTexture => Icon(MaterialCommunityIcons.terrain, size: size, color: color),
+      EffectType.wallTexture => Icon(MaterialCommunityIcons.wall, size: size, color: color),
     };
   }
 
@@ -517,6 +538,7 @@ abstract class Effect {
       EffectType.treeBark => const Color(0xFF5D4037), // Brown
       EffectType.leafVenation => const Color(0xFF4CAF50), // Green
       EffectType.fog => const Color(0xFFB0BEC5), // Light blue grey
+      EffectType.sky => const Color(0xFF81D4FA), // Light sky blue
 
       // Particle Effects - Bright colors
       EffectType.sparkle => const Color(0xFFFFD700), // Gold
@@ -534,6 +556,8 @@ abstract class Effect {
       EffectType.crystal => const Color(0xFFE1F5FE), // Light cyan
       EffectType.metal => const Color(0xFF616161), // Grey
       EffectType.noise => const Color(0xFF424242), // Dark grey
+      EffectType.groundTexture => const Color(0xFF6D4C41), // Brown
+      EffectType.wallTexture => const Color(0xFF8D6E63), // Brown
 
       // Special FX - Unique colors
       EffectType.city => const Color(0xFF37474F), // Dark blue grey
@@ -689,6 +713,12 @@ class EffectsManager {
         return LeafVenationEffect(params);
       case EffectType.city:
         return CityEffect(params);
+      case EffectType.sky:
+        return SkyEffect(params);
+      case EffectType.groundTexture:
+        return GroundTextureEffect(params);
+      case EffectType.wallTexture:
+        return WallTextureEffect(params);
     }
   }
 
