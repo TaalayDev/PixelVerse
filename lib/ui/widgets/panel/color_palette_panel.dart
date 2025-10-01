@@ -3,8 +3,8 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
-import '../../core/colors.dart';
-import '../../l10n/strings.dart';
+import '../../../core/colors.dart';
+import '../../../l10n/strings.dart';
 
 /// Utility class to generate different types of color palettes
 class ColorPaletteGenerator {

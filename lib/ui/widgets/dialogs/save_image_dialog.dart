@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
-import '../../core/utils.dart';
-import '../../data/models/subscription_model.dart';
-import '../../pixel/image_painter.dart';
-import '../../pixel/pixel_draw_state.dart';
-import '../../data.dart';
-import '../widgets.dart';
-import 'animation_timeline.dart';
+import '../../../core/utils.dart';
+import '../../../data/models/subscription_model.dart';
+import '../../../pixel/image_painter.dart';
+import '../../../pixel/pixel_canvas_state.dart';
+import '../../../data.dart';
+import '../../widgets.dart';
+import '../animation_timeline.dart';
 
 Future<void> showSaveImageDialog(
   BuildContext context, {
-  required PixelDrawState state,
+  required PixelCanvasState state,
   required final UserSubscription subscription,
   required Function(Map<String, dynamic>) onSave,
 }) {
@@ -46,7 +46,7 @@ class SaveImageBottomSheet extends StatefulWidget {
   });
 
   final String? format;
-  final PixelDrawState state;
+  final PixelCanvasState state;
   final UserSubscription subscription;
   final Function(Map<String, dynamic>) onSave;
 

@@ -6,8 +6,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
-import '../../l10n/strings.dart';
-import '../../providers/auth_provider.dart';
+import '../../../l10n/strings.dart';
+import '../../../providers/auth_provider.dart';
 
 class AuthDialog extends HookConsumerWidget {
   bool get isAppleSignInAvailable {

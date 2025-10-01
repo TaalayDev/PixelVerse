@@ -26,7 +26,6 @@ class StyledToolBottomSheet extends HookConsumerWidget {
       SubscriptionFeature.advancedTools,
     );
 
-    // Define only extra tools (non-basic tools)
     final extraTools = [
       const ToolItem(
         tool: PixelTool.sprayPaint,
@@ -281,7 +280,7 @@ class ToolGrid extends StatelessWidget {
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
-          childAspectRatio: 2.2,
+          childAspectRatio: 2.0,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),

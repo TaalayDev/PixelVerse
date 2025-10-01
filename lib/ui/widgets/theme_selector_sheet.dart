@@ -9,7 +9,6 @@ import '../../providers/ad/reward_video_ad_controller.dart';
 import '../../providers/subscription_provider.dart';
 import '../screens/subscription_screen.dart';
 import 'animated_background.dart';
-import 'reward_dialog.dart';
 import 'theme_selector.dart';
 
 class ThemeSelectorBottomSheet extends HookConsumerWidget {
@@ -168,7 +167,7 @@ class ThemeSelectorBottomSheet extends HookConsumerWidget {
                 ),
 
                 // Theme categories
-                if (!subscription.isPro)
+                if (!subscription.isPro) ...[
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 20),
                     padding: const EdgeInsets.all(16),
@@ -229,8 +228,8 @@ class ThemeSelectorBottomSheet extends HookConsumerWidget {
                       ],
                     ),
                   ),
-
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
+                ],
 
                 // Theme grid
                 Expanded(
@@ -241,10 +240,8 @@ class ThemeSelectorBottomSheet extends HookConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Free themes
-                        _buildThemeSection(
-                          context,
-                          ref,
-                          title: 'Free Themes',
+                        _ThemeList(
+                          title: const Text('Free Themes'),
                           themes: ThemeType.values.where((t) => !t.isLocked).toList(),
                           currentTheme: currentTheme,
                           selectedTheme: selectedTheme,
@@ -253,13 +250,9 @@ class ThemeSelectorBottomSheet extends HookConsumerWidget {
                           previewTheme: previewTheme,
                         ),
 
-                        const SizedBox(height: 32),
-
                         // Premium themes
-                        _buildThemeSection(
-                          context,
-                          ref,
-                          title: 'Premium Themes',
+                        _ThemeList(
+                          title: const Text('Premium Themes'),
                           themes: ThemeType.values.where((t) => t.isLocked).toList(),
                           currentTheme: currentTheme,
                           selectedTheme: selectedTheme,
@@ -280,28 +273,40 @@ class ThemeSelectorBottomSheet extends HookConsumerWidget {
       },
     );
   }
+}
 
-  Widget _buildThemeSection(
-    BuildContext context,
-    WidgetRef ref, {
-    required String title,
-    required List<ThemeType> themes,
-    required AppTheme currentTheme,
-    required ValueNotifier<ThemeType?> selectedTheme,
-    required List<ThemeType> unlockedThemes,
-    required UserSubscription subscription,
-    required AppTheme previewTheme,
-  }) {
+class _ThemeList extends ConsumerWidget {
+  final Widget title;
+  final List<ThemeType> themes;
+  final AppTheme currentTheme;
+  final ValueNotifier<ThemeType?> selectedTheme;
+  final List<ThemeType> unlockedThemes;
+  final UserSubscription subscription;
+  final AppTheme previewTheme;
+
+  const _ThemeList({
+    super.key,
+    required this.title,
+    required this.themes,
+    required this.currentTheme,
+    required this.selectedTheme,
+    required this.unlockedThemes,
+    required this.subscription,
+    required this.previewTheme,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
+        DefaultTextStyle(
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
             color: previewTheme.textPrimary,
           ),
+          child: title,
         ),
         const SizedBox(height: 16),
         GridView.builder(

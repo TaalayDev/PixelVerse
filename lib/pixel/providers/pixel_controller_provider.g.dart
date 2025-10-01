@@ -7,7 +7,7 @@ part of 'pixel_controller_provider.dart';
 // **************************************************************************
 
 String _$pixelDrawControllerHash() =>
-    r'125c91209e9cacd40113c0cd331f3fb913c376b8';
+    r'fc4be8381c2206c46ed9d7173ce6e034e0ab614b';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -31,10 +31,10 @@ class _SystemHash {
 }
 
 abstract class _$PixelDrawController
-    extends BuildlessAutoDisposeNotifier<PixelDrawState> {
+    extends BuildlessAutoDisposeNotifier<PixelCanvasState> {
   late final Project project;
 
-  PixelDrawState build(
+  PixelCanvasState build(
     Project project,
   );
 }
@@ -44,7 +44,7 @@ abstract class _$PixelDrawController
 const pixelDrawControllerProvider = PixelDrawControllerFamily();
 
 /// See also [PixelDrawController].
-class PixelDrawControllerFamily extends Family<PixelDrawState> {
+class PixelDrawControllerFamily extends Family<PixelCanvasState> {
   /// See also [PixelDrawController].
   const PixelDrawControllerFamily();
 
@@ -83,7 +83,7 @@ class PixelDrawControllerFamily extends Family<PixelDrawState> {
 
 /// See also [PixelDrawController].
 class PixelDrawControllerProvider extends AutoDisposeNotifierProviderImpl<
-    PixelDrawController, PixelDrawState> {
+    PixelDrawController, PixelCanvasState> {
   /// See also [PixelDrawController].
   PixelDrawControllerProvider(
     Project project,
@@ -114,7 +114,7 @@ class PixelDrawControllerProvider extends AutoDisposeNotifierProviderImpl<
   final Project project;
 
   @override
-  PixelDrawState runNotifierBuild(
+  PixelCanvasState runNotifierBuild(
     covariant PixelDrawController notifier,
   ) {
     return notifier.build(
@@ -139,7 +139,7 @@ class PixelDrawControllerProvider extends AutoDisposeNotifierProviderImpl<
   }
 
   @override
-  AutoDisposeNotifierProviderElement<PixelDrawController, PixelDrawState>
+  AutoDisposeNotifierProviderElement<PixelDrawController, PixelCanvasState>
       createElement() {
     return _PixelDrawControllerProviderElement(this);
   }
@@ -158,14 +158,15 @@ class PixelDrawControllerProvider extends AutoDisposeNotifierProviderImpl<
   }
 }
 
-mixin PixelDrawControllerRef on AutoDisposeNotifierProviderRef<PixelDrawState> {
+mixin PixelDrawControllerRef
+    on AutoDisposeNotifierProviderRef<PixelCanvasState> {
   /// The parameter `project` of this provider.
   Project get project;
 }
 
 class _PixelDrawControllerProviderElement
     extends AutoDisposeNotifierProviderElement<PixelDrawController,
-        PixelDrawState> with PixelDrawControllerRef {
+        PixelCanvasState> with PixelDrawControllerRef {
   _PixelDrawControllerProviderElement(super.provider);
 
   @override

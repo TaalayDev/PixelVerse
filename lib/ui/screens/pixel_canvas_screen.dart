@@ -1,42 +1,42 @@
-import 'dart:developer' as dev;
 import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../l10n/strings.dart';
 import '../../pixel/canvas/pixel_canvas.dart';
 import '../../pixel/image_painter.dart';
-import '../../pixel/pixel_draw_state.dart';
+import '../../pixel/pixel_canvas_state.dart';
 import '../../providers/background_image_provider.dart';
-import '../../pixel/providers/pixel_notifier_provider.dart';
+import '../../pixel/providers/pixel_canvas_provider.dart';
 import '../../pixel/animation_frame_controller.dart' hide AnimationController;
 import '../../pixel/tools.dart';
 import '../../data.dart';
 import '../../providers/subscription_provider.dart';
 import '../widgets/animated_background.dart';
+import '../widgets/dialogs/import_dialog.dart';
 import '../widgets/effects/effects_side_panel.dart';
-import '../widgets/layer_template_dialog.dart';
-import '../widgets/pixel_draw_shortcuts.dart';
-import '../widgets/animation_preview_dialog.dart';
+import '../widgets/dialogs/layer_template_dialog.dart';
+import '../widgets/painter/pixel_painter.dart';
+import '../widgets/panel/desktop_side_panel.dart';
+import '../widgets/pixel_canvas_shortcuts.dart';
+import '../widgets/dialogs/animation_preview_dialog.dart';
 import '../widgets/animation_timeline.dart';
 import '../widgets/effects/effects_panel.dart';
-import '../widgets/grid_painter.dart';
-import '../widgets/dialogs.dart';
+import '../widgets/painter/grid_painter.dart';
+import '../widgets/dialogs/save_image_dialog.dart';
 import '../widgets.dart';
-import '../widgets/templates_dialog.dart';
+import '../widgets/dialogs/templates_dialog.dart';
 import '../widgets/tool_bar.dart';
 import '../widgets/tool_menu.dart';
 import '../widgets/tools_bottom_bar.dart';
-import 'animation_screen.dart';
 
-class PixelDrawScreen extends StatefulHookConsumerWidget {
-  const PixelDrawScreen({
+class PixelCanvasScreen extends StatefulHookConsumerWidget {
+  const PixelCanvasScreen({
     super.key,
     required this.project,
   });
@@ -44,26 +44,21 @@ class PixelDrawScreen extends StatefulHookConsumerWidget {
   final Project project;
 
   @override
-  ConsumerState<PixelDrawScreen> createState() => _PixelDrawScreenState();
+  ConsumerState<PixelCanvasScreen> createState() => _PixelCanvasScreenState();
 }
 
-class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerProviderStateMixin {
+class _PixelCanvasScreenState extends ConsumerState<PixelCanvasScreen> with TickerProviderStateMixin {
   late Project project = widget.project;
-  late PixelDrawNotifierProvider provider = pixelDrawNotifierProvider(project);
-  late PixelDrawNotifier notifier = ref.read(provider.notifier);
+  late PixelCanvasNotifierProvider provider = pixelCanvasNotifierProvider(project);
+  late PixelCanvasNotifier notifier = ref.read(provider.notifier);
 
   final _shortcutsFocusNode = FocusNode();
   bool _showUI = true;
 
-  @override
-  void initState() {
-    super.initState();
-  }
-
   void handleExport(
     BuildContext context,
-    PixelDrawNotifier notifier,
-    PixelDrawState state,
+    PixelCanvasNotifier notifier,
+    PixelCanvasState state,
   ) async {
     _shortcutsFocusNode.canRequestFocus = false;
 
@@ -115,128 +110,6 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerPr
     _shortcutsFocusNode.canRequestFocus = true;
   }
 
-  Future<bool?> showImportDialog(BuildContext context) {
-    return showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(Icons.file_upload, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(width: 12),
-            Text(
-              'Import Image',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-          ],
-        ),
-        content: Container(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Select how you want to import your image:',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 24),
-
-              // Option 1: Import as new layer
-              _buildImportOption(
-                context,
-                icon: Icons.layers,
-                title: 'Convert to Pixel Art',
-                description: 'Import and automatically convert the image to pixel art style on a new layer.',
-                onTap: () => Navigator.of(context).pop(false),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Option 2: Import as background
-              _buildImportOption(
-                context,
-                icon: Icons.image,
-                title: 'Import as Background',
-                description: 'Import the image as-is and use it as a reference background layer.',
-                onTap: () => Navigator.of(context).pop(true),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(null),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildImportOption(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String description,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: Border.all(color: Theme.of(context).dividerColor),
-          borderRadius: BorderRadius.circular(8),
-          color: Theme.of(context).colorScheme.surface,
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                size: 28,
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                        ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _toggleUI() {
     setState(() {
       _showUI = !_showUI;
@@ -244,7 +117,6 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerPr
   }
 
   void _setZoomFit(ValueNotifier<double> gridScale, ValueNotifier<Offset> gridOffset) {
-    // Calculate zoom to fit canvas in view
     final screenSize = MediaQuery.of(context).size;
     final canvasAspectRatio = project.width / project.height;
     final screenAspectRatio = screenSize.width / screenSize.height;
@@ -263,6 +135,10 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerPr
   void _setZoom100(ValueNotifier<double> gridScale, ValueNotifier<Offset> gridOffset) {
     gridScale.value = 1.0;
     gridOffset.value = Offset.zero;
+  }
+
+  Future<bool?> showImportDialog(BuildContext context) {
+    return ImportDialog.show(context);
   }
 
   @override
@@ -295,7 +171,7 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerPr
 
     final subscription = ref.watch(subscriptionStateProvider);
 
-    return PixelDrawShortcutsWrapper(
+    return PixelCanvasShortcutsWrapper(
       shortcutsFocusNode: _shortcutsFocusNode,
       currentTool: currentTool,
       brushSize: brushSize,
@@ -467,7 +343,7 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerPr
                         ),
                       ),
                       if (MediaQuery.sizeOf(context).width > 1050)
-                        _DesktopSidePanel(
+                        DesktopSidePanel(
                           width: width,
                           height: height,
                           state: state,
@@ -562,7 +438,7 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerPr
 
   void handleEffects(
     BuildContext context,
-    PixelDrawNotifier notifier,
+    PixelCanvasNotifier notifier,
   ) {
     final currentLayer = notifier.getCurrentLayer();
 
@@ -578,7 +454,7 @@ class _PixelDrawScreenState extends ConsumerState<PixelDrawScreen> with TickerPr
 
   void showColorPicker(
     BuildContext context,
-    PixelDrawNotifier controller,
+    PixelCanvasNotifier controller,
   ) {
     showDialog(
       context: context,
@@ -696,320 +572,6 @@ class _ToolElements extends StatelessWidget {
           ),
         ]
       ],
-    );
-  }
-}
-
-class _DesktopSidePanel extends StatefulHookConsumerWidget {
-  final int width;
-  final int height;
-  final PixelDrawState state;
-  final PixelDrawNotifier notifier;
-  final ValueNotifier<PixelTool> currentTool;
-
-  const _DesktopSidePanel({
-    super.key,
-    required this.width,
-    required this.height,
-    required this.state,
-    required this.notifier,
-    required this.currentTool,
-  });
-
-  @override
-  ConsumerState<_DesktopSidePanel> createState() => _DesktopSidePanelState();
-}
-
-class _DesktopSidePanelState extends ConsumerState<_DesktopSidePanel> with SingleTickerProviderStateMixin {
-  @override
-  Widget build(BuildContext context) {
-    final subscription = ref.watch(subscriptionStateProvider);
-
-    return Container(
-      color: Theme.of(context).colorScheme.surface,
-      child: SizedBox(
-        width: 250,
-        child: Column(
-          children: [
-            // Tab content
-            Expanded(
-              child: Column(
-                children: [
-                  Expanded(
-                    child: LayersPanel(
-                      width: widget.width,
-                      height: widget.height,
-                      layers: widget.state.currentFrame.layers,
-                      activeLayerIndex: widget.state.currentLayerIndex,
-                      onLayerUpdated: (layer) {
-                        widget.notifier.updateLayer(layer);
-                      },
-                      onLayerAdded: (name) {
-                        widget.notifier.addLayer(name);
-                      },
-                      onLayerVisibilityChanged: (index) {
-                        widget.notifier.toggleLayerVisibility(index);
-                      },
-                      onLayerSelected: (index) {
-                        widget.notifier.selectLayer(index);
-                      },
-                      onLayerDeleted: (index) {
-                        widget.notifier.removeLayer(index);
-                      },
-                      onLayerLockedChanged: (index) {},
-                      onLayerReordered: (oldIndex, newIndex) {
-                        widget.notifier.reorderLayers(
-                          newIndex,
-                          oldIndex,
-                        );
-                      },
-                      onLayerOpacityChanged: (index, opacity) {},
-                      onLayerEffectsChanged: (updatedLayer) {
-                        widget.notifier.updateLayer(updatedLayer);
-                      },
-                      onLayerDuplicated: (index) {
-                        widget.notifier.duplicateLayer(index);
-                      },
-                      onLayerToTemplate: (layer) {
-                        LayerToTemplateDialog.show(context, layer: layer, width: widget.width, height: widget.height);
-                      },
-                    ),
-                  ),
-                  Divider(height: 0, color: Colors.grey.withOpacity(0.5)),
-                  Expanded(
-                    child: EffectsSidePanel(
-                      layer: widget.state.layers[widget.state.currentLayerIndex],
-                      width: widget.width,
-                      height: widget.height,
-                      onLayerUpdated: (updatedLayer) {
-                        widget.notifier.updateLayer(updatedLayer);
-                      },
-                    ),
-                  ),
-                  Divider(height: 0, color: Colors.grey.withOpacity(0.5)),
-                  Expanded(
-                    child: ColorPalettePanel(
-                      currentColor: widget.state.currentColor,
-                      isEyedropperSelected: widget.currentTool.value == PixelTool.eyedropper,
-                      onSelectEyedropper: () {
-                        widget.currentTool.value = PixelTool.eyedropper;
-                      },
-                      onColorSelected: (color) {
-                        widget.notifier.currentColor = color;
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class PixelPainter extends HookConsumerWidget {
-  const PixelPainter({
-    super.key,
-    required this.project,
-    required this.state,
-    required this.notifier,
-    required this.gridScale,
-    required this.gridOffset,
-    required this.currentTool,
-    required this.currentModifier,
-    required this.currentColor,
-    required this.brushSize,
-    required this.sprayIntensity,
-    this.showPrevFrames = false,
-  });
-
-  final Project project;
-  final PixelDrawState state;
-  final PixelDrawNotifier notifier;
-  final ValueNotifier<double> gridScale;
-  final ValueNotifier<Offset> gridOffset;
-  final PixelTool currentTool;
-  final PixelModifier currentModifier;
-  final Color currentColor;
-  final ValueNotifier<int> brushSize;
-  final ValueNotifier<int> sprayIntensity;
-  final bool showPrevFrames;
-
-  double calculateOnionSkinOpacity(int forIndex, int count) {
-    if (count <= 0 || forIndex.abs() > count) {
-      return 0.0;
-    }
-
-    const opacityRange = 0.5 - 0.01;
-    final step = opacityRange / count;
-
-    final opacity = (step * (forIndex.abs() - 1));
-
-    return opacity.clamp(0.1, 0.5);
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final backgroundImage = ref.watch(backgroundImageProvider);
-
-    return CustomPaint(
-      painter: GridPainter(
-        width: min(project.width, 64),
-        height: min(project.height, 64),
-        // scale: gridScale.value,
-        // offset: gridOffset.value,
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          if (backgroundImage.image != null)
-            Positioned.fill(
-              child: LayoutBuilder(builder: (context, constraints) {
-                final maXWidth = constraints.maxWidth;
-                final maXHeight = constraints.maxHeight;
-
-                return Opacity(
-                  opacity: backgroundImage.opacity,
-                  child: Transform(
-                    transform: Matrix4.identity()
-                      ..scale(backgroundImage.scale)
-                      ..translate(
-                        backgroundImage.offset.dx * maXWidth,
-                        backgroundImage.offset.dy * maXHeight,
-                      ),
-                    child: Image.memory(
-                      backgroundImage.image!,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                );
-              }),
-            ),
-          // Positioned.fill(
-          //   child: LayoutBuilder(builder: (context, constraints) {
-          //     final maXWidth = constraints.maxWidth;
-          //     final maXHeight = constraints.maxHeight;
-
-          //     return Opacity(
-          //       opacity: backgroundImage.opacity,
-          //       child: Transform(
-          //         transform: Matrix4.identity()
-          //           ..scale(backgroundImage.scale)
-          //           ..translate(
-          //             backgroundImage.offset.dx * maXWidth,
-          //             backgroundImage.offset.dy * maXHeight,
-          //           ),
-          //         child: SvgPicture.asset(
-          //           'assets/vectors/black_hole.svg',
-          //           fit: BoxFit.cover,
-          //         ),
-          //       ),
-          //     );
-          //   }),
-          // ),
-          if (showPrevFrames)
-            for (var i = 0; i < state.currentFrameIndex; i++)
-              Positioned.fill(
-                child: Opacity(
-                  opacity: calculateOnionSkinOpacity(
-                    i,
-                    state.currentFrameIndex,
-                  ),
-                  child: LayersPreview(
-                    width: project.width,
-                    height: project.height,
-                    layers: state.frames[i].layers,
-                    builder: (context, image) {
-                      return image != null
-                          ? CustomPaint(painter: ImagePainter(image))
-                          : const ColoredBox(color: Colors.transparent);
-                    },
-                  ),
-                ),
-              ),
-          Positioned.fill(
-            child: PixelCanvas(
-              width: project.width,
-              height: project.height,
-              layers: state.layers,
-              currentLayerIndex: state.currentLayerIndex,
-              onTapPixel: (x, y) {
-                switch (currentTool) {
-                  case PixelTool.pencil:
-                  case PixelTool.brush:
-                  case PixelTool.pixelPerfectLine:
-                  case PixelTool.sprayPaint:
-                    notifier.setPixel(x, y);
-                    break;
-                  case PixelTool.fill:
-                    notifier.fill(x, y);
-                    break;
-                  case PixelTool.eraser:
-                    final originalColor = notifier.currentColor;
-                    notifier.currentColor = Colors.transparent;
-                    notifier.setPixel(x, y);
-                    notifier.currentColor = originalColor;
-                    break;
-                  default:
-                    break;
-                }
-              },
-              currentTool: currentTool,
-              currentColor: currentColor,
-              modifier: currentModifier,
-              brushSize: brushSize.value,
-              sprayIntensity: sprayIntensity.value,
-              zoomLevel: gridScale.value,
-              currentOffset: gridOffset.value,
-              eventStream: notifier.eventStream,
-              onDrawShape: (points) {
-                ref.read(pixelDrawNotifierProvider(project).notifier).fillPixels(points);
-              },
-              onStartDrawing: () {},
-              onFinishDrawing: () {},
-              onSelectionChanged: (selectionPoints) {
-                ref.read(pixelDrawNotifierProvider(project).notifier).setSelection(selectionPoints);
-              },
-              onMoveSelection: (selectionPoints, delta) {
-                ref.read(pixelDrawNotifierProvider(project).notifier).moveSelection(selectionPoints, delta);
-              },
-              onSelectionResize: (selection, newBounds, center) {
-                ref.read(pixelDrawNotifierProvider(project).notifier).resizeSelection(selection, newBounds, center);
-              },
-              onSelectionRotate: (selection, angle, center) {
-                ref.read(pixelDrawNotifierProvider(project).notifier).rotateSelection(selection, angle, center);
-              },
-              onColorPicked: (color) {
-                ref.read(pixelDrawNotifierProvider(project).notifier).currentColor =
-                    color == Colors.transparent ? Colors.white : color;
-              },
-              onGradientApplied: (gradientColors) {
-                ref.read(pixelDrawNotifierProvider(project).notifier).applyGradient(gradientColors);
-              },
-              onStartDrag: (scale, offset) {
-                if (currentTool == PixelTool.drag) {
-                  return ref.read(pixelDrawNotifierProvider(project).notifier).startDrag();
-                }
-              },
-              onDrag: (scale, offset) {
-                if (currentTool == PixelTool.drag) {
-                  return ref.read(pixelDrawNotifierProvider(project).notifier).dragPixels(scale, offset);
-                }
-
-                gridScale.value = scale;
-                gridOffset.value = offset;
-              },
-              onDragEnd: (s, o) {
-                if (currentTool == PixelTool.drag) {
-                  return ref.read(pixelDrawNotifierProvider(project).notifier).endDrag();
-                }
-              },
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

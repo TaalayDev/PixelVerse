@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'pixel_draw_state.dart';
+part of 'pixel_canvas_state.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -15,7 +15,7 @@ final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
 /// @nodoc
-mixin _$PixelDrawState {
+mixin _$PixelCanvasState {
   int get width => throw _privateConstructorUsedError;
   int get height => throw _privateConstructorUsedError;
   List<AnimationStateModel> get animationStates =>
@@ -34,15 +34,15 @@ mixin _$PixelDrawState {
   PixelModifier get currentModifier => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
-  $PixelDrawStateCopyWith<PixelDrawState> get copyWith =>
+  $PixelCanvasStateCopyWith<PixelCanvasState> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $PixelDrawStateCopyWith<$Res> {
-  factory $PixelDrawStateCopyWith(
-          PixelDrawState value, $Res Function(PixelDrawState) then) =
-      _$PixelDrawStateCopyWithImpl<$Res, PixelDrawState>;
+abstract class $PixelCanvasStateCopyWith<$Res> {
+  factory $PixelCanvasStateCopyWith(
+          PixelCanvasState value, $Res Function(PixelCanvasState) then) =
+      _$PixelCanvasStateCopyWithImpl<$Res, PixelCanvasState>;
   @useResult
   $Res call(
       {int width,
@@ -62,9 +62,9 @@ abstract class $PixelDrawStateCopyWith<$Res> {
 }
 
 /// @nodoc
-class _$PixelDrawStateCopyWithImpl<$Res, $Val extends PixelDrawState>
-    implements $PixelDrawStateCopyWith<$Res> {
-  _$PixelDrawStateCopyWithImpl(this._value, this._then);
+class _$PixelCanvasStateCopyWithImpl<$Res, $Val extends PixelCanvasState>
+    implements $PixelCanvasStateCopyWith<$Res> {
+  _$PixelCanvasStateCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
@@ -151,11 +151,11 @@ class _$PixelDrawStateCopyWithImpl<$Res, $Val extends PixelDrawState>
 }
 
 /// @nodoc
-abstract class _$$PixelDrawStateImplCopyWith<$Res>
-    implements $PixelDrawStateCopyWith<$Res> {
-  factory _$$PixelDrawStateImplCopyWith(_$PixelDrawStateImpl value,
-          $Res Function(_$PixelDrawStateImpl) then) =
-      __$$PixelDrawStateImplCopyWithImpl<$Res>;
+abstract class _$$PixelCanvasStateImplCopyWith<$Res>
+    implements $PixelCanvasStateCopyWith<$Res> {
+  factory _$$PixelCanvasStateImplCopyWith(_$PixelCanvasStateImpl value,
+          $Res Function(_$PixelCanvasStateImpl) then) =
+      __$$PixelCanvasStateImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call(
@@ -176,11 +176,11 @@ abstract class _$$PixelDrawStateImplCopyWith<$Res>
 }
 
 /// @nodoc
-class __$$PixelDrawStateImplCopyWithImpl<$Res>
-    extends _$PixelDrawStateCopyWithImpl<$Res, _$PixelDrawStateImpl>
-    implements _$$PixelDrawStateImplCopyWith<$Res> {
-  __$$PixelDrawStateImplCopyWithImpl(
-      _$PixelDrawStateImpl _value, $Res Function(_$PixelDrawStateImpl) _then)
+class __$$PixelCanvasStateImplCopyWithImpl<$Res>
+    extends _$PixelCanvasStateCopyWithImpl<$Res, _$PixelCanvasStateImpl>
+    implements _$$PixelCanvasStateImplCopyWith<$Res> {
+  __$$PixelCanvasStateImplCopyWithImpl(_$PixelCanvasStateImpl _value,
+      $Res Function(_$PixelCanvasStateImpl) _then)
       : super(_value, _then);
 
   @pragma('vm:prefer-inline')
@@ -201,7 +201,7 @@ class __$$PixelDrawStateImplCopyWithImpl<$Res>
     Object? canRedo = null,
     Object? currentModifier = null,
   }) {
-    return _then(_$PixelDrawStateImpl(
+    return _then(_$PixelCanvasStateImpl(
       width: null == width
           ? _value.width
           : width // ignore: cast_nullable_to_non_nullable
@@ -264,8 +264,8 @@ class __$$PixelDrawStateImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$PixelDrawStateImpl extends _PixelDrawState {
-  const _$PixelDrawStateImpl(
+class _$PixelCanvasStateImpl extends _PixelCanvasState {
+  const _$PixelCanvasStateImpl(
       {required this.width,
       required this.height,
       required final List<AnimationStateModel> animationStates,
@@ -342,14 +342,14 @@ class _$PixelDrawStateImpl extends _PixelDrawState {
 
   @override
   String toString() {
-    return 'PixelDrawState(width: $width, height: $height, animationStates: $animationStates, frames: $frames, currentAnimationStateIndex: $currentAnimationStateIndex, currentFrameIndex: $currentFrameIndex, currentLayerIndex: $currentLayerIndex, currentColor: $currentColor, currentTool: $currentTool, mirrorAxis: $mirrorAxis, selectionRect: $selectionRect, canUndo: $canUndo, canRedo: $canRedo, currentModifier: $currentModifier)';
+    return 'PixelCanvasState(width: $width, height: $height, animationStates: $animationStates, frames: $frames, currentAnimationStateIndex: $currentAnimationStateIndex, currentFrameIndex: $currentFrameIndex, currentLayerIndex: $currentLayerIndex, currentColor: $currentColor, currentTool: $currentTool, mirrorAxis: $mirrorAxis, selectionRect: $selectionRect, canUndo: $canUndo, canRedo: $canRedo, currentModifier: $currentModifier)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$PixelDrawStateImpl &&
+            other is _$PixelCanvasStateImpl &&
             (identical(other.width, width) || other.width == width) &&
             (identical(other.height, height) || other.height == height) &&
             const DeepCollectionEquality()
@@ -398,13 +398,13 @@ class _$PixelDrawStateImpl extends _PixelDrawState {
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
-  _$$PixelDrawStateImplCopyWith<_$PixelDrawStateImpl> get copyWith =>
-      __$$PixelDrawStateImplCopyWithImpl<_$PixelDrawStateImpl>(
+  _$$PixelCanvasStateImplCopyWith<_$PixelCanvasStateImpl> get copyWith =>
+      __$$PixelCanvasStateImplCopyWithImpl<_$PixelCanvasStateImpl>(
           this, _$identity);
 }
 
-abstract class _PixelDrawState extends PixelDrawState {
-  const factory _PixelDrawState(
+abstract class _PixelCanvasState extends PixelCanvasState {
+  const factory _PixelCanvasState(
       {required final int width,
       required final int height,
       required final List<AnimationStateModel> animationStates,
@@ -418,8 +418,8 @@ abstract class _PixelDrawState extends PixelDrawState {
       final List<PixelPoint<int>>? selectionRect,
       final bool canUndo,
       final bool canRedo,
-      final PixelModifier currentModifier}) = _$PixelDrawStateImpl;
-  const _PixelDrawState._() : super._();
+      final PixelModifier currentModifier}) = _$PixelCanvasStateImpl;
+  const _PixelCanvasState._() : super._();
 
   @override
   int get width;
@@ -451,7 +451,7 @@ abstract class _PixelDrawState extends PixelDrawState {
   PixelModifier get currentModifier;
   @override
   @JsonKey(ignore: true)
-  _$$PixelDrawStateImplCopyWith<_$PixelDrawStateImpl> get copyWith =>
+  _$$PixelCanvasStateImplCopyWith<_$PixelCanvasStateImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 

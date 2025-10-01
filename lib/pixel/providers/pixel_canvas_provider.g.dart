@@ -1,12 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'pixel_notifier_provider.dart';
+part of 'pixel_canvas_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$pixelDrawNotifierHash() => r'e059e6e0385fa2507b748eabfcf7ee37e7e17d8a';
+String _$pixelCanvasNotifierHash() =>
+    r'f82090bd4fb05c07505221342ac8220ae55a8fc0';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -29,36 +30,36 @@ class _SystemHash {
   }
 }
 
-abstract class _$PixelDrawNotifier
-    extends BuildlessAutoDisposeNotifier<PixelDrawState> {
+abstract class _$PixelCanvasNotifier
+    extends BuildlessAutoDisposeNotifier<PixelCanvasState> {
   late final Project project;
 
-  PixelDrawState build(
+  PixelCanvasState build(
     Project project,
   );
 }
 
-/// See also [PixelDrawNotifier].
-@ProviderFor(PixelDrawNotifier)
-const pixelDrawNotifierProvider = PixelDrawNotifierFamily();
+/// See also [PixelCanvasNotifier].
+@ProviderFor(PixelCanvasNotifier)
+const pixelCanvasNotifierProvider = PixelCanvasNotifierFamily();
 
-/// See also [PixelDrawNotifier].
-class PixelDrawNotifierFamily extends Family<PixelDrawState> {
-  /// See also [PixelDrawNotifier].
-  const PixelDrawNotifierFamily();
+/// See also [PixelCanvasNotifier].
+class PixelCanvasNotifierFamily extends Family<PixelCanvasState> {
+  /// See also [PixelCanvasNotifier].
+  const PixelCanvasNotifierFamily();
 
-  /// See also [PixelDrawNotifier].
-  PixelDrawNotifierProvider call(
+  /// See also [PixelCanvasNotifier].
+  PixelCanvasNotifierProvider call(
     Project project,
   ) {
-    return PixelDrawNotifierProvider(
+    return PixelCanvasNotifierProvider(
       project,
     );
   }
 
   @override
-  PixelDrawNotifierProvider getProviderOverride(
-    covariant PixelDrawNotifierProvider provider,
+  PixelCanvasNotifierProvider getProviderOverride(
+    covariant PixelCanvasNotifierProvider provider,
   ) {
     return call(
       provider.project,
@@ -77,30 +78,30 @@ class PixelDrawNotifierFamily extends Family<PixelDrawState> {
       _allTransitiveDependencies;
 
   @override
-  String? get name => r'pixelDrawNotifierProvider';
+  String? get name => r'pixelCanvasNotifierProvider';
 }
 
-/// See also [PixelDrawNotifier].
-class PixelDrawNotifierProvider
-    extends AutoDisposeNotifierProviderImpl<PixelDrawNotifier, PixelDrawState> {
-  /// See also [PixelDrawNotifier].
-  PixelDrawNotifierProvider(
+/// See also [PixelCanvasNotifier].
+class PixelCanvasNotifierProvider extends AutoDisposeNotifierProviderImpl<
+    PixelCanvasNotifier, PixelCanvasState> {
+  /// See also [PixelCanvasNotifier].
+  PixelCanvasNotifierProvider(
     Project project,
   ) : this._internal(
-          () => PixelDrawNotifier()..project = project,
-          from: pixelDrawNotifierProvider,
-          name: r'pixelDrawNotifierProvider',
+          () => PixelCanvasNotifier()..project = project,
+          from: pixelCanvasNotifierProvider,
+          name: r'pixelCanvasNotifierProvider',
           debugGetCreateSourceHash:
               const bool.fromEnvironment('dart.vm.product')
                   ? null
-                  : _$pixelDrawNotifierHash,
-          dependencies: PixelDrawNotifierFamily._dependencies,
+                  : _$pixelCanvasNotifierHash,
+          dependencies: PixelCanvasNotifierFamily._dependencies,
           allTransitiveDependencies:
-              PixelDrawNotifierFamily._allTransitiveDependencies,
+              PixelCanvasNotifierFamily._allTransitiveDependencies,
           project: project,
         );
 
-  PixelDrawNotifierProvider._internal(
+  PixelCanvasNotifierProvider._internal(
     super._createNotifier, {
     required super.name,
     required super.dependencies,
@@ -113,8 +114,8 @@ class PixelDrawNotifierProvider
   final Project project;
 
   @override
-  PixelDrawState runNotifierBuild(
-    covariant PixelDrawNotifier notifier,
+  PixelCanvasState runNotifierBuild(
+    covariant PixelCanvasNotifier notifier,
   ) {
     return notifier.build(
       project,
@@ -122,10 +123,10 @@ class PixelDrawNotifierProvider
   }
 
   @override
-  Override overrideWith(PixelDrawNotifier Function() create) {
+  Override overrideWith(PixelCanvasNotifier Function() create) {
     return ProviderOverride(
       origin: this,
-      override: PixelDrawNotifierProvider._internal(
+      override: PixelCanvasNotifierProvider._internal(
         () => create()..project = project,
         from: from,
         name: null,
@@ -138,14 +139,14 @@ class PixelDrawNotifierProvider
   }
 
   @override
-  AutoDisposeNotifierProviderElement<PixelDrawNotifier, PixelDrawState>
+  AutoDisposeNotifierProviderElement<PixelCanvasNotifier, PixelCanvasState>
       createElement() {
-    return _PixelDrawNotifierProviderElement(this);
+    return _PixelCanvasNotifierProviderElement(this);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is PixelDrawNotifierProvider && other.project == project;
+    return other is PixelCanvasNotifierProvider && other.project == project;
   }
 
   @override
@@ -157,18 +158,19 @@ class PixelDrawNotifierProvider
   }
 }
 
-mixin PixelDrawNotifierRef on AutoDisposeNotifierProviderRef<PixelDrawState> {
+mixin PixelCanvasNotifierRef
+    on AutoDisposeNotifierProviderRef<PixelCanvasState> {
   /// The parameter `project` of this provider.
   Project get project;
 }
 
-class _PixelDrawNotifierProviderElement
-    extends AutoDisposeNotifierProviderElement<PixelDrawNotifier,
-        PixelDrawState> with PixelDrawNotifierRef {
-  _PixelDrawNotifierProviderElement(super.provider);
+class _PixelCanvasNotifierProviderElement
+    extends AutoDisposeNotifierProviderElement<PixelCanvasNotifier,
+        PixelCanvasState> with PixelCanvasNotifierRef {
+  _PixelCanvasNotifierProviderElement(super.provider);
 
   @override
-  Project get project => (origin as PixelDrawNotifierProvider).project;
+  Project get project => (origin as PixelCanvasNotifierProvider).project;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

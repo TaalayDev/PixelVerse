@@ -4,8 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
-import 'package:pixelverse/ui/widgets/animated_background.dart';
-import 'package:pixelverse/ui/widgets/reward_dialog.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../data.dart';
@@ -19,8 +17,10 @@ import '../../providers/providers.dart';
 import '../../providers/subscription_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../screens.dart';
-import '../widgets/project_donwload_dialog.dart';
+import '../widgets/animated_background.dart';
+import '../widgets/dialogs/project_donwload_dialog.dart';
 import '../widgets/theme_selector.dart';
+import '../widgets/dialogs/reward_dialog.dart';
 import 'subscription_screen.dart';
 
 class ProjectDetailScreen extends HookConsumerWidget {
@@ -1370,7 +1370,7 @@ class ProjectDetailScreen extends HookConsumerWidget {
 
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => PixelDrawScreen(project: localProject),
+        builder: (context) => PixelCanvasScreen(project: localProject),
       ),
     );
   }

@@ -5,7 +5,7 @@ import '../../../data.dart';
 import '../../../data/models/subscription_model.dart';
 import '../../../providers/subscription_provider.dart';
 import '../../../pixel/effects/effects.dart';
-import '../dialogs.dart';
+import '../dialogs/save_image_dialog.dart';
 import 'effect_list_item.dart';
 import 'effects_editor_dialog.dart';
 import 'effects_empty_widget.dart';
@@ -305,7 +305,7 @@ class _EffectsSidePanelState extends ConsumerState<EffectsSidePanel> {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: Text('More Actions', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+                  title: const Text('More Actions', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [

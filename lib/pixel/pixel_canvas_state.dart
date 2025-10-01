@@ -9,13 +9,13 @@ import '../data/models/layer.dart';
 import '../data/models/selection_model.dart';
 import 'tools/texture_brush_tool.dart';
 
-part 'pixel_draw_state.freezed.dart';
+part 'pixel_canvas_state.freezed.dart';
 
 @freezed
-class PixelDrawState with _$PixelDrawState {
-  const PixelDrawState._();
+class PixelCanvasState with _$PixelCanvasState {
+  const PixelCanvasState._();
 
-  const factory PixelDrawState({
+  const factory PixelCanvasState({
     required final int width,
     required final int height,
     required final List<AnimationStateModel> animationStates,
@@ -30,7 +30,7 @@ class PixelDrawState with _$PixelDrawState {
     @Default(false) final bool canUndo,
     @Default(false) final bool canRedo,
     @Default(PixelModifier.none) final PixelModifier currentModifier,
-  }) = _PixelDrawState;
+  }) = _PixelCanvasState;
 
   // Computed properties
   AnimationStateModel get currentAnimationState => animationStates[currentAnimationStateIndex];

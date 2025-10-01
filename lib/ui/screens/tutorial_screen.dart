@@ -10,8 +10,8 @@ import '../../pixel/canvas/pixel_canvas.dart';
 import '../../pixel/pixel_point.dart';
 import '../../pixel/tools.dart';
 import '../../data.dart';
-import '../../pixel/providers/pixel_notifier_provider.dart';
-import '../widgets/grid_painter.dart';
+import '../../pixel/providers/pixel_canvas_provider.dart';
+import '../widgets/painter/grid_painter.dart';
 
 class DrawingStep {
   final String title;
@@ -92,7 +92,7 @@ class DrawingTutorialScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tutorial = ref.watch(tutorialProvider);
     final currentStep = useState(0);
-    final provider = pixelDrawNotifierProvider(project);
+    final provider = pixelCanvasNotifierProvider(project);
     final state = ref.watch(provider);
     final notifier = ref.read(provider.notifier);
 

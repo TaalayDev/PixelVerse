@@ -3,9 +3,9 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
-import '../../data.dart';
-import '../../providers/project_upload_provider.dart';
-import '../screens/projects_screen.dart';
+import '../../../data.dart';
+import '../../../providers/project_upload_provider.dart';
+import '../../screens/projects_screen.dart';
 
 class ProjectUploadDialog extends HookConsumerWidget {
   final Project project;

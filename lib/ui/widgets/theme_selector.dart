@@ -7,7 +7,7 @@ import '../../core/theme/theme.dart';
 import '../../providers/ad/reward_video_ad_controller.dart';
 import '../../providers/subscription_provider.dart';
 import '../screens/subscription_screen.dart';
-import 'reward_dialog.dart';
+import 'dialogs/reward_dialog.dart';
 
 final themeProvider = ChangeNotifierProvider((ref) => ThemeProvider());
 

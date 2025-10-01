@@ -6,7 +6,7 @@ import '../../core/utils/cursor_manager.dart';
 import '../../pixel/tools/mirror_modifier.dart';
 import '../../pixel/tools.dart';
 import '../../data.dart';
-import '../pixel_draw_state.dart';
+import '../pixel_canvas_state.dart';
 import '../pixel_point.dart';
 
 import '../tools/texture_brush_tool.dart';

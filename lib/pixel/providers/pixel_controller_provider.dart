@@ -19,7 +19,7 @@ import '../services/layer_service.dart';
 import '../services/selection_service.dart';
 import '../services/template_service.dart';
 import '../services/undo_redo_service.dart';
-import '../pixel_draw_state.dart';
+import '../pixel_canvas_state.dart';
 import '../tools.dart';
 
 part 'pixel_controller_provider.g.dart';
@@ -39,7 +39,7 @@ class PixelDrawController extends _$PixelDrawController {
   // Current project reference
 
   @override
-  PixelDrawState build(Project project) {
+  PixelCanvasState build(Project project) {
     // Initialize services
     _layerService = LayerService(ref.read(projectRepo));
     _frameService = FrameService(ref.read(projectRepo));
@@ -50,7 +50,7 @@ class PixelDrawController extends _$PixelDrawController {
     _importExportService = ImportExportService();
     _templateService = TemplateService(ref.read(templateAPIRepoProvider));
 
-    return PixelDrawState(
+    return PixelCanvasState(
       width: project.width,
       height: project.height,
       animationStates: List<AnimationStateModel>.from(project.states),
@@ -382,26 +382,44 @@ class PixelDrawController extends _$PixelDrawController {
 
     final updatedFrames = List<AnimationFrame>.from(state.frames)..removeAt(index);
 
-    final newFrameIndex = _frameService.calculateSafeFrameIndex(
-      updatedFrames,
-      state.currentFrameIndex,
-      index,
-    );
-
     // Filter frames for current state
-    final currentStateFrames = _animationService.removeFramesForState(
+    final currentStateFrames = _frameService.getFramesForState(
       updatedFrames,
       state.currentAnimationState.id,
     );
 
-    final adjustedFrameIndex =
-        newFrameIndex >= currentStateFrames.length ? currentStateFrames.length - 1 : newFrameIndex;
+    final currentStateFrameIndex = _frameService
+        .getFramesForState(
+          state.frames,
+          state.currentAnimationState.id,
+        )
+        .indexWhere((frame) => frame.id == frameToRemove.id);
+
+    // Calculate new frame index
+    int newFrameIndex;
+    if (currentStateFrameIndex >= 0) {
+      // The deleted frame belonged to current state
+      newFrameIndex = _frameService.calculateSafeFrameIndex(
+        currentStateFrames,
+        state.currentFrameIndex,
+        currentStateFrameIndex,
+      );
+    } else {
+      // The deleted frame didn't belong to current state, keep current index
+      newFrameIndex = state.currentFrameIndex;
+    }
+
+    // Ensure the frame index is valid
+    final safeFrameIndex = newFrameIndex.clamp(0, currentStateFrames.isEmpty ? 0 : currentStateFrames.length - 1);
 
     state = state.copyWith(
       frames: updatedFrames,
-      currentFrameIndex: adjustedFrameIndex.clamp(0, currentStateFrames.length - 1),
+      currentFrameIndex: safeFrameIndex,
       currentLayerIndex: 0,
     );
+
+    // Update the project
+    _updateProject();
   }
 
   void selectFrame(int frameId) {

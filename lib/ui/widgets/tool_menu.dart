@@ -7,7 +7,7 @@ import '../../pixel/tools.dart';
 import '../../pixel/tools/texture_brush_tool.dart';
 import 'app_icon.dart';
 import 'subscription/feature_gate.dart';
-import 'texture_brush_panel.dart';
+import 'panel/texture_brush_panel.dart';
 
 class ToolMenu extends StatelessWidget {
   final ValueNotifier<PixelTool> currentTool;

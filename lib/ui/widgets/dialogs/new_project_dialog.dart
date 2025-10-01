@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
-import '../../data/models/subscription_model.dart';
-import '../../l10n/strings.dart';
+import '../../../data/models/subscription_model.dart';
+import '../../../l10n/strings.dart';
 
 const kMaxPixelWidth = 5024;
 const kMaxPixelHeight = 5024;

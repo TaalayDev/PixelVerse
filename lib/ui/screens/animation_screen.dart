@@ -14,7 +14,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../data.dart';
 import '../../pixel/pixel_point.dart';
 import '../../pixel/tools.dart';
-import '../../pixel/pixel_draw_state.dart';
+import '../../pixel/pixel_canvas_state.dart';
 
 // Platform detection
 bool get isDesktop => !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);

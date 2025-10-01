@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../pixel/pixel_draw_state.dart';
+import '../pixel/pixel_canvas_state.dart';
 
 part 'background_image_provider.g.dart';
 

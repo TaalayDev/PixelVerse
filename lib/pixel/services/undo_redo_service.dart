@@ -1,15 +1,15 @@
-import '../pixel_draw_state.dart';
+import '../pixel_canvas_state.dart';
 
 class UndoRedoService {
   static const int _maxUndoStates = 50;
 
-  final List<PixelDrawState> _undoStack = [];
-  final List<PixelDrawState> _redoStack = [];
+  final List<PixelCanvasState> _undoStack = [];
+  final List<PixelCanvasState> _redoStack = [];
 
   bool get canUndo => _undoStack.isNotEmpty;
   bool get canRedo => _redoStack.isNotEmpty;
 
-  void saveState(PixelDrawState state) {
+  void saveState(PixelCanvasState state) {
     // Create a deep copy of the state
     final stateCopy = state.copyWith();
 
@@ -24,7 +24,7 @@ class UndoRedoService {
     _redoStack.clear();
   }
 
-  PixelDrawState? undo(PixelDrawState currentState) {
+  PixelCanvasState? undo(PixelCanvasState currentState) {
     if (!canUndo) return null;
 
     // Save current state to redo stack
@@ -39,7 +39,7 @@ class UndoRedoService {
     );
   }
 
-  PixelDrawState? redo(PixelDrawState currentState) {
+  PixelCanvasState? redo(PixelCanvasState currentState) {
     if (!canRedo) return null;
 
     // Save current state to undo stack

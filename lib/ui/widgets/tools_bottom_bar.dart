@@ -3,12 +3,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 
 import '../../data/models/subscription_model.dart';
-import '../../pixel/pixel_draw_state.dart';
+import '../../pixel/pixel_canvas_state.dart';
 import '../../pixel/tools.dart';
-import '../../pixel/providers/pixel_notifier_provider.dart';
+import '../../pixel/providers/pixel_canvas_provider.dart';
 import 'app_icon.dart';
-import 'color_palette_panel.dart';
-import 'layer_template_dialog.dart';
+import 'panel/color_palette_panel.dart';
+import 'dialogs/layer_template_dialog.dart';
 import 'layers_panel.dart';
 import 'styled_tool_bottom_sheet.dart';
 
@@ -24,8 +24,8 @@ class ToolsBottomBar extends HookWidget {
   });
 
   final ValueNotifier<PixelTool> currentTool;
-  final PixelDrawState state;
-  final PixelDrawNotifier notifier;
+  final PixelCanvasState state;
+  final PixelCanvasNotifier notifier;
   final UserSubscription subscription;
   final int width;
   final int height;

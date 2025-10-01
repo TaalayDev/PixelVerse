@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../core/extensions/offset_extensions.dart';
 import '../data.dart';
-import 'pixel_draw_state.dart';
+import 'pixel_canvas_state.dart';
 import 'pixel_point.dart';
 import 'tools.dart';
 

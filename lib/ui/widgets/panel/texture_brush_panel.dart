@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../pixel/tools/texture_brush_tool.dart';
+import '../../../pixel/tools/texture_brush_tool.dart';
 
 class TextureBrushPanel extends StatefulWidget {
   final Function(TexturePattern?, BlendMode, bool isFill) onTextureSelected;

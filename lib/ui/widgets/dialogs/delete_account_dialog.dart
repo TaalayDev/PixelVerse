@@ -4,7 +4,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
-import '../../providers/auth_provider.dart';
+import '../../../providers/auth_provider.dart';
 
 class DeleteAccountDialog extends HookConsumerWidget {
   const DeleteAccountDialog({

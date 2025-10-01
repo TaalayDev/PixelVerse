@@ -5,19 +5,19 @@ import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/models/template.dart';
-import '../pixel_point.dart';
 import '../../data.dart';
+import '../pixel_point.dart';
 import '../effects/effects.dart';
-import '../pixel_draw_state.dart';
+import '../pixel_canvas_state.dart';
 import '../tools.dart';
 import 'pixel_controller_provider.dart';
 
-part 'pixel_notifier_provider.g.dart';
+part 'pixel_canvas_provider.g.dart';
 
 @riverpod
-class PixelDrawNotifier extends _$PixelDrawNotifier {
+class PixelCanvasNotifier extends _$PixelCanvasNotifier {
   @override
-  PixelDrawState build(Project project) {
+  PixelCanvasState build(Project project) {
     return ref.watch(pixelDrawControllerProvider(project));
   }
 

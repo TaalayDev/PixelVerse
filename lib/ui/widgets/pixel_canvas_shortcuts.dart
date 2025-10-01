@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../pixel/pixel_draw_state.dart';
-import '../../pixel/providers/pixel_notifier_provider.dart';
+import '../../pixel/pixel_canvas_state.dart';
+import '../../pixel/providers/pixel_canvas_provider.dart';
 import '../../pixel/tools.dart';
 import 'shortcuts_wrapper.dart';
 
-class PixelDrawShortcutsWrapper extends HookConsumerWidget {
-  const PixelDrawShortcutsWrapper({
+class PixelCanvasShortcutsWrapper extends HookConsumerWidget {
+  const PixelCanvasShortcutsWrapper({
     super.key,
     required this.shortcutsFocusNode,
     required this.currentTool,
@@ -31,13 +31,13 @@ class PixelDrawShortcutsWrapper extends HookConsumerWidget {
   final ValueNotifier<int> brushSize;
   final ValueNotifier<double> gridScale;
   final ValueNotifier<Offset> gridOffset;
-  final PixelDrawState state;
-  final PixelDrawNotifier notifier;
-  final Function(BuildContext context, PixelDrawNotifier notifier, PixelDrawState state) handleExport;
+  final PixelCanvasState state;
+  final PixelCanvasNotifier notifier;
+  final Function(BuildContext context, PixelCanvasNotifier notifier, PixelCanvasState state) handleExport;
   final Function(ValueNotifier<double> scale, ValueNotifier<Offset> offset) setZoomFit;
   final Function(ValueNotifier<double> scale, ValueNotifier<Offset> offset) setZoom100;
   final Future<bool?> Function(BuildContext context) showImportDialog;
-  final Function(BuildContext context, PixelDrawNotifier notifier) showColorPicker;
+  final Function(BuildContext context, PixelCanvasNotifier notifier) showColorPicker;
   final VoidCallback toggleUI;
   final Widget child;
 

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../providers/ad/reward_video_ad_controller.dart';
-import '../../providers/subscription_provider.dart';
-import '../screens/subscription_screen.dart';
+import '../../../providers/ad/reward_video_ad_controller.dart';
+import '../../../providers/subscription_provider.dart';
+import '../../screens/subscription_screen.dart';
 
 class RewardDialog extends HookConsumerWidget {
   const RewardDialog({

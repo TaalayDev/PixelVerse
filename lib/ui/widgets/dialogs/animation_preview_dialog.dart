@@ -3,9 +3,9 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-import '../../data.dart';
-import '../../pixel/image_painter.dart';
-import 'layers_preview.dart';
+import '../../../data.dart';
+import '../../../pixel/image_painter.dart';
+import '../layers_preview.dart';
 
 Future<void> showAnimationPreviewDialog(
   BuildContext context, {

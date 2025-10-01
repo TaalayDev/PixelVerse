@@ -74,7 +74,7 @@ final subscriptionErrorsStreamProvider =
 );
 
 typedef SubscriptionErrorsStreamRef = AutoDisposeStreamProviderRef<String>;
-String _$isFeatureLockedHash() => r'476c27168a1771695070d56f31233bb08ff09124';
+String _$isFeatureLockedHash() => r'e564ad97beed2e5b08f6b68254629494c2cc6f1f';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -224,7 +224,7 @@ class _IsFeatureLockedProviderElement extends AutoDisposeProviderElement<bool>
       (origin as IsFeatureLockedProvider).feature;
 }
 
-String _$purchaseOffersHash() => r'6920072f5ee1a1c6622eba84c7cff71f175608ab';
+String _$purchaseOffersHash() => r'7b55b6c872c0116fc1200748b71f4f3894cc0019';
 
 /// See also [purchaseOffers].
 @ProviderFor(purchaseOffers)

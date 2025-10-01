@@ -86,7 +86,6 @@ class TemplateState {
       case TemplateTab.mine:
         // Filter by current user
         return apiTemplates.where((t) => t.createdBy == currentUserId).toList();
-      case TemplateTab.all:
       default:
         return allTemplates;
     }

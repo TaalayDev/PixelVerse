@@ -19,8 +19,6 @@ import '../../core/utils/image_helper.dart';
 class TemplateService {
   TemplateService(this._apiRepo);
 
-  static const String _assetTemplatesKey = 'asset_templates_loaded';
-
   final TemplateAPIRepo _apiRepo;
   final Logger _logger = Logger('TemplateService');
 
@@ -150,7 +148,7 @@ class TemplateService {
   Future<Template?> getTemplateFromAPI(int templateId) async {
     try {
       final response = await _apiRepo.fetchTemplate(templateId);
-      return response.data;
+      return response.data?.copyWith(pixels: ImageHelper.fixColorChannels(Uint32List.fromList(response.data!.pixels)));
     } catch (e) {
       _logger.severe('Error fetching template $templateId from API: $e');
       return null;
@@ -390,27 +388,7 @@ class TemplateService {
           return template.copyWith(isLocal: true);
         }).toList();
       } else {
-        // Initialize with empty list
         _localTemplates = [];
-
-        // Check if we should load asset templates into local storage on first run
-        final hasLoadedAssets = LocalStorage().getBool(_assetTemplatesKey) ?? false;
-        if (!hasLoadedAssets) {
-          await _loadAssetTemplates();
-          if (_assetTemplates != null && _assetTemplates!.templates.isNotEmpty) {
-            // Copy some asset templates to local storage as samples
-            final sampleTemplates = _assetTemplates!.templates.take(3).map((template) {
-              return template.copyWith(
-                isLocal: true,
-                name: '${template.name} (Sample)',
-              );
-            }).toList();
-
-            _localTemplates.addAll(sampleTemplates);
-            await _saveLocalTemplates();
-            LocalStorage().setBool(_assetTemplatesKey, true);
-          }
-        }
       }
 
       _isLocalLoaded = true;

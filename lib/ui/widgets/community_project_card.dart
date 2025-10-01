@@ -13,8 +13,8 @@ import '../../providers/subscription_provider.dart';
 import '../../core.dart';
 import '../screens.dart';
 import '../screens/subscription_screen.dart';
-import 'project_donwload_dialog.dart';
-import 'reward_dialog.dart';
+import 'dialogs/project_donwload_dialog.dart';
+import 'dialogs/reward_dialog.dart';
 import 'theme_selector.dart';
 
 class CommunityProjectCard extends ConsumerWidget {
@@ -262,7 +262,7 @@ class CommunityProjectCard extends ConsumerWidget {
 
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => PixelDrawScreen(project: localProject),
+        builder: (context) => PixelCanvasScreen(project: localProject),
       ),
     );
   }

@@ -4,15 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
-import '../../core.dart';
-import '../../data/models/subscription_model.dart';
-import '../../data/models/template.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/subscription_provider.dart';
-import '../../providers/template_provider.dart';
-import '../screens/subscription_screen.dart';
-import 'animated_background.dart';
-import 'app_icon.dart';
+import '../../../core.dart';
+import '../../../data/models/subscription_model.dart';
+import '../../../data/models/template.dart';
+import '../../../providers/auth_provider.dart';
+import '../../../providers/subscription_provider.dart';
+import '../../../providers/template_provider.dart';
+import '../../screens/subscription_screen.dart';
+import '../animated_background.dart';
+import '../app_icon.dart';
 
 /// Dialog for selecting and applying templates to the canvas
 class TemplatesDialog extends ConsumerStatefulWidget {

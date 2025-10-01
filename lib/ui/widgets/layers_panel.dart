@@ -181,16 +181,72 @@ class _ActionButtonsBar extends HookWidget {
                     showDialog(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: const Text(
-                          'More Actions',
-                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         content: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                            const Text(
+                              'More Actions',
+                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+                            ),
+                            const Divider(),
                             ListTile(
-                              leading: const Icon(Icons.checklist_outlined, color: Colors.green),
-                              title: const Text('Add to Template'),
+                              leading: const Icon(Icons.opacity, color: Colors.blue, size: 18),
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text('Adjust Opacity', style: TextStyle(fontSize: 14)),
+                              onTap: () {
+                                Navigator.of(context).pop();
+                                showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    double opacity = selectedLayer!.opacity;
+                                    return AlertDialog(
+                                      title: Text(
+                                        'Adjust Layer Opacity',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Theme.of(context).colorScheme.onSurface,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Slider(
+                                            value: opacity,
+                                            min: 0.0,
+                                            max: 1.0,
+                                            divisions: 100,
+                                            padding: const EdgeInsets.symmetric(horizontal: 0),
+                                            label: (opacity * 100).toInt().toString(),
+                                            onChanged: (value) {
+                                              opacity = value;
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.of(context).pop(),
+                                          child: const Text('Cancel'),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                            onLayerUpdated(selectedLayer.copyWith(opacity: opacity));
+                                          },
+                                          child: const Text('Apply'),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.checklist_outlined, color: Colors.green, size: 18),
+                              title: const Text('Add to Template', style: TextStyle(fontSize: 14)),
+                              contentPadding: EdgeInsets.zero,
                               onTap: () {
                                 Navigator.of(context).pop();
                                 onLayerToTemplate(selectedLayer!);

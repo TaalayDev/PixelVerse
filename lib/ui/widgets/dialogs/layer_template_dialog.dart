@@ -5,13 +5,13 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
-import '../../data/models/layer.dart';
-import '../../data/models/template.dart';
-import '../../core/utils/image_helper.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/template_provider.dart';
-import '../widgets/animated_background.dart';
-import 'app_icon.dart';
+import '../../../data/models/layer.dart';
+import '../../../data/models/template.dart';
+import '../../../core/utils/image_helper.dart';
+import '../../../providers/auth_provider.dart';
+import '../../../providers/template_provider.dart';
+import '../animated_background.dart';
+import '../app_icon.dart';
 import 'auth_dialog.dart';
 
 class LayerToTemplateDialog extends HookConsumerWidget {

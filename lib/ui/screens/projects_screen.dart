@@ -23,20 +23,22 @@ import '../../providers/projects_provider.dart';
 import '../../providers/community_projects_providers.dart';
 import '../../providers/providers.dart';
 import '../../providers/subscription_provider.dart';
-import '../widgets/auth_dialog.dart';
+import '../widgets/dialogs/auth_dialog.dart';
 import '../widgets/animated_pro_button.dart';
 import '../widgets/animated_background.dart';
-import '../widgets/community_project_card.dart';
-import '../widgets/delete_account_dialog.dart';
-import '../widgets/project_upload_dialog.dart';
+import '../widgets/community_project_card.dart' hide CheckerboardPainter;
+import '../widgets/dialogs/delete_account_dialog.dart';
+import '../widgets/dialogs/rename_project_dialog.dart';
+import '../widgets/dialogs/project_upload_dialog.dart' hide CheckerboardPainter;
 import '../widgets/subscription/subscription_menu.dart';
 import '../widgets/theme_selector.dart';
+import '../widgets/painter/checkboard_painter.dart';
 import '../widgets.dart';
 import '../widgets/theme_selector_sheet.dart';
 import 'subscription_screen.dart';
 import 'about_screen.dart';
-import 'pixel_draw_screen.dart';
-import 'project_detail_screen.dart';
+import 'pixel_canvas_screen.dart';
+import 'project_detail_screen.dart' hide CheckerboardPainter;
 
 class ProjectsScreen extends HookConsumerWidget {
   const ProjectsScreen({super.key});
@@ -439,7 +441,7 @@ class ProjectsScreen extends HookConsumerWidget {
         loader.remove();
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => PixelDrawScreen(project: newProject),
+            builder: (context) => PixelCanvasScreen(project: newProject),
           ),
         );
       }
@@ -462,7 +464,7 @@ class ProjectsScreen extends HookConsumerWidget {
     if (project != null && context.mounted) {
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) => PixelDrawScreen(project: project),
+          builder: (context) => PixelCanvasScreen(project: project),
         ),
       );
     }
@@ -1538,91 +1540,5 @@ class _ProjectThumbnailWidgetState extends State<ProjectThumbnailWidget> {
         _image = image;
       });
     }
-  }
-}
-
-class CheckerboardPainter extends CustomPainter {
-  final double cellSize;
-  final Color color1;
-  final Color color2;
-
-  CheckerboardPainter({
-    required this.cellSize,
-    required this.color1,
-    required this.color2,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint();
-    final rows = (size.height / cellSize).ceil();
-    final cols = (size.width / cellSize).ceil();
-
-    for (var row = 0; row < rows; row++) {
-      for (var col = 0; col < cols; col++) {
-        final color = (row + col) % 2 == 0 ? color1 : color2;
-        paint.color = color;
-
-        canvas.drawRect(
-          Rect.fromLTWH(
-            col * cellSize,
-            row * cellSize,
-            cellSize,
-            cellSize,
-          ),
-          paint,
-        );
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class RenameProjectDialog extends HookWidget {
-  const RenameProjectDialog({super.key, this.onRename});
-
-  final Function(String name)? onRename;
-
-  @override
-  Widget build(BuildContext context) {
-    final controller = useTextEditingController();
-
-    return AlertDialog(
-      title: Text(Strings.of(context).renameProject),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              labelText: Strings.of(context).projectName,
-              border: const OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: Text(Strings.of(context).cancel),
-        ),
-        TextButton(
-          onPressed: () {
-            if (controller.text.isEmpty) {
-              return;
-            }
-
-            Navigator.of(context).pop();
-            onRename?.call(controller.text);
-          },
-          child: Text(Strings.of(context).rename),
-        ),
-      ],
-    );
   }
 }
