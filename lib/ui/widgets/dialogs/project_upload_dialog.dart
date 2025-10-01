@@ -5,7 +5,7 @@ import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
 import '../../../data.dart';
 import '../../../providers/project_upload_provider.dart';
-import '../../screens/projects_screen.dart';
+import '../project/project_thumbnail.dart';
 
 class ProjectUploadDialog extends HookConsumerWidget {
   final Project project;
