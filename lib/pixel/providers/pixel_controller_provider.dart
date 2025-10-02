@@ -822,49 +822,53 @@ class PixelDrawController extends _$PixelDrawController {
 
   /// MARK: Selection Resizing & Rotation
 
-  void resizeSelection(List<PixelPoint<int>> selection, Rect newBounds, Offset? center) {
-    if (selection.isEmpty || currentLayer.pixels.isEmpty) {
+  void resizeSelection(List<PixelPoint<int>> selection, List<PixelPoint<int>> oldSelection, Rect b, Offset? center) {
+    if (oldSelection.isEmpty || selection.isEmpty || currentLayer.pixels.isEmpty) {
       return;
     }
 
-    _saveState();
-
-    final originalBounds = _getSelectionBounds(selection);
+    final originalBounds = _getSelectionBounds(oldSelection);
     if (originalBounds == null) return;
 
-    // Ensure minimum size and constrain to canvas bounds
-    final constrainedBounds = Rect.fromLTRB(
-      newBounds.left.clamp(0, state.width.toDouble()),
-      newBounds.top.clamp(0, state.height.toDouble()),
-      newBounds.right.clamp(1, state.width.toDouble()),
-      newBounds.bottom.clamp(1, state.height.toDouble()),
-    );
+    // Get bounds of NEW selection (after resize)
+    final targetBounds = _getSelectionBounds(selection);
+    if (targetBounds == null) return;
 
-    final targetWidth = (constrainedBounds.width).round().clamp(1, state.width);
-    final targetHeight = (constrainedBounds.height).round().clamp(1, state.height);
+    _saveState();
 
-    // Extract selected pixels
     final selectedPixels = _extractSelectedPixels(
       currentLayer.pixels,
-      selection,
+      oldSelection,
       originalBounds,
+      respectSelectionShape: false,
     );
 
-    // Apply resize transformation
+    final srcWidth = originalBounds.width.toInt().clamp(1, state.width);
+    final srcHeight = originalBounds.height.toInt().clamp(1, state.height);
+    final targetWidth = targetBounds.width.toInt().clamp(1, state.width);
+    final targetHeight = targetBounds.height.toInt().clamp(1, state.height);
+
     final transformedPixels = PixelUtils.resize(
       selectedPixels,
-      originalBounds.width.toInt(),
-      originalBounds.height.toInt(),
-      targetWidth,
-      targetHeight,
+      srcWidth, // source width
+      srcHeight, // source height
+      targetWidth, // target width
+      targetHeight, // target height
       1, // bilinear interpolation
       0, // transparent background
     );
 
-    // Clear original selection area
     final clearedPixels = _clearSelectionArea(
       currentLayer.pixels,
-      selection,
+      oldSelection,
+    );
+
+    // Constrain target bounds to canvas
+    final constrainedBounds = Rect.fromLTRB(
+      targetBounds.left.clamp(0, state.width.toDouble()),
+      targetBounds.top.clamp(0, state.height.toDouble()),
+      targetBounds.right.clamp(1, state.width.toDouble()),
+      targetBounds.bottom.clamp(1, state.height.toDouble()),
     );
 
     // Place transformed pixels
@@ -877,82 +881,106 @@ class PixelDrawController extends _$PixelDrawController {
     );
 
     _updateCurrentLayerPixels(resultPixels);
-
-    // Don't update selection here - let the calling code handle it
   }
 
-  void rotateSelection(List<PixelPoint<int>> selection, double angle, Offset? center) {
-    if (selection.isEmpty || currentLayer.pixels.isEmpty) {
-      return;
-    }
+  void rotateSelection(
+    List<PixelPoint<int>> selection,
+    List<PixelPoint<int>> oldSelection, // kept for parity; not needed here
+    double angle,
+    Offset? center,
+  ) {
+    if (selection.isEmpty || currentLayer.pixels.isEmpty) return;
+
+    final bounds = _getSelectionBounds(selection);
+    if (bounds == null || bounds.width <= 0 || bounds.height <= 0) return;
 
     _saveState();
 
-    final originalBounds = _getSelectionBounds(selection);
-    if (originalBounds == null) return;
+    // Rotation center in world coords (pixels/canvas space)
+    final rotCenter = center ?? bounds.center;
 
-    // Use provided center or calculate geometric center
-    final rotationCenter = center ??
-        Offset(
-          originalBounds.left + originalBounds.width / 2,
-          originalBounds.top + originalBounds.height / 2,
-        );
-
-    // Calculate rotated bounds
-    final rotatedBounds = _calculateRotatedBounds(
-      originalBounds,
-      angle,
-      rotationCenter,
-    );
-
-    // Constrain rotated bounds to canvas
-    final constrainedBounds = Rect.fromLTRB(
-      rotatedBounds.left.clamp(0, state.width.toDouble()),
-      rotatedBounds.top.clamp(0, state.height.toDouble()),
-      rotatedBounds.right.clamp(1, state.width.toDouble()),
-      rotatedBounds.bottom.clamp(1, state.height.toDouble()),
-    );
-
-    // Extract selected pixels
+    // Extract the selected pixels as a tight bitmap of size bounds.w × bounds.h
     final selectedPixels = _extractSelectedPixels(
       currentLayer.pixels,
       selection,
-      originalBounds,
+      bounds,
+      respectSelectionShape: false,
     );
 
-    // Apply rotation transformation
-    final transformedPixels = PixelUtils.applyRotationWithBounds(
+    final srcWidth = bounds.width.round().clamp(1, state.width);
+    final srcHeight = bounds.height.round().clamp(1, state.height);
+
+    // Compute the rotated bounding box in world coords
+    final rotatedBounds = _computeRotatedBounds(bounds, rotCenter, angle);
+
+    // Produce the rotated pixel buffer sized to rotatedBounds.w × rotatedBounds.h
+    final rotatedPixels = PixelUtils.applyRotationWithBounds(
       selectedPixels,
-      originalBounds.width.toInt(),
-      originalBounds.height.toInt(),
+      srcWidth,
+      srcHeight,
       angle,
-      originalBounds,
-      constrainedBounds,
-      rotationCenter,
-      1, // bilinear interpolation
-      0, // transparent background
+      bounds, // original (unrotated) world bounds
+      rotatedBounds, // rotated world bounds (can be outside canvas)
+      rotCenter,
+      1, // bilinear
+      0, // transparent background outside source
     );
+    if (rotatedPixels.isEmpty) return;
 
-    // Clear original selection area
+    // Clear the original selection area on the layer
     final clearedPixels = _clearSelectionArea(
       currentLayer.pixels,
       selection,
     );
 
-    // Place transformed pixels
+    // Clamp destination rect to canvas; _placeTransformedPixels should clip if needed
+    final constrainedDest = Rect.fromLTRB(
+      rotatedBounds.left.clamp(0.0, state.width.toDouble()),
+      rotatedBounds.top.clamp(0.0, state.height.toDouble()),
+      rotatedBounds.right.clamp(1.0, state.width.toDouble()),
+      rotatedBounds.bottom.clamp(1.0, state.height.toDouble()),
+    );
+
+    final targetW = rotatedBounds.width.round().clamp(1, state.width);
+    final targetH = rotatedBounds.height.round().clamp(1, state.height);
+
+    // Blit the rotated buffer into the (clipped) destination area
     final resultPixels = _placeTransformedPixels(
       clearedPixels,
-      transformedPixels,
-      constrainedBounds,
-      constrainedBounds.width.round(),
-      constrainedBounds.height.round(),
+      rotatedPixels,
+      constrainedDest,
+      targetW,
+      targetH,
     );
 
     _updateCurrentLayerPixels(resultPixels);
+  }
 
-    // Update selection to match rotated bounds
-    final newSelection = _createSelectionFromBounds(constrainedBounds);
-    setSelection(newSelection);
+  /// Rotated AABB of [rect] about [center] by [angle] (radians) in screen coords.
+  Rect _computeRotatedBounds(Rect rect, Offset center, double angle) {
+    final c = math.cos(angle);
+    final s = math.sin(angle);
+
+    Offset rot(Offset p) {
+      final dx = p.dx - center.dx;
+      final dy = p.dy - center.dy;
+      return Offset(
+        center.dx + dx * c - dy * s,
+        center.dy + dx * s + dy * c,
+      );
+    }
+
+    final p1 = rot(rect.topLeft);
+    final p2 = rot(rect.topRight);
+    final p3 = rot(rect.bottomLeft);
+    final p4 = rot(rect.bottomRight);
+
+    final minX = math.min(math.min(p1.dx, p2.dx), math.min(p3.dx, p4.dx));
+    final maxX = math.max(math.max(p1.dx, p2.dx), math.max(p3.dx, p4.dx));
+    final minY = math.min(math.min(p1.dy, p2.dy), math.min(p3.dy, p4.dy));
+    final maxY = math.max(math.max(p1.dy, p2.dy), math.max(p3.dy, p4.dy));
+
+    return Rect.fromLTRB(minX, minY, maxX, maxY);
   }
 
 // Helper methods for selection transformation
@@ -983,29 +1011,45 @@ class PixelDrawController extends _$PixelDrawController {
   Uint32List _extractSelectedPixels(
     Uint32List sourcePixels,
     List<PixelPoint<int>> selection,
-    Rect bounds,
-  ) {
+    Rect bounds, {
+    bool respectSelectionShape = false,
+  }) {
     final width = bounds.width.toInt();
     final height = bounds.height.toInt();
-    final pixels = Uint32List(width * height);
 
-    // Create a set for faster lookup
-    final selectionSet = <String>{};
-    for (final point in selection) {
-      selectionSet.add('${point.x},${point.y}');
+    if (width <= 0 || height <= 0) {
+      return Uint32List(0);
+    }
+
+    final pixels = Uint32List(width * height);
+    final boundsLeft = bounds.left.toInt();
+    final boundsTop = bounds.top.toInt();
+
+    // For non-rectangular selections (like lasso), we need to check each pixel
+    Set<String>? selectionSet;
+    if (respectSelectionShape && selection.isNotEmpty) {
+      selectionSet = <String>{};
+      for (final point in selection) {
+        selectionSet.add('${point.x},${point.y}');
+      }
     }
 
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
-        final worldX = bounds.left.toInt() + x;
-        final worldY = bounds.top.toInt() + y;
+        final worldX = boundsLeft + x;
+        final worldY = boundsTop + y;
 
-        // Check if this pixel is in the selection
-        if (selectionSet.contains('$worldX,$worldY')) {
+        // Check if this pixel is in the selection (if needed)
+        if (selectionSet != null && !selectionSet.contains('$worldX,$worldY')) {
+          continue; // Skip pixels outside selection shape
+        }
+
+        // Check if world coordinates are valid
+        if (worldX >= 0 && worldX < state.width && worldY >= 0 && worldY < state.height) {
           final sourceIndex = worldY * state.width + worldX;
           final destIndex = y * width + x;
 
-          if (sourceIndex >= 0 && sourceIndex < sourcePixels.length && destIndex >= 0 && destIndex < pixels.length) {
+          if (sourceIndex >= 0 && sourceIndex < sourcePixels.length) {
             pixels[destIndex] = sourcePixels[sourceIndex];
           }
         }

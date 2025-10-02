@@ -181,16 +181,25 @@ class PixelCanvasNotifier extends _$PixelCanvasNotifier {
     updateLayer(updatedLayer);
   }
 
-  void resizeSelection(List<PixelPoint<int>> selection, Rect newBounds, Offset? center) {
-    _controller.resizeSelection(selection, newBounds, center);
+  void resizeSelection(
+    List<PixelPoint<int>> selection,
+    List<PixelPoint<int>> oldSelection,
+    Rect newBounds,
+    Offset? center,
+  ) {
+    _controller.resizeSelection(selection, oldSelection, newBounds, center);
 
-    // After transformation, create new selection from bounds
     final newSelection = _createSelectionFromBounds(newBounds);
     setSelection(newSelection);
   }
 
-  void rotateSelection(List<PixelPoint<int>> selection, double angle, Offset? center) {
-    _controller.rotateSelection(selection, angle, center);
+  void rotateSelection(
+    List<PixelPoint<int>> selection,
+    List<PixelPoint<int>> oldSelection,
+    double angle,
+    Offset? center,
+  ) {
+    _controller.rotateSelection(selection, oldSelection, angle, center);
   }
 
   List<PixelPoint<int>> _createSelectionFromBounds(Rect bounds) {

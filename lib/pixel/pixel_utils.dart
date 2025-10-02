@@ -267,15 +267,16 @@ abstract final class PixelUtils {
 
     final scaleX = srcWidth / targetWidth.toDouble();
     final scaleY = srcHeight / targetHeight.toDouble();
+    const centerBias = 0.5;
 
     for (int y = 0; y < targetHeight; y++) {
+      final sy = (y + centerBias) * scaleY - centerBias;
       for (int x = 0; x < targetWidth; x++) {
-        final sourceX = x * scaleX;
-        final sourceY = y * scaleY;
+        final sx = (x + centerBias) * scaleX - centerBias;
 
         final color = interpolation == 0
-            ? _sampleNearest(pixels, srcWidth, srcHeight, sourceX, sourceY, backgroundMode)
-            : _sampleBilinear(pixels, srcWidth, srcHeight, sourceX, sourceY, backgroundMode);
+            ? _sampleNearest(pixels, srcWidth, srcHeight, sx, sy, backgroundMode)
+            : _sampleBilinear(pixels, srcWidth, srcHeight, sx, sy, backgroundMode);
 
         result[y * targetWidth + x] = color;
       }

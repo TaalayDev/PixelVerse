@@ -40,8 +40,8 @@ class PixelCanvas extends StatefulWidget {
   final Function(List<PixelPoint<int>>) onDrawShape;
   final Function(List<PixelPoint<int>>?)? onSelectionChanged;
   final Function(List<PixelPoint<int>>, Point)? onMoveSelection;
-  final Function(List<PixelPoint<int>>, Rect, Offset?)? onSelectionResize;
-  final Function(List<PixelPoint<int>>, double, Offset?)? onSelectionRotate;
+  final Function(List<PixelPoint<int>>, List<PixelPoint<int>>, Rect, Offset?)? onSelectionResize;
+  final Function(List<PixelPoint<int>>, List<PixelPoint<int>>, double, Offset?)? onSelectionRotate;
   final Function(Color)? onColorPicked;
   final Function(List<Color>)? onGradientApplied;
   final Function(double, Offset)? onStartDrag;
@@ -91,6 +91,12 @@ class _PixelCanvasState extends State<PixelCanvas> {
   late final CanvasGestureHandler _gestureHandler;
   late final LayerCacheManager _cacheManager;
   late final ToolDrawingManager _toolManager;
+
+  List<PixelPoint<int>>? _resizeOriginalSelection;
+
+  List<PixelPoint<int>>? _rotationOriginalSelection;
+  double _rotationAngle = 0.0;
+  Offset? _rotationCenter;
 
   @override
   void initState() {
@@ -311,6 +317,32 @@ class _PixelCanvasState extends State<PixelCanvas> {
                   onSelectionMoveEnd: () {
                     widget.onSelectionChanged?.call(_controller.selectionPoints);
                   },
+                  onSelectionResizeStart: (original) {
+                    _resizeOriginalSelection = List<PixelPoint<int>>.from(original);
+                  },
+                  onSelectionResize: (selection, scaleX, scaleY, pivot) {
+                    final oldSelection = _controller.selectionPoints;
+
+                    widget.onSelectionResize?.call(
+                      selection,
+                      oldSelection,
+                      Rect.fromLTWH(0, 0, scaleX, scaleY),
+                      Offset(pivot.x.toDouble(), pivot.y.toDouble()),
+                    );
+                    _controller.setSelection(selection);
+                  },
+                  onSelectionRotate: (rotatedSelection, angle) {
+                    _rotationOriginalSelection ??= List<PixelPoint<int>>.from(_controller.selectionPoints);
+
+                    _rotationAngle = angle;
+                    _rotationCenter ??= _centerOf(rotatedSelection);
+
+                    _controller.setSelection(rotatedSelection);
+
+                    // Optional: if you want parents to react during drag (e.g., show angle), you can surface it:
+                    widget.onSelectionRotate
+                        ?.call(rotatedSelection, _controller.selectionPoints, angle, _rotationCenter);
+                  },
                 );
               }),
             ],
@@ -387,5 +419,28 @@ class _PixelCanvasState extends State<PixelCanvas> {
 
   MouseCursor _getCursor() {
     return CursorManager.instance.getCursor(widget.currentTool) ?? widget.currentTool.cursor;
+  }
+
+  Rect _boundsOf(List<PixelPoint<int>> pts) {
+    if (pts.isEmpty) return Rect.zero;
+    int minX = pts.first.x, maxX = pts.first.x, minY = pts.first.y, maxY = pts.first.y;
+    for (final p in pts) {
+      if (p.x < minX) minX = p.x;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.y > maxY) maxY = p.y;
+    }
+    return Rect.fromLTRB(minX.toDouble(), minY.toDouble(), (maxX + 1).toDouble(), (maxY + 1).toDouble());
+  }
+
+  Offset _centerOf(List<PixelPoint<int>> pts) {
+    final b = _boundsOf(pts);
+    return Offset(b.left + b.width / 2, b.top + b.height / 2);
+  }
+
+  void _clearRotationState() {
+    _rotationOriginalSelection = null;
+    _rotationAngle = 0.0;
+    _rotationCenter = null;
   }
 }

@@ -235,7 +235,7 @@ class _PixelCanvasScreenState extends ConsumerState<PixelCanvasScreen> with Tick
                 Expanded(
                   child: Row(
                     children: [
-                      if (MediaQuery.of(context).size.width > 1050)
+                      if (MediaQuery.sizeOf(context).width > 1050)
                         Container(
                           width: 45,
                           color: Theme.of(context).colorScheme.surface,
