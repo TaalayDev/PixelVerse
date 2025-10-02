@@ -29,6 +29,7 @@ import '../../core/theme/sunset.dart';
 import '../../core/theme/toxic_waste.dart';
 import '../../core/theme/volcanic.dart';
 import '../../core/theme/winter_wonderland.dart';
+import '../../core/theme/halloween.dart';
 import 'theme_selector.dart';
 
 class AnimatedBackground extends HookConsumerWidget {
@@ -354,6 +355,18 @@ class AnimatedBackground extends HookConsumerWidget {
           ],
           stops: const [0.0, 0.4, 0.8, 1.0],
         );
+      case ThemeType.halloween:
+        return RadialGradient(
+          center: Alignment.topCenter,
+          radius: 1.5,
+          colors: [
+            Color.lerp(theme.background, theme.primaryColor, 0.04)!,
+            theme.background,
+            Color.lerp(theme.background, theme.accentColor, 0.02)!,
+            theme.background,
+          ],
+          stops: const [0.0, 0.4, 0.8, 1.0],
+        );
 
       default:
         return LinearGradient(
@@ -539,6 +552,12 @@ class AnimatedBackground extends HookConsumerWidget {
 
       case ThemeType.autumnHarvest:
         return AutumnHarvestBackground(
+          theme: theme,
+          intensity: intensity,
+          enableAnimation: enableAnimation,
+        );
+      case ThemeType.halloween:
+        return HalloweenBackground(
           theme: theme,
           intensity: intensity,
           enableAnimation: enableAnimation,

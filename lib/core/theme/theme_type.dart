@@ -27,7 +27,8 @@ enum ThemeType {
   emeraldForest,
   roseQuartzGarden,
   winterWonderland,
-  autumnHarvest;
+  autumnHarvest,
+  halloween;
 
   static List<ThemeType> lockedThemeTypes = [
     ThemeType.ocean,
@@ -123,6 +124,8 @@ enum ThemeType {
         return 'Winter Wonderland';
       case ThemeType.autumnHarvest:
         return 'Autumn Harvest';
+      case ThemeType.halloween:
+        return 'Halloween';
     }
   }
 

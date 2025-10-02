@@ -30,6 +30,7 @@ import 'toxic_waste.dart';
 import 'volcanic.dart';
 import 'emerald_forest.dart';
 import 'winter_wonderland.dart';
+import 'halloween.dart';
 
 export 'theme_type.dart';
 
@@ -169,6 +170,8 @@ class AppTheme {
         return buildWinterWonderlandTheme();
       case ThemeType.autumnHarvest:
         return buildAutumnHarvestTheme();
+      case ThemeType.halloween:
+        return buildHalloweenTheme();
     }
   }
 
