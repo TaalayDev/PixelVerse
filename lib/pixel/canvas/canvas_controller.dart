@@ -214,6 +214,13 @@ class PixelCanvasController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearSelection() {
+    if (_selectionPoints.isNotEmpty) {
+      _selectionPoints = [];
+      notifyListeners();
+    }
+  }
+
   void setHoverPosition(
     Offset? position, {
     List<PixelPoint<int>>? previewPixels,

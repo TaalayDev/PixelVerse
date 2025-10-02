@@ -19,6 +19,10 @@ enum ScreenSize {
     return true;
   }
 
+  bool get isMobile => this == ScreenSize.xxs || this == ScreenSize.xs || this == ScreenSize.sm;
+  bool get isTablet => this == ScreenSize.md;
+  bool get isDesktop => this == ScreenSize.lg || this == ScreenSize.xl;
+
   static ScreenSize? forWidth(double width) {
     return values.cast<ScreenSize?>().firstWhere(
           (size) => size!.matches(width),

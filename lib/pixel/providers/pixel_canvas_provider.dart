@@ -81,6 +81,10 @@ class PixelCanvasNotifier extends _$PixelCanvasNotifier {
   // Selection operations
   void setSelection(List<PixelPoint<int>>? selection) => _controller.setSelection(selection);
   void moveSelection(List<PixelPoint<int>> selection, Point delta) => _controller.moveSelection(selection, delta);
+  void clearSelection() {
+    _eventController.add(const ClearSelectionEvent());
+    _controller.clearSelection();
+  }
 
   void addTemplate(Template template) => _controller.addTemplate(template);
 

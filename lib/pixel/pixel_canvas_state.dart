@@ -75,3 +75,7 @@ class TextureBrushPatternEvent extends PixelDrawEvent {
 
   const TextureBrushPatternEvent(this.texture, {this.blendMode = BlendMode.srcOver, this.isFill = false});
 }
+
+class ClearSelectionEvent extends PixelDrawEvent {
+  const ClearSelectionEvent();
+}

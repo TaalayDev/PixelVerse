@@ -6,6 +6,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../core.dart';
 import '../../l10n/strings.dart';
 import '../../pixel/pixel_canvas_state.dart';
 import '../../pixel/providers/pixel_canvas_provider.dart';
@@ -23,6 +24,7 @@ import '../widgets/animation_timeline.dart';
 import '../widgets/effects/effects_panel.dart';
 import '../widgets/dialogs/save_image_window.dart';
 import '../widgets/dialogs/templates_dialog.dart';
+import '../widgets/selection_options_button.dart';
 import '../widgets/tool_bar.dart';
 import '../widgets/tool_menu.dart';
 import '../widgets/tools_bottom_bar.dart';
@@ -162,6 +164,10 @@ class _PixelCanvasScreenState extends ConsumerState<PixelCanvasScreen> with Tick
     final isAnimationTimelineExpanded = useState(false);
 
     final subscription = ref.watch(subscriptionStateProvider);
+    final hasSelection = state.selectionRect != null;
+
+    final size = MediaQuery.sizeOf(context);
+    final screenSize = ScreenSize.forWidth(size.width) ?? ScreenSize.xs;
 
     return PixelCanvasShortcutsWrapper(
       shortcutsFocusNode: _shortcutsFocusNode,
@@ -185,6 +191,7 @@ class _PixelCanvasScreenState extends ConsumerState<PixelCanvasScreen> with Tick
             child: Column(
               children: [
                 ToolBar(
+                  project: project,
                   currentTool: currentTool,
                   brushSize: brushSize,
                   sprayIntensity: sprayIntensity,
@@ -319,7 +326,7 @@ class _PixelCanvasScreenState extends ConsumerState<PixelCanvasScreen> with Tick
                                   ),
                                 ),
                               ),
-                              if (MediaQuery.sizeOf(context).width < 1000)
+                              if (MediaQuery.sizeOf(context).width < 1000) ...[
                                 Positioned(
                                   left: 16,
                                   right: 16,
@@ -330,6 +337,19 @@ class _PixelCanvasScreenState extends ConsumerState<PixelCanvasScreen> with Tick
                                     sprayIntensity: sprayIntensity,
                                   ),
                                 ),
+                                if (screenSize.isMobile)
+                                  Positioned(
+                                    right: 26,
+                                    bottom: 26,
+                                    child: SelectionOptionsButton(
+                                      hasSelection: hasSelection,
+                                      isFloating: true,
+                                      onClearSelection: () {
+                                        notifier.clearSelection();
+                                      },
+                                    ),
+                                  ),
+                              ],
                             ],
                           ),
                         ),
@@ -481,18 +501,23 @@ class _ToolElements extends StatelessWidget {
     required this.currentTool,
     required this.brushSize,
     required this.sprayIntensity,
+    this.hasSelection = false,
+    this.onClearSelection,
   });
 
   final ValueNotifier<PixelTool> currentTool;
   final ValueNotifier<int> brushSize;
   final ValueNotifier<int> sprayIntensity;
+  final bool hasSelection;
+  final VoidCallback? onClearSelection;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        if (currentTool.value == PixelTool.brush ||
+        if (currentTool.value == PixelTool.pencil ||
+            currentTool.value == PixelTool.brush ||
             currentTool.value == PixelTool.eraser ||
             currentTool.value == PixelTool.sprayPaint) ...[
           Container(

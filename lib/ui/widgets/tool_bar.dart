@@ -2,16 +2,22 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../core.dart';
+import '../../data.dart';
 import '../../l10n/strings.dart';
 import '../../config/assets.dart';
 import '../../data/models/subscription_model.dart';
+import '../../pixel/pixel_canvas_state.dart';
+import '../../pixel/providers/pixel_canvas_provider.dart';
 import '../../pixel/tools.dart';
 import '../../pixel/tools/texture_brush_tool.dart';
 import 'app_icon.dart';
 import 'menu_value_field.dart';
+import 'selection_options_button.dart';
 
-class ToolBar extends StatelessWidget {
+class ToolBar extends ConsumerWidget {
   final ValueNotifier<PixelTool> currentTool;
   final ValueNotifier<PixelModifier> currentModifier;
   final ValueNotifier<int> brushSize;
@@ -35,6 +41,7 @@ class ToolBar extends StatelessWidget {
   final Function()? showPrevFramesOpacity;
   final bool currentLayerHasEffects; // Added flag to show if layer has effects
   final UserSubscription subscription;
+  final Project project;
 
   const ToolBar({
     super.key,
@@ -61,10 +68,18 @@ class ToolBar extends StatelessWidget {
     this.showPrevFramesOpacity,
     this.currentLayerHasEffects = false,
     required this.subscription,
+    required this.project,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final canvasState = ref.watch(pixelCanvasNotifierProvider(project));
+    final notifier = ref.read(pixelCanvasNotifierProvider(project).notifier);
+    final hasSelection = canvasState.selectionRect != null;
+
+    final size = MediaQuery.sizeOf(context);
+    final screenSize = ScreenSize.forWidth(size.width) ?? ScreenSize.xs;
+
     return Container(
       height: 45,
       width: double.infinity,
@@ -248,6 +263,14 @@ class ToolBar extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                         ],
+                      ],
+                      if (!screenSize.isMobile) ...[
+                        SelectionOptionsButton(
+                          hasSelection: hasSelection,
+                          onClearSelection: () {
+                            notifier.clearSelection();
+                          },
+                        ),
                       ],
                     ],
                   );

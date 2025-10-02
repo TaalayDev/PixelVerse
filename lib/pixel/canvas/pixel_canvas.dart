@@ -114,6 +114,10 @@ class _PixelCanvasState extends State<PixelCanvas> {
             mode: event.isFill ? TextureBrushMode.fill : TextureBrushMode.brush,
             fillMode: event.isFill ? TextureFillMode.stretch : TextureFillMode.center,
           );
+        } else if (event is ClearSelectionEvent) {
+          _controller.clearSelection();
+          widget.onSelectionChanged?.call(null);
+          _clearRotationState();
         }
       });
     });
