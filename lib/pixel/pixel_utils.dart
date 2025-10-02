@@ -13,18 +13,37 @@ abstract final class PixelUtils {
   }) {
     final pixels = Uint32List(width * height);
     final layersPixels = layers.reversed
-        .where((l) => l.isVisible)
+        .where((l) => l.isVisible && l.opacity > 0)
         .map(
-          (l) => l.processedPixels,
+          (l) => (pixels: l.processedPixels, opacity: l.opacity),
         )
         .toList();
 
-    for (final processedPixels in layersPixels) {
+    for (final item in layersPixels) {
+      final processedPixels = item.pixels;
+      final opacity = item.opacity;
       for (int i = 0; i < pixels.length; i++) {
-        pixels[i] = pixels[i] == 0 ? processedPixels[i] : pixels[i];
+        pixels[i] = pixels[i] == 0 ? applyAlpha(processedPixels[i], opacity) : pixels[i];
       }
     }
     return pixels;
+  }
+
+  static int applyAlpha(int color, double alpha) {
+    if (color == 0 || alpha >= 1.0) return color;
+    if (alpha <= 0.0) return 0;
+
+    final a = ((color >> 24) & 0xFF);
+    final r = ((color >> 16) & 0xFF);
+    final g = ((color >> 8) & 0xFF);
+    final b = (color & 0xFF);
+
+    final newA = (a * alpha).round().clamp(0, 255);
+    final newR = (r * alpha).round().clamp(0, 255);
+    final newG = (g * alpha).round().clamp(0, 255);
+    final newB = (b * alpha).round().clamp(0, 255);
+
+    return (newA << 24) | (newR << 16) | (newG << 8) | newB;
   }
 
   /// Applies scale transformation to the image pixels.

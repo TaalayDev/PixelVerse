@@ -5,7 +5,7 @@ import 'package:pixelverse/core/extensions/primitive_extensions.dart';
 import 'package:pixelverse/ui/widgets/animated_background.dart';
 
 import '../../../pixel/effects/effects.dart';
-import '../dialogs/save_image_dialog.dart';
+import '../dialogs/save_image_window.dart';
 import 'pixlel_preview_painter.dart';
 
 class EffectEditorDialog extends StatefulWidget {

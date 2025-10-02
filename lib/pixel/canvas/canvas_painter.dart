@@ -84,9 +84,9 @@ class PixelCanvasPainter extends CustomPainter {
     for (int i = 0; i < controller.layers.length; i++) {
       final layer = controller.layers[i];
 
-      if (!layer.isVisible) continue;
+      if (!layer.isVisible || layer.opacity == 0) continue;
 
-      canvas.saveLayer(canvasRect, Paint());
+      canvas.saveLayer(canvasRect, Paint()..color = Color.fromRGBO(255, 255, 255, layer.opacity));
 
       final cachedImage = cacheManager.getLayerImage(layer.layerId);
 

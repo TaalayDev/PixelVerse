@@ -3,8 +3,9 @@ import 'package:flutter/widgets.dart';
 
 class ImagePainter extends CustomPainter {
   final ui.Image image;
+  final double? opacity;
 
-  ImagePainter(this.image);
+  ImagePainter(this.image, {this.opacity});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -15,7 +16,11 @@ class ImagePainter extends CustomPainter {
       image.height.toDouble(),
     );
     final dst = Rect.fromLTWH(0, 0, size.width, size.height);
-    canvas.drawImageRect(image, src, dst, Paint());
+    final paint = Paint();
+    if (opacity != null) {
+      paint.color = Color.fromRGBO(255, 255, 255, opacity!);
+    }
+    canvas.drawImageRect(image, src, dst, paint);
   }
 
   @override

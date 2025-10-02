@@ -9,6 +9,7 @@ import '../../data.dart';
 import '../../l10n/strings.dart';
 import '../../providers/subscription_provider.dart';
 import '../../providers/background_image_provider.dart';
+import 'fancy_slider.dart';
 
 class LayersPanel extends HookConsumerWidget {
   final int width;
@@ -209,21 +210,24 @@ class _ActionButtonsBar extends HookWidget {
                                           fontSize: 16,
                                         ),
                                       ),
-                                      content: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Slider(
-                                            value: opacity,
-                                            min: 0.0,
-                                            max: 1.0,
-                                            divisions: 100,
-                                            padding: const EdgeInsets.symmetric(horizontal: 0),
-                                            label: (opacity * 100).toInt().toString(),
-                                            onChanged: (value) {
-                                              opacity = value;
-                                            },
-                                          ),
-                                        ],
+                                      content: StatefulBuilder(
+                                        builder: (context, setState) {
+                                          return Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              CustomSlider(
+                                                value: opacity,
+                                                min: 0.0,
+                                                max: 1.0,
+                                                onChanged: (value) {
+                                                  setState(() {
+                                                    opacity = value;
+                                                  });
+                                                },
+                                              ),
+                                            ],
+                                          );
+                                        },
                                       ),
                                       actions: [
                                         TextButton(

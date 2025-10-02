@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -8,10 +7,7 @@ import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../l10n/strings.dart';
-import '../../pixel/canvas/pixel_canvas.dart';
-import '../../pixel/image_painter.dart';
 import '../../pixel/pixel_canvas_state.dart';
-import '../../providers/background_image_provider.dart';
 import '../../pixel/providers/pixel_canvas_provider.dart';
 import '../../pixel/animation_frame_controller.dart' hide AnimationController;
 import '../../pixel/tools.dart';
@@ -19,17 +15,13 @@ import '../../data.dart';
 import '../../providers/subscription_provider.dart';
 import '../widgets/animated_background.dart';
 import '../widgets/dialogs/import_dialog.dart';
-import '../widgets/effects/effects_side_panel.dart';
-import '../widgets/dialogs/layer_template_dialog.dart';
 import '../widgets/painter/pixel_painter.dart';
 import '../widgets/panel/desktop_side_panel.dart';
 import '../widgets/pixel_canvas_shortcuts.dart';
 import '../widgets/dialogs/animation_preview_dialog.dart';
 import '../widgets/animation_timeline.dart';
 import '../widgets/effects/effects_panel.dart';
-import '../widgets/painter/grid_painter.dart';
-import '../widgets/dialogs/save_image_dialog.dart';
-import '../widgets.dart';
+import '../widgets/dialogs/save_image_window.dart';
 import '../widgets/dialogs/templates_dialog.dart';
 import '../widgets/tool_bar.dart';
 import '../widgets/tool_menu.dart';
@@ -62,7 +54,7 @@ class _PixelCanvasScreenState extends ConsumerState<PixelCanvasScreen> with Tick
   ) async {
     _shortcutsFocusNode.canRequestFocus = false;
 
-    await showSaveImageDialog(
+    await showSaveImageWindow(
       context,
       state: state,
       subscription: ref.read(subscriptionStateProvider),
