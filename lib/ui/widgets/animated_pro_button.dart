@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
-import '../../core/theme/theme.dart';
+import '../../app/theme/theme.dart';
 
 class AnimatedProButton extends StatefulWidget {
   final VoidCallback onTap;
@@ -18,8 +18,7 @@ class AnimatedProButton extends StatefulWidget {
   State<AnimatedProButton> createState() => _AnimatedProButtonState();
 }
 
-class _AnimatedProButtonState extends State<AnimatedProButton>
-    with SingleTickerProviderStateMixin {
+class _AnimatedProButtonState extends State<AnimatedProButton> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _glowAnimation;
@@ -73,8 +72,7 @@ class _AnimatedProButtonState extends State<AnimatedProButton>
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: widget.theme.accentColor
-                      .withOpacity(_glowAnimation.value),
+                  color: widget.theme.accentColor.withOpacity(_glowAnimation.value),
                   blurRadius: 8,
                   spreadRadius: 1,
                   offset: const Offset(0, 2),
@@ -87,8 +85,7 @@ class _AnimatedProButtonState extends State<AnimatedProButton>
                 onTap: widget.onTap,
                 borderRadius: BorderRadius.circular(20),
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

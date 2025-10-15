@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../core/theme/theme.dart';
+import '../../app/theme/theme.dart';
 import '../../pixel/tools.dart';
 import '../../data/models/subscription_model.dart';
 import '../../providers/subscription_provider.dart';

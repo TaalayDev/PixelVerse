@@ -106,6 +106,14 @@ class HalloweenBackground extends HookWidget {
 
     return Stack(
       children: [
+        Positioned.fill(
+          child: Image.asset(
+            'assets/images/halloween_background.jpg',
+            fit: BoxFit.cover,
+            color: Colors.black.withOpacity(0.3 * intensity),
+            colorBlendMode: BlendMode.darken,
+          ),
+        ),
         // Fog/mist layer
         CustomPaint(
           painter: _FogPainter(
@@ -114,30 +122,11 @@ class HalloweenBackground extends HookWidget {
           ),
           size: Size.infinite,
         ),
-        // Floating ghosts
-        CustomPaint(
-          painter: _GhostPainter(
-            animation: slowAnimation,
-            color: Colors.white.withOpacity(0.15 * intensity),
-            intensity: intensity,
-          ),
-          size: Size.infinite,
-        ),
         // Flying bats
         CustomPaint(
           painter: _BatPainter(
             animation: fastAnimation,
             color: Colors.black.withOpacity(0.6 * intensity),
-            intensity: intensity,
-          ),
-          size: Size.infinite,
-        ),
-        // Glowing pumpkin effects
-        CustomPaint(
-          painter: _PumpkinGlowPainter(
-            animation: slowAnimation,
-            primaryColor: theme.primaryColor,
-            accentColor: theme.accentColor,
             intensity: intensity,
           ),
           size: Size.infinite,
@@ -171,7 +160,7 @@ class _FogPainter extends CustomPainter {
 
     for (int i = 0; i < 8; i++) {
       final baseX = random.nextDouble() * size.width;
-      final baseY = size.height * 0.7 + random.nextDouble() * size.height * 0.3;
+      final baseY = size.height * 0.2 + random.nextDouble() * size.height * 0.3;
 
       final offset = math.sin(animation * 2 * math.pi + i * 0.5) * 30;
       final x = baseX + offset;

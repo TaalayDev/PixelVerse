@@ -2,8 +2,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../core/theme/theme.dart';
 import '../../core/utils/cursor_manager.dart';
+import '../widgets/version_text.dart';
 import 'projects_screen.dart';
 
 import '../widgets/theme_selector.dart';
@@ -15,12 +15,9 @@ class SplashScreen extends ConsumerStatefulWidget {
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen>
-    with SingleTickerProviderStateMixin {
+class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _rotationAnimation;
   final List<PixelSquare> _squares = [];
   final List<PixelDot> _dots = [];
   final int _gridSize = 10;
@@ -31,40 +28,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   void initState() {
     super.initState();
 
-    // Initialize the animation controller
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 3000),
-    );
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 3000));
+    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
 
-    // Setup animations
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeIn,
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.0, 0.7, curve: Curves.elasticOut),
-      ),
-    );
-
-    _rotationAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.5, 1.0, curve: Curves.easeOutBack),
-      ),
-    );
-
-    // Create animated squares for the grid effect
     _createSquares();
     _createDots();
 
-    // Start the animation
     _controller.forward();
 
-    // Start initialization process
     _init();
   }
 
@@ -145,16 +116,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         builder: (context, child) {
           return Stack(
             children: [
-              // Background with animated dots
-
-              // Center content
               Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Animated Pixel Art Logo
-
-                    // Animated app name
                     AnimatedOpacity(
                       opacity: _fadeAnimation.value,
                       duration: const Duration(milliseconds: 500),
@@ -175,10 +140,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 8),
-
-                    // Animated tagline
                     AnimatedOpacity(
                       opacity: _fadeAnimation.value,
                       duration: const Duration(milliseconds: 500),
@@ -191,10 +153,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 60),
-
-                    // Loading indicator
                     AnimatedOpacity(
                       opacity: _fadeAnimation.value,
                       duration: const Duration(milliseconds: 500),
@@ -203,16 +162,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         height: 40,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(theme.primaryColor),
+                          valueColor: AlwaysStoppedAnimation<Color>(theme.primaryColor),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-
-              // Version text at bottom
               Positioned(
                 bottom: 20,
                 left: 0,
@@ -221,13 +177,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   opacity: _fadeAnimation.value,
                   duration: const Duration(milliseconds: 500),
                   child: Center(
-                    child: Text(
-                      'v1.1.0',
-                      style: TextStyle(
-                        color: theme.textSecondary.withOpacity(0.5),
-                        fontSize: 12,
-                      ),
-                    ),
+                    child: VersionTextBuilder(builder: (context, version, isLoading) {
+                      if (isLoading) {
+                        return const SizedBox();
+                      }
+
+                      return Text(
+                        version,
+                        style: TextStyle(
+                          color: theme.textSecondary.withOpacity(0.5),
+                          fontSize: 12,
+                        ),
+                      );
+                    }),
                   ),
                 ),
               ),
@@ -316,10 +278,8 @@ class PixelLogoPainter extends CustomPainter {
     for (int y = 0; y < logoPixels.length; y++) {
       for (int x = 0; x < logoPixels[y].length; x++) {
         if (logoPixels[y][x] == 1) {
-          final delayFactor =
-              0.7 + (x + y) / (logoPixels.length + logoPixels[0].length) * 0.3;
-          final animationProgress =
-              math.max(0, math.min(1, (animation - 0.3) / delayFactor));
+          final delayFactor = 0.7 + (x + y) / (logoPixels.length + logoPixels[0].length) * 0.3;
+          final animationProgress = math.max(0, math.min(1, (animation - 0.3) / delayFactor));
 
           // Determine pixel color with alternating pattern
           final isEven = (x + y) % 2 == 0;
@@ -337,8 +297,7 @@ class PixelLogoPainter extends CustomPainter {
           final offset = (gridSize - pixelSize) / 2;
 
           canvas.drawRect(
-            Rect.fromLTWH(
-                pixelX + offset, pixelY + offset, pixelSize, pixelSize),
+            Rect.fromLTWH(pixelX + offset, pixelY + offset, pixelSize, pixelSize),
             paint,
           );
         }
@@ -347,8 +306,7 @@ class PixelLogoPainter extends CustomPainter {
 
     // Draw animated squares
     for (final square in squares) {
-      final squareAnimation =
-          math.max(0, math.min(1, animation - square.animationDelay));
+      final squareAnimation = math.max(0, math.min(1, animation - square.animationDelay));
 
       if (squareAnimation > 0) {
         final squareOpacity = math.sin(squareAnimation * math.pi) * 0.6;
@@ -357,8 +315,7 @@ class PixelLogoPainter extends CustomPainter {
 
         // Calculate square position with rotation around the center
         final angle = square.rotationSpeed * animation * math.pi * 2;
-        final distance =
-            square.position.distance * gridSize * 3 * squareAnimation;
+        final distance = square.position.distance * gridSize * 3 * squareAnimation;
 
         final dx = math.cos(angle) * distance;
         final dy = math.sin(angle) * distance;
@@ -400,21 +357,18 @@ class PixelBackgroundPainter extends CustomPainter {
     final paint = Paint()..color = color;
 
     for (final dot in dots) {
-      final dotAnimation =
-          math.max(0, math.min(1, animation - dot.animationDelay));
+      final dotAnimation = math.max(0, math.min(1, animation - dot.animationDelay));
 
       if (dotAnimation > 0) {
         // Pulsating effect
-        final pulse =
-            (math.sin(animation * 3 + dot.animationDelay * 10) + 1) / 2;
+        final pulse = (math.sin(animation * 3 + dot.animationDelay * 10) + 1) / 2;
         final dotOpacity = 0.3 + pulse * 0.7;
 
         paint.color = color.withOpacity(dotOpacity * 0.5);
 
         // Moving outward
         final angle = dot.position.direction;
-        final distance =
-            dot.position.distance * size.width / 4 * (0.2 + dotAnimation * 0.8);
+        final distance = dot.position.distance * size.width / 4 * (0.2 + dotAnimation * 0.8);
         final speed = dot.speed * animation * 100;
 
         final dx = math.cos(angle) * (distance + speed);
@@ -425,10 +379,7 @@ class PixelBackgroundPainter extends CustomPainter {
         final dotSize = size.width * dot.size * (0.5 + pulse * 0.5);
 
         // Only draw dots within the screen
-        if (dotX > -dotSize &&
-            dotX < size.width + dotSize &&
-            dotY > -dotSize &&
-            dotY < size.height + dotSize) {
+        if (dotX > -dotSize && dotX < size.width + dotSize && dotY > -dotSize && dotY < size.height + dotSize) {
           canvas.drawCircle(
             Offset(dotX, dotY),
             dotSize,

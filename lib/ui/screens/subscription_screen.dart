@@ -8,7 +8,7 @@ import 'package:pixelverse/config/constants.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import '../../config/assets.dart';
-import '../../core/theme/theme.dart';
+import '../../app/theme/theme.dart';
 import '../../data/models/subscription_model.dart';
 import '../../providers/subscription_provider.dart';
 import '../../providers/ad/reward_video_ad_controller.dart';

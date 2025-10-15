@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../core/theme/theme.dart';
+import 'theme/theme.dart';
 import '../core/utils/locale_manager.dart';
 import '../providers/providers.dart';
 import '../l10n/strings.dart';
@@ -16,8 +16,7 @@ class PixelVerseApp extends ConsumerStatefulWidget {
   ConsumerState<PixelVerseApp> createState() => _PixelVerseAppState();
 }
 
-class _PixelVerseAppState extends ConsumerState<PixelVerseApp>
-    with WidgetsBindingObserver {
+class _PixelVerseAppState extends ConsumerState<PixelVerseApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();

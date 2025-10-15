@@ -3,7 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../../core/theme/theme.dart';
+import '../../app/theme/theme.dart';
 import '../../providers/ad/reward_video_ad_controller.dart';
 import '../../providers/subscription_provider.dart';
 import '../screens/subscription_screen.dart';
