@@ -157,7 +157,8 @@ class _EffectEditorDialogState extends State<EffectEditorDialog> {
       children: [
         // Preview
         Container(
-          height: 200,
+          constraints: const BoxConstraints(maxHeight: 200),
+          clipBehavior: Clip.hardEdge,
           margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
             color: Colors.grey.shade200,
@@ -192,8 +193,7 @@ class _EffectEditorDialogState extends State<EffectEditorDialog> {
               ),
               const SizedBox(height: 16),
               Container(
-                width: 200,
-                height: 200,
+                constraints: const BoxConstraints(maxHeight: 200),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(8),
@@ -257,11 +257,14 @@ class _EffectEditorDialogState extends State<EffectEditorDialog> {
       return const Center(child: Text('Preview not available'));
     }
 
-    return CustomPaint(
-      painter: PixelPreviewPainter(
-        pixels: _previewPixels!,
-        width: widget.layerWidth,
-        height: widget.layerHeight,
+    return AspectRatio(
+      aspectRatio: widget.layerWidth / widget.layerHeight,
+      child: CustomPaint(
+        painter: PixelPreviewPainter(
+          pixels: _previewPixels!,
+          width: widget.layerWidth,
+          height: widget.layerHeight,
+        ),
       ),
     );
   }
