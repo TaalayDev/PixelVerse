@@ -95,4 +95,31 @@ class ImageHelper {
     final bytes = Uint8List.fromList(img.encodePng(image));
     return bytes;
   }
+
+  static Future<ui.Image> scaleUiImageSync(
+    ui.Image image,
+    double scale,
+  ) async {
+    final int newWidth = (image.width * scale).toInt();
+    final int newHeight = (image.height * scale).toInt();
+
+    final img.Image dartImage = await convertFlutterUiToImage(
+      image.width,
+      image.height,
+      image,
+    );
+
+    final img.Image resizedImage = img.copyResize(
+      dartImage,
+      width: newWidth,
+      height: newHeight,
+      interpolation: img.Interpolation.nearest,
+    );
+
+    final ui.Image scaledUiImage = await convertImageToFlutterUi(
+      resizedImage,
+    );
+
+    return scaledUiImage;
+  }
 }

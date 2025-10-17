@@ -423,4 +423,51 @@ abstract final class PixelUtils {
     }
     return out;
   }
+
+  /// Resize pixels using the image package for high quality scaling.
+  /// Takes 0xAARRGGBB pixels and returns resized 0xAARRGGBB pixels.
+  static Uint32List resizeWithImagePackage(
+    Uint32List pixels,
+    int srcWidth,
+    int srcHeight,
+    int targetWidth,
+    int targetHeight, {
+    img.Interpolation interpolation = img.Interpolation.cubic,
+  }) {
+    if (targetWidth <= 0 || targetHeight <= 0) return Uint32List(0);
+    if (srcWidth == targetWidth && srcHeight == targetHeight) return pixels;
+
+    // Convert to img.Image
+    final srcImage = imageFromAarrggbb(pixels, srcWidth, srcHeight);
+
+    // Resize using image package
+    final resized = img.copyResize(
+      srcImage,
+      width: targetWidth,
+      height: targetHeight,
+      interpolation: interpolation,
+    );
+
+    // Convert back to 0xAARRGGBB
+    return imageToAarrggbb(resized);
+  }
+
+  /// Convert img.Image back to 0xAARRGGBB format.
+  static Uint32List imageToAarrggbb(img.Image image) {
+    final pixels = Uint32List(image.width * image.height);
+
+    for (int y = 0; y < image.height; y++) {
+      for (int x = 0; x < image.width; x++) {
+        final pixel = image.getPixel(x, y);
+        final a = pixel.a.toInt();
+        final r = pixel.r.toInt();
+        final g = pixel.g.toInt();
+        final b = pixel.b.toInt();
+
+        pixels[y * image.width + x] = (a << 24) | (r << 16) | (g << 8) | b;
+      }
+    }
+
+    return pixels;
+  }
 }

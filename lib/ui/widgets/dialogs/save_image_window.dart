@@ -98,6 +98,7 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
   final previewKey = GlobalKey();
   late double width = widget.state.width.toDouble();
   late double height = widget.state.height.toDouble();
+  double scale = 1.0;
 
   final widthController = TextEditingController();
   final heightController = TextEditingController();
@@ -112,14 +113,33 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
       columnOptions.sort();
     }
     spriteSheetColumns = framesLength;
-    widthController.text = width.toString();
-    heightController.text = height.toString();
+    widthController.text = width.toStringAsFixed(0);
+    heightController.text = height.toStringAsFixed(0);
     super.initState();
+  }
+
+  void _updateScale(double newScale) {
+    setState(() {
+      scale = newScale;
+      width = widget.state.width * scale;
+      height = widget.state.height * scale;
+      widthController.text = width.toStringAsFixed(0);
+      heightController.text = height.toStringAsFixed(0);
+    });
+  }
+
+  double _calcSpriteSheetHeight(double width) {
+    double originalRatio = widget.state.width / widget.state.height;
+    return (width / spriteSheetColumns) / originalRatio;
   }
 
   void _savePreviewImage() async {
     final boundary = previewKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-    final image = await boundary.toImage();
+    var image = await boundary.toImage();
+
+    if (scale != 1.0) {
+      image = await ImageHelper.scaleUiImageSync(image, scale);
+    }
 
     await FileUtils(context).saveUIImage(
       image,
@@ -127,11 +147,6 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
     );
 
     Navigator.of(context).pop();
-  }
-
-  double _calcSpriteSheetHeight(double width) {
-    double originalRatio = widget.state.width / widget.state.height;
-    return (width / spriteSheetColumns) / originalRatio;
   }
 
   @override
@@ -291,6 +306,31 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                       ),
                     ),
                     const SizedBox(height: 8),
+                    // Scale slider
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Scale: ${scale.toStringAsFixed(1)}x',
+                                style: const TextStyle(fontSize: 12, color: Colors.grey),
+                              ),
+                              Slider(
+                                value: scale,
+                                min: 0.1,
+                                max: 10.0,
+                                divisions: 99,
+                                label: '${scale.toStringAsFixed(1)}x',
+                                onChanged: _updateScale,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         Expanded(
@@ -302,11 +342,11 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                             keyboardType: TextInputType.number,
                             onChanged: (value) {
                               width = double.tryParse(value) ?? widget.state.width.toDouble();
-
                               double originalRatio = widget.state.width / widget.state.height;
                               height = width / originalRatio;
-
-                              heightController.text = height.toString();
+                              scale = (width / widget.state.width).clamp(0.1, 10.0);
+                              heightController.text = height.toStringAsFixed(0);
+                              setState(() {});
                             },
                           ),
                         ),
@@ -321,9 +361,10 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                             onChanged: (value) {
                               height = double.tryParse(value) ?? widget.state.height.toDouble();
                               double originalRatio = widget.state.width / widget.state.height;
-                              width = height / originalRatio;
-
-                              widthController.text = width.toString();
+                              width = height * originalRatio;
+                              scale = (height / widget.state.height).clamp(0.1, 10.0);
+                              widthController.text = width.toStringAsFixed(0);
+                              setState(() {});
                             },
                           ),
                         ),
@@ -500,6 +541,7 @@ class _SaveImageDesktopState extends State<SaveImageDesktop> {
   final previewKey = GlobalKey();
   late double width = widget.state.width.toDouble();
   late double height = widget.state.height.toDouble();
+  double scale = 1.0;
 
   final widthController = TextEditingController();
   final heightController = TextEditingController();
@@ -514,14 +556,33 @@ class _SaveImageDesktopState extends State<SaveImageDesktop> {
       columnOptions.sort();
     }
     spriteSheetColumns = framesLength;
-    widthController.text = width.toString();
-    heightController.text = height.toString();
+    widthController.text = width.toStringAsFixed(0);
+    heightController.text = height.toStringAsFixed(0);
     super.initState();
+  }
+
+  void _updateScale(double newScale) {
+    setState(() {
+      scale = newScale;
+      width = widget.state.width * scale;
+      height = widget.state.height * scale;
+      widthController.text = width.toStringAsFixed(0);
+      heightController.text = height.toStringAsFixed(0);
+    });
+  }
+
+  double _calcSpriteSheetHeight(double width) {
+    double originalRatio = widget.state.width / widget.state.height;
+    return (width / spriteSheetColumns) / originalRatio;
   }
 
   void _savePreviewImage() async {
     final boundary = previewKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-    final image = await boundary.toImage();
+    var image = await boundary.toImage();
+
+    if (scale != 1.0) {
+      image = await ImageHelper.scaleUiImageSync(image, scale);
+    }
 
     await FileUtils(context).saveUIImage(
       image,
@@ -529,11 +590,6 @@ class _SaveImageDesktopState extends State<SaveImageDesktop> {
     );
 
     Navigator.of(context).pop();
-  }
-
-  double _calcSpriteSheetHeight(double width) {
-    double originalRatio = widget.state.width / widget.state.height;
-    return (width / spriteSheetColumns) / originalRatio;
   }
 
   @override
@@ -667,7 +723,27 @@ class _SaveImageDesktopState extends State<SaveImageDesktop> {
                                 fontWeight: FontWeight.bold,
                               ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Scale: ${scale.toStringAsFixed(1)}x',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.grey.shade600,
+                                  ),
+                            ),
+                            Slider(
+                              value: scale,
+                              min: 0.1,
+                              max: 10.0,
+                              divisions: 99,
+                              label: '${scale.toStringAsFixed(1)}x',
+                              onChanged: _updateScale,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
                         Row(
                           children: [
                             Expanded(
@@ -683,7 +759,9 @@ class _SaveImageDesktopState extends State<SaveImageDesktop> {
                                   width = double.tryParse(value) ?? widget.state.width.toDouble();
                                   double originalRatio = widget.state.width / widget.state.height;
                                   height = width / originalRatio;
+                                  scale = (width / widget.state.width).clamp(0.1, 10.0);
                                   heightController.text = height.toStringAsFixed(0);
+                                  setState(() {});
                                 },
                               ),
                             ),
@@ -704,7 +782,9 @@ class _SaveImageDesktopState extends State<SaveImageDesktop> {
                                   height = double.tryParse(value) ?? widget.state.height.toDouble();
                                   double originalRatio = widget.state.width / widget.state.height;
                                   width = height * originalRatio;
+                                  scale = (height / widget.state.height).clamp(0.1, 10.0);
                                   widthController.text = width.toStringAsFixed(0);
+                                  setState(() {});
                                 },
                               ),
                             ),
@@ -899,6 +979,7 @@ class _SaveImageTabletState extends State<SaveImageTablet> {
   final previewKey = GlobalKey();
   late double width = widget.state.width.toDouble();
   late double height = widget.state.height.toDouble();
+  double scale = 1.0;
 
   final widthController = TextEditingController();
   final heightController = TextEditingController();
@@ -913,14 +994,33 @@ class _SaveImageTabletState extends State<SaveImageTablet> {
       columnOptions.sort();
     }
     spriteSheetColumns = framesLength;
-    widthController.text = width.toString();
-    heightController.text = height.toString();
+    widthController.text = width.toStringAsFixed(0);
+    heightController.text = height.toStringAsFixed(0);
     super.initState();
+  }
+
+  void _updateScale(double newScale) {
+    setState(() {
+      scale = newScale;
+      width = widget.state.width * scale;
+      height = widget.state.height * scale;
+      widthController.text = width.toStringAsFixed(0);
+      heightController.text = height.toStringAsFixed(0);
+    });
+  }
+
+  double _calcSpriteSheetHeight(double width) {
+    double originalRatio = widget.state.width / widget.state.height;
+    return (width / spriteSheetColumns) / originalRatio;
   }
 
   void _savePreviewImage() async {
     final boundary = previewKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-    final image = await boundary.toImage();
+    var image = await boundary.toImage();
+
+    if (scale != 1.0) {
+      image = await ImageHelper.scaleUiImageSync(image, scale);
+    }
 
     await FileUtils(context).saveUIImage(
       image,
@@ -928,11 +1028,6 @@ class _SaveImageTabletState extends State<SaveImageTablet> {
     );
 
     Navigator.of(context).pop();
-  }
-
-  double _calcSpriteSheetHeight(double width) {
-    double originalRatio = widget.state.width / widget.state.height;
-    return (width / spriteSheetColumns) / originalRatio;
   }
 
   @override
@@ -1047,6 +1142,26 @@ class _SaveImageTabletState extends State<SaveImageTablet> {
                               thumbColor: MaterialStateProperty.all(Theme.of(context).colorScheme.onPrimary),
                             ),
                             const SizedBox(height: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Scale: ${scale.toStringAsFixed(1)}x',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: Colors.grey.shade600,
+                                      ),
+                                ),
+                                Slider(
+                                  value: scale,
+                                  min: 0.1,
+                                  max: 10.0,
+                                  divisions: 99,
+                                  label: '${scale.toStringAsFixed(1)}x',
+                                  onChanged: _updateScale,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
                             Row(
                               children: [
                                 Expanded(
@@ -1062,7 +1177,9 @@ class _SaveImageTabletState extends State<SaveImageTablet> {
                                       width = double.tryParse(value) ?? widget.state.width.toDouble();
                                       double originalRatio = widget.state.width / widget.state.height;
                                       height = width / originalRatio;
+                                      scale = (width / widget.state.width).clamp(0.1, 10.0);
                                       heightController.text = height.toStringAsFixed(0);
+                                      setState(() {});
                                     },
                                   ),
                                 ),
@@ -1080,7 +1197,9 @@ class _SaveImageTabletState extends State<SaveImageTablet> {
                                       height = double.tryParse(value) ?? widget.state.height.toDouble();
                                       double originalRatio = widget.state.width / widget.state.height;
                                       width = height * originalRatio;
+                                      scale = (height / widget.state.height).clamp(0.1, 10.0);
                                       widthController.text = width.toStringAsFixed(0);
+                                      setState(() {});
                                     },
                                   ),
                                 ),
