@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img;
 
 import '../data/models/layer.dart';
 
@@ -328,5 +329,98 @@ abstract final class PixelUtils {
     }
 
     return result;
+  }
+
+  /// NOTE: Additional utility methods for image processing
+  ///
+  /// /// If your pipeline produces premultiplied colors (RGB * A / 255),
+  /// convert them back to straight alpha to avoid dark edges.
+  static void _unpremultiplyInPlace(Uint8List rgba) {
+    for (int i = 0; i < rgba.length; i += 4) {
+      final a = rgba[i + 3];
+      if (a == 0) {
+        rgba[i] = 0;
+        rgba[i + 1] = 0;
+        rgba[i + 2] = 0;
+      } else if (a < 255) {
+        // unpremultiply
+        final scale = 255.0 / a;
+        rgba[i] = (rgba[i] * scale).clamp(0, 255).toInt();
+        rgba[i + 1] = (rgba[i + 1] * scale).clamp(0, 255).toInt();
+        rgba[i + 2] = (rgba[i + 2] * scale).clamp(0, 255).toInt();
+      }
+    }
+  }
+
+  /// Convert 0xAARRGGBB pixels to an RGBA Image.
+  /// Ensures RGB = 0 when alpha == 0 to avoid halos in GIF.
+  static img.Image imageFromAarrggbb(Uint32List pixels, int w, int h, {bool hardAlphaForGif = false}) {
+    final out = Uint8List(w * h * 4);
+    for (int i = 0, o = 0; i < pixels.length; i++, o += 4) {
+      final c = pixels[i];
+      int a = (c >> 24) & 0xFF;
+      int r = (c >> 16) & 0xFF;
+      int g = (c >> 8) & 0xFF;
+      int b = (c) & 0xFF;
+
+      if (hardAlphaForGif) a = a >= 128 ? 255 : 0;
+      if (a == 0) {
+        r = 0;
+        g = 0;
+        b = 0;
+      }
+
+      out[o] = r;
+      out[o + 1] = g;
+      out[o + 2] = b;
+      out[o + 3] = a;
+    }
+
+    // If your upstream used premultiplied alpha, undo it now.
+    _unpremultiplyInPlace(out);
+
+    return img.Image.fromBytes(width: w, height: h, bytes: out.buffer, numChannels: 4);
+  }
+
+  /// Composite `src` onto a solid matte (e.g., your app background) to remove transparency.
+  static img.Image compositeOnMatte(img.Image src, {int r = 26, int g = 15, int b = 46}) {
+    final bg = img.Image(width: src.width, height: src.height);
+    img.fill(bg, color: img.ColorRgb8(r, g, b));
+    img.compositeImage(bg, src);
+    return bg;
+  }
+
+  /// Convert a 0xFFRRGGBB integer to (r,g,b).
+  static ({int r, int g, int b}) rgbFromInt(int rgb) {
+    return (r: (rgb >> 16) & 0xFF, g: (rgb >> 8) & 0xFF, b: rgb & 0xFF);
+  }
+
+  /// Convert 0xAARRGGBB -> RGBA bytes for gifencoder (ImageData-like).
+  /// - Snaps alpha to 0/255 (GIF has 1-bit transparency)
+  /// - Zeros RGB when A==0 (prevents black fringes)
+  static Uint8List aarrggbbToRgbaForGif(Uint32List src) {
+    final out = Uint8List(src.length * 4);
+    for (int i = 0, o = 0; i < src.length; i++, o += 4) {
+      final c = src[i];
+      int a = (c >> 24) & 0xFF;
+      int r = (c >> 16) & 0xFF;
+      int g = (c >> 8) & 0xFF;
+      int b = c & 0xFF;
+
+      // snap alpha for GIF’s 1-bit transparency
+      a = a >= 128 ? 255 : 0;
+
+      if (a == 0) {
+        r = 0;
+        g = 0;
+        b = 0;
+      } // crucial: no hidden dark RGB
+
+      out[o] = r;
+      out[o + 1] = g;
+      out[o + 2] = b;
+      out[o + 3] = a;
+    }
+    return out;
   }
 }

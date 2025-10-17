@@ -7,6 +7,9 @@ import 'package:uuid/uuid.dart';
 
 import '../../core.dart';
 import '../../data.dart';
+import '../../gifencoder/gifencoder.dart' as gifencoder;
+
+const _kGifFps = 10;
 
 class ImportExportService {
   Future<void> exportProjectAsJson({
@@ -57,65 +60,43 @@ class ImportExportService {
     double? exportWidth,
     double? exportHeight,
   }) async {
-    final images = <img.Image>[];
+    // If you want transparency, we must *not* flatten on any background.
+    // So ensure withBackground==false here for a transparent export.
+    final wantTransparent = !withBackground;
+
+    // Prepare a GifBuffer (expects RGBA bytes per frame)
+    final gb = gifencoder.GifBuffer(project.width, project.height);
 
     for (final frame in frames) {
-      final pixels = PixelUtils.mergeLayersPixels(
+      // Your existing compositor:
+      final pixelsAARRGGBB = PixelUtils.mergeLayersPixels(
         width: project.width,
         height: project.height,
         layers: frame.layers,
       );
 
-      final image = img.Image(
-        width: project.width,
-        height: project.height,
-        numChannels: 4,
-      );
-
-      for (int y = 0; y < project.height; y++) {
-        for (int x = 0; x < project.width; x++) {
-          final pixel = pixels[y * project.width + x];
-          final a = (pixel >> 24) & 0xFF;
-          final r = (pixel >> 16) & 0xFF;
-          final g = (pixel >> 8) & 0xFF;
-          final b = pixel & 0xFF;
-
-          if (a == 0 && withBackground) {
-            image.setPixelRgba(x, y, 255, 255, 255, 255);
-          } else {
-            image.setPixelRgba(x, y, r, g, b, a);
-          }
-        }
-      }
-
-      if (exportWidth != null && exportHeight != null) {
-        images.add(img.copyResize(
-          image,
-          width: exportWidth.toInt(),
-          height: exportHeight.toInt(),
-        ));
+      Uint8List rgba;
+      if (wantTransparent) {
+        // Clean alpha for GIF
+        rgba = PixelUtils.aarrggbbToRgbaForGif(pixelsAARRGGBB);
       } else {
-        images.add(image);
+        // If you want a solid matte export (no transparency), pre-flatten onto
+        // a matte color in your compositor OR force A=255 here.
+        final forced = Uint32List.fromList(pixelsAARRGGBB);
+        for (int i = 0; i < forced.length; i++) {
+          forced[i] = (0xFF << 24) | (forced[i] & 0x00FFFFFF); // A=255
+        }
+        rgba = PixelUtils.aarrggbbToRgbaForGif(forced);
       }
+
+      // Feed raw RGBA to gifencoder
+      gb.add(rgba);
     }
 
-    final gifEncoder = img.GifEncoder(
-      samplingFactor: 1,
-      quantizerType: img.QuantizerType.octree,
-      ditherSerpentine: true,
-    );
+    // Build animated GIF bytes
+    final data = Uint8List.fromList(gb.build(_kGifFps));
 
-    for (var i = 0; i < images.length; i++) {
-      gifEncoder.addFrame(
-        images[i],
-        duration: frames[i].duration ~/ 10,
-      );
-    }
-
-    final gifData = gifEncoder.finish();
-    if (gifData != null) {
-      await FileUtils(context).saveImage(gifData, '${project.name}.gif');
-    }
+    await FileUtils(context).saveImage(data, '${project.name}.gif');
   }
 
   Future<void> shareProject({
@@ -359,5 +340,95 @@ class ImportExportService {
       pngData,
       '${project.name}_sprite_sheet.png',
     );
+  }
+
+  /// Export a single-frame GIF.
+  /// [pixels] are 0xAARRGGBB, size [w]x[h].
+  /// If [withBackground] is true, the frame is flattened onto [matteColor] (0xFFRRGGBB).
+  Uint8List exportGifSingleFrame({
+    required Uint32List pixels,
+    required int w,
+    required int h,
+    bool withBackground = false,
+    int? matteColor, // 0xFFRRGGBB (alpha ignored)
+    bool hardAlphaForGif = true, // snap alpha to 0/255 for cleaner GIF transparency
+    int samplingFactor = 1,
+    img.QuantizerType quantizerType = img.QuantizerType.octree,
+    img.DitherKernel dither = img.DitherKernel.none,
+    bool ditherSerpentine = false,
+  }) {
+    img.Image frame = PixelUtils.imageFromAarrggbb(
+      pixels,
+      w,
+      h,
+      hardAlphaForGif: !withBackground && hardAlphaForGif,
+    );
+
+    if (withBackground) {
+      final matte = matteColor ?? 0xFF1A0F2E; // default dark purple
+      final rgb = PixelUtils.rgbFromInt(matte);
+      frame = PixelUtils.compositeOnMatte(frame, r: rgb.r, g: rgb.g, b: rgb.b);
+    }
+
+    final encoder = img.GifEncoder(
+      samplingFactor: samplingFactor,
+      quantizerType: quantizerType,
+      dither: dither,
+      ditherSerpentine: ditherSerpentine,
+    );
+
+    // Encode single frame
+    return encoder.encode(frame, singleFrame: true);
+  }
+
+  /// Export an animated GIF.
+  /// - [frames] list of 0xAARRGGBB pixel buffers (all w x h)
+  /// - [durationsMs] per-frame duration (ms), length matches frames or falls back to [defaultDurationMs]
+  Uint8List exportGifAnimation({
+    required List<Uint32List> frames,
+    required int w,
+    required int h,
+    List<int>? durationsMs, // per-frame duration in ms
+    int defaultDurationMs = 100, // fallback duration
+    bool withBackground = false,
+    int? matteColor, // 0xFFRRGGBB
+    bool hardAlphaForGif = true,
+    int samplingFactor = 1,
+    img.QuantizerType quantizerType = img.QuantizerType.octree,
+    img.DitherKernel dither = img.DitherKernel.none,
+    bool ditherSerpentine = false,
+    // Some versions expose `repeat` (loop count) on the encoder ctor.
+    // If your version supports it, you can add `repeat: 0` (infinite).
+  }) {
+    final enc = img.GifEncoder(
+      samplingFactor: samplingFactor,
+      quantizerType: quantizerType,
+      dither: dither,
+      ditherSerpentine: ditherSerpentine,
+      // repeat: 0, // uncomment if your image package exposes this
+    );
+
+    final matte = matteColor ?? 0xFF1A0F2E;
+    final matteRgb = PixelUtils.rgbFromInt(matte);
+
+    for (int i = 0; i < frames.length; i++) {
+      img.Image f = PixelUtils.imageFromAarrggbb(
+        frames[i],
+        w,
+        h,
+        hardAlphaForGif: !withBackground && hardAlphaForGif,
+      );
+
+      if (withBackground) {
+        f = PixelUtils.compositeOnMatte(f, r: matteRgb.r, g: matteRgb.g, b: matteRgb.b);
+      }
+
+      final dur = (durationsMs != null && i < durationsMs.length) ? durationsMs[i] : defaultDurationMs;
+
+      enc.addFrame(f, duration: dur);
+    }
+
+    final bytes = enc.finish(); // List<int>?
+    return Uint8List.fromList(bytes ?? const <int>[]);
   }
 }
