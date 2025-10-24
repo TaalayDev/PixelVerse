@@ -57,7 +57,15 @@
     "feedback_q_use_learning",
     "feedback_q_additional_feedback",
     "feedback_q_additional_feedback_placeholder",
-    "feedback_q_recommend"
+    "feedback_q_recommend",
+    "feedback_dialog_title",
+    "feedback_dialog_description",
+    "feedback_dialog_benefit_1",
+    "feedback_dialog_benefit_2",
+    "feedback_dialog_benefit_3",
+    "feedback_dialog_leave_feedback",
+    "feedback_dialog_maybe_later",
+    "feedback_dialog_dont_ask"
   ],
 
   "ja": [
@@ -65,7 +73,15 @@
     "fileMenu",
     "profile",
     "logout",
-    "deleteAccount"
+    "deleteAccount",
+    "feedback_dialog_title",
+    "feedback_dialog_description",
+    "feedback_dialog_benefit_1",
+    "feedback_dialog_benefit_2",
+    "feedback_dialog_benefit_3",
+    "feedback_dialog_leave_feedback",
+    "feedback_dialog_maybe_later",
+    "feedback_dialog_dont_ask"
   ],
 
   "ky": [
@@ -73,7 +89,15 @@
     "fileMenu",
     "profile",
     "logout",
-    "deleteAccount"
+    "deleteAccount",
+    "feedback_dialog_title",
+    "feedback_dialog_description",
+    "feedback_dialog_benefit_1",
+    "feedback_dialog_benefit_2",
+    "feedback_dialog_benefit_3",
+    "feedback_dialog_leave_feedback",
+    "feedback_dialog_maybe_later",
+    "feedback_dialog_dont_ask"
   ],
 
   "ru": [
@@ -81,7 +105,15 @@
     "fileMenu",
     "profile",
     "logout",
-    "deleteAccount"
+    "deleteAccount",
+    "feedback_dialog_title",
+    "feedback_dialog_description",
+    "feedback_dialog_benefit_1",
+    "feedback_dialog_benefit_2",
+    "feedback_dialog_benefit_3",
+    "feedback_dialog_leave_feedback",
+    "feedback_dialog_maybe_later",
+    "feedback_dialog_dont_ask"
   ],
 
   "zh": [
@@ -89,6 +121,14 @@
     "fileMenu",
     "profile",
     "logout",
-    "deleteAccount"
+    "deleteAccount",
+    "feedback_dialog_title",
+    "feedback_dialog_description",
+    "feedback_dialog_benefit_1",
+    "feedback_dialog_benefit_2",
+    "feedback_dialog_benefit_3",
+    "feedback_dialog_leave_feedback",
+    "feedback_dialog_maybe_later",
+    "feedback_dialog_dont_ask"
   ]
 }

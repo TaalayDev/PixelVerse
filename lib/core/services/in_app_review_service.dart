@@ -124,4 +124,9 @@ class InAppReviewService {
     await prefs.remove(_sessionCountKey);
     await prefs.remove(_hasRatedKey);
   }
+
+  Future<int> getSessionCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_sessionCountKey) ?? 0;
+  }
 }

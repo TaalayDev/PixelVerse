@@ -787,6 +787,54 @@ abstract class Strings {
   /// In en, this message translates to:
   /// **'Would you recommend this app to friends?'**
   String get feedback_q_recommend;
+
+  /// No description provided for @feedback_dialog_title.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'d Love Your Feedback!'**
+  String get feedback_dialog_title;
+
+  /// No description provided for @feedback_dialog_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Your opinion matters! Help us make the app better by sharing your thoughts.'**
+  String get feedback_dialog_description;
+
+  /// No description provided for @feedback_dialog_benefit_1.
+  ///
+  /// In en, this message translates to:
+  /// **'Share ideas for new features'**
+  String get feedback_dialog_benefit_1;
+
+  /// No description provided for @feedback_dialog_benefit_2.
+  ///
+  /// In en, this message translates to:
+  /// **'Report bugs and issues'**
+  String get feedback_dialog_benefit_2;
+
+  /// No description provided for @feedback_dialog_benefit_3.
+  ///
+  /// In en, this message translates to:
+  /// **'Help shape the app\'s future'**
+  String get feedback_dialog_benefit_3;
+
+  /// No description provided for @feedback_dialog_leave_feedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave Feedback'**
+  String get feedback_dialog_leave_feedback;
+
+  /// No description provided for @feedback_dialog_maybe_later.
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe Later'**
+  String get feedback_dialog_maybe_later;
+
+  /// No description provided for @feedback_dialog_dont_ask.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t ask again'**
+  String get feedback_dialog_dont_ask;
 }
 
 class _StringsDelegate extends LocalizationsDelegate<Strings> {

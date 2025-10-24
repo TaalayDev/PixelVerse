@@ -375,6 +375,31 @@ class StringsEn extends Strings {
 
   @override
   String get feedback_q_recommend => 'Would you recommend this app to friends?';
+
+  @override
+  String get feedback_dialog_title => 'We\'d Love Your Feedback!';
+
+  @override
+  String get feedback_dialog_description =>
+      'Your opinion matters! Help us make the app better by sharing your thoughts.';
+
+  @override
+  String get feedback_dialog_benefit_1 => 'Share ideas for new features';
+
+  @override
+  String get feedback_dialog_benefit_2 => 'Report bugs and issues';
+
+  @override
+  String get feedback_dialog_benefit_3 => 'Help shape the app\'s future';
+
+  @override
+  String get feedback_dialog_leave_feedback => 'Leave Feedback';
+
+  @override
+  String get feedback_dialog_maybe_later => 'Maybe Later';
+
+  @override
+  String get feedback_dialog_dont_ask => 'Don\'t ask again';
 }
 
 /// The translations for English, as used in the United States (`en_US`).

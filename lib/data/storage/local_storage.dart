@@ -13,6 +13,7 @@ enum StorageKey {
   authSkipped,
   currentUser,
   hasBioAuth,
+  feedbackPromptNeverAskAgain,
 }
 
 /// A singleton class to handle simple storage operations.
@@ -106,6 +107,9 @@ abstract class LocalStorage {
       setString(StorageKey.token.name, '');
     }
   }
+
+  bool get feedbackPromptNeverAskAgain => getBool(StorageKey.feedbackPromptNeverAskAgain.name) ?? false;
+  set feedbackPromptNeverAskAgain(bool val) => setBool(StorageKey.feedbackPromptNeverAskAgain.name, val);
 }
 
 class SharedPrefLocalStorageImpl extends LocalStorage {

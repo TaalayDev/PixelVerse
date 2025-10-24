@@ -138,5 +138,14 @@
     "feedback_q_use_learning": "Learning",
     "feedback_q_additional_feedback": "Additional comments and suggestions",
     "feedback_q_additional_feedback_placeholder": "Share your thoughts about the app...",
-    "feedback_q_recommend": "Would you recommend this app to friends?"
+    "feedback_q_recommend": "Would you recommend this app to friends?",
+
+    "feedback_dialog_title": "We'd Love Your Feedback!",
+    "feedback_dialog_description": "Your opinion matters! Help us make the app better by sharing your thoughts.",
+    "feedback_dialog_benefit_1": "Share ideas for new features",
+    "feedback_dialog_benefit_2": "Report bugs and issues",
+    "feedback_dialog_benefit_3": "Help shape the app's future",
+    "feedback_dialog_leave_feedback": "Leave Feedback",
+    "feedback_dialog_maybe_later": "Maybe Later",
+    "feedback_dialog_dont_ask": "Don't ask again"
 }

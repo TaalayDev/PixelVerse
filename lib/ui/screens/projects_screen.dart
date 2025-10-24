@@ -28,6 +28,7 @@ import '../widgets/animated_background.dart';
 import '../widgets/community_project_card.dart' hide CheckerboardPainter;
 import '../widgets/dialogs/delete_account_dialog.dart';
 import '../widgets/dialogs/project_upload_dialog.dart' hide CheckerboardPainter;
+import '../widgets/dialogs/feedback_prompt_dialog.dart';
 import '../widgets/project/adaprive_project_grid.dart';
 import '../widgets/subscription/subscription_menu.dart';
 import '../widgets/theme_selector.dart';
@@ -50,6 +51,8 @@ class ProjectsScreen extends HookConsumerWidget {
 
     final showBadge = useState(false);
     final subscription = ref.watch(subscriptionStateProvider);
+
+    final reviewService = ref.watch(inAppReviewProvider);
 
     final authState = ref.watch(authProvider);
     final showProfileIcon = useState(false);
@@ -85,6 +88,22 @@ class ProjectsScreen extends HookConsumerWidget {
       tabController.addListener(tabListener);
       return null;
     }, [authState]);
+
+    useEffect(() {
+      if (ref.read(localStorageProvider).feedbackPromptNeverAskAgain) {
+        return null;
+      }
+
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await Future.delayed(const Duration(seconds: 5));
+        final count = await reviewService.getSessionCount();
+        if ((count > 2 || count % 5 == 0) && context.mounted) {
+          FeedbackPromptDialog.show(context, () {
+            _navigateToFeedback(context, ref);
+          });
+        }
+      });
+    }, []);
 
     return AnimatedBackground(
       child: Scaffold(
@@ -302,7 +321,7 @@ class ProjectsScreen extends HookConsumerWidget {
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () => _navigateToFeedback(context, ref),
           backgroundColor: Theme.of(context).colorScheme.primary,
-          label: Text('Feedback'),
+          label: const Text('Feedback'),
           icon: const AppIcon(AppIcons.user_voice),
           tooltip: 'Leave Feedback',
         ),
