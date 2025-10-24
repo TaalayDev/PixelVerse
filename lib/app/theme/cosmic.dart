@@ -83,7 +83,7 @@ class CosmicBackground extends HookWidget {
 
     useEffect(() {
       if (enableAnimation) {
-        controller.repeat();
+        controller.repeat(reverse: true);
       } else {
         controller.stop();
       }
@@ -94,14 +94,31 @@ class CosmicBackground extends HookWidget {
       Tween<double>(begin: 0, end: 2 * math.pi).animate(controller),
     );
 
-    return CustomPaint(
-      painter: _CosmicPainter(
-        animation: rotationAnimation,
-        primaryColor: theme.primaryColor,
-        accentColor: theme.accentColor,
-        intensity: intensity,
-      ),
-      size: Size.infinite,
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: ClipRRect(
+            borderRadius: BorderRadius.zero,
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 1.0, end: 1.05).animate(controller),
+              child: Image.asset(
+                'assets/images/cosmic_background.webp',
+                fit: BoxFit.cover,
+                colorBlendMode: BlendMode.darken,
+              ),
+            ),
+          ),
+        ),
+        CustomPaint(
+          painter: _CosmicPainter(
+            animation: rotationAnimation,
+            primaryColor: theme.primaryColor,
+            accentColor: theme.accentColor,
+            intensity: intensity,
+          ),
+          size: Size.infinite,
+        ),
+      ],
     );
   }
 }

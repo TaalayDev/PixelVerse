@@ -80,31 +80,53 @@ class PrismaticBackground extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final controller = useAnimationController(duration: theme.type.animationDuration);
+    final backgroundController = useAnimationController(duration: const Duration(seconds: 20));
 
     useEffect(() {
       if (enableAnimation) {
         controller.repeat();
+        backgroundController.repeat(reverse: true);
       } else {
         controller.stop();
         controller.value = 0.0;
+        backgroundController.stop();
+        backgroundController.value = 0.0;
       }
       return null;
     }, [enableAnimation]);
 
     final t = useAnimation(Tween<double>(begin: 0, end: 1).animate(controller));
 
-    return RepaintBoundary(
-      child: CustomPaint(
-        painter: _EnhancedPrismaticPainter(
-          t: t,
-          primaryColor: theme.primaryColor,
-          accentColor: theme.accentColor,
-          intensity: intensity.clamp(0.3, 2.0),
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Positioned.fill(
+          child: ClipRRect(
+            borderRadius: BorderRadius.zero,
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 1.0, end: 1.05).animate(backgroundController),
+              child: Image.asset(
+                'assets/images/prismatic_background.webp',
+                fit: BoxFit.cover,
+                colorBlendMode: BlendMode.darken,
+              ),
+            ),
+          ),
         ),
-        size: Size.infinite,
-        isComplex: true,
-        willChange: enableAnimation,
-      ),
+        RepaintBoundary(
+          child: CustomPaint(
+            painter: _EnhancedPrismaticPainter(
+              t: t,
+              primaryColor: theme.primaryColor,
+              accentColor: theme.accentColor,
+              intensity: intensity.clamp(0.3, 2.0),
+            ),
+            size: Size.infinite,
+            isComplex: true,
+            willChange: enableAnimation,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -142,14 +164,7 @@ class _EnhancedPrismaticPainter extends CustomPainter {
   int get _crystalCount => (12 * intensity).round().clamp(6, 18);
 
   @override
-  void paint(Canvas canvas, Size size) {
-    _paintHolographicSky(canvas, size);
-    _paintHolographicParticles(canvas, size);
-    _paintQuantumInterference(canvas, size);
-    _paintCrystalFormations(canvas, size);
-    _paintHolographicGrid(canvas, size);
-    _paintPrismaticVortex(canvas, size);
-  }
+  void paint(Canvas canvas, Size size) {}
 
   // ---------- 1) Background sky (loop-safe) ----------
   void _paintHolographicSky(Canvas canvas, Size size) {

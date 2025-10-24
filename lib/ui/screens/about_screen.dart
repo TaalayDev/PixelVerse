@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:pixelverse/l10n/strings.dart';
+import 'package:pixelverse/ui/widgets/version_text.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import '../../config/assets.dart';
@@ -72,13 +73,15 @@ class AboutScreen extends StatelessWidget {
                 ],
               ),
             ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.3, end: 0),
-            Text(
-              Strings.of(context).version('1.2.0'),
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white.withOpacity(0.8),
-              ),
-            ).animate().fadeIn(delay: 300.ms, duration: 600.ms),
+            VersionTextBuilder(builder: (context, version, isLoading) {
+              return Text(
+                Strings.of(context).version(version),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white.withOpacity(0.8),
+                ),
+              ).animate().fadeIn(delay: 300.ms, duration: 600.ms);
+            }),
           ],
         ),
       ),

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
-import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -9,13 +8,13 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:pixelverse/ui/screens/corkboard_screen.dart';
 
 import '../../data/models/subscription_model.dart';
 import '../../data/models/project_api_models.dart';
 import '../../l10n/strings.dart';
 import '../../data.dart';
 import '../../core.dart';
-import '../../pixel/image_painter.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/ad/interstitial_ad_controller.dart';
 import '../../providers/project_upload_provider.dart';
@@ -28,12 +27,10 @@ import '../widgets/animated_pro_button.dart';
 import '../widgets/animated_background.dart';
 import '../widgets/community_project_card.dart' hide CheckerboardPainter;
 import '../widgets/dialogs/delete_account_dialog.dart';
-import '../widgets/dialogs/rename_project_dialog.dart';
 import '../widgets/dialogs/project_upload_dialog.dart' hide CheckerboardPainter;
 import '../widgets/project/adaprive_project_grid.dart';
 import '../widgets/subscription/subscription_menu.dart';
 import '../widgets/theme_selector.dart';
-import '../widgets/painter/checkboard_painter.dart';
 import '../widgets.dart';
 import '../widgets/theme_selector_sheet.dart';
 import 'subscription_screen.dart';
@@ -50,7 +47,6 @@ class ProjectsScreen extends HookConsumerWidget {
     final projects = ref.watch(projectsProvider);
     final overlayLoader = useState<OverlayEntry?>(null);
 
-    final isMobile = MediaQuery.sizeOf(context).width < 600;
     final showBadge = useState(false);
     final subscription = ref.watch(subscriptionStateProvider);
 
@@ -135,6 +131,7 @@ class ProjectsScreen extends HookConsumerWidget {
                         ),
                       ),
                     );
+
                     return;
                   } else {
                     Navigator.of(context).push(

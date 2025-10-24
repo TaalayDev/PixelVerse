@@ -94,14 +94,26 @@ class CyberpunkBackground extends HookWidget {
       Tween<double>(begin: 0, end: 1).animate(controller),
     );
 
-    return CustomPaint(
-      painter: _CyberpunkPainter(
-        animation: matrixAnimation,
-        primaryColor: theme.primaryColor,
-        accentColor: theme.accentColor,
-        intensity: intensity,
-      ),
-      size: Size.infinite,
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Positioned.fill(
+          child: Image.asset(
+            'assets/images/cyberpunk_background.webp',
+            fit: BoxFit.cover,
+            colorBlendMode: BlendMode.darken,
+          ),
+        ),
+        CustomPaint(
+          painter: _CyberpunkPainter(
+            animation: matrixAnimation,
+            primaryColor: theme.primaryColor,
+            accentColor: theme.accentColor,
+            intensity: intensity,
+          ),
+          size: Size.infinite,
+        ),
+      ],
     );
   }
 }

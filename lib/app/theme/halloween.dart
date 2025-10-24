@@ -108,7 +108,7 @@ class HalloweenBackground extends HookWidget {
       children: [
         Positioned.fill(
           child: Image.asset(
-            'assets/images/halloween_background.jpg',
+            'assets/images/halloween_background.webp',
             fit: BoxFit.cover,
             color: Colors.black.withOpacity(0.3 * intensity),
             colorBlendMode: BlendMode.darken,
