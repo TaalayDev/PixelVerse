@@ -196,4 +196,188 @@ class StringsRu extends Strings {
 
   @override
   String get deleteAccount => 'Delete Account';
+
+  @override
+  String get feedback_title => 'Обратная связь';
+
+  @override
+  String get feedback_thank_you => 'Спасибо за ваш отзыв!';
+
+  @override
+  String get feedback_thank_you_message =>
+      'Ваше мнение очень важно для нас и поможет сделать приложение лучше.';
+
+  @override
+  String get feedback_return => 'Вернуться';
+
+  @override
+  String get feedback_help_us => 'Помогите нам стать лучше';
+
+  @override
+  String get feedback_intro =>
+      'Ваше мнение очень важно для развития проекта. Пожалуйста, ответьте на несколько вопросов.';
+
+  @override
+  String feedback_answered(int count, int total) {
+    return 'Отвечено: $count из $total';
+  }
+
+  @override
+  String get feedback_required => 'Обязательно';
+
+  @override
+  String get feedback_sending => 'Отправка...';
+
+  @override
+  String get feedback_send => 'Отправить';
+
+  @override
+  String get feedback_validation_error =>
+      'Пожалуйста, ответьте на все обязательные вопросы';
+
+  @override
+  String get feedback_very_poor => 'Очень плохо';
+
+  @override
+  String get feedback_excellent => 'Отлично';
+
+  @override
+  String get feedback_yes => 'Да';
+
+  @override
+  String get feedback_no => 'Нет';
+
+  @override
+  String get feedback_text_placeholder => 'Введите ваш ответ...';
+
+  @override
+  String get feedback_q_satisfaction => 'Насколько вы довольны приложением?';
+
+  @override
+  String get feedback_q_missing_features =>
+      'Какие функциональности вам не хватают?';
+
+  @override
+  String get feedback_q_missing_features_placeholder =>
+      'Опишите функции, которые вы хотели бы видеть...';
+
+  @override
+  String get feedback_q_bug_reports =>
+      'Столкнулись ли вы с какими-либо ошибками или сбоями?';
+
+  @override
+  String get feedback_q_bug_reports_placeholder =>
+      'Опишите проблемы, с которыми вы столкнулись...';
+
+  @override
+  String get feedback_q_price_satisfaction =>
+      'Устраивает ли вас текущая цена приложения?';
+
+  @override
+  String get feedback_q_price_feedback =>
+      'Если нет, какую цену вы считаете справедливой?';
+
+  @override
+  String get feedback_q_price_free => 'Бесплатно';
+
+  @override
+  String get feedback_q_price_up_to_5 => 'До \$5';
+
+  @override
+  String get feedback_q_price_5_to_10 => '\$5 - \$10';
+
+  @override
+  String get feedback_q_price_10_to_20 => '\$10 - \$20';
+
+  @override
+  String get feedback_q_price_more_20 => 'Больше \$20';
+
+  @override
+  String get feedback_q_patreon_support =>
+      'Будете ли вы поддерживать проект на Patreon?';
+
+  @override
+  String get feedback_q_patreon_definitely => 'Да, обязательно';
+
+  @override
+  String get feedback_q_patreon_if_exclusive =>
+      'Возможно, если будут эксклюзивные функции';
+
+  @override
+  String get feedback_q_patreon_if_reasonable =>
+      'Возможно, если цена будет разумной';
+
+  @override
+  String get feedback_q_patreon_probably_not => 'Скорее нет';
+
+  @override
+  String get feedback_q_patreon_no => 'Нет, не планирую';
+
+  @override
+  String get feedback_q_patreon_tier =>
+      'Какой уровень поддержки на Patreon вам интересен?';
+
+  @override
+  String get feedback_q_patreon_tier_3 =>
+      '\$3/месяц - Ранний доступ к функциям';
+
+  @override
+  String get feedback_q_patreon_tier_5 => '\$5/месяц - + Эксклюзивные темы';
+
+  @override
+  String get feedback_q_patreon_tier_10 =>
+      '\$10/месяц - + Влияние на разработку';
+
+  @override
+  String get feedback_q_usage_frequency =>
+      'Как часто вы используете приложение?';
+
+  @override
+  String get feedback_q_usage_daily => 'Каждый день';
+
+  @override
+  String get feedback_q_usage_several_week => 'Несколько раз в неделю';
+
+  @override
+  String get feedback_q_usage_once_week => 'Раз в неделю';
+
+  @override
+  String get feedback_q_usage_several_month => 'Несколько раз в месяц';
+
+  @override
+  String get feedback_q_usage_rarely => 'Реже';
+
+  @override
+  String get feedback_q_main_use_case =>
+      'Для чего вы в основном используете приложение?';
+
+  @override
+  String get feedback_q_use_pixel_art => 'Создание pixel art';
+
+  @override
+  String get feedback_q_use_game_design => 'Дизайн игр';
+
+  @override
+  String get feedback_q_use_animation => 'Анимация';
+
+  @override
+  String get feedback_q_use_hobby => 'Хобби/развлечение';
+
+  @override
+  String get feedback_q_use_professional => 'Профессиональная работа';
+
+  @override
+  String get feedback_q_use_learning => 'Обучение';
+
+  @override
+  String get feedback_q_additional_feedback =>
+      'Дополнительные комментарии и пожелания';
+
+  @override
+  String get feedback_q_additional_feedback_placeholder =>
+      'Поделитесь своими мыслями о приложении...';
+
+  @override
+  String get feedback_q_recommend =>
+      'Порекомендуете ли вы это приложение друзьям?';
 }

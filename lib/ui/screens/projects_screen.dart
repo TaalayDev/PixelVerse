@@ -8,7 +8,6 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:pixelverse/ui/screens/corkboard_screen.dart';
 
 import '../../data/models/subscription_model.dart';
 import '../../data/models/project_api_models.dart';
@@ -22,6 +21,7 @@ import '../../providers/projects_provider.dart';
 import '../../providers/community_projects_providers.dart';
 import '../../providers/providers.dart';
 import '../../providers/subscription_provider.dart';
+import '../widgets/app_icon.dart';
 import '../widgets/dialogs/auth_dialog.dart';
 import '../widgets/animated_pro_button.dart';
 import '../widgets/animated_background.dart';
@@ -33,6 +33,7 @@ import '../widgets/subscription/subscription_menu.dart';
 import '../widgets/theme_selector.dart';
 import '../widgets.dart';
 import '../widgets/theme_selector_sheet.dart';
+import 'feedback_screen.dart';
 import 'subscription_screen.dart';
 import 'about_screen.dart';
 import 'pixel_canvas_screen.dart';
@@ -298,6 +299,13 @@ class ProjectsScreen extends HookConsumerWidget {
             ),
           ),
         ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () => _navigateToFeedback(context, ref),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          label: Text('Feedback'),
+          icon: const AppIcon(AppIcons.user_voice),
+          tooltip: 'Leave Feedback',
+        ),
         body: Column(
           children: [
             if (!subscription.isPro && showBadge.value) ...[
@@ -405,6 +413,32 @@ class ProjectsScreen extends HookConsumerWidget {
 
   void _showSubscriptionScreen(BuildContext context) {
     SubscriptionOfferScreen.show(context);
+  }
+
+  void _navigateToFeedback(BuildContext context, WidgetRef ref) {
+    if (kIsWeb || Platform.isMacOS || Platform.isWindows) {
+      showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          child: ClipRRect(
+            clipBehavior: Clip.antiAlias,
+            borderRadius: BorderRadius.circular(16),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: const FeedbackScreen(),
+            ),
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const FeedbackScreen(),
+      ),
+    );
   }
 
   void _navigateToNewProject(

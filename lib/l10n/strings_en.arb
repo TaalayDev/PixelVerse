@@ -72,5 +72,71 @@
     "fileMenu": "File",
     "profile": "Profile",
     "logout": "Logout",
-    "deleteAccount": "Delete Account"
+    "deleteAccount": "Delete Account",
+
+    "feedback_title": "Feedback",
+    "feedback_thank_you": "Thank you for your feedback!",
+    "feedback_thank_you_message": "Your opinion is very important to us and will help make the app better.",
+    "feedback_return": "Return",
+    "feedback_help_us": "Help us become better",
+    "feedback_intro": "Your opinion is very important for the project development. Please answer a few questions.",
+    "feedback_answered": "Answered: {count} of {total}",
+    "@feedback_answered": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "feedback_required": "Required",
+    "feedback_sending": "Sending...",
+    "feedback_send": "Send",
+    "feedback_validation_error": "Please answer all required questions",
+    "feedback_very_poor": "Very poor",
+    "feedback_excellent": "Excellent",
+    "feedback_yes": "Yes",
+    "feedback_no": "No",
+    "feedback_text_placeholder": "Enter your answer...",
+    
+    "feedback_q_satisfaction": "How satisfied are you with the app?",
+    "feedback_q_missing_features": "What features are you missing?",
+    "feedback_q_missing_features_placeholder": "Describe the features you would like to see...",
+    "feedback_q_bug_reports": "Have you encountered any errors or crashes?",
+    "feedback_q_bug_reports_placeholder": "Describe the problems you encountered...",
+    "feedback_q_price_satisfaction": "Are you satisfied with the current app price?",
+    "feedback_q_price_feedback": "If not, what price do you consider fair?",
+    "feedback_q_price_free": "Free",
+    "feedback_q_price_up_to_5": "Up to $5",
+    "feedback_q_price_5_to_10": "$5 - $10",
+    "feedback_q_price_10_to_20": "$10 - $20",
+    "feedback_q_price_more_20": "More than $20",
+    "feedback_q_patreon_support": "Will you support the project on Patreon?",
+    "feedback_q_patreon_definitely": "Yes, definitely",
+    "feedback_q_patreon_if_exclusive": "Maybe, if there are exclusive features",
+    "feedback_q_patreon_if_reasonable": "Maybe, if the price is reasonable",
+    "feedback_q_patreon_probably_not": "Probably not",
+    "feedback_q_patreon_no": "No, not planning to",
+    "feedback_q_patreon_tier": "Which Patreon support tier interests you?",
+    "feedback_q_patreon_tier_3": "$3/month - Early access to features",
+    "feedback_q_patreon_tier_5": "$5/month - + Exclusive themes",
+    "feedback_q_patreon_tier_10": "$10/month - + Influence on development",
+    "feedback_q_usage_frequency": "How often do you use the app?",
+    "feedback_q_usage_daily": "Every day",
+    "feedback_q_usage_several_week": "Several times a week",
+    "feedback_q_usage_once_week": "Once a week",
+    "feedback_q_usage_several_month": "Several times a month",
+    "feedback_q_usage_rarely": "Rarely",
+    "feedback_q_main_use_case": "What do you mainly use the app for?",
+    "feedback_q_use_pixel_art": "Creating pixel art",
+    "feedback_q_use_game_design": "Game design",
+    "feedback_q_use_animation": "Animation",
+    "feedback_q_use_hobby": "Hobby/entertainment",
+    "feedback_q_use_professional": "Professional work",
+    "feedback_q_use_learning": "Learning",
+    "feedback_q_additional_feedback": "Additional comments and suggestions",
+    "feedback_q_additional_feedback_placeholder": "Share your thoughts about the app...",
+    "feedback_q_recommend": "Would you recommend this app to friends?"
 }

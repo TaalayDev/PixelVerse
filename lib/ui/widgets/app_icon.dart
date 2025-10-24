@@ -50,7 +50,8 @@ enum AppIcons {
   retro_game,
   black_hole,
   star,
-  gallery_wide
+  gallery_wide,
+  user_voice
 }
 
 class AppIcon extends StatelessWidget {

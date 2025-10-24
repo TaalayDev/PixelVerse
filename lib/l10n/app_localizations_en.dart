@@ -195,6 +195,186 @@ class StringsEn extends Strings {
 
   @override
   String get deleteAccount => 'Delete Account';
+
+  @override
+  String get feedback_title => 'Feedback';
+
+  @override
+  String get feedback_thank_you => 'Thank you for your feedback!';
+
+  @override
+  String get feedback_thank_you_message =>
+      'Your opinion is very important to us and will help make the app better.';
+
+  @override
+  String get feedback_return => 'Return';
+
+  @override
+  String get feedback_help_us => 'Help us become better';
+
+  @override
+  String get feedback_intro =>
+      'Your opinion is very important for the project development. Please answer a few questions.';
+
+  @override
+  String feedback_answered(int count, int total) {
+    return 'Answered: $count of $total';
+  }
+
+  @override
+  String get feedback_required => 'Required';
+
+  @override
+  String get feedback_sending => 'Sending...';
+
+  @override
+  String get feedback_send => 'Send';
+
+  @override
+  String get feedback_validation_error =>
+      'Please answer all required questions';
+
+  @override
+  String get feedback_very_poor => 'Very poor';
+
+  @override
+  String get feedback_excellent => 'Excellent';
+
+  @override
+  String get feedback_yes => 'Yes';
+
+  @override
+  String get feedback_no => 'No';
+
+  @override
+  String get feedback_text_placeholder => 'Enter your answer...';
+
+  @override
+  String get feedback_q_satisfaction => 'How satisfied are you with the app?';
+
+  @override
+  String get feedback_q_missing_features => 'What features are you missing?';
+
+  @override
+  String get feedback_q_missing_features_placeholder =>
+      'Describe the features you would like to see...';
+
+  @override
+  String get feedback_q_bug_reports =>
+      'Have you encountered any errors or crashes?';
+
+  @override
+  String get feedback_q_bug_reports_placeholder =>
+      'Describe the problems you encountered...';
+
+  @override
+  String get feedback_q_price_satisfaction =>
+      'Are you satisfied with the current app price?';
+
+  @override
+  String get feedback_q_price_feedback =>
+      'If not, what price do you consider fair?';
+
+  @override
+  String get feedback_q_price_free => 'Free';
+
+  @override
+  String get feedback_q_price_up_to_5 => 'Up to \$5';
+
+  @override
+  String get feedback_q_price_5_to_10 => '\$5 - \$10';
+
+  @override
+  String get feedback_q_price_10_to_20 => '\$10 - \$20';
+
+  @override
+  String get feedback_q_price_more_20 => 'More than \$20';
+
+  @override
+  String get feedback_q_patreon_support =>
+      'Will you support the project on Patreon?';
+
+  @override
+  String get feedback_q_patreon_definitely => 'Yes, definitely';
+
+  @override
+  String get feedback_q_patreon_if_exclusive =>
+      'Maybe, if there are exclusive features';
+
+  @override
+  String get feedback_q_patreon_if_reasonable =>
+      'Maybe, if the price is reasonable';
+
+  @override
+  String get feedback_q_patreon_probably_not => 'Probably not';
+
+  @override
+  String get feedback_q_patreon_no => 'No, not planning to';
+
+  @override
+  String get feedback_q_patreon_tier =>
+      'Which Patreon support tier interests you?';
+
+  @override
+  String get feedback_q_patreon_tier_3 =>
+      '\$3/month - Early access to features';
+
+  @override
+  String get feedback_q_patreon_tier_5 => '\$5/month - + Exclusive themes';
+
+  @override
+  String get feedback_q_patreon_tier_10 =>
+      '\$10/month - + Influence on development';
+
+  @override
+  String get feedback_q_usage_frequency => 'How often do you use the app?';
+
+  @override
+  String get feedback_q_usage_daily => 'Every day';
+
+  @override
+  String get feedback_q_usage_several_week => 'Several times a week';
+
+  @override
+  String get feedback_q_usage_once_week => 'Once a week';
+
+  @override
+  String get feedback_q_usage_several_month => 'Several times a month';
+
+  @override
+  String get feedback_q_usage_rarely => 'Rarely';
+
+  @override
+  String get feedback_q_main_use_case => 'What do you mainly use the app for?';
+
+  @override
+  String get feedback_q_use_pixel_art => 'Creating pixel art';
+
+  @override
+  String get feedback_q_use_game_design => 'Game design';
+
+  @override
+  String get feedback_q_use_animation => 'Animation';
+
+  @override
+  String get feedback_q_use_hobby => 'Hobby/entertainment';
+
+  @override
+  String get feedback_q_use_professional => 'Professional work';
+
+  @override
+  String get feedback_q_use_learning => 'Learning';
+
+  @override
+  String get feedback_q_additional_feedback =>
+      'Additional comments and suggestions';
+
+  @override
+  String get feedback_q_additional_feedback_placeholder =>
+      'Share your thoughts about the app...';
+
+  @override
+  String get feedback_q_recommend => 'Would you recommend this app to friends?';
 }
 
 /// The translations for English, as used in the United States (`en_US`).

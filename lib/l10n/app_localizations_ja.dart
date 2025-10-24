@@ -193,4 +193,170 @@ class StringsJa extends Strings {
 
   @override
   String get deleteAccount => 'Delete Account';
+
+  @override
+  String get feedback_title => 'フィードバック';
+
+  @override
+  String get feedback_thank_you => 'フィードバックありがとうございます！';
+
+  @override
+  String get feedback_thank_you_message =>
+      'あなたのご意見は私たちにとって非常に重要であり、アプリの改善に役立ちます。';
+
+  @override
+  String get feedback_return => '戻る';
+
+  @override
+  String get feedback_help_us => 'より良いアプリにするためにご協力ください';
+
+  @override
+  String get feedback_intro => 'あなたのご意見はプロジェクトの発展にとって非常に重要です。いくつかの質問にお答えください。';
+
+  @override
+  String feedback_answered(int count, int total) {
+    return '回答済み：$total中$count';
+  }
+
+  @override
+  String get feedback_required => '必須';
+
+  @override
+  String get feedback_sending => '送信中...';
+
+  @override
+  String get feedback_send => '送信';
+
+  @override
+  String get feedback_validation_error => '必須項目にすべて回答してください';
+
+  @override
+  String get feedback_very_poor => '非常に悪い';
+
+  @override
+  String get feedback_excellent => '優秀';
+
+  @override
+  String get feedback_yes => 'はい';
+
+  @override
+  String get feedback_no => 'いいえ';
+
+  @override
+  String get feedback_text_placeholder => '回答を入力してください...';
+
+  @override
+  String get feedback_q_satisfaction => 'アプリに満足していますか？';
+
+  @override
+  String get feedback_q_missing_features => 'どのような機能が不足していますか？';
+
+  @override
+  String get feedback_q_missing_features_placeholder => '見たい機能を説明してください...';
+
+  @override
+  String get feedback_q_bug_reports => 'エラーやクラッシュに遭遇しましたか？';
+
+  @override
+  String get feedback_q_bug_reports_placeholder => '遭遇した問題を説明してください...';
+
+  @override
+  String get feedback_q_price_satisfaction => '現在のアプリ価格に満足していますか？';
+
+  @override
+  String get feedback_q_price_feedback => '満足していない場合、適正と考える価格は？';
+
+  @override
+  String get feedback_q_price_free => '無料';
+
+  @override
+  String get feedback_q_price_up_to_5 => '\$5まで';
+
+  @override
+  String get feedback_q_price_5_to_10 => '\$5 - \$10';
+
+  @override
+  String get feedback_q_price_10_to_20 => '\$10 - \$20';
+
+  @override
+  String get feedback_q_price_more_20 => '\$20以上';
+
+  @override
+  String get feedback_q_patreon_support => 'Patreonでプロジェクトをサポートしますか？';
+
+  @override
+  String get feedback_q_patreon_definitely => 'はい、必ず';
+
+  @override
+  String get feedback_q_patreon_if_exclusive => '限定機能があれば';
+
+  @override
+  String get feedback_q_patreon_if_reasonable => '価格が妥当であれば';
+
+  @override
+  String get feedback_q_patreon_probably_not => 'おそらくしない';
+
+  @override
+  String get feedback_q_patreon_no => 'いいえ、予定なし';
+
+  @override
+  String get feedback_q_patreon_tier => 'どのPatreonサポート層に興味がありますか？';
+
+  @override
+  String get feedback_q_patreon_tier_3 => '\$3/月 - 機能への早期アクセス';
+
+  @override
+  String get feedback_q_patreon_tier_5 => '\$5/月 - + 限定テーマ';
+
+  @override
+  String get feedback_q_patreon_tier_10 => '\$10/月 - + 開発への影響力';
+
+  @override
+  String get feedback_q_usage_frequency => 'アプリをどのくらいの頻度で使用しますか？';
+
+  @override
+  String get feedback_q_usage_daily => '毎日';
+
+  @override
+  String get feedback_q_usage_several_week => '週に数回';
+
+  @override
+  String get feedback_q_usage_once_week => '週に1回';
+
+  @override
+  String get feedback_q_usage_several_month => '月に数回';
+
+  @override
+  String get feedback_q_usage_rarely => 'まれに';
+
+  @override
+  String get feedback_q_main_use_case => 'アプリを主に何に使用していますか？';
+
+  @override
+  String get feedback_q_use_pixel_art => 'ピクセルアート制作';
+
+  @override
+  String get feedback_q_use_game_design => 'ゲームデザイン';
+
+  @override
+  String get feedback_q_use_animation => 'アニメーション';
+
+  @override
+  String get feedback_q_use_hobby => '趣味/娯楽';
+
+  @override
+  String get feedback_q_use_professional => 'プロの仕事';
+
+  @override
+  String get feedback_q_use_learning => '学習';
+
+  @override
+  String get feedback_q_additional_feedback => '追加のコメントと提案';
+
+  @override
+  String get feedback_q_additional_feedback_placeholder =>
+      'アプリについてのご意見をお聞かせください...';
+
+  @override
+  String get feedback_q_recommend => 'このアプリを友達に勧めますか？';
 }

@@ -193,4 +193,168 @@ class StringsZh extends Strings {
 
   @override
   String get deleteAccount => 'Delete Account';
+
+  @override
+  String get feedback_title => '反馈';
+
+  @override
+  String get feedback_thank_you => '感谢您的反馈！';
+
+  @override
+  String get feedback_thank_you_message => '您的意见对我们非常重要，将帮助我们改进应用。';
+
+  @override
+  String get feedback_return => '返回';
+
+  @override
+  String get feedback_help_us => '帮助我们做得更好';
+
+  @override
+  String get feedback_intro => '您的意见对项目发展非常重要。请回答几个问题。';
+
+  @override
+  String feedback_answered(int count, int total) {
+    return '已回答：$count/$total';
+  }
+
+  @override
+  String get feedback_required => '必填';
+
+  @override
+  String get feedback_sending => '发送中...';
+
+  @override
+  String get feedback_send => '发送';
+
+  @override
+  String get feedback_validation_error => '请回答所有必填问题';
+
+  @override
+  String get feedback_very_poor => '非常差';
+
+  @override
+  String get feedback_excellent => '优秀';
+
+  @override
+  String get feedback_yes => '是';
+
+  @override
+  String get feedback_no => '否';
+
+  @override
+  String get feedback_text_placeholder => '输入您的答案...';
+
+  @override
+  String get feedback_q_satisfaction => '您对应用的满意度如何？';
+
+  @override
+  String get feedback_q_missing_features => '您觉得缺少哪些功能？';
+
+  @override
+  String get feedback_q_missing_features_placeholder => '描述您希望看到的功能...';
+
+  @override
+  String get feedback_q_bug_reports => '您是否遇到过任何错误或崩溃？';
+
+  @override
+  String get feedback_q_bug_reports_placeholder => '描述您遇到的问题...';
+
+  @override
+  String get feedback_q_price_satisfaction => '您对目前的应用价格满意吗？';
+
+  @override
+  String get feedback_q_price_feedback => '如果不满意，您认为合理的价格是多少？';
+
+  @override
+  String get feedback_q_price_free => '免费';
+
+  @override
+  String get feedback_q_price_up_to_5 => '最多\$5';
+
+  @override
+  String get feedback_q_price_5_to_10 => '\$5 - \$10';
+
+  @override
+  String get feedback_q_price_10_to_20 => '\$10 - \$20';
+
+  @override
+  String get feedback_q_price_more_20 => '超过\$20';
+
+  @override
+  String get feedback_q_patreon_support => '您会在Patreon上支持该项目吗？';
+
+  @override
+  String get feedback_q_patreon_definitely => '是的，一定会';
+
+  @override
+  String get feedback_q_patreon_if_exclusive => '可能，如果有独家功能';
+
+  @override
+  String get feedback_q_patreon_if_reasonable => '可能，如果价格合理';
+
+  @override
+  String get feedback_q_patreon_probably_not => '可能不会';
+
+  @override
+  String get feedback_q_patreon_no => '不，不打算';
+
+  @override
+  String get feedback_q_patreon_tier => '您对Patreon的哪个支持级别感兴趣？';
+
+  @override
+  String get feedback_q_patreon_tier_3 => '\$3/月 - 提前使用功能';
+
+  @override
+  String get feedback_q_patreon_tier_5 => '\$5/月 - + 独家主题';
+
+  @override
+  String get feedback_q_patreon_tier_10 => '\$10/月 - + 影响开发';
+
+  @override
+  String get feedback_q_usage_frequency => '您多久使用一次应用？';
+
+  @override
+  String get feedback_q_usage_daily => '每天';
+
+  @override
+  String get feedback_q_usage_several_week => '每周几次';
+
+  @override
+  String get feedback_q_usage_once_week => '每周一次';
+
+  @override
+  String get feedback_q_usage_several_month => '每月几次';
+
+  @override
+  String get feedback_q_usage_rarely => '很少';
+
+  @override
+  String get feedback_q_main_use_case => '您主要用应用做什么？';
+
+  @override
+  String get feedback_q_use_pixel_art => '创作像素艺术';
+
+  @override
+  String get feedback_q_use_game_design => '游戏设计';
+
+  @override
+  String get feedback_q_use_animation => '动画';
+
+  @override
+  String get feedback_q_use_hobby => '爱好/娱乐';
+
+  @override
+  String get feedback_q_use_professional => '专业工作';
+
+  @override
+  String get feedback_q_use_learning => '学习';
+
+  @override
+  String get feedback_q_additional_feedback => '其他评论和建议';
+
+  @override
+  String get feedback_q_additional_feedback_placeholder => '分享您对应用的看法...';
+
+  @override
+  String get feedback_q_recommend => '您会向朋友推荐这个应用吗？';
 }

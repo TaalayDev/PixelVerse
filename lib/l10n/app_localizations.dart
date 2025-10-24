@@ -463,6 +463,330 @@ abstract class Strings {
   /// In en, this message translates to:
   /// **'Delete Account'**
   String get deleteAccount;
+
+  /// No description provided for @feedback_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback'**
+  String get feedback_title;
+
+  /// No description provided for @feedback_thank_you.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you for your feedback!'**
+  String get feedback_thank_you;
+
+  /// No description provided for @feedback_thank_you_message.
+  ///
+  /// In en, this message translates to:
+  /// **'Your opinion is very important to us and will help make the app better.'**
+  String get feedback_thank_you_message;
+
+  /// No description provided for @feedback_return.
+  ///
+  /// In en, this message translates to:
+  /// **'Return'**
+  String get feedback_return;
+
+  /// No description provided for @feedback_help_us.
+  ///
+  /// In en, this message translates to:
+  /// **'Help us become better'**
+  String get feedback_help_us;
+
+  /// No description provided for @feedback_intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Your opinion is very important for the project development. Please answer a few questions.'**
+  String get feedback_intro;
+
+  /// No description provided for @feedback_answered.
+  ///
+  /// In en, this message translates to:
+  /// **'Answered: {count} of {total}'**
+  String feedback_answered(int count, int total);
+
+  /// No description provided for @feedback_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get feedback_required;
+
+  /// No description provided for @feedback_sending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending...'**
+  String get feedback_sending;
+
+  /// No description provided for @feedback_send.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get feedback_send;
+
+  /// No description provided for @feedback_validation_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Please answer all required questions'**
+  String get feedback_validation_error;
+
+  /// No description provided for @feedback_very_poor.
+  ///
+  /// In en, this message translates to:
+  /// **'Very poor'**
+  String get feedback_very_poor;
+
+  /// No description provided for @feedback_excellent.
+  ///
+  /// In en, this message translates to:
+  /// **'Excellent'**
+  String get feedback_excellent;
+
+  /// No description provided for @feedback_yes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get feedback_yes;
+
+  /// No description provided for @feedback_no.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get feedback_no;
+
+  /// No description provided for @feedback_text_placeholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your answer...'**
+  String get feedback_text_placeholder;
+
+  /// No description provided for @feedback_q_satisfaction.
+  ///
+  /// In en, this message translates to:
+  /// **'How satisfied are you with the app?'**
+  String get feedback_q_satisfaction;
+
+  /// No description provided for @feedback_q_missing_features.
+  ///
+  /// In en, this message translates to:
+  /// **'What features are you missing?'**
+  String get feedback_q_missing_features;
+
+  /// No description provided for @feedback_q_missing_features_placeholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe the features you would like to see...'**
+  String get feedback_q_missing_features_placeholder;
+
+  /// No description provided for @feedback_q_bug_reports.
+  ///
+  /// In en, this message translates to:
+  /// **'Have you encountered any errors or crashes?'**
+  String get feedback_q_bug_reports;
+
+  /// No description provided for @feedback_q_bug_reports_placeholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe the problems you encountered...'**
+  String get feedback_q_bug_reports_placeholder;
+
+  /// No description provided for @feedback_q_price_satisfaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you satisfied with the current app price?'**
+  String get feedback_q_price_satisfaction;
+
+  /// No description provided for @feedback_q_price_feedback.
+  ///
+  /// In en, this message translates to:
+  /// **'If not, what price do you consider fair?'**
+  String get feedback_q_price_feedback;
+
+  /// No description provided for @feedback_q_price_free.
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get feedback_q_price_free;
+
+  /// No description provided for @feedback_q_price_up_to_5.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to \$5'**
+  String get feedback_q_price_up_to_5;
+
+  /// No description provided for @feedback_q_price_5_to_10.
+  ///
+  /// In en, this message translates to:
+  /// **'\$5 - \$10'**
+  String get feedback_q_price_5_to_10;
+
+  /// No description provided for @feedback_q_price_10_to_20.
+  ///
+  /// In en, this message translates to:
+  /// **'\$10 - \$20'**
+  String get feedback_q_price_10_to_20;
+
+  /// No description provided for @feedback_q_price_more_20.
+  ///
+  /// In en, this message translates to:
+  /// **'More than \$20'**
+  String get feedback_q_price_more_20;
+
+  /// No description provided for @feedback_q_patreon_support.
+  ///
+  /// In en, this message translates to:
+  /// **'Will you support the project on Patreon?'**
+  String get feedback_q_patreon_support;
+
+  /// No description provided for @feedback_q_patreon_definitely.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, definitely'**
+  String get feedback_q_patreon_definitely;
+
+  /// No description provided for @feedback_q_patreon_if_exclusive.
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe, if there are exclusive features'**
+  String get feedback_q_patreon_if_exclusive;
+
+  /// No description provided for @feedback_q_patreon_if_reasonable.
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe, if the price is reasonable'**
+  String get feedback_q_patreon_if_reasonable;
+
+  /// No description provided for @feedback_q_patreon_probably_not.
+  ///
+  /// In en, this message translates to:
+  /// **'Probably not'**
+  String get feedback_q_patreon_probably_not;
+
+  /// No description provided for @feedback_q_patreon_no.
+  ///
+  /// In en, this message translates to:
+  /// **'No, not planning to'**
+  String get feedback_q_patreon_no;
+
+  /// No description provided for @feedback_q_patreon_tier.
+  ///
+  /// In en, this message translates to:
+  /// **'Which Patreon support tier interests you?'**
+  String get feedback_q_patreon_tier;
+
+  /// No description provided for @feedback_q_patreon_tier_3.
+  ///
+  /// In en, this message translates to:
+  /// **'\$3/month - Early access to features'**
+  String get feedback_q_patreon_tier_3;
+
+  /// No description provided for @feedback_q_patreon_tier_5.
+  ///
+  /// In en, this message translates to:
+  /// **'\$5/month - + Exclusive themes'**
+  String get feedback_q_patreon_tier_5;
+
+  /// No description provided for @feedback_q_patreon_tier_10.
+  ///
+  /// In en, this message translates to:
+  /// **'\$10/month - + Influence on development'**
+  String get feedback_q_patreon_tier_10;
+
+  /// No description provided for @feedback_q_usage_frequency.
+  ///
+  /// In en, this message translates to:
+  /// **'How often do you use the app?'**
+  String get feedback_q_usage_frequency;
+
+  /// No description provided for @feedback_q_usage_daily.
+  ///
+  /// In en, this message translates to:
+  /// **'Every day'**
+  String get feedback_q_usage_daily;
+
+  /// No description provided for @feedback_q_usage_several_week.
+  ///
+  /// In en, this message translates to:
+  /// **'Several times a week'**
+  String get feedback_q_usage_several_week;
+
+  /// No description provided for @feedback_q_usage_once_week.
+  ///
+  /// In en, this message translates to:
+  /// **'Once a week'**
+  String get feedback_q_usage_once_week;
+
+  /// No description provided for @feedback_q_usage_several_month.
+  ///
+  /// In en, this message translates to:
+  /// **'Several times a month'**
+  String get feedback_q_usage_several_month;
+
+  /// No description provided for @feedback_q_usage_rarely.
+  ///
+  /// In en, this message translates to:
+  /// **'Rarely'**
+  String get feedback_q_usage_rarely;
+
+  /// No description provided for @feedback_q_main_use_case.
+  ///
+  /// In en, this message translates to:
+  /// **'What do you mainly use the app for?'**
+  String get feedback_q_main_use_case;
+
+  /// No description provided for @feedback_q_use_pixel_art.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating pixel art'**
+  String get feedback_q_use_pixel_art;
+
+  /// No description provided for @feedback_q_use_game_design.
+  ///
+  /// In en, this message translates to:
+  /// **'Game design'**
+  String get feedback_q_use_game_design;
+
+  /// No description provided for @feedback_q_use_animation.
+  ///
+  /// In en, this message translates to:
+  /// **'Animation'**
+  String get feedback_q_use_animation;
+
+  /// No description provided for @feedback_q_use_hobby.
+  ///
+  /// In en, this message translates to:
+  /// **'Hobby/entertainment'**
+  String get feedback_q_use_hobby;
+
+  /// No description provided for @feedback_q_use_professional.
+  ///
+  /// In en, this message translates to:
+  /// **'Professional work'**
+  String get feedback_q_use_professional;
+
+  /// No description provided for @feedback_q_use_learning.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning'**
+  String get feedback_q_use_learning;
+
+  /// No description provided for @feedback_q_additional_feedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional comments and suggestions'**
+  String get feedback_q_additional_feedback;
+
+  /// No description provided for @feedback_q_additional_feedback_placeholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your thoughts about the app...'**
+  String get feedback_q_additional_feedback_placeholder;
+
+  /// No description provided for @feedback_q_recommend.
+  ///
+  /// In en, this message translates to:
+  /// **'Would you recommend this app to friends?'**
+  String get feedback_q_recommend;
 }
 
 class _StringsDelegate extends LocalizationsDelegate<Strings> {
