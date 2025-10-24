@@ -57,7 +57,7 @@ class AnimatedBackground extends HookConsumerWidget {
             gradient: _getBaseGradient(theme),
           ),
         ),
-        if (enableAnimation) _buildAnimatedLayer(theme),
+        _buildAnimatedLayer(theme),
         child,
       ],
     );

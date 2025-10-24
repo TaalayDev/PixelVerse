@@ -187,7 +187,7 @@ class _PixelCanvasScreenState extends ConsumerState<PixelCanvasScreen> with Tick
         backgroundColor: Theme.of(context).colorScheme.surface,
         body: SafeArea(
           child: AnimatedBackground(
-            enableAnimation: true,
+            enableAnimation: false,
             child: Column(
               children: [
                 ToolBar(
