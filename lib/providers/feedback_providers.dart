@@ -79,6 +79,8 @@ class FeedbackNotifier extends _$FeedbackNotifier {
         throw Exception(response.error);
       }
 
+      ref.read(localStorageProvider).feedbackPromptNeverAskAgain = true;
+
       debugPrint('Feedback sent successfully: ${response.data}');
     } catch (e) {
       debugPrint('Error sending feedback: $e');
