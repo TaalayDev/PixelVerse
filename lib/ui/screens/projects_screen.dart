@@ -97,7 +97,7 @@ class ProjectsScreen extends HookConsumerWidget {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         await Future.delayed(const Duration(seconds: 5));
         final count = await reviewService.getSessionCount();
-        if ((count > 2 || count % 5 == 0) && context.mounted) {
+        if ((count == 2 || count % 5 == 0) && context.mounted) {
           FeedbackPromptDialog.show(context, () {
             _navigateToFeedback(context, ref);
           });
