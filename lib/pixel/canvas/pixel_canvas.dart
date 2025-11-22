@@ -163,7 +163,10 @@ class _PixelCanvasState extends State<PixelCanvas> {
       controller: _controller,
       toolManager: _toolManager,
       onStartDrawing: widget.onStartDrawing,
-      onFinishDrawing: widget.onFinishDrawing,
+      onFinishDrawing: () {
+        widget.onFinishDrawing();
+        _controller.applyLayerCache();
+      },
       onDrawShape: (shape) {
         if (widget.currentTool == PixelTool.select) {
           _controller.setSelection(shape);

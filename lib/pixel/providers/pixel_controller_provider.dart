@@ -36,6 +36,9 @@ class PixelDrawController extends _$PixelDrawController {
   late final ImportExportService _importExportService;
   late final TemplateService _templateService;
 
+  bool _isBatching = false;
+  Uint32List? _activeBuffer;
+
   // Current project reference
 
   @override
@@ -104,6 +107,85 @@ class PixelDrawController extends _$PixelDrawController {
           ),
         );
   }
+
+  // MARK: Batch Drawing Methods
+
+  // 1. Start Drawing (On Tap Down)
+  void startBatchDrawing() {
+    _isBatching = true;
+    _saveState(); // Save state ONCE before the stroke begins
+    // Create a mutable working copy of the current layer
+    _activeBuffer = Uint32List.fromList(currentLayer.pixels);
+  }
+
+// 2. Update Drawing (On Pan Update)
+  void batchSetPixel(int x, int y) {
+    if (!_isBatching || _activeBuffer == null) return;
+
+    // Use the mutable method in DrawingService
+    _drawingService.setPixelMutable(
+      pixels: _activeBuffer!,
+      x: x,
+      y: y,
+      width: state.width,
+      height: state.height,
+      color: state.currentColor,
+      selection: state.selectionRect,
+    );
+
+    // We need to notify the UI to redraw, but NOT update the entire Immutable Project State
+    // This is the tricky part with Riverpod.
+    // Ideally, update a temporary provider or a local value in PixelCanvasController
+    // For now, we perform a "cheap" update:
+
+    final updatedLayer = currentLayer.copyWith(pixels: _activeBuffer!);
+    // This triggers a rebuild, but doesn't re-allocate the Uint32List because we are reusing _activeBuffer
+    // _updateLayerAndFrameSimple(updatedLayer);
+  }
+
+  // 2.1 Batch Fill Pixels
+  void batchFillPixels(List<PixelPoint<int>> points) {
+    if (!_isBatching || _activeBuffer == null) return;
+
+    // Use the mutable method in DrawingService
+    _drawingService.fillPixelsMutable(
+      pixels: _activeBuffer!,
+      points: points,
+      width: state.width,
+      color: state.currentColor,
+      selection: state.selectionRect,
+    );
+
+    // Cheap update to notify UI
+    final updatedLayer = currentLayer.copyWith(pixels: _activeBuffer!);
+    // _updateLayerAndFrameSimple(updatedLayer);
+  }
+
+// 3. End Drawing (On Pan End)
+  void endBatchDrawing() {
+    if (_activeBuffer != null) {
+      // Final commit to Undo/Redo history and project structure
+      _updateCurrentLayerPixels(_activeBuffer!);
+      _activeBuffer = null;
+    }
+    _isBatching = false;
+  }
+
+// Helper for cheap updates without triggering DB/Repo updates
+  void _updateLayerAndFrameSimple(Layer updatedLayer) {
+    final updatedLayers = List<Layer>.from(currentFrame.layers);
+    updatedLayers[state.currentLayerIndex] = updatedLayer;
+    final updatedFrame = currentFrame.copyWith(layers: updatedLayers);
+
+    final frameIndex = state.frames.indexWhere((f) => f.id == currentFrame.id);
+    final updatedFrames = List<AnimationFrame>.from(state.frames);
+    updatedFrames[frameIndex] = updatedFrame;
+
+    // Just update state memory, don't hit the database/repo
+    state = state.copyWith(frames: updatedFrames);
+  }
+
+  // MARK: Drawing Operations
 
   // Drawing operations
   void setPixel(int x, int y) {

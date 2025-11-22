@@ -38,7 +38,7 @@ class PixelCanvasPainter extends CustomPainter {
     final pixelWidth = size.width / width;
     final pixelHeight = size.height / height;
 
-    _drawGrid(canvas, size, pixelWidth, pixelHeight);
+    // _drawGrid(canvas, size, pixelWidth, pixelHeight);
 
     _drawLayers(canvas, size, pixelWidth, pixelHeight);
 
@@ -48,7 +48,7 @@ class PixelCanvasPainter extends CustomPainter {
     _drawCurveGuides(canvas, size);
     _drawLassoPath(canvas, size);
 
-    if (controller.previewPixels.isEmpty) {
+    if (controller.previewPixels.isEmpty && controller.livePreviewImage == null) {
       _drawHoverPreview(canvas, size, pixelWidth, pixelHeight);
     }
 
@@ -86,7 +86,13 @@ class PixelCanvasPainter extends CustomPainter {
 
       if (!layer.isVisible || layer.opacity == 0) continue;
 
-      canvas.saveLayer(canvasRect, Paint()..color = Color.fromRGBO(255, 255, 255, layer.opacity));
+      final bool needsSaveLayer = layer.opacity < 1.0;
+      if (needsSaveLayer) {
+        canvas.saveLayer(
+          canvasRect,
+          Paint()..color = Colors.white.withOpacity(layer.opacity),
+        );
+      }
 
       final cachedImage = cacheManager.getLayerImage(layer.layerId);
 
@@ -100,7 +106,9 @@ class PixelCanvasPainter extends CustomPainter {
         _drawPreviewPixels(canvas, size, pixelWidth, pixelHeight);
       }
 
-      canvas.restore();
+      if (needsSaveLayer) {
+        canvas.restore();
+      }
     }
   }
 
@@ -121,26 +129,63 @@ class PixelCanvasPainter extends CustomPainter {
   }
 
   void _drawLayerPixels(Canvas canvas, Layer layer, double pixelWidth, double pixelHeight) {
-    final paint = Paint()..style = PaintingStyle.fill;
     final processedPixels = layer.processedPixels;
+
+    // Reuse the logic from _drawProcessedPreviewPixels which uses Vertices
+    // This is significantly faster than 250k drawRect calls.
+
+    final List<Offset> positions = [];
+    final List<Color> colors = [];
+    final List<int> indices = [];
+    int vertexIndex = 0;
 
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {
         final index = y * width + x;
         if (index >= processedPixels.length) continue;
 
-        final color = Color(processedPixels[index]);
+        final colorValue = processedPixels[index];
+        if (colorValue == 0) continue; // Skip transparent/empty
+
+        // Fast opacity check
+        final color = Color(colorValue);
         if (color.alpha == 0) continue;
 
-        final rect = Rect.fromLTWH(
-          x * pixelWidth,
-          y * pixelHeight,
-          pixelWidth,
-          pixelHeight,
-        );
+        final left = x * pixelWidth;
+        final top = y * pixelHeight;
+        final right = left + pixelWidth;
+        final bottom = top + pixelHeight;
 
-        canvas.drawRect(rect, paint..color = color);
+        positions.addAll([
+          Offset(left, top),
+          Offset(right, top),
+          Offset(right, bottom),
+          Offset(left, bottom),
+        ]);
+
+        colors.addAll([color, color, color, color]);
+
+        indices.addAll([
+          vertexIndex,
+          vertexIndex + 1,
+          vertexIndex + 2,
+          vertexIndex,
+          vertexIndex + 2,
+          vertexIndex + 3,
+        ]);
+
+        vertexIndex += 4;
       }
+    }
+
+    if (positions.isNotEmpty) {
+      final vertices = Vertices(
+        VertexMode.triangles,
+        positions,
+        colors: colors,
+        indices: indices,
+      );
+      canvas.drawVertices(vertices, BlendMode.srcOver, Paint());
     }
   }
 

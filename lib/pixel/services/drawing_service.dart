@@ -8,6 +8,38 @@ import '../tools/mirror_modifier.dart';
 import '../../data.dart';
 
 class DrawingService {
+  void setPixelMutable({
+    required Uint32List pixels, // Pass reference, not copy
+    required int x,
+    required int y,
+    required int width,
+    required int height,
+    required Color color,
+    List<PixelPoint<int>>? selection,
+  }) {
+    if (!_isWithinBounds(x, y, width, height)) return;
+    if (!_isInSelectionBounds(x, y, selection)) return;
+
+    final index = y * width + x;
+    // Directly modify the passed reference
+    pixels[index] = color.value;
+  }
+
+  void fillPixelsMutable({
+    required Uint32List pixels, // Pass reference, not copy
+    required List<PixelPoint<int>> points,
+    required int width,
+    required Color color,
+    List<PixelPoint<int>>? selection,
+  }) {
+    for (final point in points) {
+      final index = point.y * width + point.x;
+      if (index >= 0 && index < pixels.length && _isInSelectionBounds(point.x, point.y, selection)) {
+        pixels[index] = color.value;
+      }
+    }
+  }
+
   bool _isWithinBounds(int x, int y, int width, int height) {
     return x >= 0 && x < width && y >= 0 && y < height;
   }

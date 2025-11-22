@@ -40,8 +40,10 @@ class PixelCanvasNotifier extends _$PixelCanvasNotifier {
   Color get currentColor => state.currentColor;
 
   // Drawing operations
-  void setPixel(int x, int y) => _controller.setPixel(x, y);
-  void fillPixels(List<PixelPoint<int>> points) => _controller.fillPixels(points);
+  void startDrawing() => _controller.startBatchDrawing();
+  void endDrawing() => _controller.endBatchDrawing();
+  void setPixel(int x, int y) => _controller.batchSetPixel(x, y);
+  void fillPixels(List<PixelPoint<int>> points) => _controller.batchFillPixels(points);
   void fill(int x, int y) => _controller.floodFill(x, y);
   void clear() => _controller.clearCanvas();
   Color getPixelColor(int x, int y) => _controller.getPixelColor(x, y);

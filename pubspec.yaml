@@ -123,6 +123,9 @@ flutter:
     - assets/images/
     - assets/animations/
     - assets/data/
+  
+  shaders:
+    - shaders/pixel_editor.frag
 
   # fonts:
   #   - family: Schyler

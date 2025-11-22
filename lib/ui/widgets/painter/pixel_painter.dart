@@ -171,8 +171,12 @@ class PixelPainter extends HookConsumerWidget {
               onDrawShape: (points) {
                 ref.read(pixelCanvasNotifierProvider(project).notifier).fillPixels(points);
               },
-              onStartDrawing: () {},
-              onFinishDrawing: () {},
+              onStartDrawing: () {
+                ref.read(pixelCanvasNotifierProvider(project).notifier).startDrawing();
+              },
+              onFinishDrawing: () {
+                ref.read(pixelCanvasNotifierProvider(project).notifier).endDrawing();
+              },
               onSelectionChanged: (selectionPoints) {
                 ref.read(pixelCanvasNotifierProvider(project).notifier).setSelection(selectionPoints);
               },

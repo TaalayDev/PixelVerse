@@ -1,9 +1,11 @@
+import 'dart:ui' as ui;
 import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:pixelverse/core.dart';
 
 import '../../data.dart';
 import '../../pixel/tools.dart';
@@ -23,6 +25,11 @@ class PixelCanvasController extends ChangeNotifier {
   PixelTool _currentTool = PixelTool.pencil;
   double _zoomLevel = 1.0;
   Offset _offset = Offset.zero;
+
+  ui.Image? _livePreviewImage;
+  Uint32List? _strokeSnapshotPixels;
+  Timer? _previewImageUpdateTimer;
+
   List<PixelPoint<int>> _previewPixels = [];
   Uint32List _cachedPixels = Uint32List(0);
 
@@ -60,6 +67,9 @@ class PixelCanvasController extends ChangeNotifier {
   PixelTool get currentTool => _currentTool;
   double get zoomLevel => _zoomLevel;
   Offset get offset => _offset;
+
+  ui.Image? get livePreviewImage => _livePreviewImage;
+
   List<PixelPoint<int>> get previewPixels => _previewPixels;
   Uint32List get cachedPixels => _cachedPixels;
 
@@ -142,16 +152,141 @@ class PixelCanvasController extends ChangeNotifier {
     }
   }
 
-  void setPreviewPixels(List<PixelPoint<int>> pixels) {
-    _previewPixels = List<PixelPoint<int>>.from(filterPixelsInSelection(pixels));
+  void updatePreviewPixels(List<PixelPoint<int>> newPoints) {
+    if (newPoints.isEmpty) return;
+
+    // Start stroke snapshot if needed (first points of a stroke)
+    _strokeSnapshotPixels ??= Uint32List.fromList(currentLayer.processedPixels);
+
+    // Incrementally apply new points to snapshot (fast, no list bloat)
+    for (final point in newPoints) {
+      final index = point.y * width + point.x;
+      if (index >= 0 && index < _strokeSnapshotPixels!.length) {
+        _strokeSnapshotPixels![index] = point.color;
+      }
+    }
+
+    // Keep old list for now (used by commit logic in provider)
+    _previewPixels.addAll(newPoints);
+
+    // Debounced image rebuild – feels instant but caps CPU/GPU load
+    _schedulePreviewImageUpdate();
+    notifyListeners();
+  }
+
+  void _schedulePreviewImageUpdate({bool immediate = false}) async {
+    if (_strokeSnapshotPixels == null) return;
+
+    _previewImageUpdateTimer?.cancel();
+    final delay = immediate ? Duration.zero : const Duration(milliseconds: 10);
+
+    Uint32List pixelsForPreview = Uint32List.fromList(_strokeSnapshotPixels!);
+
+    // Optional: skip heavy effects during active drawing for extra speed
+    // Remove this block if you want full effects live (still fast with compute)
+    if (currentLayer.effects.isNotEmpty && previewEffectsEnabled == false) {
+      // use raw snapshot – super fast
+    } else {
+      pixelsForPreview = EffectsManager.applyMultipleEffects(
+        _strokeSnapshotPixels!,
+        width,
+        height,
+        currentLayer.effects,
+      );
+    }
+
+    final image = await ImageHelper.createImageFromPixels(
+      pixelsForPreview,
+      width,
+      height,
+    );
+    _livePreviewImage?.dispose();
+    _livePreviewImage = image;
+    notifyListeners();
+  }
+
+  static Future<ui.Image> _createImageFromPixels(List<dynamic> args) async {
+    final Uint32List pixels = args[0];
+    final int w = args[1];
+    final int h = args[2];
+
+    return ImageHelper.createImageFromPixels(pixels, w, h);
+  }
+
+  /// Called on stroke end / tool finish – commits preview to layer & cleans up
+  void commitPreviewAndClear() {
+    // Old code still works (uses _previewPixels list)
+    // Provider will apply the points to raw layer pixels via DrawingService
+
+    // Clean up new system
+    _strokeSnapshotPixels = null;
+    _livePreviewImage?.dispose();
+    _livePreviewImage = null;
+    _previewImageUpdateTimer?.cancel();
+
+    // Keep old clear for now
+    _previewPixels = [];
+    _processedPreviewPixels = Uint32List(0);
+
     _updateCurrentLayerCache();
-    _updatePreviewPixelsWithEffects();
     notifyListeners();
   }
 
   void clearPreviewPixels() {
-    _clearPreviewPixels();
+    if (_strokeSnapshotPixels != null) {
+      _strokeSnapshotPixels = null;
+      _livePreviewImage?.dispose();
+      _livePreviewImage = null;
+      _previewImageUpdateTimer?.cancel();
+    }
+
+    _previewPixels = [];
+    _processedPreviewPixels = Uint32List(0);
     notifyListeners();
+  }
+
+  void _updateCachedPixels({bool cacheAll = false}) {
+    // Existing implementation unchanged for now
+    // Later phases (composite cache) will replace this entirely
+    _cachedPixels = Uint32List(width * height);
+
+    for (var i = 0; i < _layers.length; i++) {
+      final layer = _layers[i];
+      if (!layer.isVisible) {
+        cacheManager.removeLayer(layer.layerId);
+        continue;
+      }
+
+      final processedPixels = layer.processedPixels;
+      _cachedPixels = _mergePixels(_cachedPixels, processedPixels);
+
+      if (i == _currentLayerIndex || cacheAll) {
+        cacheManager.updateLayer(layer.layerId, processedPixels, width, height);
+      }
+    }
+
+    // Old preview merge (kept temporarily)
+    if (_previewPixels.isNotEmpty) {
+      _cachedPixels = _mergePixelsWithPoints(_cachedPixels, _previewPixels);
+    }
+  }
+
+  void setPreviewPixels(List<PixelPoint<int>> pixels) {
+    _previewPixels = List<PixelPoint<int>>.from(filterPixelsInSelection(pixels));
+    // _updateCurrentLayerCache();
+    _updatePreviewPixelsWithEffects();
+    notifyListeners();
+
+    // updatePreviewPixels(pixels);
+  }
+
+  // void clearPreviewPixels() {
+  //   _clearPreviewPixels();
+  //   notifyListeners();
+  // }
+
+  void applyLayerCache() {
+    _updateCurrentLayerCache();
   }
 
   void setCurvePoints(Offset? start, Offset? end, Offset? control) {
@@ -272,28 +407,28 @@ class PixelCanvasController extends ChangeNotifier {
     );
   }
 
-  void _updateCachedPixels({bool cacheAll = false}) {
-    _cachedPixels = Uint32List(width * height);
+  // void _updateCachedPixels({bool cacheAll = false}) {
+  //   _cachedPixels = Uint32List(width * height);
 
-    for (var i = 0; i < _layers.length; i++) {
-      final layer = _layers[i];
-      if (!layer.isVisible) {
-        cacheManager.removeLayer(layer.layerId);
-        continue;
-      }
+  //   for (var i = 0; i < _layers.length; i++) {
+  //     final layer = _layers[i];
+  //     if (!layer.isVisible) {
+  //       cacheManager.removeLayer(layer.layerId);
+  //       continue;
+  //     }
 
-      final processedPixels = layer.processedPixels;
-      _cachedPixels = _mergePixels(_cachedPixels, processedPixels);
+  //     final processedPixels = layer.processedPixels;
+  //     _cachedPixels = _mergePixels(_cachedPixels, processedPixels);
 
-      if (i == _currentLayerIndex || cacheAll) {
-        cacheManager.updateLayer(layer.layerId, processedPixels, width, height);
-      }
-    }
+  //     if (i == _currentLayerIndex || cacheAll) {
+  //       cacheManager.updateLayer(layer.layerId, processedPixels, width, height);
+  //     }
+  //   }
 
-    if (_previewPixels.isNotEmpty) {
-      _cachedPixels = _mergePixelsWithPoints(_cachedPixels, _previewPixels);
-    }
-  }
+  //   if (_previewPixels.isNotEmpty) {
+  //     _cachedPixels = _mergePixelsWithPoints(_cachedPixels, _previewPixels);
+  //   }
+  // }
 
   void _updateCurrentLayerCache() {
     if (_currentLayerIndex < _layers.length) {
