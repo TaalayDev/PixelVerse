@@ -33,7 +33,7 @@ class SubscriptionState extends _$SubscriptionState {
 
     const testing = bool.fromEnvironment('TESTING');
 
-    if (kIsWeb || Platform.isAndroid || Platform.isWindows || testing) {
+    if (kIsWeb || Platform.isWindows || testing) {
       return UserSubscription(
         plan: SubscriptionPlan.proPurchase,
         status: AppPurchaseStatus.purchased,
@@ -78,7 +78,7 @@ class SubscriptionState extends _$SubscriptionState {
     }
   }
 
-  void grantTemporaryProAccess({Duration duration = const Duration(minutes: 45)}) {
+  void grantTemporaryProAccess({Duration duration = const Duration(hours: 1)}) {
     final service = ref.read(subscriptionServiceProvider);
     service.grantTemporaryProAccess(duration: duration);
   }
@@ -117,7 +117,8 @@ Stream<List<ProductDetails>> productsStream(ProductsStreamRef ref) {
 }
 
 @riverpod
-Stream<List<PurchaseDetails>> purchaseUpdatesStream(PurchaseUpdatesStreamRef ref) {
+Stream<List<PurchaseDetails>> purchaseUpdatesStream(
+    PurchaseUpdatesStreamRef ref) {
   final service = ref.watch(subscriptionServiceProvider);
   return service.purchaseUpdatedStream;
 }
@@ -137,7 +138,9 @@ bool isFeatureLocked(IsFeatureLockedRef ref, SubscriptionFeature feature) {
     case SubscriptionFeature.cloudBackup:
     case SubscriptionFeature.noWatermark:
     case SubscriptionFeature.prioritySupport:
-      return !ref.read(subscriptionStateProvider.notifier).hasFeatureAccess(feature);
+      return !ref
+          .read(subscriptionStateProvider.notifier)
+          .hasFeatureAccess(feature);
     case SubscriptionFeature.maxProjects:
     case SubscriptionFeature.maxCanvasSize:
     case SubscriptionFeature.exportFormats:
@@ -145,7 +148,9 @@ bool isFeatureLocked(IsFeatureLockedRef ref, SubscriptionFeature feature) {
     case SubscriptionFeature.effects:
     case SubscriptionFeature.templates:
     case SubscriptionFeature.proTheme:
-      return !ref.read(subscriptionStateProvider.notifier).hasFeatureAccess(feature);
+      return !ref
+          .read(subscriptionStateProvider.notifier)
+          .hasFeatureAccess(feature);
   }
 }
 
@@ -170,7 +175,8 @@ List<PurchaseOffer> purchaseOffers(PurchaseOffersRef ref) {
     ),
   ];
 
-  final proProduct = products.firstWhereOrNull((product) => product.id == SubscriptionProductIds.proPurchase);
+  final proProduct = products.firstWhereOrNull(
+      (product) => product.id == SubscriptionProductIds.proPurchase);
 
   if (proProduct != null) {
     offers.add(

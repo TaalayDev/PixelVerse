@@ -1856,11 +1856,11 @@ class StringsKy extends Strings {
       '• Бардык функцияларга чексиз жеткиликтүүлүк\n• Бир жолку сатып алуу\n• Жарнамасыз\n• Артыкчылыктуу колдоо';
 
   @override
-  String get tryPro45Minutes => 'Proну 45 мүнөткө сынап көрүү';
+  String get tryProOneHour => 'Proну 1 саатка сынап көрүү';
 
   @override
   String get rewardAdReadyBullets =>
-      '• Кыска видео жарнаманы көрүңүз\n• 45 мүнөт Pro жеткиликтүүлүгүн алыңыз\n• Колдонмонун өнүгүшүн колдоңуз';
+      '• Кыска видео жарнаманы көрүңүз\n• 1 саат Pro жеткиликтүүлүгүн алыңыз';
 
   @override
   String get rewardAdLoadingBullets =>
@@ -1876,7 +1876,7 @@ class StringsKy extends Strings {
   String get loadingVideoAd => 'Видео жарнама жүктөлүүдө...';
 
   @override
-  String get proAccessGranted45 => 'Pro жеткиликтүүлүгү 45 мүнөткө берилди!';
+  String get proAccessGrantedOneHour => 'Pro жеткиликтүүлүгү 1 саатка берилди!';
 
   @override
   String get videoAdNotCompleted =>

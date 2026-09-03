@@ -6,6 +6,7 @@ import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:picell/config/constants.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import '../../config/assets.dart';
@@ -58,14 +59,25 @@ class SubscriptionOfferScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<SubscriptionOfferScreen> createState() => _SubscriptionOfferScreenState();
+  ConsumerState<SubscriptionOfferScreen> createState() =>
+      _SubscriptionOfferScreenState();
 }
 
-class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScreen> {
+class _SubscriptionOfferScreenState
+    extends ConsumerState<SubscriptionOfferScreen> {
+  static const int _requiredTemporaryProAds = 3;
+  static const String _temporaryProAdsWatchedKey = 'temporary_pro_ads_watched';
+
   late ConfettiController _confettiController;
   int _selectedIndex = 1; // Default to pro purchase
+  int _temporaryProAdsWatched = 0;
   bool _isLoading = false;
   String? _errorMessage;
+
+  bool get _supportsRewardedAds =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
 
   @override
   void initState() {
@@ -73,6 +85,7 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 5),
     );
+    _loadTemporaryProAdProgress();
 
     // Start loading products if not already loaded
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -86,6 +99,18 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
         }
       }
     });
+  }
+
+  Future<void> _loadTemporaryProAdProgress() async {
+    final preferences = await SharedPreferences.getInstance();
+    final watched = preferences.getInt(_temporaryProAdsWatchedKey) ?? 0;
+
+    if (mounted) {
+      setState(() {
+        _temporaryProAdsWatched =
+            watched.clamp(0, _requiredTemporaryProAds - 1);
+      });
+    }
   }
 
   @override
@@ -114,7 +139,8 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
             _isLoading = false;
             _errorMessage = purchase.error?.message ?? 'Purchase failed';
           });
-        } else if (purchase.status == PurchaseStatus.purchased || purchase.status == PurchaseStatus.restored) {
+        } else if (purchase.status == PurchaseStatus.purchased ||
+            purchase.status == PurchaseStatus.restored) {
           setState(() {
             _isLoading = false;
             _errorMessage = null;
@@ -160,9 +186,10 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
                   children: [
                     _buildHeader(context),
                     const SizedBox(height: 24),
-                    if (subscription.hasTemporaryPro) _buildTemporaryProStatus(context, theme),
+                    if (subscription.hasTemporaryPro)
+                      _buildTemporaryProStatus(context, theme),
                     const SizedBox(height: 16),
-                    if (rewardAdState) ...[
+                    if (_supportsRewardedAds) ...[
                       _buildTemporaryProSection(context, theme, rewardAdState),
                       const SizedBox(height: 24),
                     ],
@@ -290,7 +317,8 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
         );
   }
 
-  Widget _buildTemporaryProSection(BuildContext context, AppTheme theme, bool adReady) {
+  Widget _buildTemporaryProSection(
+      BuildContext context, AppTheme theme, bool adReady) {
     final subscription = ref.watch(subscriptionStateProvider);
 
     if (subscription.isPermanentPro) {
@@ -333,24 +361,45 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
           ),
           const SizedBox(height: 8),
           Text(
-            'Watch a short video ad to unlock Pro features for 45 minutes',
+            'Watch $_requiredTemporaryProAds ads to unlock Pro features for 1 hour. '
+            'You choose when to start each ad.',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
+          if (!subscription.hasTemporaryPro) ...[
+            const SizedBox(height: 8),
+            LinearProgressIndicator(
+              value: _temporaryProAdsWatched / _requiredTemporaryProAds,
+              backgroundColor: Colors.orange.withValues(alpha: 0.15),
+              color: Colors.orange,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Completed: $_temporaryProAdsWatched/$_requiredTemporaryProAds ads',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: adReady && !subscription.hasTemporaryPro ? () => _watchAdForTemporaryPro() : null,
+              onPressed: adReady && !subscription.hasTemporaryPro && !_isLoading
+                  ? _watchAdForTemporaryPro
+                  : null,
               icon: Icon(
-                subscription.hasTemporaryPro ? Icons.check_circle : (adReady ? Icons.play_arrow : Icons.refresh),
+                subscription.hasTemporaryPro
+                    ? Icons.check_circle
+                    : (adReady ? Icons.play_arrow : Icons.refresh),
               ),
               label: Text(
                 subscription.hasTemporaryPro
                     ? 'Pro Access Active'
-                    : (adReady ? 'Watch Ad (45 min Pro)' : 'Loading Ad...'),
+                    : (adReady
+                        ? 'Watch ad ${_temporaryProAdsWatched + 1}/$_requiredTemporaryProAds'
+                        : 'Loading next ad...'),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: subscription.hasTemporaryPro ? Colors.green : Colors.orange,
+                backgroundColor:
+                    subscription.hasTemporaryPro ? Colors.green : Colors.orange,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
@@ -373,16 +422,44 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
       final rewardEarned = await rewardController.showAdIfLoaded();
 
       if (rewardEarned) {
-        ref.read(subscriptionStateProvider.notifier).grantTemporaryProAccess();
+        final completedAds = _temporaryProAdsWatched + 1;
+        final preferences = await SharedPreferences.getInstance();
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('🎉 Pro access granted for 45 minutes!'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 3),
-            ),
+        if (completedAds >= _requiredTemporaryProAds) {
+          await preferences.remove(_temporaryProAdsWatchedKey);
+          ref
+              .read(subscriptionStateProvider.notifier)
+              .grantTemporaryProAccess();
+
+          if (mounted) {
+            setState(() => _temporaryProAdsWatched = 0);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('🎉 Pro access granted for 1 hour!'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+        } else {
+          await preferences.setInt(
+            _temporaryProAdsWatchedKey,
+            completedAds,
           );
+
+          if (mounted) {
+            setState(() => _temporaryProAdsWatched = completedAds);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Ad completed: $completedAds/$_requiredTemporaryProAds. '
+                  'Start the next ad when it is ready.',
+                ),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
         }
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -399,7 +476,7 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
           SnackBar(
             content: Text('Failed to load video ad: $e'),
             backgroundColor: Colors.red,
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -468,7 +545,11 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
               ? _getUpgradePromptSubtitle(widget.featurePrompt!)
               : 'One-time purchase • No recurring fees • Try with ads first',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.7),
+                color: Theme.of(context)
+                    .textTheme
+                    .bodyLarge
+                    ?.color
+                    ?.withValues(alpha: 0.7),
               ),
           textAlign: TextAlign.center,
         ).animate().fadeIn(
@@ -484,7 +565,8 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
       _FeatureComparisonItem(
         icon: Icons.inventory_2_outlined,
         title: 'Projects',
-        free: '${SubscriptionFeatureConfig.maxProjects[SubscriptionPlan.free]} projects',
+        free:
+            '${SubscriptionFeatureConfig.maxProjects[SubscriptionPlan.free]} projects',
         pro: 'Unlimited projects',
       ),
       _FeatureComparisonItem(
@@ -575,7 +657,8 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
                     Expanded(
                       flex: 3,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 6, horizontal: 12),
                         decoration: BoxDecoration(
                           color: theme.background,
                           borderRadius: BorderRadius.circular(16),
@@ -591,17 +674,19 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
                     Expanded(
                       flex: 3,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 6, horizontal: 12),
                         decoration: BoxDecoration(
                           color: theme.primaryColor.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
                           'Pro',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: theme.primaryColor,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.primaryColor,
+                                  ),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -636,7 +721,10 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
                           flex: 4,
                           child: Text(
                             feature.title,
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
@@ -647,13 +735,18 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
                               ? Center(
                                   child: Icon(
                                     feature.free ? Icons.check : Icons.close,
-                                    color: feature.free ? Colors.green : Colors.red.shade300,
+                                    color: feature.free
+                                        ? Colors.green
+                                        : Colors.red.shade300,
                                     size: 20,
                                   ),
                                 )
                               : Text(
                                   feature.free as String,
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
                                         color: theme.textSecondary,
                                       ),
                                   textAlign: TextAlign.center,
@@ -666,13 +759,18 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
                               ? Center(
                                   child: Icon(
                                     feature.pro ? Icons.check : Icons.close,
-                                    color: feature.pro ? theme.primaryColor : Colors.red.shade300,
+                                    color: feature.pro
+                                        ? theme.primaryColor
+                                        : Colors.red.shade300,
                                     size: 20,
                                   ),
                                 )
                               : Text(
                                   feature.pro as String,
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
                                         color: theme.primaryColor,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -716,7 +814,10 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
       children: [
         Text(
           'Choose Your Plan',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(context)
+              .textTheme
+              .titleLarge
+              ?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         ...List.generate(offers.length, (index) {
@@ -757,7 +858,10 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
           Text(
             'By continuing, you agree to our Terms of Service and Privacy Policy.',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.7),
                 ),
             textAlign: TextAlign.center,
           ),
@@ -780,7 +884,11 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
               Text(
                 ' • ',
                 style: TextStyle(
-                  color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.color
+                      ?.withValues(alpha: 0.7),
                   fontSize: 12,
                 ),
               ),
@@ -802,7 +910,10 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
           Text(
             'One-time purchase • No recurring charges • Lifetime access',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.7),
                   fontSize: 11,
                 ),
             textAlign: TextAlign.center,
@@ -813,7 +924,8 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
   }
 
   Widget _buildBottomBar(BuildContext context, List<PurchaseOffer> offers) {
-    final selectedOffer = _selectedIndex < offers.length ? offers[_selectedIndex] : null;
+    final selectedOffer =
+        _selectedIndex < offers.length ? offers[_selectedIndex] : null;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -834,7 +946,8 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
       child: SafeArea(
         child: Row(
           children: [
-            if (selectedOffer != null && selectedOffer.plan != SubscriptionPlan.free)
+            if (selectedOffer != null &&
+                selectedOffer.plan != SubscriptionPlan.free)
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -860,14 +973,17 @@ class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScree
             const SizedBox(width: 16),
             Expanded(
               child: FilledButton(
-                onPressed: selectedOffer?.plan == SubscriptionPlan.free || _isLoading
-                    ? null
-                    : () => _handlePurchase(selectedOffer!),
+                onPressed:
+                    selectedOffer?.plan == SubscriptionPlan.free || _isLoading
+                        ? null
+                        : () => _handlePurchase(selectedOffer!),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 child: Text(
-                  selectedOffer?.plan == SubscriptionPlan.free ? 'Continue with Free' : 'Buy Pro',
+                  selectedOffer?.plan == SubscriptionPlan.free
+                      ? 'Continue with Free'
+                      : 'Buy Pro',
                   style: const TextStyle(fontSize: 16),
                 ),
               ),
@@ -983,8 +1099,9 @@ class _PurchaseOfferCard extends StatelessWidget {
         duration: const Duration(milliseconds: 300),
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color:
-              isSelected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08) : Theme.of(context).cardColor,
+          color: isSelected
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
+              : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
@@ -1016,9 +1133,14 @@ class _PurchaseOfferCard extends StatelessWidget {
                           children: [
                             Text(
                               offer.title,
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    color: isSelected ? Theme.of(context).colorScheme.primary : null,
+                                    color: isSelected
+                                        ? Theme.of(context).colorScheme.primary
+                                        : null,
                                   ),
                             ),
                             const SizedBox(height: 4),
@@ -1032,7 +1154,10 @@ class _PurchaseOfferCard extends StatelessWidget {
                       if (offer.plan != SubscriptionPlan.free)
                         Text(
                           offer.price,
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: isSelected
                                     ? Theme.of(context).colorScheme.primary
@@ -1051,7 +1176,9 @@ class _PurchaseOfferCard extends StatelessWidget {
                           children: [
                             Icon(
                               Icons.check_circle_outline,
-                              color: isSelected ? Theme.of(context).colorScheme.primary : Colors.green,
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Colors.green,
                               size: 18,
                             ),
                             const SizedBox(width: 8),

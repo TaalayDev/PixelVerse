@@ -1808,11 +1808,10 @@ class StringsJa extends Strings {
       '• すべての機能に無制限アクセス\n• 一度きりの購入\n• 広告なし\n• 優先サポート';
 
   @override
-  String get tryPro45Minutes => 'Proを45分試す';
+  String get tryProOneHour => 'Proを1時間試す';
 
   @override
-  String get rewardAdReadyBullets =>
-      '• 短い動画広告を見る\n• 45分間のProアクセスを取得\n• アプリ開発を応援';
+  String get rewardAdReadyBullets => '• 短い動画広告を見る\n• 1時間のProアクセスを取得';
 
   @override
   String get rewardAdLoadingBullets => '• 動画広告を読み込み中...\n• しばらくしてからもう一度お試しください';
@@ -1827,7 +1826,7 @@ class StringsJa extends Strings {
   String get loadingVideoAd => '動画広告を読み込み中...';
 
   @override
-  String get proAccessGranted45 => 'Proアクセスが45分間付与されました！';
+  String get proAccessGrantedOneHour => 'Proアクセスが1時間付与されました！';
 
   @override
   String get videoAdNotCompleted => '動画広告が完了しませんでした。もう一度試すか、Proにアップグレードしてください。';

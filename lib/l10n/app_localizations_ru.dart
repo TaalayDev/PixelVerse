@@ -1860,11 +1860,11 @@ class StringsRu extends Strings {
       '• Неограниченный доступ ко всем функциям\n• Разовая покупка\n• Без рекламы\n• Приоритетная поддержка';
 
   @override
-  String get tryPro45Minutes => 'Попробовать Pro на 45 минут';
+  String get tryProOneHour => 'Попробовать Pro на 1 час';
 
   @override
   String get rewardAdReadyBullets =>
-      '• Посмотрите короткую видеорекламу\n• Получите 45 минут Pro-доступа\n• Поддержите развитие приложения';
+      '• Посмотрите короткую видеорекламу\n• Получите 1 час Pro-доступа';
 
   @override
   String get rewardAdLoadingBullets =>
@@ -1880,7 +1880,7 @@ class StringsRu extends Strings {
   String get loadingVideoAd => 'Загрузка видеорекламы...';
 
   @override
-  String get proAccessGranted45 => 'Pro-доступ выдан на 45 минут!';
+  String get proAccessGrantedOneHour => 'Pro-доступ выдан на 1 час!';
 
   @override
   String get videoAdNotCompleted =>

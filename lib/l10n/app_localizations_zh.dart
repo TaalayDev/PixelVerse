@@ -1788,10 +1788,10 @@ class StringsZh extends Strings {
   String get rewardUpgradeBullets => '• 无限使用所有功能\n• 一次性购买\n• 无广告\n• 优先支持';
 
   @override
-  String get tryPro45Minutes => '试用 Pro 45 分钟';
+  String get tryProOneHour => '试用 Pro 1 小时';
 
   @override
-  String get rewardAdReadyBullets => '• 观看一段短视频广告\n• 获得 45 分钟 Pro 权限\n• 支持应用开发';
+  String get rewardAdReadyBullets => '• 观看一段短视频广告\n• 获得 1 小时 Pro 权限';
 
   @override
   String get rewardAdLoadingBullets => '• 视频广告正在加载...\n• 请稍后再试';
@@ -1806,7 +1806,7 @@ class StringsZh extends Strings {
   String get loadingVideoAd => '正在加载视频广告...';
 
   @override
-  String get proAccessGranted45 => '已授予 45 分钟 Pro 权限！';
+  String get proAccessGrantedOneHour => '已授予 1 小时 Pro 权限！';
 
   @override
   String get videoAdNotCompleted => '视频广告未播放完成。请重试或升级到 Pro。';

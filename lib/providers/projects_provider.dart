@@ -152,8 +152,7 @@ final localProjectByRemoteIdProvider = Provider.family<Project?, int>((ref, remo
   final projects = ref.read(projectsProvider);
   return projects.when(
     data: (projectsList) => projectsList
-        .where((project) =>
-            (project.isCloudSynced && project.remoteId == remoteId) || project.forkedFromId == remoteId)
+        .where((project) => (project.isCloudSynced && project.remoteId == remoteId) || project.forkedFromId == remoteId)
         .firstOrNull,
     loading: () => null,
     error: (_, __) => null,

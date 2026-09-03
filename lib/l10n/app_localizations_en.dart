@@ -1864,11 +1864,11 @@ class StringsEn extends Strings {
       '• Unlimited access to all features\n• One-time purchase\n• No ads\n• Priority support';
 
   @override
-  String get tryPro45Minutes => 'Try Pro for 45 Minutes';
+  String get tryProOneHour => 'Try Pro for 1 Hour';
 
   @override
   String get rewardAdReadyBullets =>
-      '• Watch a short video ad\n• Get 45 minutes of Pro access\n• Support the app development';
+      '• Watch a short video ad\n• Get 1 hour of Pro access';
 
   @override
   String get rewardAdLoadingBullets =>
@@ -1884,7 +1884,7 @@ class StringsEn extends Strings {
   String get loadingVideoAd => 'Loading video ad...';
 
   @override
-  String get proAccessGranted45 => 'Pro access granted for 45 minutes!';
+  String get proAccessGrantedOneHour => 'Pro access granted for 1 hour!';
 
   @override
   String get videoAdNotCompleted =>

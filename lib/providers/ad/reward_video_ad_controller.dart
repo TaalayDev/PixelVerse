@@ -6,15 +6,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import '../subscription_provider.dart';
-
 class RewardVideoAdController extends StateNotifier<bool> {
   RewardedAd? _rewardedAd;
   bool _isAdLoaded = false;
   bool _isAdLoading = false;
-  final Ref _ref;
 
-  RewardVideoAdController(this._ref) : super(false) {
+  RewardVideoAdController() : super(false) {
     loadAd();
   }
 
@@ -97,12 +94,12 @@ class RewardVideoAdController extends StateNotifier<bool> {
         },
       );
 
+      // Note: no side effects here — what the reward unlocks (temporary Pro,
+      // a download, ...) is decided by the caller based on the returned bool.
       await _rewardedAd!.show(
         onUserEarnedReward: (ad, reward) {
           debugPrint('User earned reward: ${reward.amount} ${reward.type}');
           rewardEarned = true;
-
-          _ref.read(subscriptionStateProvider.notifier).grantTemporaryProAccess();
         },
       );
 
@@ -124,5 +121,5 @@ class RewardVideoAdController extends StateNotifier<bool> {
 }
 
 final rewardVideoAdProvider = StateNotifierProvider<RewardVideoAdController, bool>((ref) {
-  return RewardVideoAdController(ref);
+  return RewardVideoAdController();
 });

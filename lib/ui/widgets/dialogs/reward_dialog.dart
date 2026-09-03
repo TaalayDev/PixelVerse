@@ -158,7 +158,7 @@ class RewardDialog extends HookConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        s.tryPro45Minutes,
+                        s.tryProOneHour,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -259,7 +259,7 @@ class RewardDialog extends HookConsumerWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(Strings.of(context).proAccessGranted45),
+              content: Text(Strings.of(context).proAccessGrantedOneHour),
               backgroundColor: Colors.green,
               duration: const Duration(seconds: 3),
             ),

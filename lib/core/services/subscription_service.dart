@@ -124,7 +124,7 @@ class SubscriptionService {
   }
 
   // Grant temporary pro access from watching ads
-  void grantTemporaryProAccess({Duration duration = const Duration(minutes: 45)}) {
+  void grantTemporaryProAccess({Duration duration = const Duration(hours: 1)}) {
     final temporaryAccess = TemporaryProAccess(
       startTime: DateTime.now(),
       duration: duration,
@@ -140,6 +140,11 @@ class SubscriptionService {
 
     // Restart the timer to check for expiry
     _startTemporaryAccessTimer();
+  }
+
+  /// Clear temporary pro access
+  void clearTemporaryProAccess() {
+    _updateSubscription(_currentSubscription.clearTemporaryAccess());
   }
 
   // Start timer to monitor temporary access expiry

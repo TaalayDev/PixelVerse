@@ -3469,16 +3469,16 @@ abstract class Strings {
   /// **'• Unlimited access to all features\n• One-time purchase\n• No ads\n• Priority support'**
   String get rewardUpgradeBullets;
 
-  /// No description provided for @tryPro45Minutes.
+  /// No description provided for @tryProOneHour.
   ///
   /// In en, this message translates to:
-  /// **'Try Pro for 45 Minutes'**
-  String get tryPro45Minutes;
+  /// **'Try Pro for 1 Hour'**
+  String get tryProOneHour;
 
   /// No description provided for @rewardAdReadyBullets.
   ///
   /// In en, this message translates to:
-  /// **'• Watch a short video ad\n• Get 45 minutes of Pro access\n• Support the app development'**
+  /// **'• Watch a short video ad\n• Get 1 hour of Pro access'**
   String get rewardAdReadyBullets;
 
   /// No description provided for @rewardAdLoadingBullets.
@@ -3505,11 +3505,11 @@ abstract class Strings {
   /// **'Loading video ad...'**
   String get loadingVideoAd;
 
-  /// No description provided for @proAccessGranted45.
+  /// No description provided for @proAccessGrantedOneHour.
   ///
   /// In en, this message translates to:
-  /// **'Pro access granted for 45 minutes!'**
-  String get proAccessGranted45;
+  /// **'Pro access granted for 1 hour!'**
+  String get proAccessGrantedOneHour;
 
   /// No description provided for @videoAdNotCompleted.
   ///
