@@ -44,6 +44,12 @@ class SelectionOptionsButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!hasSelection) {
+      // No selection, but the clipboard has content — still surface Paste,
+      // otherwise there is no way to paste on touch devices (the review
+      // "how do I paste after copy with the lasso" bug).
+      if (onPaste != null) {
+        return isFloating ? _buildFloatingPasteButton(context) : _buildPasteButton(context);
+      }
       return const SizedBox.shrink();
     }
 
@@ -52,6 +58,38 @@ class SelectionOptionsButton extends StatelessWidget {
     } else {
       return _buildToolbarButton(context);
     }
+  }
+
+  Widget _buildPasteButton(BuildContext context) {
+    return IconButton(
+      icon: Icon(
+        Icons.content_paste,
+        color: Theme.of(context).colorScheme.primary,
+      ),
+      tooltip: Strings.of(context).paste,
+      onPressed: onPaste,
+    );
+  }
+
+  Widget _buildFloatingPasteButton(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.content_paste, color: Colors.blue),
+        tooltip: Strings.of(context).paste,
+        onPressed: onPaste,
+      ),
+    );
   }
 
   Widget _buildFloatingButton(BuildContext context) {
@@ -261,6 +299,17 @@ class SelectionOptionsButton extends StatelessWidget {
             ],
           ),
         ),
+      if (onPaste != null)
+        PopupMenuItem<String>(
+          value: 'paste',
+          child: Row(
+            children: [
+              const Icon(Icons.content_paste, size: 20),
+              const SizedBox(width: 8),
+              Text(s.paste),
+            ],
+          ),
+        ),
       if (onDelete != null)
         PopupMenuItem<String>(
           value: 'delete',
@@ -312,6 +361,9 @@ class SelectionOptionsButton extends StatelessWidget {
         break;
       case 'copy':
         onCopy?.call();
+        break;
+      case 'paste':
+        onPaste?.call();
         break;
       case 'delete':
         onDelete?.call();

@@ -115,6 +115,7 @@ class LassoSelectionTool extends Tool {
 
   final List<Offset> _screenPoints = [];
   bool _isDrawing = false;
+  bool _hasLeftCloseRadius = false;
 
   static const double _closeThreshold = 15.0;
   static const int _minPoints = 3;
@@ -130,6 +131,7 @@ class LassoSelectionTool extends Tool {
     _screenPoints.clear();
     _screenPoints.add(details.position);
     _isDrawing = true;
+    _hasLeftCloseRadius = false;
     onLassoUpdate?.call(List.unmodifiable(_screenPoints), true);
   }
 
@@ -137,9 +139,16 @@ class LassoSelectionTool extends Tool {
   void onMove(PixelDrawDetails details) {
     if (!_isDrawing) return;
 
-    // Auto-close when pointer returns near start
-    if (_screenPoints.length > _minPoints &&
-        (details.position - _screenPoints.first).distance <= _closeThreshold) {
+    final distanceFromStart = (details.position - _screenPoints.first).distance;
+
+    // Auto-close only after the pointer has first left the close radius. On
+    // high-refresh touchscreens, several tiny move events can otherwise close
+    // the lasso immediately while the user's finger is just starting to move.
+    if (!_hasLeftCloseRadius && distanceFromStart > _closeThreshold) {
+      _hasLeftCloseRadius = true;
+    } else if (_hasLeftCloseRadius &&
+        _screenPoints.length > _minPoints &&
+        distanceFromStart <= _closeThreshold) {
       _finalize(details);
       return;
     }
@@ -155,8 +164,23 @@ class LassoSelectionTool extends Tool {
     }
   }
 
+  /// Abandons an interrupted lasso without changing the current selection.
+  ///
+  /// Android can cancel a pointer sequence when another finger lands or a
+  /// system overlay takes focus. Clearing both the tool state and its preview
+  /// prevents the initial lasso point from remaining on screen.
+  void cancel() {
+    if (!_isDrawing && _screenPoints.isEmpty) return;
+
+    _isDrawing = false;
+    _hasLeftCloseRadius = false;
+    _screenPoints.clear();
+    onLassoUpdate?.call(const [], false);
+  }
+
   void _finalize(PixelDrawDetails details) {
     _isDrawing = false;
+    _hasLeftCloseRadius = false;
     onLassoUpdate?.call(const [], false);
 
     if (_screenPoints.length < _minPoints) {

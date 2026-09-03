@@ -137,7 +137,7 @@ class CanvasGestureHandler {
     if (_pointerCount == 1) {
       _handleSingleFingerStart(details, currentTool, drawDetails);
     } else if (_pointerCount == 2) {
-      _handleTwoFingerStart(details);
+      _handleTwoFingerStart(details, currentTool);
     }
   }
 
@@ -258,7 +258,10 @@ class CanvasGestureHandler {
     _isDrawingActive = false;
   }
 
-  void _handleTwoFingerStart(ScaleStartDetails details) {
+  void _handleTwoFingerStart(ScaleStartDetails details, PixelTool currentTool) {
+    if (_isSelectionTool(currentTool) && _isDrawingActive) {
+      _cancelSelectionDrawing(currentTool);
+    }
     _twoFingerStartFocalPoint = details.localFocalPoint;
     _twoFingerStartTimeMs = DateTime.now().millisecondsSinceEpoch;
     _initialTwoFingerScale = controller.zoomLevel;
@@ -446,7 +449,7 @@ class CanvasGestureHandler {
     }
     if (_isSelectionDrawingActive) {
       // Cancel ongoing selection if user adds a second finger
-      _isSelectionDrawingActive = false;
+      _cancelSelectionDrawing(currentTool);
     }
 
     final pointers = _activePointers.values.toList();
@@ -562,6 +565,16 @@ class CanvasGestureHandler {
     _resetTwoFingerState();
   }
 
+  void _cancelSelectionDrawing(PixelTool currentTool) {
+    _discardPendingMove();
+    if (currentTool == PixelTool.lasso) {
+      toolManager.cancelLassoGesture();
+    }
+    toolManager.cancelSelectionGesture();
+    _isSelectionDrawingActive = false;
+    _isDrawingActive = false;
+  }
+
   /// Returns the current distance between the two active pointers (local coords).
   /// Call this once when two fingers first land to capture the initial distance.
   double _getCurrentTwoPointerDistance() {
@@ -583,7 +596,13 @@ class CanvasGestureHandler {
         (onCancelDrawing ?? onFinishDrawing).call();
         _isRawPointerDrawing = false;
       }
-      _isSelectionDrawingActive = false;
+      if (_isSelectionDrawingActive || _isDrawingActive) {
+        _cancelSelectionDrawing(currentTool);
+      } else if (currentTool == PixelTool.lasso && toolManager.isDrawingLasso) {
+        // The gesture flag may already have been cleared by a multi-touch
+        // transition, while the lasso tool still owns its one-point preview.
+        _cancelSelectionDrawing(currentTool);
+      }
       _resetPointerState();
     }
   }

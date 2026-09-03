@@ -150,6 +150,11 @@ class ToolDrawingManager {
     _gestureBaseRegion = null;
   }
 
+  /// Cancels an interrupted lasso and clears its live preview.
+  void cancelLassoGesture() {
+    _lassoSelectionTool.cancel();
+  }
+
   /// Combines [newRegion] with the base region captured at gesture start and
   /// resets the gesture state. Returns null when the result is empty (e.g.
   /// everything was subtracted) — callers should clear the selection.
