@@ -1826,14 +1826,14 @@ class StringsJa extends Strings {
   String get loadingVideoAd => '動画広告を読み込み中...';
 
   @override
-  String get proAccessGrantedOneHour => 'Proアクセスが1時間付与されました！';
+  String get proAccessGrantedOneHour => '🎉 Proアクセスが1時間付与されました！';
 
   @override
-  String get videoAdNotCompleted => '動画広告が完了しませんでした。もう一度試すか、Proにアップグレードしてください。';
+  String get videoAdNotCompleted => '動画広告が最後まで再生されませんでした。もう一度お試しください。';
 
   @override
   String failedToLoadVideoAd(String error) {
-    return '動画広告の読み込みに失敗しました: $error';
+    return '動画広告の読み込みに失敗しました：$error';
   }
 
   @override
@@ -2524,4 +2524,192 @@ class StringsJa extends Strings {
 
   @override
   String get moveToolDescription => '要素を移動・ドラッグします';
+
+  @override
+  String get restore => '復元';
+
+  @override
+  String get purchaseFailed => '購入に失敗しました';
+
+  @override
+  String get proAccessActiveExclaim => 'Proアクセス有効中！';
+
+  @override
+  String temporaryProTimeRemaining(int minutes, int seconds) {
+    return '残り時間：$minutes分$seconds秒';
+  }
+
+  @override
+  String get tryProForFreeExclaim => 'Proを無料で試す！';
+
+  @override
+  String get watchAdUnlockProOneHour =>
+      '広告を視聴してProの機能を1時間ロック解除。各広告を開始するタイミングはあなたが選べます。';
+
+  @override
+  String temporaryProAdsCompleted(int completed, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '完了：$completed/$total 本',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get loadingNextAd => '次の広告を読み込み中...';
+
+  @override
+  String adCompletedStartNext(int completed, int total) {
+    return '広告視聴完了：$completed/$total。準備ができたら次の広告を開始してください。';
+  }
+
+  @override
+  String get unlockPremiumPixelCreation => 'プレミアムなピクセル制作をアンロック';
+
+  @override
+  String get oneTimePurchaseTryAdsFirst => '買い切り • 継続課金なし • まずは広告で試す';
+
+  @override
+  String get featureProjects => 'プロジェクト';
+
+  @override
+  String get featureCanvasSize => 'キャンバスサイズ';
+
+  @override
+  String get featureToolsEffects => 'ツールとエフェクト';
+
+  @override
+  String get featureExportFormats => 'エクスポート形式';
+
+  @override
+  String get featureTryProFeatures => 'Pro機能を試す';
+
+  @override
+  String get featureAds => '広告';
+
+  @override
+  String freeProjectsCount(int count) {
+    return '$count件のプロジェクト';
+  }
+
+  @override
+  String get unlimitedProjects => '無制限のプロジェクト';
+
+  @override
+  String freeCanvasSizeUpTo(int size) {
+    return '最大$size×$sizeピクセル';
+  }
+
+  @override
+  String get proCanvasSizeUpTo => '最大1024×1024ピクセル';
+
+  @override
+  String get basicTools => '基本ツール';
+
+  @override
+  String get advancedToolsEffectsTemplates => '高度なツール・エフェクト・テンプレート';
+
+  @override
+  String get pngJpegFormats => 'PNG、JPEG';
+
+  @override
+  String get allFormatsVideoGif => '動画・GIFを含む全形式';
+
+  @override
+  String get watchAdsForTemporaryAccess => '広告を見て一時的にアクセス';
+
+  @override
+  String get unlimitedAccess => '無制限アクセス';
+
+  @override
+  String get watchAdsForProFeatures => 'Pro機能のために広告を見る';
+
+  @override
+  String get noAds => '広告なし';
+
+  @override
+  String get freeVsProFeatures => '無料版とPro版の機能比較';
+
+  @override
+  String get featureColumnHeader => '機能';
+
+  @override
+  String get proColumnHeader => 'Pro';
+
+  @override
+  String get chooseYourPlan => 'プランを選択';
+
+  @override
+  String get agreeToTermsAndPrivacy => '続行することで、利用規約とプライバシーポリシーに同意したものとみなされます。';
+
+  @override
+  String get termsOfService => '利用規約';
+
+  @override
+  String get privacyPolicy => 'プライバシーポリシー';
+
+  @override
+  String get oneTimePurchaseLifetimeAccess => '買い切り • 継続課金なし • 永久利用可能';
+
+  @override
+  String get continueWithFree => '無料版で続ける';
+
+  @override
+  String get bestValue => 'お得';
+
+  @override
+  String get unlockUnlimitedProjects => '無制限のプロジェクトをアンロック';
+
+  @override
+  String get unlockLargerCanvasSizes => 'より大きなキャンバスサイズをアンロック';
+
+  @override
+  String get unlockAllExportFormats => 'すべてのエクスポート形式をアンロック';
+
+  @override
+  String get unlockAdvancedTools => '高度なツールをアンロック';
+
+  @override
+  String get enableCloudBackup => 'クラウドバックアップを有効化';
+
+  @override
+  String get removeWatermark => '透かしを削除';
+
+  @override
+  String get getPrioritySupport => '優先サポートを利用';
+
+  @override
+  String get unlockSpecialEffects => '特殊エフェクトをアンロック';
+
+  @override
+  String get unlockTemplates => 'テンプレートをアンロック';
+
+  @override
+  String get unlockProTheme => 'Proテーマをアンロック';
+
+  @override
+  String get upgradePromptMaxProjectsSubtitle =>
+      '無料プランのプロジェクト上限に達しました • 広告を見て一時的にアクセスするか、Proを購入してください';
+
+  @override
+  String get upgradePromptMaxCanvasSizeSubtitle =>
+      'より高い解像度でピクセルアートを作成 • まずは広告で試す';
+
+  @override
+  String get upgradePromptExportFormatsSubtitle =>
+      'より多くの形式で作品をエクスポート • 広告を見て一時的にアクセス';
+
+  @override
+  String get upgradePromptAdvancedToolsSubtitle =>
+      'プレミアムツールとエフェクトにアクセス • 動画広告で試す';
+
+  @override
+  String get upgradePromptCloudBackupSubtitle => 'ピクセルアート作品を失わない';
+
+  @override
+  String get upgradePromptNoWatermarkSubtitle => '透かしなしでクリーンな作品をエクスポート';
+
+  @override
+  String get upgradePromptPrioritySupportSubtitle => 'あらゆる問題に迅速なサポートを';
 }

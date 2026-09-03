@@ -134,8 +134,7 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
   }
 
   void _savePreviewImage() async {
-    final boundary =
-        previewKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+    final boundary = previewKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
     var image = await boundary.toImage();
 
     if (scale != 1.0) {
@@ -215,30 +214,24 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                           ? null
                           : Text(
                               Strings.of(context).proPlanRequired,
-                              style: const TextStyle(
-                                  fontSize: 12, color: Colors.blue),
+                              style: const TextStyle(fontSize: 12, color: Colors.blue),
                             ),
                       value: 'gif',
                       groupValue: format,
-                      onChanged: subscription.isPro
-                          ? (String? value) => setState(() => format = value!)
-                          : null,
+                      onChanged: subscription.isPro ? (String? value) => setState(() => format = value!) : null,
                       contentPadding: EdgeInsets.zero,
                     ),
                     RadioListTile(
                       title: Text(Strings.of(context).spriteSheet),
-                      subtitle:
-                          subscription.plan == SubscriptionPlan.proPurchase
-                              ? null
-                              : Text(
-                                  Strings.of(context).proPlanRequired,
-                                  style: const TextStyle(
-                                      fontSize: 12, color: Colors.blue),
-                                ),
+                      subtitle: subscription.plan == SubscriptionPlan.proPurchase
+                          ? null
+                          : Text(
+                              Strings.of(context).proPlanRequired,
+                              style: const TextStyle(fontSize: 12, color: Colors.blue),
+                            ),
                       value: 'sprite-sheet',
                       groupValue: format,
-                      onChanged: subscription.plan ==
-                              SubscriptionPlan.proPurchase
+                      onChanged: subscription.plan == SubscriptionPlan.proPurchase
                           ? (String? value) => setState(() => format = value!)
                           : null,
                       contentPadding: EdgeInsets.zero,
@@ -283,8 +276,7 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                                   child: Text('$value'),
                                 );
                               }).toList(),
-                              onChanged: (value) =>
-                                  setState(() => spriteSheetColumns = value!),
+                              onChanged: (value) => setState(() => spriteSheetColumns = value!),
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -295,9 +287,7 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                               ),
                               initialValue: spriteSheetSpacing.toString(),
                               keyboardType: TextInputType.number,
-                              onChanged: (value) => setState(() =>
-                                  spriteSheetSpacing =
-                                      int.tryParse(value) ?? 0),
+                              onChanged: (value) => setState(() => spriteSheetSpacing = int.tryParse(value) ?? 0),
                             ),
                           ),
                         ],
@@ -320,10 +310,8 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                Strings.of(context)
-                                    .scaleWithValues(scale.toStringAsFixed(1)),
-                                style: const TextStyle(
-                                    fontSize: 12, color: Colors.grey),
+                                Strings.of(context).scaleWithValues(scale.toStringAsFixed(1)),
+                                style: const TextStyle(fontSize: 12, color: Colors.grey),
                               ),
                               Slider(
                                 value: scale,
@@ -349,13 +337,10 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                             controller: widthController,
                             keyboardType: TextInputType.number,
                             onChanged: (value) {
-                              width = double.tryParse(value) ??
-                                  widget.state.width.toDouble();
-                              double originalRatio =
-                                  widget.state.width / widget.state.height;
+                              width = double.tryParse(value) ?? widget.state.width.toDouble();
+                              double originalRatio = widget.state.width / widget.state.height;
                               height = width / originalRatio;
-                              scale =
-                                  (width / widget.state.width).clamp(0.1, 10.0);
+                              scale = (width / widget.state.width).clamp(0.1, 10.0);
                               heightController.text = height.toStringAsFixed(0);
                               setState(() {});
                             },
@@ -370,13 +355,10 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                             controller: heightController,
                             keyboardType: TextInputType.number,
                             onChanged: (value) {
-                              height = double.tryParse(value) ??
-                                  widget.state.height.toDouble();
-                              double originalRatio =
-                                  widget.state.width / widget.state.height;
+                              height = double.tryParse(value) ?? widget.state.height.toDouble();
+                              double originalRatio = widget.state.width / widget.state.height;
                               width = height * originalRatio;
-                              scale = (height / widget.state.height)
-                                  .clamp(0.1, 10.0);
+                              scale = (height / widget.state.height).clamp(0.1, 10.0);
                               widthController.text = width.toStringAsFixed(0);
                               setState(() {});
                             },
@@ -392,16 +374,14 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                         child: () {
                           if (format == 'png') {
                             return AspectRatio(
-                              aspectRatio:
-                                  widget.state.width / widget.state.height,
+                              aspectRatio: widget.state.width / widget.state.height,
                               child: LayersPreview(
                                 width: widget.state.width,
                                 height: widget.state.height,
                                 layers: widget.state.layers,
                                 builder: (context, image) {
                                   return image != null
-                                      ? CustomPaint(
-                                          painter: ImagePainter(image))
+                                      ? CustomPaint(painter: ImagePainter(image))
                                       : const ColoredBox(color: Colors.white);
                                 },
                               ),
@@ -415,12 +395,10 @@ class _SaveImageBottomSheetState extends State<SaveImageBottomSheet> {
                               ),
                             );
                           } else {
-                            return LayoutBuilder(
-                                builder: (context, constraints) {
+                            return LayoutBuilder(builder: (context, constraints) {
                               return SizedBox(
                                 width: 400,
-                                height: _calcSpriteSheetHeight(
-                                    constraints.maxWidth),
+                                height: _calcSpriteSheetHeight(constraints.maxWidth),
                                 child: SpriteSheetPreview(
                                   width: widget.state.width,
                                   height: widget.state.height,
@@ -522,9 +500,7 @@ class SpriteSheetPreview extends StatelessWidget {
           height: height,
           layers: frame.layers,
           builder: (context, image) {
-            return image != null
-                ? CustomPaint(painter: ImagePainter(image))
-                : const ColoredBox(color: Colors.white);
+            return image != null ? CustomPaint(painter: ImagePainter(image)) : const ColoredBox(color: Colors.white);
           },
         );
       },
@@ -597,8 +573,7 @@ class _SaveImageDesktopState extends State<SaveImageDesktop> {
   }
 
   void _savePreviewImage() async {
-    final boundary =
-        previewKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+    final boundary = previewKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
     var image = await boundary.toImage();
 
     if (scale != 1.0) {
@@ -659,24 +634,20 @@ class _SaveImageDesktopState extends State<SaveImageDesktop> {
                         // Format Section
                         Text(
                           Strings.of(context).format,
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                         const SizedBox(height: 12),
                         Wrap(
                           spacing: 12,
                           runSpacing: 8,
                           children: [
-                            _buildFormatOption(
-                                'png', Strings.of(context).png, null),
+                            _buildFormatOption('png', Strings.of(context).png, null),
                             _buildFormatOption(
                               'gif',
                               Strings.of(context).animatedGif,
-                              subscription.isPro
-                                  ? null
-                                  : Strings.of(context).proPlanRequired,
+                              subscription.isPro ? null : Strings.of(context).proPlanRequired,
                             ),
                             _buildFormatOption(
                               'sprite-sheet',
@@ -696,12 +667,10 @@ class _SaveImageDesktopState extends State<SaveImageDesktop> {
                         SwitchListTile(
                           title: Text(Strings.of(context).transparent),
                           value: transparent,
-                          onChanged: (value) =>
-                              setState(() => transparent = value),
+                          onChanged: (value) => setState(() => transparent = value),
                           contentPadding: EdgeInsets.zero,
                           activeColor: Theme.of(context).colorScheme.primary,
-                          thumbColor: MaterialStateProperty.all(
-                              Theme.of(context).colorScheme.onPrimary),
+                          thumbColor: MaterialStateProperty.all(Theme.of(context).colorScheme.onPrimary),
                         ),
 
                         if (format == 'sprite-sheet') ...[
@@ -711,10 +680,7 @@ class _SaveImageDesktopState extends State<SaveImageDesktop> {
                           // Sprite Sheet Options
                           Text(
                             Strings.of(context).spriteSheetOptions,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
@@ -731,8 +697,7 @@ class _SaveImageDesktopState extends State<SaveImageDesktop> {
                                 child: Text('$value'),
                               );
                             }).toList(),
-                            onChanged: (value) =>
-                                setState(() => spriteSheetColumns = value!),
+                            onChanged: (value) => setState(() => spriteSheetColumns = value!),
                           ),
                           const SizedBox(height: 16),
                           TextFormField(
@@ -742,8 +707,7 @@ class _SaveImageDesktopState extends State<SaveImageDesktop> {
                             ),
                             initialValue: spriteSheetSpacing.toString(),
                             keyboardType: TextInputType.number,
-                            onChanged: (value) => setState(() =>
-                                spriteSheetSpacing = int.tryParse(value) ?? 0),
+                            onChanged: (value) => setState(() => spriteSheetSpacing = int.tryParse(value) ?? 0),
                           ),
                         ],
 
@@ -753,22 +717,17 @@ class _SaveImageDesktopState extends State<SaveImageDesktop> {
                         // Size Section
                         Text(
                           Strings.of(context).exportSize,
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                         const SizedBox(height: 12),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              Strings.of(context)
-                                  .scaleWithValues(scale.toStringAsFixed(1)),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
+                              Strings.of(context).scaleWithValues(scale.toStringAsFixed(1)),
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                     color: Colors.grey.shade600,
                                   ),
                             ),
@@ -795,15 +754,11 @@ class _SaveImageDesktopState extends State<SaveImageDesktop> {
                                 controller: widthController,
                                 keyboardType: TextInputType.number,
                                 onChanged: (value) {
-                                  width = double.tryParse(value) ??
-                                      widget.state.width.toDouble();
-                                  double originalRatio =
-                                      widget.state.width / widget.state.height;
+                                  width = double.tryParse(value) ?? widget.state.width.toDouble();
+                                  double originalRatio = widget.state.width / widget.state.height;
                                   height = width / originalRatio;
-                                  scale = (width / widget.state.width)
-                                      .clamp(0.1, 10.0);
-                                  heightController.text =
-                                      height.toStringAsFixed(0);
+                                  scale = (width / widget.state.width).clamp(0.1, 10.0);
+                                  heightController.text = height.toStringAsFixed(0);
                                   setState(() {});
                                 },
                               ),
@@ -822,15 +777,11 @@ class _SaveImageDesktopState extends State<SaveImageDesktop> {
                                 controller: heightController,
                                 keyboardType: TextInputType.number,
                                 onChanged: (value) {
-                                  height = double.tryParse(value) ??
-                                      widget.state.height.toDouble();
-                                  double originalRatio =
-                                      widget.state.width / widget.state.height;
+                                  height = double.tryParse(value) ?? widget.state.height.toDouble();
+                                  double originalRatio = widget.state.width / widget.state.height;
                                   width = height * originalRatio;
-                                  scale = (height / widget.state.height)
-                                      .clamp(0.1, 10.0);
-                                  widthController.text =
-                                      width.toStringAsFixed(0);
+                                  scale = (height / widget.state.height).clamp(0.1, 10.0);
+                                  widthController.text = width.toStringAsFixed(0);
                                   setState(() {});
                                 },
                               ),
@@ -853,9 +804,7 @@ class _SaveImageDesktopState extends State<SaveImageDesktop> {
                           child: SingleChildScrollView(
                             padding: const EdgeInsets.all(24),
                             child: ColoredBox(
-                              color: transparent
-                                  ? Colors.grey.shade200
-                                  : backgroundColor,
+                              color: transparent ? Colors.grey.shade200 : backgroundColor,
                               child: RepaintBoundary(
                                 key: previewKey,
                                 child: _buildPreview(),
@@ -906,15 +855,11 @@ class _SaveImageDesktopState extends State<SaveImageDesktop> {
         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
         decoration: BoxDecoration(
           border: Border.all(
-            color: format == value
-                ? Theme.of(context).colorScheme.primary
-                : Colors.grey.shade300,
+            color: format == value ? Theme.of(context).colorScheme.primary : Colors.grey.shade300,
             width: format == value ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
-          color: format == value
-              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
-              : null,
+          color: format == value ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1) : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -922,14 +867,12 @@ class _SaveImageDesktopState extends State<SaveImageDesktop> {
             Radio<String>(
               value: value,
               groupValue: format,
-              onChanged:
-                  isEnabled ? (val) => setState(() => format = val!) : null,
+              onChanged: isEnabled ? (val) => setState(() => format = val!) : null,
             ),
             Text(
               title,
               style: TextStyle(
-                fontWeight:
-                    format == value ? FontWeight.w600 : FontWeight.normal,
+                fontWeight: format == value ? FontWeight.w600 : FontWeight.normal,
                 color: isEnabled ? null : Colors.grey,
               ),
             ),
@@ -951,9 +894,7 @@ class _SaveImageDesktopState extends State<SaveImageDesktop> {
             height: widget.state.height,
             layers: widget.state.layers,
             builder: (context, image) {
-              return image != null
-                  ? CustomPaint(painter: ImagePainter(image))
-                  : const ColoredBox(color: Colors.white);
+              return image != null ? CustomPaint(painter: ImagePainter(image)) : const ColoredBox(color: Colors.white);
             },
           ),
         ),
@@ -1072,8 +1013,7 @@ class _SaveImageTabletState extends State<SaveImageTablet> {
   }
 
   void _savePreviewImage() async {
-    final boundary =
-        previewKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+    final boundary = previewKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
     var image = await boundary.toImage();
 
     if (scale != 1.0) {
@@ -1134,13 +1074,9 @@ class _SaveImageTabletState extends State<SaveImageTablet> {
                           children: [
                             Text(
                               Strings.of(context).format,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
-                                  ?.copyWith(
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    color:
-                                        Theme.of(context).colorScheme.onSurface,
+                                    color: Theme.of(context).colorScheme.onSurface,
                                   ),
                             ),
                             const SizedBox(height: 12),
@@ -1148,8 +1084,7 @@ class _SaveImageTabletState extends State<SaveImageTablet> {
                               title: Text(Strings.of(context).png),
                               value: 'png',
                               groupValue: format,
-                              onChanged: (value) =>
-                                  setState(() => format = value!),
+                              onChanged: (value) => setState(() => format = value!),
                               contentPadding: EdgeInsets.zero,
                             ),
                             RadioListTile(
@@ -1158,33 +1093,25 @@ class _SaveImageTabletState extends State<SaveImageTablet> {
                                   ? null
                                   : Text(
                                       Strings.of(context).proPlanRequired,
-                                      style: const TextStyle(
-                                          fontSize: 11, color: Colors.blue),
+                                      style: const TextStyle(fontSize: 11, color: Colors.blue),
                                     ),
                               value: 'gif',
                               groupValue: format,
-                              onChanged: subscription.isPro
-                                  ? (String? value) =>
-                                      setState(() => format = value!)
-                                  : null,
+                              onChanged: subscription.isPro ? (String? value) => setState(() => format = value!) : null,
                               contentPadding: EdgeInsets.zero,
                             ),
                             RadioListTile(
                               title: Text(Strings.of(context).spriteSheet),
-                              subtitle: subscription.plan ==
-                                      SubscriptionPlan.proPurchase
+                              subtitle: subscription.plan == SubscriptionPlan.proPurchase
                                   ? null
                                   : Text(
                                       Strings.of(context).proPlanRequired,
-                                      style: const TextStyle(
-                                          fontSize: 11, color: Colors.blue),
+                                      style: const TextStyle(fontSize: 11, color: Colors.blue),
                                     ),
                               value: 'sprite-sheet',
                               groupValue: format,
-                              onChanged: subscription.plan ==
-                                      SubscriptionPlan.proPurchase
-                                  ? (String? value) =>
-                                      setState(() => format = value!)
+                              onChanged: subscription.plan == SubscriptionPlan.proPurchase
+                                  ? (String? value) => setState(() => format = value!)
                                   : null,
                               contentPadding: EdgeInsets.zero,
                             ),
@@ -1198,39 +1125,27 @@ class _SaveImageTabletState extends State<SaveImageTablet> {
                           children: [
                             Text(
                               Strings.of(context).options,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
-                                  ?.copyWith(
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    color:
-                                        Theme.of(context).colorScheme.onSurface,
+                                    color: Theme.of(context).colorScheme.onSurface,
                                   ),
                             ),
                             const SizedBox(height: 12),
                             SwitchListTile(
-                              title: Text(
-                                  Strings.of(context).transparentBackground),
+                              title: Text(Strings.of(context).transparentBackground),
                               value: transparent,
-                              onChanged: (value) =>
-                                  setState(() => transparent = value),
+                              onChanged: (value) => setState(() => transparent = value),
                               contentPadding: EdgeInsets.zero,
-                              activeColor:
-                                  Theme.of(context).colorScheme.primary,
-                              thumbColor: MaterialStateProperty.all(
-                                  Theme.of(context).colorScheme.onPrimary),
+                              activeColor: Theme.of(context).colorScheme.primary,
+                              thumbColor: MaterialStateProperty.all(Theme.of(context).colorScheme.onPrimary),
                             ),
                             const SizedBox(height: 16),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  Strings.of(context).scaleWithValues(
-                                      scale.toStringAsFixed(1)),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(
+                                  Strings.of(context).scaleWithValues(scale.toStringAsFixed(1)),
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                         color: Colors.grey.shade600,
                                       ),
                                 ),
@@ -1257,16 +1172,11 @@ class _SaveImageTabletState extends State<SaveImageTablet> {
                                     controller: widthController,
                                     keyboardType: TextInputType.number,
                                     onChanged: (value) {
-                                      width = double.tryParse(value) ??
-                                          widget.state.width.toDouble();
-                                      double originalRatio =
-                                          widget.state.width /
-                                              widget.state.height;
+                                      width = double.tryParse(value) ?? widget.state.width.toDouble();
+                                      double originalRatio = widget.state.width / widget.state.height;
                                       height = width / originalRatio;
-                                      scale = (width / widget.state.width)
-                                          .clamp(0.1, 10.0);
-                                      heightController.text =
-                                          height.toStringAsFixed(0);
+                                      scale = (width / widget.state.width).clamp(0.1, 10.0);
+                                      heightController.text = height.toStringAsFixed(0);
                                       setState(() {});
                                     },
                                   ),
@@ -1282,16 +1192,11 @@ class _SaveImageTabletState extends State<SaveImageTablet> {
                                     controller: heightController,
                                     keyboardType: TextInputType.number,
                                     onChanged: (value) {
-                                      height = double.tryParse(value) ??
-                                          widget.state.height.toDouble();
-                                      double originalRatio =
-                                          widget.state.width /
-                                              widget.state.height;
+                                      height = double.tryParse(value) ?? widget.state.height.toDouble();
+                                      double originalRatio = widget.state.width / widget.state.height;
                                       width = height * originalRatio;
-                                      scale = (height / widget.state.height)
-                                          .clamp(0.1, 10.0);
-                                      widthController.text =
-                                          width.toStringAsFixed(0);
+                                      scale = (height / widget.state.height).clamp(0.1, 10.0);
+                                      widthController.text = width.toStringAsFixed(0);
                                       setState(() {});
                                     },
                                   ),
@@ -1330,8 +1235,7 @@ class _SaveImageTabletState extends State<SaveImageTablet> {
                                 child: Text('$value'),
                               );
                             }).toList(),
-                            onChanged: (value) =>
-                                setState(() => spriteSheetColumns = value!),
+                            onChanged: (value) => setState(() => spriteSheetColumns = value!),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -1343,8 +1247,7 @@ class _SaveImageTabletState extends State<SaveImageTablet> {
                             ),
                             initialValue: spriteSheetSpacing.toString(),
                             keyboardType: TextInputType.number,
-                            onChanged: (value) => setState(() =>
-                                spriteSheetSpacing = int.tryParse(value) ?? 0),
+                            onChanged: (value) => setState(() => spriteSheetSpacing = int.tryParse(value) ?? 0),
                           ),
                         ),
                       ],
@@ -1357,8 +1260,7 @@ class _SaveImageTabletState extends State<SaveImageTablet> {
 
                   Center(
                     child: ColoredBox(
-                      color:
-                          transparent ? Colors.grey.shade200 : backgroundColor,
+                      color: transparent ? Colors.grey.shade200 : backgroundColor,
                       child: RepaintBoundary(
                         key: previewKey,
                         child: _buildPreview(),
@@ -1407,9 +1309,7 @@ class _SaveImageTabletState extends State<SaveImageTablet> {
             height: widget.state.height,
             layers: widget.state.layers,
             builder: (context, image) {
-              return image != null
-                  ? CustomPaint(painter: ImagePainter(image))
-                  : const ColoredBox(color: Colors.white);
+              return image != null ? CustomPaint(painter: ImagePainter(image)) : const ColoredBox(color: Colors.white);
             },
           ),
         ),

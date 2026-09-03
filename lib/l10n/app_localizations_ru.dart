@@ -886,7 +886,7 @@ class StringsRu extends Strings {
   String get maybeLater => 'Возможно позже';
 
   @override
-  String get upgradeToPro => 'Обновить до Pro';
+  String get upgradeToPro => 'Перейти на Pro';
 
   @override
   String get effectsPanelRemoveEffectTitle => 'Удалить эффект';
@@ -1845,7 +1845,7 @@ class StringsRu extends Strings {
   }
 
   @override
-  String get proAccessActive => 'Pro-доступ активен';
+  String get proAccessActive => 'Pro доступ активен';
 
   @override
   String proAccessRemaining(String time) {
@@ -1880,11 +1880,11 @@ class StringsRu extends Strings {
   String get loadingVideoAd => 'Загрузка видеорекламы...';
 
   @override
-  String get proAccessGrantedOneHour => 'Pro-доступ выдан на 1 час!';
+  String get proAccessGrantedOneHour => '🎉 Pro доступ предоставлен на 1 час!';
 
   @override
   String get videoAdNotCompleted =>
-      'Видеореклама не была досмотрена. Попробуйте ещё раз или перейдите на Pro.';
+      'Видеореклама не была досмотрена. Попробуйте ещё раз.';
 
   @override
   String failedToLoadVideoAd(String error) {
@@ -2601,4 +2601,202 @@ class StringsRu extends Strings {
 
   @override
   String get moveToolDescription => 'Перемещает и перетаскивает элементы';
+
+  @override
+  String get restore => 'Восстановить';
+
+  @override
+  String get purchaseFailed => 'Покупка не удалась';
+
+  @override
+  String get proAccessActiveExclaim => 'Pro доступ активен!';
+
+  @override
+  String temporaryProTimeRemaining(int minutes, int seconds) {
+    return 'Осталось времени: $minutes мин $seconds сек';
+  }
+
+  @override
+  String get tryProForFreeExclaim => 'Попробуйте Pro бесплатно!';
+
+  @override
+  String get watchAdUnlockProOneHour =>
+      'Посмотрите рекламу, чтобы разблокировать функции Pro на 1 час. Вы сами решаете, когда начать каждый ролик.';
+
+  @override
+  String temporaryProAdsCompleted(int completed, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'Пройдено: $completed/$total роликов',
+      one: 'Пройдено: $completed/$total ролик',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get loadingNextAd => 'Загрузка следующей рекламы...';
+
+  @override
+  String adCompletedStartNext(int completed, int total) {
+    return 'Ролик просмотрен: $completed/$total. Начните следующий, когда он будет готов.';
+  }
+
+  @override
+  String get unlockPremiumPixelCreation =>
+      'Откройте премиум-создание пиксель-арта';
+
+  @override
+  String get oneTimePurchaseTryAdsFirst =>
+      'Разовая покупка • Без подписки • Сначала попробуйте с рекламой';
+
+  @override
+  String get featureProjects => 'Проекты';
+
+  @override
+  String get featureCanvasSize => 'Размер холста';
+
+  @override
+  String get featureToolsEffects => 'Инструменты и эффекты';
+
+  @override
+  String get featureExportFormats => 'Форматы экспорта';
+
+  @override
+  String get featureTryProFeatures => 'Попробовать функции Pro';
+
+  @override
+  String get featureAds => 'Реклама';
+
+  @override
+  String freeProjectsCount(int count) {
+    return '$count проектов';
+  }
+
+  @override
+  String get unlimitedProjects => 'Неограниченное количество проектов';
+
+  @override
+  String freeCanvasSizeUpTo(int size) {
+    return 'До $size×$size пикселей';
+  }
+
+  @override
+  String get proCanvasSizeUpTo => 'До 1024×1024 пикселей';
+
+  @override
+  String get basicTools => 'Базовые инструменты';
+
+  @override
+  String get advancedToolsEffectsTemplates =>
+      'Продвинутые инструменты, эффекты и шаблоны';
+
+  @override
+  String get pngJpegFormats => 'PNG, JPEG';
+
+  @override
+  String get allFormatsVideoGif => 'Все форматы, включая видео и GIF';
+
+  @override
+  String get watchAdsForTemporaryAccess =>
+      'Смотрите рекламу для временного доступа';
+
+  @override
+  String get unlimitedAccess => 'Неограниченный доступ';
+
+  @override
+  String get watchAdsForProFeatures => 'Смотрите рекламу для функций Pro';
+
+  @override
+  String get noAds => 'Без рекламы';
+
+  @override
+  String get freeVsProFeatures => 'Free и Pro: сравнение функций';
+
+  @override
+  String get featureColumnHeader => 'Функция';
+
+  @override
+  String get proColumnHeader => 'Pro';
+
+  @override
+  String get chooseYourPlan => 'Выберите план';
+
+  @override
+  String get agreeToTermsAndPrivacy =>
+      'Продолжая, вы соглашаетесь с Условиями использования и Политикой конфиденциальности.';
+
+  @override
+  String get termsOfService => 'Условия использования';
+
+  @override
+  String get privacyPolicy => 'Политика конфиденциальности';
+
+  @override
+  String get oneTimePurchaseLifetimeAccess =>
+      'Разовая покупка • Без повторных списаний • Пожизненный доступ';
+
+  @override
+  String get continueWithFree => 'Продолжить бесплатно';
+
+  @override
+  String get bestValue => 'ВЫГОДНО';
+
+  @override
+  String get unlockUnlimitedProjects => 'Разблокировать неограниченные проекты';
+
+  @override
+  String get unlockLargerCanvasSizes => 'Разблокировать больший размер холста';
+
+  @override
+  String get unlockAllExportFormats => 'Разблокировать все форматы экспорта';
+
+  @override
+  String get unlockAdvancedTools => 'Разблокировать продвинутые инструменты';
+
+  @override
+  String get enableCloudBackup => 'Включить облачное резервное копирование';
+
+  @override
+  String get removeWatermark => 'Убрать водяной знак';
+
+  @override
+  String get getPrioritySupport => 'Получить приоритетную поддержку';
+
+  @override
+  String get unlockSpecialEffects => 'Разблокировать специальные эффекты';
+
+  @override
+  String get unlockTemplates => 'Разблокировать шаблоны';
+
+  @override
+  String get unlockProTheme => 'Разблокировать Pro тему';
+
+  @override
+  String get upgradePromptMaxProjectsSubtitle =>
+      'Вы достигли лимита проектов бесплатного плана • Посмотрите рекламу для временного доступа или купите Pro';
+
+  @override
+  String get upgradePromptMaxCanvasSizeSubtitle =>
+      'Создавайте пиксель-арт в более высоком разрешении • Сначала попробуйте с рекламой';
+
+  @override
+  String get upgradePromptExportFormatsSubtitle =>
+      'Экспортируйте работы в большем количестве форматов • Посмотрите рекламу для временного доступа';
+
+  @override
+  String get upgradePromptAdvancedToolsSubtitle =>
+      'Доступ к премиум-инструментам и эффектам • Попробуйте с видеорекламой';
+
+  @override
+  String get upgradePromptCloudBackupSubtitle =>
+      'Никогда не теряйте свои пиксельные работы';
+
+  @override
+  String get upgradePromptNoWatermarkSubtitle =>
+      'Экспортируйте чистые работы без водяных знаков';
+
+  @override
+  String get upgradePromptPrioritySupportSubtitle =>
+      'Получайте более быструю поддержку по любым вопросам';
 }

@@ -1312,5 +1312,120 @@
     "curve": "Кривая",
     "curveToolDescription": "Рисует плавные кривые линии",
     "move": "Перемещение",
-    "moveToolDescription": "Перемещает и перетаскивает элементы"
+    "moveToolDescription": "Перемещает и перетаскивает элементы",
+    "upgradeToPro": "Перейти на Pro",
+    "restore": "Восстановить",
+    "purchaseFailed": "Покупка не удалась",
+    "proAccessActiveExclaim": "Pro доступ активен!",
+    "temporaryProTimeRemaining": "Осталось времени: {minutes} мин {seconds} сек",
+    "@temporaryProTimeRemaining": {
+        "placeholders": {
+            "minutes": {
+                "type": "int"
+            },
+            "seconds": {
+                "type": "int"
+            }
+        }
+    },
+    "tryProForFreeExclaim": "Попробуйте Pro бесплатно!",
+    "watchAdUnlockProOneHour": "Посмотрите рекламу, чтобы разблокировать функции Pro на 1 час. Вы сами решаете, когда начать каждый ролик.",
+    "temporaryProAdsCompleted": "{total, plural, =1{Пройдено: {completed}/{total} ролик} other{Пройдено: {completed}/{total} роликов}}",
+    "@temporaryProAdsCompleted": {
+        "placeholders": {
+            "completed": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "proAccessActive": "Pro доступ активен",
+    "watchAd": "Смотреть рекламу",
+    "loadingNextAd": "Загрузка следующей рекламы...",
+    "proAccessGrantedOneHour": "🎉 Pro доступ предоставлен на 1 час!",
+    "adCompletedStartNext": "Ролик просмотрен: {completed}/{total}. Начните следующий, когда он будет готов.",
+    "@adCompletedStartNext": {
+        "placeholders": {
+            "completed": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "videoAdNotCompleted": "Видеореклама не была досмотрена. Попробуйте ещё раз.",
+    "failedToLoadVideoAd": "Не удалось загрузить видеорекламу: {error}",
+    "@failedToLoadVideoAd": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "unlockPremiumPixelCreation": "Откройте премиум-создание пиксель-арта",
+    "oneTimePurchaseTryAdsFirst": "Разовая покупка • Без подписки • Сначала попробуйте с рекламой",
+    "featureProjects": "Проекты",
+    "featureCanvasSize": "Размер холста",
+    "featureToolsEffects": "Инструменты и эффекты",
+    "featureExportFormats": "Форматы экспорта",
+    "featureTryProFeatures": "Попробовать функции Pro",
+    "featureAds": "Реклама",
+    "featureCloudBackup": "Облачное резервное копирование",
+    "featurePrioritySupport": "Приоритетная поддержка",
+    "freeProjectsCount": "{count} проектов",
+    "@freeProjectsCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "unlimitedProjects": "Неограниченное количество проектов",
+    "freeCanvasSizeUpTo": "До {size}×{size} пикселей",
+    "@freeCanvasSizeUpTo": {
+        "placeholders": {
+            "size": {
+                "type": "int"
+            }
+        }
+    },
+    "proCanvasSizeUpTo": "До 1024×1024 пикселей",
+    "basicTools": "Базовые инструменты",
+    "advancedToolsEffectsTemplates": "Продвинутые инструменты, эффекты и шаблоны",
+    "pngJpegFormats": "PNG, JPEG",
+    "allFormatsVideoGif": "Все форматы, включая видео и GIF",
+    "watchAdsForTemporaryAccess": "Смотрите рекламу для временного доступа",
+    "unlimitedAccess": "Неограниченный доступ",
+    "watchAdsForProFeatures": "Смотрите рекламу для функций Pro",
+    "noAds": "Без рекламы",
+    "freeVsProFeatures": "Free и Pro: сравнение функций",
+    "featureColumnHeader": "Функция",
+    "proColumnHeader": "Pro",
+    "chooseYourPlan": "Выберите план",
+    "agreeToTermsAndPrivacy": "Продолжая, вы соглашаетесь с Условиями использования и Политикой конфиденциальности.",
+    "termsOfService": "Условия использования",
+    "privacyPolicy": "Политика конфиденциальности",
+    "oneTimePurchaseLifetimeAccess": "Разовая покупка • Без повторных списаний • Пожизненный доступ",
+    "continueWithFree": "Продолжить бесплатно",
+    "bestValue": "ВЫГОДНО",
+    "unlockUnlimitedProjects": "Разблокировать неограниченные проекты",
+    "unlockLargerCanvasSizes": "Разблокировать больший размер холста",
+    "unlockAllExportFormats": "Разблокировать все форматы экспорта",
+    "unlockAdvancedTools": "Разблокировать продвинутые инструменты",
+    "enableCloudBackup": "Включить облачное резервное копирование",
+    "removeWatermark": "Убрать водяной знак",
+    "getPrioritySupport": "Получить приоритетную поддержку",
+    "unlockSpecialEffects": "Разблокировать специальные эффекты",
+    "unlockTemplates": "Разблокировать шаблоны",
+    "unlockProTheme": "Разблокировать Pro тему",
+    "upgradePromptMaxProjectsSubtitle": "Вы достигли лимита проектов бесплатного плана • Посмотрите рекламу для временного доступа или купите Pro",
+    "upgradePromptMaxCanvasSizeSubtitle": "Создавайте пиксель-арт в более высоком разрешении • Сначала попробуйте с рекламой",
+    "upgradePromptExportFormatsSubtitle": "Экспортируйте работы в большем количестве форматов • Посмотрите рекламу для временного доступа",
+    "upgradePromptAdvancedToolsSubtitle": "Доступ к премиум-инструментам и эффектам • Попробуйте с видеорекламой",
+    "upgradePromptCloudBackupSubtitle": "Никогда не теряйте свои пиксельные работы",
+    "upgradePromptNoWatermarkSubtitle": "Экспортируйте чистые работы без водяных знаков",
+    "upgradePromptPrioritySupportSubtitle": "Получайте более быструю поддержку по любым вопросам"
 }

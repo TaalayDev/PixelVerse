@@ -1323,5 +1323,120 @@
     "curve": "Ийри сызык",
     "curveToolDescription": "Жылмакай ийри сызыктарды тартат",
     "move": "Жылдыруу",
-    "moveToolDescription": "Элементтерди жылдырат жана сүйрөйт"
+    "moveToolDescription": "Элементтерди жылдырат жана сүйрөйт",
+    "upgradeToPro": "Pro версиясына өтүү",
+    "restore": "Калыбына келтирүү",
+    "purchaseFailed": "Сатып алуу ишке ашкан жок",
+    "proAccessActiveExclaim": "Pro мүмкүнчүлүгү иштетилди!",
+    "temporaryProTimeRemaining": "Калган убакыт: {minutes} мүн {seconds} сек",
+    "@temporaryProTimeRemaining": {
+        "placeholders": {
+            "minutes": {
+                "type": "int"
+            },
+            "seconds": {
+                "type": "int"
+            }
+        }
+    },
+    "tryProForFreeExclaim": "Pro версиясын бекер сынап көрүңүз!",
+    "watchAdUnlockProOneHour": "Pro функцияларын 1 саатка ачуу үчүн жарнаманы көрүңүз. Ар бир жарнаманы качан баштаарыңызды өзүңүз тандайсыз.",
+    "temporaryProAdsCompleted": "{total, plural, =1{Аткарылды: {completed}/{total} жарнама} other{Аткарылды: {completed}/{total} жарнама}}",
+    "@temporaryProAdsCompleted": {
+        "placeholders": {
+            "completed": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "proAccessActive": "Pro мүмкүнчүлүгү иштетилди",
+    "watchAd": "Жарнаманы көрүү",
+    "loadingNextAd": "Кийинки жарнама жүктөлүүдө...",
+    "proAccessGrantedOneHour": "🎉 Pro мүмкүнчүлүгү 1 саатка берилди!",
+    "adCompletedStartNext": "Жарнама көрүлдү: {completed}/{total}. Даяр болгондо кийинкисин баштаңыз.",
+    "@adCompletedStartNext": {
+        "placeholders": {
+            "completed": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "videoAdNotCompleted": "Видео жарнама аягына чейин көрүлгөн жок. Кайра аракет кылыңыз.",
+    "failedToLoadVideoAd": "Видео жарнаманы жүктөө ишке ашкан жок: {error}",
+    "@failedToLoadVideoAd": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "unlockPremiumPixelCreation": "Премиум пиксель-арт түзүүнү ачыңыз",
+    "oneTimePurchaseTryAdsFirst": "Бир жолку сатып алуу • Кайталанма төлөм жок • Алгач жарнама менен сынап көрүңүз",
+    "featureProjects": "Долбоорлор",
+    "featureCanvasSize": "Холст өлчөмү",
+    "featureToolsEffects": "Куралдар жана эффекттер",
+    "featureExportFormats": "Экспорт форматтары",
+    "featureTryProFeatures": "Pro функцияларын сынап көрүү",
+    "featureAds": "Жарнамалар",
+    "featureCloudBackup": "Булуттагы камдык көчүрмө",
+    "featurePrioritySupport": "Артыкчылыктуу колдоо",
+    "freeProjectsCount": "{count} долбоор",
+    "@freeProjectsCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "unlimitedProjects": "Чексиз долбоорлор",
+    "freeCanvasSizeUpTo": "{size}×{size} пикселге чейин",
+    "@freeCanvasSizeUpTo": {
+        "placeholders": {
+            "size": {
+                "type": "int"
+            }
+        }
+    },
+    "proCanvasSizeUpTo": "1024×1024 пикселге чейин",
+    "basicTools": "Негизги куралдар",
+    "advancedToolsEffectsTemplates": "Өркүндөтүлгөн куралдар, эффекттер жана шаблондор",
+    "pngJpegFormats": "PNG, JPEG",
+    "allFormatsVideoGif": "Видео жана GIF кошкондо бардык форматтар",
+    "watchAdsForTemporaryAccess": "Убактылуу мүмкүнчүлүк үчүн жарнама көрүңүз",
+    "unlimitedAccess": "Чексиз мүмкүнчүлүк",
+    "watchAdsForProFeatures": "Pro функциялары үчүн жарнама көрүңүз",
+    "noAds": "Жарнамасыз",
+    "freeVsProFeatures": "Акысыз жана Pro функцияларын салыштыруу",
+    "featureColumnHeader": "Функция",
+    "proColumnHeader": "Pro",
+    "chooseYourPlan": "Планыңызды тандаңыз",
+    "agreeToTermsAndPrivacy": "Улантуу менен сиз биздин Колдонуу шарттарына жана Купуялык саясатына макул болосуз.",
+    "termsOfService": "Колдонуу шарттары",
+    "privacyPolicy": "Купуялык саясаты",
+    "oneTimePurchaseLifetimeAccess": "Бир жолку сатып алуу • Кайталанма төлөм жок • Өмүр бою мүмкүнчүлүк",
+    "continueWithFree": "Акысыз версия менен улантуу",
+    "bestValue": "ЭҢ ПАЙДАЛУУ",
+    "unlockUnlimitedProjects": "Чексиз долбоорлорду ачуу",
+    "unlockLargerCanvasSizes": "Чоңураак холст өлчөмүн ачуу",
+    "unlockAllExportFormats": "Бардык экспорт форматтарын ачуу",
+    "unlockAdvancedTools": "Өркүндөтүлгөн куралдарды ачуу",
+    "enableCloudBackup": "Булуттагы камдык көчүрмөнү иштетүү",
+    "removeWatermark": "Сутаңбаны алып салуу",
+    "getPrioritySupport": "Артыкчылыктуу колдоо алуу",
+    "unlockSpecialEffects": "Атайын эффекттерди ачуу",
+    "unlockTemplates": "Шаблондорду ачуу",
+    "unlockProTheme": "Pro темасын ачуу",
+    "upgradePromptMaxProjectsSubtitle": "Сиз акысыз пландын долбоор чегине жеттиңиз • Убактылуу мүмкүнчүлүк үчүн жарнама көрүңүз же Pro сатып алыңыз",
+    "upgradePromptMaxCanvasSizeSubtitle": "Жогорку резолюцияда пиксель-арт түзүңүз • Алгач жарнама менен сынап көрүңүз",
+    "upgradePromptExportFormatsSubtitle": "Чыгармаларыңызды көбүрөөк форматтарда экспорттоңуз • Убактылуу мүмкүнчүлүк үчүн жарнама көрүңүз",
+    "upgradePromptAdvancedToolsSubtitle": "Премиум куралдарга жана эффекттерге мүмкүнчүлүк алыңыз • Видео жарнама менен сынап көрүңүз",
+    "upgradePromptCloudBackupSubtitle": "Пиксель-арт чыгармаларыңызды эч качан жоготпоңуз",
+    "upgradePromptNoWatermarkSubtitle": "Сутаңбасыз таза чыгармаларды экспорттоңуз",
+    "upgradePromptPrioritySupportSubtitle": "Каалаган маселе боюнча тезирээк колдоо алыңыз"
 }

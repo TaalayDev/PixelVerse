@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:picell/ui/widgets/ad_wrapper.dart';
 
 import 'theme/theme.dart';
 import '../core/utils/locale_manager.dart';
@@ -62,6 +63,9 @@ class _PixelVerseAppState extends ConsumerState<PixelVerseApp> with WidgetsBindi
         localizationsDelegates: Strings.localizationsDelegates,
         locale: _getLocale(ref),
         home: const SplashScreen(),
+        builder: (context, child) {
+          return AdWrapper(child: child!);
+        },
       ),
     );
   }

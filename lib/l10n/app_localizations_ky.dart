@@ -872,7 +872,7 @@ class StringsKy extends Strings {
   String get featureUnlimitedProjects => 'Чексиз долбоорлор';
 
   @override
-  String get featureCloudBackup => 'Булуттук камдык көчүрмө';
+  String get featureCloudBackup => 'Булуттагы камдык көчүрмө';
 
   @override
   String get featurePrioritySupport => 'Артыкчылыктуу колдоо';
@@ -881,7 +881,7 @@ class StringsKy extends Strings {
   String get maybeLater => 'Мүмкүн кийинчерээк';
 
   @override
-  String get upgradeToPro => 'Pro\'го өтүү';
+  String get upgradeToPro => 'Pro версиясына өтүү';
 
   @override
   String get effectsPanelRemoveEffectTitle => 'Эффектти алып салуу';
@@ -1841,7 +1841,7 @@ class StringsKy extends Strings {
   }
 
   @override
-  String get proAccessActive => 'Pro жеткиликтүүлүгү активдүү';
+  String get proAccessActive => 'Pro мүмкүнчүлүгү иштетилди';
 
   @override
   String proAccessRemaining(String time) {
@@ -1876,11 +1876,11 @@ class StringsKy extends Strings {
   String get loadingVideoAd => 'Видео жарнама жүктөлүүдө...';
 
   @override
-  String get proAccessGrantedOneHour => 'Pro жеткиликтүүлүгү 1 саатка берилди!';
+  String get proAccessGrantedOneHour => '🎉 Pro мүмкүнчүлүгү 1 саатка берилди!';
 
   @override
   String get videoAdNotCompleted =>
-      'Видео жарнама аягына чейин көрүлгөн жок. Кайра аракет кылыңыз же Proго өтүңүз.';
+      'Видео жарнама аягына чейин көрүлгөн жок. Кайра аракет кылыңыз.';
 
   @override
   String failedToLoadVideoAd(String error) {
@@ -2594,4 +2594,201 @@ class StringsKy extends Strings {
 
   @override
   String get moveToolDescription => 'Элементтерди жылдырат жана сүйрөйт';
+
+  @override
+  String get restore => 'Калыбына келтирүү';
+
+  @override
+  String get purchaseFailed => 'Сатып алуу ишке ашкан жок';
+
+  @override
+  String get proAccessActiveExclaim => 'Pro мүмкүнчүлүгү иштетилди!';
+
+  @override
+  String temporaryProTimeRemaining(int minutes, int seconds) {
+    return 'Калган убакыт: $minutes мүн $seconds сек';
+  }
+
+  @override
+  String get tryProForFreeExclaim => 'Pro версиясын бекер сынап көрүңүз!';
+
+  @override
+  String get watchAdUnlockProOneHour =>
+      'Pro функцияларын 1 саатка ачуу үчүн жарнаманы көрүңүз. Ар бир жарнаманы качан баштаарыңызды өзүңүз тандайсыз.';
+
+  @override
+  String temporaryProAdsCompleted(int completed, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'Аткарылды: $completed/$total жарнама',
+      one: 'Аткарылды: $completed/$total жарнама',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get loadingNextAd => 'Кийинки жарнама жүктөлүүдө...';
+
+  @override
+  String adCompletedStartNext(int completed, int total) {
+    return 'Жарнама көрүлдү: $completed/$total. Даяр болгондо кийинкисин баштаңыз.';
+  }
+
+  @override
+  String get unlockPremiumPixelCreation => 'Премиум пиксель-арт түзүүнү ачыңыз';
+
+  @override
+  String get oneTimePurchaseTryAdsFirst =>
+      'Бир жолку сатып алуу • Кайталанма төлөм жок • Алгач жарнама менен сынап көрүңүз';
+
+  @override
+  String get featureProjects => 'Долбоорлор';
+
+  @override
+  String get featureCanvasSize => 'Холст өлчөмү';
+
+  @override
+  String get featureToolsEffects => 'Куралдар жана эффекттер';
+
+  @override
+  String get featureExportFormats => 'Экспорт форматтары';
+
+  @override
+  String get featureTryProFeatures => 'Pro функцияларын сынап көрүү';
+
+  @override
+  String get featureAds => 'Жарнамалар';
+
+  @override
+  String freeProjectsCount(int count) {
+    return '$count долбоор';
+  }
+
+  @override
+  String get unlimitedProjects => 'Чексиз долбоорлор';
+
+  @override
+  String freeCanvasSizeUpTo(int size) {
+    return '$size×$size пикселге чейин';
+  }
+
+  @override
+  String get proCanvasSizeUpTo => '1024×1024 пикселге чейин';
+
+  @override
+  String get basicTools => 'Негизги куралдар';
+
+  @override
+  String get advancedToolsEffectsTemplates =>
+      'Өркүндөтүлгөн куралдар, эффекттер жана шаблондор';
+
+  @override
+  String get pngJpegFormats => 'PNG, JPEG';
+
+  @override
+  String get allFormatsVideoGif => 'Видео жана GIF кошкондо бардык форматтар';
+
+  @override
+  String get watchAdsForTemporaryAccess =>
+      'Убактылуу мүмкүнчүлүк үчүн жарнама көрүңүз';
+
+  @override
+  String get unlimitedAccess => 'Чексиз мүмкүнчүлүк';
+
+  @override
+  String get watchAdsForProFeatures => 'Pro функциялары үчүн жарнама көрүңүз';
+
+  @override
+  String get noAds => 'Жарнамасыз';
+
+  @override
+  String get freeVsProFeatures => 'Акысыз жана Pro функцияларын салыштыруу';
+
+  @override
+  String get featureColumnHeader => 'Функция';
+
+  @override
+  String get proColumnHeader => 'Pro';
+
+  @override
+  String get chooseYourPlan => 'Планыңызды тандаңыз';
+
+  @override
+  String get agreeToTermsAndPrivacy =>
+      'Улантуу менен сиз биздин Колдонуу шарттарына жана Купуялык саясатына макул болосуз.';
+
+  @override
+  String get termsOfService => 'Колдонуу шарттары';
+
+  @override
+  String get privacyPolicy => 'Купуялык саясаты';
+
+  @override
+  String get oneTimePurchaseLifetimeAccess =>
+      'Бир жолку сатып алуу • Кайталанма төлөм жок • Өмүр бою мүмкүнчүлүк';
+
+  @override
+  String get continueWithFree => 'Акысыз версия менен улантуу';
+
+  @override
+  String get bestValue => 'ЭҢ ПАЙДАЛУУ';
+
+  @override
+  String get unlockUnlimitedProjects => 'Чексиз долбоорлорду ачуу';
+
+  @override
+  String get unlockLargerCanvasSizes => 'Чоңураак холст өлчөмүн ачуу';
+
+  @override
+  String get unlockAllExportFormats => 'Бардык экспорт форматтарын ачуу';
+
+  @override
+  String get unlockAdvancedTools => 'Өркүндөтүлгөн куралдарды ачуу';
+
+  @override
+  String get enableCloudBackup => 'Булуттагы камдык көчүрмөнү иштетүү';
+
+  @override
+  String get removeWatermark => 'Сутаңбаны алып салуу';
+
+  @override
+  String get getPrioritySupport => 'Артыкчылыктуу колдоо алуу';
+
+  @override
+  String get unlockSpecialEffects => 'Атайын эффекттерди ачуу';
+
+  @override
+  String get unlockTemplates => 'Шаблондорду ачуу';
+
+  @override
+  String get unlockProTheme => 'Pro темасын ачуу';
+
+  @override
+  String get upgradePromptMaxProjectsSubtitle =>
+      'Сиз акысыз пландын долбоор чегине жеттиңиз • Убактылуу мүмкүнчүлүк үчүн жарнама көрүңүз же Pro сатып алыңыз';
+
+  @override
+  String get upgradePromptMaxCanvasSizeSubtitle =>
+      'Жогорку резолюцияда пиксель-арт түзүңүз • Алгач жарнама менен сынап көрүңүз';
+
+  @override
+  String get upgradePromptExportFormatsSubtitle =>
+      'Чыгармаларыңызды көбүрөөк форматтарда экспорттоңуз • Убактылуу мүмкүнчүлүк үчүн жарнама көрүңүз';
+
+  @override
+  String get upgradePromptAdvancedToolsSubtitle =>
+      'Премиум куралдарга жана эффекттерге мүмкүнчүлүк алыңыз • Видео жарнама менен сынап көрүңүз';
+
+  @override
+  String get upgradePromptCloudBackupSubtitle =>
+      'Пиксель-арт чыгармаларыңызды эч качан жоготпоңуз';
+
+  @override
+  String get upgradePromptNoWatermarkSubtitle =>
+      'Сутаңбасыз таза чыгармаларды экспорттоңуз';
+
+  @override
+  String get upgradePromptPrioritySupportSubtitle =>
+      'Каалаган маселе боюнча тезирээк колдоо алыңыз';
 }

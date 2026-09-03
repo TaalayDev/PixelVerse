@@ -12,6 +12,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import '../../config/assets.dart';
 import '../../app/theme/theme.dart';
 import '../../data/models/subscription_model.dart';
+import '../../l10n/strings.dart';
 import '../../providers/subscription_provider.dart';
 import '../../providers/ad/reward_video_ad_controller.dart';
 import '../widgets/theme_selector.dart';
@@ -59,13 +60,11 @@ class SubscriptionOfferScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<SubscriptionOfferScreen> createState() =>
-      _SubscriptionOfferScreenState();
+  ConsumerState<SubscriptionOfferScreen> createState() => _SubscriptionOfferScreenState();
 }
 
-class _SubscriptionOfferScreenState
-    extends ConsumerState<SubscriptionOfferScreen> {
-  static const int _requiredTemporaryProAds = 3;
+class _SubscriptionOfferScreenState extends ConsumerState<SubscriptionOfferScreen> {
+  static const int _requiredTemporaryProAds = 1;
   static const String _temporaryProAdsWatchedKey = 'temporary_pro_ads_watched';
 
   late ConfettiController _confettiController;
@@ -75,9 +74,7 @@ class _SubscriptionOfferScreenState
   String? _errorMessage;
 
   bool get _supportsRewardedAds =>
-      !kIsWeb &&
-      (defaultTargetPlatform == TargetPlatform.android ||
-          defaultTargetPlatform == TargetPlatform.iOS);
+      !kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS);
 
   @override
   void initState() {
@@ -107,8 +104,7 @@ class _SubscriptionOfferScreenState
 
     if (mounted) {
       setState(() {
-        _temporaryProAdsWatched =
-            watched.clamp(0, _requiredTemporaryProAds - 1);
+        _temporaryProAdsWatched = watched.clamp(0, _requiredTemporaryProAds - 1);
       });
     }
   }
@@ -137,10 +133,9 @@ class _SubscriptionOfferScreenState
         } else if (purchase.status == PurchaseStatus.error) {
           setState(() {
             _isLoading = false;
-            _errorMessage = purchase.error?.message ?? 'Purchase failed';
+            _errorMessage = purchase.error?.message ?? Strings.of(context).purchaseFailed;
           });
-        } else if (purchase.status == PurchaseStatus.purchased ||
-            purchase.status == PurchaseStatus.restored) {
+        } else if (purchase.status == PurchaseStatus.purchased || purchase.status == PurchaseStatus.restored) {
           setState(() {
             _isLoading = false;
             _errorMessage = null;
@@ -164,7 +159,7 @@ class _SubscriptionOfferScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Upgrade to Pro'),
+        title: Text(Strings.of(context).upgradeToPro),
         actions: [
           if (!_isLoading && !kIsWeb)
             TextButton(
@@ -172,7 +167,7 @@ class _SubscriptionOfferScreenState
                 ref.read(subscriptionStateProvider.notifier).restorePurchases();
                 setState(() => _isLoading = true);
               },
-              child: const Text('Restore'),
+              child: Text(Strings.of(context).restore),
             ),
         ],
       ),
@@ -186,8 +181,7 @@ class _SubscriptionOfferScreenState
                   children: [
                     _buildHeader(context),
                     const SizedBox(height: 24),
-                    if (subscription.hasTemporaryPro)
-                      _buildTemporaryProStatus(context, theme),
+                    if (subscription.hasTemporaryPro) _buildTemporaryProStatus(context, theme),
                     const SizedBox(height: 16),
                     if (_supportsRewardedAds) ...[
                       _buildTemporaryProSection(context, theme, rewardAdState),
@@ -283,7 +277,7 @@ class _SubscriptionOfferScreenState
       ),
       child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.star,
             color: Colors.white,
             size: 24,
@@ -294,14 +288,14 @@ class _SubscriptionOfferScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Pro Access Active!',
+                  Strings.of(context).proAccessActiveExclaim,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                 ),
                 Text(
-                  'Time remaining: ${minutes}m ${seconds}s',
+                  Strings.of(context).temporaryProTimeRemaining(minutes, seconds),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.white.withValues(alpha: 0.9),
                       ),
@@ -317,8 +311,7 @@ class _SubscriptionOfferScreenState
         );
   }
 
-  Widget _buildTemporaryProSection(
-      BuildContext context, AppTheme theme, bool adReady) {
+  Widget _buildTemporaryProSection(BuildContext context, AppTheme theme, bool adReady) {
     final subscription = ref.watch(subscriptionStateProvider);
 
     if (subscription.isPermanentPro) {
@@ -351,7 +344,7 @@ class _SubscriptionOfferScreenState
               ),
               const SizedBox(width: 8),
               Text(
-                'Try Pro for Free!',
+                Strings.of(context).tryProForFreeExclaim,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: Colors.orange.shade700,
@@ -361,8 +354,7 @@ class _SubscriptionOfferScreenState
           ),
           const SizedBox(height: 8),
           Text(
-            'Watch $_requiredTemporaryProAds ads to unlock Pro features for 1 hour. '
-            'You choose when to start each ad.',
+            Strings.of(context).watchAdUnlockProOneHour,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           if (!subscription.hasTemporaryPro) ...[
@@ -374,32 +366,24 @@ class _SubscriptionOfferScreenState
             ),
             const SizedBox(height: 6),
             Text(
-              'Completed: $_temporaryProAdsWatched/$_requiredTemporaryProAds ads',
+              Strings.of(context).temporaryProAdsCompleted(_temporaryProAdsWatched, _requiredTemporaryProAds),
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
-          const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: adReady && !subscription.hasTemporaryPro && !_isLoading
-                  ? _watchAdForTemporaryPro
-                  : null,
+              onPressed: adReady && !subscription.hasTemporaryPro && !_isLoading ? _watchAdForTemporaryPro : null,
               icon: Icon(
-                subscription.hasTemporaryPro
-                    ? Icons.check_circle
-                    : (adReady ? Icons.play_arrow : Icons.refresh),
+                subscription.hasTemporaryPro ? Icons.check_circle : (adReady ? Icons.play_arrow : Icons.refresh),
               ),
               label: Text(
                 subscription.hasTemporaryPro
-                    ? 'Pro Access Active'
-                    : (adReady
-                        ? 'Watch ad ${_temporaryProAdsWatched + 1}/$_requiredTemporaryProAds'
-                        : 'Loading next ad...'),
+                    ? Strings.of(context).proAccessActive
+                    : (adReady ? Strings.of(context).watchAd : Strings.of(context).loadingNextAd),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    subscription.hasTemporaryPro ? Colors.green : Colors.orange,
+                backgroundColor: subscription.hasTemporaryPro ? Colors.green : Colors.orange,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
@@ -427,17 +411,15 @@ class _SubscriptionOfferScreenState
 
         if (completedAds >= _requiredTemporaryProAds) {
           await preferences.remove(_temporaryProAdsWatchedKey);
-          ref
-              .read(subscriptionStateProvider.notifier)
-              .grantTemporaryProAccess();
+          ref.read(subscriptionStateProvider.notifier).grantTemporaryProAccess();
 
           if (mounted) {
             setState(() => _temporaryProAdsWatched = 0);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('🎉 Pro access granted for 1 hour!'),
+              SnackBar(
+                content: Text(Strings.of(context).proAccessGrantedOneHour),
                 backgroundColor: Colors.green,
-                duration: Duration(seconds: 3),
+                duration: const Duration(seconds: 3),
               ),
             );
           }
@@ -452,8 +434,7 @@ class _SubscriptionOfferScreenState
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  'Ad completed: $completedAds/$_requiredTemporaryProAds. '
-                  'Start the next ad when it is ready.',
+                  Strings.of(context).adCompletedStartNext(completedAds, _requiredTemporaryProAds),
                 ),
                 backgroundColor: Colors.orange,
                 duration: const Duration(seconds: 3),
@@ -463,10 +444,10 @@ class _SubscriptionOfferScreenState
         }
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Video ad was not completed. Please try again.'),
+          SnackBar(
+            content: Text(Strings.of(context).videoAdNotCompleted),
             backgroundColor: Colors.orange,
-            duration: Duration(seconds: 3),
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -474,7 +455,7 @@ class _SubscriptionOfferScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load video ad: $e'),
+            content: Text(Strings.of(context).failedToLoadVideoAd(e.toString())),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),
@@ -518,8 +499,8 @@ class _SubscriptionOfferScreenState
         // Headline
         Text(
           widget.featurePrompt != null
-              ? _getUpgradePromptTitle(widget.featurePrompt!)
-              : 'Unlock Premium Pixel Creation',
+              ? _getUpgradePromptTitle(context, widget.featurePrompt!)
+              : Strings.of(context).unlockPremiumPixelCreation,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.onSurface,
@@ -542,14 +523,10 @@ class _SubscriptionOfferScreenState
         // Subtitle
         Text(
           widget.featurePrompt != null
-              ? _getUpgradePromptSubtitle(widget.featurePrompt!)
-              : 'One-time purchase • No recurring fees • Try with ads first',
+              ? _getUpgradePromptSubtitle(context, widget.featurePrompt!)
+              : Strings.of(context).oneTimePurchaseTryAdsFirst,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.color
-                    ?.withValues(alpha: 0.7),
+                color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.7),
               ),
           textAlign: TextAlign.center,
         ).animate().fadeIn(
@@ -561,54 +538,53 @@ class _SubscriptionOfferScreenState
   }
 
   Widget _buildFeatureComparison(BuildContext context, AppTheme theme) {
+    final s = Strings.of(context);
     final features = [
       _FeatureComparisonItem(
         icon: Icons.inventory_2_outlined,
-        title: 'Projects',
-        free:
-            '${SubscriptionFeatureConfig.maxProjects[SubscriptionPlan.free]} projects',
-        pro: 'Unlimited projects',
+        title: s.featureProjects,
+        free: s.freeProjectsCount(SubscriptionFeatureConfig.maxProjects[SubscriptionPlan.free]!),
+        pro: s.unlimitedProjects,
       ),
       _FeatureComparisonItem(
         icon: Icons.grid_on,
-        title: 'Canvas Size',
-        free:
-            'Up to ${SubscriptionFeatureConfig.maxCanvasSize[SubscriptionPlan.free]}×${SubscriptionFeatureConfig.maxCanvasSize[SubscriptionPlan.free]} pixels',
-        pro: 'Up to 1024×1024 pixels',
+        title: s.featureCanvasSize,
+        free: s.freeCanvasSizeUpTo(SubscriptionFeatureConfig.maxCanvasSize[SubscriptionPlan.free]!),
+        pro: s.proCanvasSizeUpTo,
       ),
       _FeatureComparisonItem(
         icon: Icons.format_paint,
-        title: 'Tools & Effects',
-        free: 'Basic tools',
-        pro: 'Advanced tools & effects & templates',
+        title: s.featureToolsEffects,
+        free: s.basicTools,
+        pro: s.advancedToolsEffectsTemplates,
       ),
       _FeatureComparisonItem(
         icon: Icons.download,
-        title: 'Export Formats',
-        free: 'PNG, JPEG',
-        pro: 'All formats including Video & GIF',
+        title: s.featureExportFormats,
+        free: s.pngJpegFormats,
+        pro: s.allFormatsVideoGif,
       ),
       _FeatureComparisonItem(
         icon: Icons.play_circle_outline,
-        title: 'Try Pro Features',
-        free: 'Watch ads for temporary access',
-        pro: 'Unlimited access',
+        title: s.featureTryProFeatures,
+        free: s.watchAdsForTemporaryAccess,
+        pro: s.unlimitedAccess,
       ),
       _FeatureComparisonItem(
         icon: MaterialCommunityIcons.advertisements,
-        title: 'Ads',
-        free: 'Watch ads for pro features',
-        pro: 'No ads',
+        title: s.featureAds,
+        free: s.watchAdsForProFeatures,
+        pro: s.noAds,
       ),
       _FeatureComparisonItem(
         icon: Icons.cloud_upload,
-        title: 'Cloud Backup',
+        title: s.featureCloudBackup,
         free: false,
         pro: true,
       ),
       _FeatureComparisonItem(
         icon: Icons.support_agent,
-        title: 'Priority Support',
+        title: s.featurePrioritySupport,
         free: false,
         pro: true,
       ),
@@ -618,7 +594,7 @@ class _SubscriptionOfferScreenState
       children: [
         // Title
         Text(
-          'Free vs Pro Features',
+          s.freeVsProFeatures,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -650,21 +626,20 @@ class _SubscriptionOfferScreenState
                     Expanded(
                       flex: 4,
                       child: Text(
-                        'Feature',
+                        s.featureColumnHeader,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
                     Expanded(
                       flex: 3,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 6, horizontal: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
                         decoration: BoxDecoration(
                           color: theme.background,
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
-                          'Free',
+                          s.free,
                           style: Theme.of(context).textTheme.bodyMedium,
                           textAlign: TextAlign.center,
                         ),
@@ -674,19 +649,17 @@ class _SubscriptionOfferScreenState
                     Expanded(
                       flex: 3,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 6, horizontal: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
                         decoration: BoxDecoration(
                           color: theme.primaryColor.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
-                          'Pro',
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: theme.primaryColor,
-                                  ),
+                          s.proColumnHeader,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: theme.primaryColor,
+                              ),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -721,10 +694,7 @@ class _SubscriptionOfferScreenState
                           flex: 4,
                           child: Text(
                             feature.title,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
@@ -735,18 +705,13 @@ class _SubscriptionOfferScreenState
                               ? Center(
                                   child: Icon(
                                     feature.free ? Icons.check : Icons.close,
-                                    color: feature.free
-                                        ? Colors.green
-                                        : Colors.red.shade300,
+                                    color: feature.free ? Colors.green : Colors.red.shade300,
                                     size: 20,
                                   ),
                                 )
                               : Text(
                                   feature.free as String,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                         color: theme.textSecondary,
                                       ),
                                   textAlign: TextAlign.center,
@@ -759,18 +724,13 @@ class _SubscriptionOfferScreenState
                               ? Center(
                                   child: Icon(
                                     feature.pro ? Icons.check : Icons.close,
-                                    color: feature.pro
-                                        ? theme.primaryColor
-                                        : Colors.red.shade300,
+                                    color: feature.pro ? theme.primaryColor : Colors.red.shade300,
                                     size: 20,
                                   ),
                                 )
                               : Text(
                                   feature.pro as String,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                         color: theme.primaryColor,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -813,11 +773,8 @@ class _SubscriptionOfferScreenState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Choose Your Plan',
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge
-              ?.copyWith(fontWeight: FontWeight.bold),
+          Strings.of(context).chooseYourPlan,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         ...List.generate(offers.length, (index) {
@@ -856,12 +813,9 @@ class _SubscriptionOfferScreenState
       child: Column(
         children: [
           Text(
-            'By continuing, you agree to our Terms of Service and Privacy Policy.',
+            Strings.of(context).agreeToTermsAndPrivacy,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.7),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
             textAlign: TextAlign.center,
           ),
@@ -874,7 +828,7 @@ class _SubscriptionOfferScreenState
                   launchUrlString(Constants.termsOfServiceUrl);
                 },
                 child: Text(
-                  'Terms of Service',
+                  Strings.of(context).termsOfService,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.primary,
                     fontSize: 12,
@@ -884,11 +838,7 @@ class _SubscriptionOfferScreenState
               Text(
                 ' • ',
                 style: TextStyle(
-                  color: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.color
-                      ?.withValues(alpha: 0.7),
+                  color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
                   fontSize: 12,
                 ),
               ),
@@ -897,7 +847,7 @@ class _SubscriptionOfferScreenState
                   launchUrlString(Constants.privacyPolicyUrl);
                 },
                 child: Text(
-                  'Privacy Policy',
+                  Strings.of(context).privacyPolicy,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.primary,
                     fontSize: 12,
@@ -908,12 +858,9 @@ class _SubscriptionOfferScreenState
           ),
           const SizedBox(height: 8),
           Text(
-            'One-time purchase • No recurring charges • Lifetime access',
+            Strings.of(context).oneTimePurchaseLifetimeAccess,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.7),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                   fontSize: 11,
                 ),
             textAlign: TextAlign.center,
@@ -924,8 +871,7 @@ class _SubscriptionOfferScreenState
   }
 
   Widget _buildBottomBar(BuildContext context, List<PurchaseOffer> offers) {
-    final selectedOffer =
-        _selectedIndex < offers.length ? offers[_selectedIndex] : null;
+    final selectedOffer = _selectedIndex < offers.length ? offers[_selectedIndex] : null;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -946,8 +892,7 @@ class _SubscriptionOfferScreenState
       child: SafeArea(
         child: Row(
           children: [
-            if (selectedOffer != null &&
-                selectedOffer.plan != SubscriptionPlan.free)
+            if (selectedOffer != null && selectedOffer.plan != SubscriptionPlan.free)
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -973,17 +918,16 @@ class _SubscriptionOfferScreenState
             const SizedBox(width: 16),
             Expanded(
               child: FilledButton(
-                onPressed:
-                    selectedOffer?.plan == SubscriptionPlan.free || _isLoading
-                        ? null
-                        : () => _handlePurchase(selectedOffer!),
+                onPressed: selectedOffer?.plan == SubscriptionPlan.free || _isLoading
+                    ? null
+                    : () => _handlePurchase(selectedOffer!),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 child: Text(
                   selectedOffer?.plan == SubscriptionPlan.free
-                      ? 'Continue with Free'
-                      : 'Buy Pro',
+                      ? Strings.of(context).continueWithFree
+                      : Strings.of(context).buyPro,
                   style: const TextStyle(fontSize: 16),
                 ),
               ),
@@ -1013,53 +957,57 @@ class _SubscriptionOfferScreenState
     }
   }
 
-  String _getUpgradePromptTitle(SubscriptionFeature feature) {
+  String _getUpgradePromptTitle(BuildContext context, SubscriptionFeature feature) {
+    final s = Strings.of(context);
     switch (feature) {
       case SubscriptionFeature.maxProjects:
-        return 'Unlock Unlimited Projects';
+        return s.unlockUnlimitedProjects;
       case SubscriptionFeature.maxCanvasSize:
-        return 'Unlock Larger Canvas Sizes';
+        return s.unlockLargerCanvasSizes;
       case SubscriptionFeature.exportFormats:
-        return 'Unlock All Export Formats';
+        return s.unlockAllExportFormats;
       case SubscriptionFeature.advancedTools:
-        return 'Unlock Advanced Tools';
+        return s.unlockAdvancedTools;
       case SubscriptionFeature.cloudBackup:
-        return 'Enable Cloud Backup';
+        return s.enableCloudBackup;
       case SubscriptionFeature.noWatermark:
-        return 'Remove Watermark';
+        return s.removeWatermark;
       case SubscriptionFeature.prioritySupport:
-        return 'Get Priority Support';
+        return s.getPrioritySupport;
       case SubscriptionFeature.effects:
-        return 'Unlock Special Effects';
+        return s.unlockSpecialEffects;
       case SubscriptionFeature.templates:
-        return 'Unlock Templates';
+        return s.unlockTemplates;
       case SubscriptionFeature.proTheme:
-        return 'Unlock Pro Theme';
+        return s.unlockProTheme;
     }
   }
 
-  String _getUpgradePromptSubtitle(SubscriptionFeature feature) {
+  String _getUpgradePromptSubtitle(BuildContext context, SubscriptionFeature feature) {
+    final s = Strings.of(context);
     switch (feature) {
       case SubscriptionFeature.maxProjects:
-        return 'You\'ve reached your free plan project limit • Watch an ad for temporary access or buy Pro';
+        return s.upgradePromptMaxProjectsSubtitle;
       case SubscriptionFeature.maxCanvasSize:
-        return 'Create pixel art at higher resolutions • Try with ads first';
+        return s.upgradePromptMaxCanvasSizeSubtitle;
       case SubscriptionFeature.exportFormats:
-        return 'Export your art in more formats • Watch ad for temporary access';
+        return s.upgradePromptExportFormatsSubtitle;
       case SubscriptionFeature.advancedTools:
-        return 'Access premium tools and effects • Try with video ads';
+        return s.upgradePromptAdvancedToolsSubtitle;
       case SubscriptionFeature.cloudBackup:
-        return 'Never lose your pixel art creations';
+        return s.upgradePromptCloudBackupSubtitle;
       case SubscriptionFeature.noWatermark:
-        return 'Export clean art without watermarks';
+        return s.upgradePromptNoWatermarkSubtitle;
       case SubscriptionFeature.prioritySupport:
-        return 'Get faster support for any issues';
+        return s.upgradePromptPrioritySupportSubtitle;
+      // These three mirror the original implementation, which returned the
+      // same "Unlock X" text for both the title and the subtitle.
       case SubscriptionFeature.effects:
-        return 'Unlock Special Effects';
+        return s.unlockSpecialEffects;
       case SubscriptionFeature.templates:
-        return 'Unlock Templates';
+        return s.unlockTemplates;
       case SubscriptionFeature.proTheme:
-        return 'Unlock Pro Theme';
+        return s.unlockProTheme;
     }
   }
 }
@@ -1099,9 +1047,8 @@ class _PurchaseOfferCard extends StatelessWidget {
         duration: const Duration(milliseconds: 300),
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: isSelected
-              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
-              : Theme.of(context).cardColor,
+          color:
+              isSelected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08) : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected
@@ -1133,14 +1080,9 @@ class _PurchaseOfferCard extends StatelessWidget {
                           children: [
                             Text(
                               offer.title,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    color: isSelected
-                                        ? Theme.of(context).colorScheme.primary
-                                        : null,
+                                    color: isSelected ? Theme.of(context).colorScheme.primary : null,
                                   ),
                             ),
                             const SizedBox(height: 4),
@@ -1154,10 +1096,7 @@ class _PurchaseOfferCard extends StatelessWidget {
                       if (offer.plan != SubscriptionPlan.free)
                         Text(
                           offer.price,
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall
-                              ?.copyWith(
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: isSelected
                                     ? Theme.of(context).colorScheme.primary
@@ -1176,9 +1115,7 @@ class _PurchaseOfferCard extends StatelessWidget {
                           children: [
                             Icon(
                               Icons.check_circle_outline,
-                              color: isSelected
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Colors.green,
+                              color: isSelected ? Theme.of(context).colorScheme.primary : Colors.green,
                               size: 18,
                             ),
                             const SizedBox(width: 8),
@@ -1213,7 +1150,7 @@ class _PurchaseOfferCard extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    'BEST VALUE',
+                    Strings.of(context).bestValue,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.onPrimary,
                           fontWeight: FontWeight.bold,

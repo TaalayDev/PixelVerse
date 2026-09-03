@@ -1284,5 +1284,120 @@
     "curve": "Curve",
     "curveToolDescription": "Draw smooth curved lines",
     "move": "Move",
-    "moveToolDescription": "Move and drag elements"
+    "moveToolDescription": "Move and drag elements",
+    "upgradeToPro": "Upgrade to Pro",
+    "restore": "Restore",
+    "purchaseFailed": "Purchase failed",
+    "proAccessActiveExclaim": "Pro Access Active!",
+    "temporaryProTimeRemaining": "Time remaining: {minutes}m {seconds}s",
+    "@temporaryProTimeRemaining": {
+        "placeholders": {
+            "minutes": {
+                "type": "int"
+            },
+            "seconds": {
+                "type": "int"
+            }
+        }
+    },
+    "tryProForFreeExclaim": "Try Pro for Free!",
+    "watchAdUnlockProOneHour": "Watch ad to unlock Pro features for 1 hour. You choose when to start each ad.",
+    "temporaryProAdsCompleted": "{total, plural, =1{Completed: {completed}/{total} ad} other{Completed: {completed}/{total} ads}}",
+    "@temporaryProAdsCompleted": {
+        "placeholders": {
+            "completed": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "proAccessActive": "Pro Access Active",
+    "watchAd": "Watch ad",
+    "loadingNextAd": "Loading next ad...",
+    "proAccessGrantedOneHour": "🎉 Pro access granted for 1 hour!",
+    "adCompletedStartNext": "Ad completed: {completed}/{total}. Start the next ad when it is ready.",
+    "@adCompletedStartNext": {
+        "placeholders": {
+            "completed": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "videoAdNotCompleted": "Video ad was not completed. Please try again.",
+    "failedToLoadVideoAd": "Failed to load video ad: {error}",
+    "@failedToLoadVideoAd": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "unlockPremiumPixelCreation": "Unlock Premium Pixel Creation",
+    "oneTimePurchaseTryAdsFirst": "One-time purchase • No recurring fees • Try with ads first",
+    "featureProjects": "Projects",
+    "featureCanvasSize": "Canvas Size",
+    "featureToolsEffects": "Tools & Effects",
+    "featureExportFormats": "Export Formats",
+    "featureTryProFeatures": "Try Pro Features",
+    "featureAds": "Ads",
+    "featureCloudBackup": "Cloud Backup",
+    "featurePrioritySupport": "Priority Support",
+    "freeProjectsCount": "{count} projects",
+    "@freeProjectsCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "unlimitedProjects": "Unlimited projects",
+    "freeCanvasSizeUpTo": "Up to {size}×{size} pixels",
+    "@freeCanvasSizeUpTo": {
+        "placeholders": {
+            "size": {
+                "type": "int"
+            }
+        }
+    },
+    "proCanvasSizeUpTo": "Up to 1024×1024 pixels",
+    "basicTools": "Basic tools",
+    "advancedToolsEffectsTemplates": "Advanced tools & effects & templates",
+    "pngJpegFormats": "PNG, JPEG",
+    "allFormatsVideoGif": "All formats including Video & GIF",
+    "watchAdsForTemporaryAccess": "Watch ads for temporary access",
+    "unlimitedAccess": "Unlimited access",
+    "watchAdsForProFeatures": "Watch ads for pro features",
+    "noAds": "No ads",
+    "freeVsProFeatures": "Free vs Pro Features",
+    "featureColumnHeader": "Feature",
+    "proColumnHeader": "Pro",
+    "chooseYourPlan": "Choose Your Plan",
+    "agreeToTermsAndPrivacy": "By continuing, you agree to our Terms of Service and Privacy Policy.",
+    "termsOfService": "Terms of Service",
+    "privacyPolicy": "Privacy Policy",
+    "oneTimePurchaseLifetimeAccess": "One-time purchase • No recurring charges • Lifetime access",
+    "continueWithFree": "Continue with Free",
+    "bestValue": "BEST VALUE",
+    "unlockUnlimitedProjects": "Unlock Unlimited Projects",
+    "unlockLargerCanvasSizes": "Unlock Larger Canvas Sizes",
+    "unlockAllExportFormats": "Unlock All Export Formats",
+    "unlockAdvancedTools": "Unlock Advanced Tools",
+    "enableCloudBackup": "Enable Cloud Backup",
+    "removeWatermark": "Remove Watermark",
+    "getPrioritySupport": "Get Priority Support",
+    "unlockSpecialEffects": "Unlock Special Effects",
+    "unlockTemplates": "Unlock Templates",
+    "unlockProTheme": "Unlock Pro Theme",
+    "upgradePromptMaxProjectsSubtitle": "You've reached your free plan project limit • Watch an ad for temporary access or buy Pro",
+    "upgradePromptMaxCanvasSizeSubtitle": "Create pixel art at higher resolutions • Try with ads first",
+    "upgradePromptExportFormatsSubtitle": "Export your art in more formats • Watch ad for temporary access",
+    "upgradePromptAdvancedToolsSubtitle": "Access premium tools and effects • Try with video ads",
+    "upgradePromptCloudBackupSubtitle": "Never lose your pixel art creations",
+    "upgradePromptNoWatermarkSubtitle": "Export clean art without watermarks",
+    "upgradePromptPrioritySupportSubtitle": "Get faster support for any issues"
 }

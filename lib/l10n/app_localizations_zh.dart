@@ -1774,7 +1774,7 @@ class StringsZh extends Strings {
   }
 
   @override
-  String get proAccessActive => 'Pro 权限已启用';
+  String get proAccessActive => 'Pro 权限已激活';
 
   @override
   String proAccessRemaining(String time) {
@@ -1806,14 +1806,14 @@ class StringsZh extends Strings {
   String get loadingVideoAd => '正在加载视频广告...';
 
   @override
-  String get proAccessGrantedOneHour => '已授予 1 小时 Pro 权限！';
+  String get proAccessGrantedOneHour => '🎉 已获得 1 小时 Pro 权限！';
 
   @override
-  String get videoAdNotCompleted => '视频广告未播放完成。请重试或升级到 Pro。';
+  String get videoAdNotCompleted => '视频广告未看完，请重试。';
 
   @override
   String failedToLoadVideoAd(String error) {
-    return '加载视频广告失败：$error';
+    return '视频广告加载失败：$error';
   }
 
   @override
@@ -2500,4 +2500,189 @@ class StringsZh extends Strings {
 
   @override
   String get moveToolDescription => '移动和拖拽元素';
+
+  @override
+  String get restore => '恢复购买';
+
+  @override
+  String get purchaseFailed => '购买失败';
+
+  @override
+  String get proAccessActiveExclaim => 'Pro 权限已激活！';
+
+  @override
+  String temporaryProTimeRemaining(int minutes, int seconds) {
+    return '剩余时间：$minutes 分 $seconds 秒';
+  }
+
+  @override
+  String get tryProForFreeExclaim => '免费试用 Pro！';
+
+  @override
+  String get watchAdUnlockProOneHour =>
+      '观看广告即可解锁 Pro 功能 1 小时。您可以自行选择何时开始观看每个广告。';
+
+  @override
+  String temporaryProAdsCompleted(int completed, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '已完成：$completed/$total 个广告',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get loadingNextAd => '正在加载下一个广告...';
+
+  @override
+  String adCompletedStartNext(int completed, int total) {
+    return '已完成广告：$completed/$total。准备好后开始下一个。';
+  }
+
+  @override
+  String get unlockPremiumPixelCreation => '解锁高级像素创作';
+
+  @override
+  String get oneTimePurchaseTryAdsFirst => '一次性购买 • 无需订阅 • 先用广告试用';
+
+  @override
+  String get featureProjects => '项目';
+
+  @override
+  String get featureCanvasSize => '画布尺寸';
+
+  @override
+  String get featureToolsEffects => '工具与特效';
+
+  @override
+  String get featureExportFormats => '导出格式';
+
+  @override
+  String get featureTryProFeatures => '试用 Pro 功能';
+
+  @override
+  String get featureAds => '广告';
+
+  @override
+  String freeProjectsCount(int count) {
+    return '$count 个项目';
+  }
+
+  @override
+  String get unlimitedProjects => '无限项目';
+
+  @override
+  String freeCanvasSizeUpTo(int size) {
+    return '最高 $size×$size 像素';
+  }
+
+  @override
+  String get proCanvasSizeUpTo => '最高 1024×1024 像素';
+
+  @override
+  String get basicTools => '基础工具';
+
+  @override
+  String get advancedToolsEffectsTemplates => '高级工具、特效与模板';
+
+  @override
+  String get pngJpegFormats => 'PNG、JPEG';
+
+  @override
+  String get allFormatsVideoGif => '包括视频和 GIF 在内的所有格式';
+
+  @override
+  String get watchAdsForTemporaryAccess => '观看广告获取临时访问权限';
+
+  @override
+  String get unlimitedAccess => '无限访问';
+
+  @override
+  String get watchAdsForProFeatures => '观看广告以使用 Pro 功能';
+
+  @override
+  String get noAds => '无广告';
+
+  @override
+  String get freeVsProFeatures => '免费版与 Pro 版功能对比';
+
+  @override
+  String get featureColumnHeader => '功能';
+
+  @override
+  String get proColumnHeader => 'Pro';
+
+  @override
+  String get chooseYourPlan => '选择您的方案';
+
+  @override
+  String get agreeToTermsAndPrivacy => '继续即表示您同意我们的服务条款和隐私政策。';
+
+  @override
+  String get termsOfService => '服务条款';
+
+  @override
+  String get privacyPolicy => '隐私政策';
+
+  @override
+  String get oneTimePurchaseLifetimeAccess => '一次性购买 • 无需重复扣款 • 终身使用';
+
+  @override
+  String get continueWithFree => '继续使用免费版';
+
+  @override
+  String get bestValue => '超值';
+
+  @override
+  String get unlockUnlimitedProjects => '解锁无限项目';
+
+  @override
+  String get unlockLargerCanvasSizes => '解锁更大画布尺寸';
+
+  @override
+  String get unlockAllExportFormats => '解锁所有导出格式';
+
+  @override
+  String get unlockAdvancedTools => '解锁高级工具';
+
+  @override
+  String get enableCloudBackup => '启用云备份';
+
+  @override
+  String get removeWatermark => '移除水印';
+
+  @override
+  String get getPrioritySupport => '获得优先支持';
+
+  @override
+  String get unlockSpecialEffects => '解锁特殊特效';
+
+  @override
+  String get unlockTemplates => '解锁模板';
+
+  @override
+  String get unlockProTheme => '解锁 Pro 主题';
+
+  @override
+  String get upgradePromptMaxProjectsSubtitle =>
+      '您已达到免费版的项目数量上限 • 观看广告获取临时权限，或购买 Pro';
+
+  @override
+  String get upgradePromptMaxCanvasSizeSubtitle => '以更高分辨率创作像素画 • 先用广告试用';
+
+  @override
+  String get upgradePromptExportFormatsSubtitle => '以更多格式导出作品 • 观看广告获取临时权限';
+
+  @override
+  String get upgradePromptAdvancedToolsSubtitle => '使用高级工具和特效 • 通过观看视频广告试用';
+
+  @override
+  String get upgradePromptCloudBackupSubtitle => '再也不会丢失您的像素艺术作品';
+
+  @override
+  String get upgradePromptNoWatermarkSubtitle => '导出无水印的干净作品';
+
+  @override
+  String get upgradePromptPrioritySupportSubtitle => '任何问题都能获得更快的支持';
 }

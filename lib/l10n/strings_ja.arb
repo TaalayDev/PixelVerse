@@ -1385,5 +1385,120 @@
     "curve": "曲線",
     "curveToolDescription": "滑らかな曲線を描きます",
     "move": "移動",
-    "moveToolDescription": "要素を移動・ドラッグします"
+    "moveToolDescription": "要素を移動・ドラッグします",
+    "upgradeToPro": "Proにアップグレード",
+    "restore": "復元",
+    "purchaseFailed": "購入に失敗しました",
+    "proAccessActiveExclaim": "Proアクセス有効中！",
+    "temporaryProTimeRemaining": "残り時間：{minutes}分{seconds}秒",
+    "@temporaryProTimeRemaining": {
+        "placeholders": {
+            "minutes": {
+                "type": "int"
+            },
+            "seconds": {
+                "type": "int"
+            }
+        }
+    },
+    "tryProForFreeExclaim": "Proを無料で試す！",
+    "watchAdUnlockProOneHour": "広告を視聴してProの機能を1時間ロック解除。各広告を開始するタイミングはあなたが選べます。",
+    "temporaryProAdsCompleted": "{total, plural, other{完了：{completed}/{total} 本}}",
+    "@temporaryProAdsCompleted": {
+        "placeholders": {
+            "completed": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "proAccessActive": "Proアクセス有効",
+    "watchAd": "広告を見る",
+    "loadingNextAd": "次の広告を読み込み中...",
+    "proAccessGrantedOneHour": "🎉 Proアクセスが1時間付与されました！",
+    "adCompletedStartNext": "広告視聴完了：{completed}/{total}。準備ができたら次の広告を開始してください。",
+    "@adCompletedStartNext": {
+        "placeholders": {
+            "completed": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "videoAdNotCompleted": "動画広告が最後まで再生されませんでした。もう一度お試しください。",
+    "failedToLoadVideoAd": "動画広告の読み込みに失敗しました：{error}",
+    "@failedToLoadVideoAd": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "unlockPremiumPixelCreation": "プレミアムなピクセル制作をアンロック",
+    "oneTimePurchaseTryAdsFirst": "買い切り • 継続課金なし • まずは広告で試す",
+    "featureProjects": "プロジェクト",
+    "featureCanvasSize": "キャンバスサイズ",
+    "featureToolsEffects": "ツールとエフェクト",
+    "featureExportFormats": "エクスポート形式",
+    "featureTryProFeatures": "Pro機能を試す",
+    "featureAds": "広告",
+    "featureCloudBackup": "クラウドバックアップ",
+    "featurePrioritySupport": "優先サポート",
+    "freeProjectsCount": "{count}件のプロジェクト",
+    "@freeProjectsCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "unlimitedProjects": "無制限のプロジェクト",
+    "freeCanvasSizeUpTo": "最大{size}×{size}ピクセル",
+    "@freeCanvasSizeUpTo": {
+        "placeholders": {
+            "size": {
+                "type": "int"
+            }
+        }
+    },
+    "proCanvasSizeUpTo": "最大1024×1024ピクセル",
+    "basicTools": "基本ツール",
+    "advancedToolsEffectsTemplates": "高度なツール・エフェクト・テンプレート",
+    "pngJpegFormats": "PNG、JPEG",
+    "allFormatsVideoGif": "動画・GIFを含む全形式",
+    "watchAdsForTemporaryAccess": "広告を見て一時的にアクセス",
+    "unlimitedAccess": "無制限アクセス",
+    "watchAdsForProFeatures": "Pro機能のために広告を見る",
+    "noAds": "広告なし",
+    "freeVsProFeatures": "無料版とPro版の機能比較",
+    "featureColumnHeader": "機能",
+    "proColumnHeader": "Pro",
+    "chooseYourPlan": "プランを選択",
+    "agreeToTermsAndPrivacy": "続行することで、利用規約とプライバシーポリシーに同意したものとみなされます。",
+    "termsOfService": "利用規約",
+    "privacyPolicy": "プライバシーポリシー",
+    "oneTimePurchaseLifetimeAccess": "買い切り • 継続課金なし • 永久利用可能",
+    "continueWithFree": "無料版で続ける",
+    "bestValue": "お得",
+    "unlockUnlimitedProjects": "無制限のプロジェクトをアンロック",
+    "unlockLargerCanvasSizes": "より大きなキャンバスサイズをアンロック",
+    "unlockAllExportFormats": "すべてのエクスポート形式をアンロック",
+    "unlockAdvancedTools": "高度なツールをアンロック",
+    "enableCloudBackup": "クラウドバックアップを有効化",
+    "removeWatermark": "透かしを削除",
+    "getPrioritySupport": "優先サポートを利用",
+    "unlockSpecialEffects": "特殊エフェクトをアンロック",
+    "unlockTemplates": "テンプレートをアンロック",
+    "unlockProTheme": "Proテーマをアンロック",
+    "upgradePromptMaxProjectsSubtitle": "無料プランのプロジェクト上限に達しました • 広告を見て一時的にアクセスするか、Proを購入してください",
+    "upgradePromptMaxCanvasSizeSubtitle": "より高い解像度でピクセルアートを作成 • まずは広告で試す",
+    "upgradePromptExportFormatsSubtitle": "より多くの形式で作品をエクスポート • 広告を見て一時的にアクセス",
+    "upgradePromptAdvancedToolsSubtitle": "プレミアムツールとエフェクトにアクセス • 動画広告で試す",
+    "upgradePromptCloudBackupSubtitle": "ピクセルアート作品を失わない",
+    "upgradePromptNoWatermarkSubtitle": "透かしなしでクリーンな作品をエクスポート",
+    "upgradePromptPrioritySupportSubtitle": "あらゆる問題に迅速なサポートを"
 }

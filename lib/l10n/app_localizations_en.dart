@@ -868,10 +868,10 @@ class StringsEn extends Strings {
   String get featureUnlimitedProjects => 'Unlimited projects';
 
   @override
-  String get featureCloudBackup => 'Cloud backup';
+  String get featureCloudBackup => 'Cloud Backup';
 
   @override
-  String get featurePrioritySupport => 'Priority support';
+  String get featurePrioritySupport => 'Priority Support';
 
   @override
   String get maybeLater => 'Maybe Later';
@@ -1875,7 +1875,7 @@ class StringsEn extends Strings {
       '• Video ad is loading...\n• Please try again in a moment';
 
   @override
-  String get watchAd => 'Watch Ad';
+  String get watchAd => 'Watch ad';
 
   @override
   String get loadingEllipsis => 'Loading...';
@@ -1884,11 +1884,11 @@ class StringsEn extends Strings {
   String get loadingVideoAd => 'Loading video ad...';
 
   @override
-  String get proAccessGrantedOneHour => 'Pro access granted for 1 hour!';
+  String get proAccessGrantedOneHour => '🎉 Pro access granted for 1 hour!';
 
   @override
   String get videoAdNotCompleted =>
-      'Video ad was not completed. Please try again or upgrade to Pro.';
+      'Video ad was not completed. Please try again.';
 
   @override
   String failedToLoadVideoAd(String error) {
@@ -2593,4 +2593,200 @@ class StringsEn extends Strings {
 
   @override
   String get moveToolDescription => 'Move and drag elements';
+
+  @override
+  String get restore => 'Restore';
+
+  @override
+  String get purchaseFailed => 'Purchase failed';
+
+  @override
+  String get proAccessActiveExclaim => 'Pro Access Active!';
+
+  @override
+  String temporaryProTimeRemaining(int minutes, int seconds) {
+    return 'Time remaining: ${minutes}m ${seconds}s';
+  }
+
+  @override
+  String get tryProForFreeExclaim => 'Try Pro for Free!';
+
+  @override
+  String get watchAdUnlockProOneHour =>
+      'Watch ad to unlock Pro features for 1 hour. You choose when to start each ad.';
+
+  @override
+  String temporaryProAdsCompleted(int completed, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'Completed: $completed/$total ads',
+      one: 'Completed: $completed/$total ad',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get loadingNextAd => 'Loading next ad...';
+
+  @override
+  String adCompletedStartNext(int completed, int total) {
+    return 'Ad completed: $completed/$total. Start the next ad when it is ready.';
+  }
+
+  @override
+  String get unlockPremiumPixelCreation => 'Unlock Premium Pixel Creation';
+
+  @override
+  String get oneTimePurchaseTryAdsFirst =>
+      'One-time purchase • No recurring fees • Try with ads first';
+
+  @override
+  String get featureProjects => 'Projects';
+
+  @override
+  String get featureCanvasSize => 'Canvas Size';
+
+  @override
+  String get featureToolsEffects => 'Tools & Effects';
+
+  @override
+  String get featureExportFormats => 'Export Formats';
+
+  @override
+  String get featureTryProFeatures => 'Try Pro Features';
+
+  @override
+  String get featureAds => 'Ads';
+
+  @override
+  String freeProjectsCount(int count) {
+    return '$count projects';
+  }
+
+  @override
+  String get unlimitedProjects => 'Unlimited projects';
+
+  @override
+  String freeCanvasSizeUpTo(int size) {
+    return 'Up to $size×$size pixels';
+  }
+
+  @override
+  String get proCanvasSizeUpTo => 'Up to 1024×1024 pixels';
+
+  @override
+  String get basicTools => 'Basic tools';
+
+  @override
+  String get advancedToolsEffectsTemplates =>
+      'Advanced tools & effects & templates';
+
+  @override
+  String get pngJpegFormats => 'PNG, JPEG';
+
+  @override
+  String get allFormatsVideoGif => 'All formats including Video & GIF';
+
+  @override
+  String get watchAdsForTemporaryAccess => 'Watch ads for temporary access';
+
+  @override
+  String get unlimitedAccess => 'Unlimited access';
+
+  @override
+  String get watchAdsForProFeatures => 'Watch ads for pro features';
+
+  @override
+  String get noAds => 'No ads';
+
+  @override
+  String get freeVsProFeatures => 'Free vs Pro Features';
+
+  @override
+  String get featureColumnHeader => 'Feature';
+
+  @override
+  String get proColumnHeader => 'Pro';
+
+  @override
+  String get chooseYourPlan => 'Choose Your Plan';
+
+  @override
+  String get agreeToTermsAndPrivacy =>
+      'By continuing, you agree to our Terms of Service and Privacy Policy.';
+
+  @override
+  String get termsOfService => 'Terms of Service';
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get oneTimePurchaseLifetimeAccess =>
+      'One-time purchase • No recurring charges • Lifetime access';
+
+  @override
+  String get continueWithFree => 'Continue with Free';
+
+  @override
+  String get bestValue => 'BEST VALUE';
+
+  @override
+  String get unlockUnlimitedProjects => 'Unlock Unlimited Projects';
+
+  @override
+  String get unlockLargerCanvasSizes => 'Unlock Larger Canvas Sizes';
+
+  @override
+  String get unlockAllExportFormats => 'Unlock All Export Formats';
+
+  @override
+  String get unlockAdvancedTools => 'Unlock Advanced Tools';
+
+  @override
+  String get enableCloudBackup => 'Enable Cloud Backup';
+
+  @override
+  String get removeWatermark => 'Remove Watermark';
+
+  @override
+  String get getPrioritySupport => 'Get Priority Support';
+
+  @override
+  String get unlockSpecialEffects => 'Unlock Special Effects';
+
+  @override
+  String get unlockTemplates => 'Unlock Templates';
+
+  @override
+  String get unlockProTheme => 'Unlock Pro Theme';
+
+  @override
+  String get upgradePromptMaxProjectsSubtitle =>
+      'You\'ve reached your free plan project limit • Watch an ad for temporary access or buy Pro';
+
+  @override
+  String get upgradePromptMaxCanvasSizeSubtitle =>
+      'Create pixel art at higher resolutions • Try with ads first';
+
+  @override
+  String get upgradePromptExportFormatsSubtitle =>
+      'Export your art in more formats • Watch ad for temporary access';
+
+  @override
+  String get upgradePromptAdvancedToolsSubtitle =>
+      'Access premium tools and effects • Try with video ads';
+
+  @override
+  String get upgradePromptCloudBackupSubtitle =>
+      'Never lose your pixel art creations';
+
+  @override
+  String get upgradePromptNoWatermarkSubtitle =>
+      'Export clean art without watermarks';
+
+  @override
+  String get upgradePromptPrioritySupportSubtitle =>
+      'Get faster support for any issues';
 }

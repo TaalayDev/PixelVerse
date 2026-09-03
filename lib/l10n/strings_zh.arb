@@ -1368,5 +1368,120 @@
     "curve": "曲线",
     "curveToolDescription": "绘制平滑曲线",
     "move": "移动",
-    "moveToolDescription": "移动和拖拽元素"
+    "moveToolDescription": "移动和拖拽元素",
+    "upgradeToPro": "升级到 Pro",
+    "restore": "恢复购买",
+    "purchaseFailed": "购买失败",
+    "proAccessActiveExclaim": "Pro 权限已激活！",
+    "temporaryProTimeRemaining": "剩余时间：{minutes} 分 {seconds} 秒",
+    "@temporaryProTimeRemaining": {
+        "placeholders": {
+            "minutes": {
+                "type": "int"
+            },
+            "seconds": {
+                "type": "int"
+            }
+        }
+    },
+    "tryProForFreeExclaim": "免费试用 Pro！",
+    "watchAdUnlockProOneHour": "观看广告即可解锁 Pro 功能 1 小时。您可以自行选择何时开始观看每个广告。",
+    "temporaryProAdsCompleted": "{total, plural, other{已完成：{completed}/{total} 个广告}}",
+    "@temporaryProAdsCompleted": {
+        "placeholders": {
+            "completed": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "proAccessActive": "Pro 权限已激活",
+    "watchAd": "观看广告",
+    "loadingNextAd": "正在加载下一个广告...",
+    "proAccessGrantedOneHour": "🎉 已获得 1 小时 Pro 权限！",
+    "adCompletedStartNext": "已完成广告：{completed}/{total}。准备好后开始下一个。",
+    "@adCompletedStartNext": {
+        "placeholders": {
+            "completed": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "videoAdNotCompleted": "视频广告未看完，请重试。",
+    "failedToLoadVideoAd": "视频广告加载失败：{error}",
+    "@failedToLoadVideoAd": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "unlockPremiumPixelCreation": "解锁高级像素创作",
+    "oneTimePurchaseTryAdsFirst": "一次性购买 • 无需订阅 • 先用广告试用",
+    "featureProjects": "项目",
+    "featureCanvasSize": "画布尺寸",
+    "featureToolsEffects": "工具与特效",
+    "featureExportFormats": "导出格式",
+    "featureTryProFeatures": "试用 Pro 功能",
+    "featureAds": "广告",
+    "featureCloudBackup": "云备份",
+    "featurePrioritySupport": "优先支持",
+    "freeProjectsCount": "{count} 个项目",
+    "@freeProjectsCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "unlimitedProjects": "无限项目",
+    "freeCanvasSizeUpTo": "最高 {size}×{size} 像素",
+    "@freeCanvasSizeUpTo": {
+        "placeholders": {
+            "size": {
+                "type": "int"
+            }
+        }
+    },
+    "proCanvasSizeUpTo": "最高 1024×1024 像素",
+    "basicTools": "基础工具",
+    "advancedToolsEffectsTemplates": "高级工具、特效与模板",
+    "pngJpegFormats": "PNG、JPEG",
+    "allFormatsVideoGif": "包括视频和 GIF 在内的所有格式",
+    "watchAdsForTemporaryAccess": "观看广告获取临时访问权限",
+    "unlimitedAccess": "无限访问",
+    "watchAdsForProFeatures": "观看广告以使用 Pro 功能",
+    "noAds": "无广告",
+    "freeVsProFeatures": "免费版与 Pro 版功能对比",
+    "featureColumnHeader": "功能",
+    "proColumnHeader": "Pro",
+    "chooseYourPlan": "选择您的方案",
+    "agreeToTermsAndPrivacy": "继续即表示您同意我们的服务条款和隐私政策。",
+    "termsOfService": "服务条款",
+    "privacyPolicy": "隐私政策",
+    "oneTimePurchaseLifetimeAccess": "一次性购买 • 无需重复扣款 • 终身使用",
+    "continueWithFree": "继续使用免费版",
+    "bestValue": "超值",
+    "unlockUnlimitedProjects": "解锁无限项目",
+    "unlockLargerCanvasSizes": "解锁更大画布尺寸",
+    "unlockAllExportFormats": "解锁所有导出格式",
+    "unlockAdvancedTools": "解锁高级工具",
+    "enableCloudBackup": "启用云备份",
+    "removeWatermark": "移除水印",
+    "getPrioritySupport": "获得优先支持",
+    "unlockSpecialEffects": "解锁特殊特效",
+    "unlockTemplates": "解锁模板",
+    "unlockProTheme": "解锁 Pro 主题",
+    "upgradePromptMaxProjectsSubtitle": "您已达到免费版的项目数量上限 • 观看广告获取临时权限，或购买 Pro",
+    "upgradePromptMaxCanvasSizeSubtitle": "以更高分辨率创作像素画 • 先用广告试用",
+    "upgradePromptExportFormatsSubtitle": "以更多格式导出作品 • 观看广告获取临时权限",
+    "upgradePromptAdvancedToolsSubtitle": "使用高级工具和特效 • 通过观看视频广告试用",
+    "upgradePromptCloudBackupSubtitle": "再也不会丢失您的像素艺术作品",
+    "upgradePromptNoWatermarkSubtitle": "导出无水印的干净作品",
+    "upgradePromptPrioritySupportSubtitle": "任何问题都能获得更快的支持"
 }

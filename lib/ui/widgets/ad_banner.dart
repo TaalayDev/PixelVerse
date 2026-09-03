@@ -36,9 +36,10 @@ class _AdBannerState extends State<AdBanner> {
 
   String _getAdUnitId() {
     if (Platform.isAndroid) {
-      return 'ca-app-pub-3940256099942544/6300978111'; // Android test ad unit ID
+      final bannerId = dotenv.env['ANDROID_BANNER_ID'] ?? 'ca-app-pub-3940256099942544/6300978111';
+      return bannerId;
     } else if (Platform.isIOS) {
-      final bannerId = dotenv.env['ADMOB_BANNER_ID'] ?? 'ca-app-pub-3940256099942544/2934735716';
+      final bannerId = dotenv.env['IOS_BANNER_ID'] ?? 'ca-app-pub-3940256099942544/2934735716';
       return kReleaseMode ? bannerId : 'ca-app-pub-3940256099942544/2934735716'; // iOS test ad unit ID
     } else {
       throw UnsupportedError('Unsupported platform');

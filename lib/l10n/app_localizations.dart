@@ -1732,13 +1732,13 @@ abstract class Strings {
   /// No description provided for @featureCloudBackup.
   ///
   /// In en, this message translates to:
-  /// **'Cloud backup'**
+  /// **'Cloud Backup'**
   String get featureCloudBackup;
 
   /// No description provided for @featurePrioritySupport.
   ///
   /// In en, this message translates to:
-  /// **'Priority support'**
+  /// **'Priority Support'**
   String get featurePrioritySupport;
 
   /// No description provided for @maybeLater.
@@ -3490,7 +3490,7 @@ abstract class Strings {
   /// No description provided for @watchAd.
   ///
   /// In en, this message translates to:
-  /// **'Watch Ad'**
+  /// **'Watch ad'**
   String get watchAd;
 
   /// No description provided for @loadingEllipsis.
@@ -3508,13 +3508,13 @@ abstract class Strings {
   /// No description provided for @proAccessGrantedOneHour.
   ///
   /// In en, this message translates to:
-  /// **'Pro access granted for 1 hour!'**
+  /// **'🎉 Pro access granted for 1 hour!'**
   String get proAccessGrantedOneHour;
 
   /// No description provided for @videoAdNotCompleted.
   ///
   /// In en, this message translates to:
-  /// **'Video ad was not completed. Please try again or upgrade to Pro.'**
+  /// **'Video ad was not completed. Please try again.'**
   String get videoAdNotCompleted;
 
   /// No description provided for @failedToLoadVideoAd.
@@ -4728,6 +4728,342 @@ abstract class Strings {
   /// In en, this message translates to:
   /// **'Move and drag elements'**
   String get moveToolDescription;
+
+  /// No description provided for @restore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restore;
+
+  /// No description provided for @purchaseFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase failed'**
+  String get purchaseFailed;
+
+  /// No description provided for @proAccessActiveExclaim.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro Access Active!'**
+  String get proAccessActiveExclaim;
+
+  /// No description provided for @temporaryProTimeRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Time remaining: {minutes}m {seconds}s'**
+  String temporaryProTimeRemaining(int minutes, int seconds);
+
+  /// No description provided for @tryProForFreeExclaim.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Pro for Free!'**
+  String get tryProForFreeExclaim;
+
+  /// No description provided for @watchAdUnlockProOneHour.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch ad to unlock Pro features for 1 hour. You choose when to start each ad.'**
+  String get watchAdUnlockProOneHour;
+
+  /// No description provided for @temporaryProAdsCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{total, plural, =1{Completed: {completed}/{total} ad} other{Completed: {completed}/{total} ads}}'**
+  String temporaryProAdsCompleted(int completed, int total);
+
+  /// No description provided for @loadingNextAd.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading next ad...'**
+  String get loadingNextAd;
+
+  /// No description provided for @adCompletedStartNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Ad completed: {completed}/{total}. Start the next ad when it is ready.'**
+  String adCompletedStartNext(int completed, int total);
+
+  /// No description provided for @unlockPremiumPixelCreation.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Premium Pixel Creation'**
+  String get unlockPremiumPixelCreation;
+
+  /// No description provided for @oneTimePurchaseTryAdsFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time purchase • No recurring fees • Try with ads first'**
+  String get oneTimePurchaseTryAdsFirst;
+
+  /// No description provided for @featureProjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Projects'**
+  String get featureProjects;
+
+  /// No description provided for @featureCanvasSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Canvas Size'**
+  String get featureCanvasSize;
+
+  /// No description provided for @featureToolsEffects.
+  ///
+  /// In en, this message translates to:
+  /// **'Tools & Effects'**
+  String get featureToolsEffects;
+
+  /// No description provided for @featureExportFormats.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Formats'**
+  String get featureExportFormats;
+
+  /// No description provided for @featureTryProFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Pro Features'**
+  String get featureTryProFeatures;
+
+  /// No description provided for @featureAds.
+  ///
+  /// In en, this message translates to:
+  /// **'Ads'**
+  String get featureAds;
+
+  /// No description provided for @freeProjectsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} projects'**
+  String freeProjectsCount(int count);
+
+  /// No description provided for @unlimitedProjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited projects'**
+  String get unlimitedProjects;
+
+  /// No description provided for @freeCanvasSizeUpTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {size}×{size} pixels'**
+  String freeCanvasSizeUpTo(int size);
+
+  /// No description provided for @proCanvasSizeUpTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 1024×1024 pixels'**
+  String get proCanvasSizeUpTo;
+
+  /// No description provided for @basicTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic tools'**
+  String get basicTools;
+
+  /// No description provided for @advancedToolsEffectsTemplates.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced tools & effects & templates'**
+  String get advancedToolsEffectsTemplates;
+
+  /// No description provided for @pngJpegFormats.
+  ///
+  /// In en, this message translates to:
+  /// **'PNG, JPEG'**
+  String get pngJpegFormats;
+
+  /// No description provided for @allFormatsVideoGif.
+  ///
+  /// In en, this message translates to:
+  /// **'All formats including Video & GIF'**
+  String get allFormatsVideoGif;
+
+  /// No description provided for @watchAdsForTemporaryAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch ads for temporary access'**
+  String get watchAdsForTemporaryAccess;
+
+  /// No description provided for @unlimitedAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited access'**
+  String get unlimitedAccess;
+
+  /// No description provided for @watchAdsForProFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch ads for pro features'**
+  String get watchAdsForProFeatures;
+
+  /// No description provided for @noAds.
+  ///
+  /// In en, this message translates to:
+  /// **'No ads'**
+  String get noAds;
+
+  /// No description provided for @freeVsProFeatures.
+  ///
+  /// In en, this message translates to:
+  /// **'Free vs Pro Features'**
+  String get freeVsProFeatures;
+
+  /// No description provided for @featureColumnHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Feature'**
+  String get featureColumnHeader;
+
+  /// No description provided for @proColumnHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro'**
+  String get proColumnHeader;
+
+  /// No description provided for @chooseYourPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Your Plan'**
+  String get chooseYourPlan;
+
+  /// No description provided for @agreeToTermsAndPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'By continuing, you agree to our Terms of Service and Privacy Policy.'**
+  String get agreeToTermsAndPrivacy;
+
+  /// No description provided for @termsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get termsOfService;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @oneTimePurchaseLifetimeAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'One-time purchase • No recurring charges • Lifetime access'**
+  String get oneTimePurchaseLifetimeAccess;
+
+  /// No description provided for @continueWithFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Free'**
+  String get continueWithFree;
+
+  /// No description provided for @bestValue.
+  ///
+  /// In en, this message translates to:
+  /// **'BEST VALUE'**
+  String get bestValue;
+
+  /// No description provided for @unlockUnlimitedProjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Unlimited Projects'**
+  String get unlockUnlimitedProjects;
+
+  /// No description provided for @unlockLargerCanvasSizes.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Larger Canvas Sizes'**
+  String get unlockLargerCanvasSizes;
+
+  /// No description provided for @unlockAllExportFormats.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock All Export Formats'**
+  String get unlockAllExportFormats;
+
+  /// No description provided for @unlockAdvancedTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Advanced Tools'**
+  String get unlockAdvancedTools;
+
+  /// No description provided for @enableCloudBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Cloud Backup'**
+  String get enableCloudBackup;
+
+  /// No description provided for @removeWatermark.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Watermark'**
+  String get removeWatermark;
+
+  /// No description provided for @getPrioritySupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Priority Support'**
+  String get getPrioritySupport;
+
+  /// No description provided for @unlockSpecialEffects.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Special Effects'**
+  String get unlockSpecialEffects;
+
+  /// No description provided for @unlockTemplates.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Templates'**
+  String get unlockTemplates;
+
+  /// No description provided for @unlockProTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Pro Theme'**
+  String get unlockProTheme;
+
+  /// No description provided for @upgradePromptMaxProjectsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve reached your free plan project limit • Watch an ad for temporary access or buy Pro'**
+  String get upgradePromptMaxProjectsSubtitle;
+
+  /// No description provided for @upgradePromptMaxCanvasSizeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create pixel art at higher resolutions • Try with ads first'**
+  String get upgradePromptMaxCanvasSizeSubtitle;
+
+  /// No description provided for @upgradePromptExportFormatsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export your art in more formats • Watch ad for temporary access'**
+  String get upgradePromptExportFormatsSubtitle;
+
+  /// No description provided for @upgradePromptAdvancedToolsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Access premium tools and effects • Try with video ads'**
+  String get upgradePromptAdvancedToolsSubtitle;
+
+  /// No description provided for @upgradePromptCloudBackupSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Never lose your pixel art creations'**
+  String get upgradePromptCloudBackupSubtitle;
+
+  /// No description provided for @upgradePromptNoWatermarkSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export clean art without watermarks'**
+  String get upgradePromptNoWatermarkSubtitle;
+
+  /// No description provided for @upgradePromptPrioritySupportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get faster support for any issues'**
+  String get upgradePromptPrioritySupportSubtitle;
 }
 
 class _StringsDelegate extends LocalizationsDelegate<Strings> {
