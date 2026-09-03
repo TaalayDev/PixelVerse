@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../core.dart';
 import '../../l10n/strings.dart';
+import 'theme_selector.dart';
 
 /// A button that shows selection options when a selection is active
-class SelectionOptionsButton extends StatelessWidget {
+class SelectionOptionsButton extends ConsumerWidget {
   final bool hasSelection;
   final VoidCallback? onClearSelection;
   final VoidCallback? onRotate90;
@@ -42,64 +45,70 @@ class SelectionOptionsButton extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = ref.watch(themeProvider).theme;
+
     if (!hasSelection) {
       // No selection, but the clipboard has content — still surface Paste,
       // otherwise there is no way to paste on touch devices (the review
       // "how do I paste after copy with the lasso" bug).
       if (onPaste != null) {
-        return isFloating ? _buildFloatingPasteButton(context) : _buildPasteButton(context);
+        return isFloating ? _buildFloatingPasteButton(context, theme) : _buildPasteButton(context, theme);
       }
       return const SizedBox.shrink();
     }
 
     if (isFloating) {
-      return _buildFloatingButton(context);
+      return _buildFloatingButton(context, theme);
     } else {
-      return _buildToolbarButton(context);
+      return _buildToolbarButton(context, theme);
     }
   }
 
-  Widget _buildPasteButton(BuildContext context) {
+  Widget _buildPasteButton(BuildContext context, AppTheme theme) {
     return IconButton(
       icon: Icon(
         Icons.content_paste,
-        color: Theme.of(context).colorScheme.primary,
+        color: theme.primaryColor,
       ),
       tooltip: Strings.of(context).paste,
       onPressed: onPaste,
     );
   }
 
-  Widget _buildFloatingPasteButton(BuildContext context) {
-    return Container(
+  Widget _buildFloatingPasteButton(BuildContext context, AppTheme theme) {
+    final g = theme.geometry;
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(g.cardRadius),
+        border: g.cardBorderWidth > 0 ? Border.all(color: theme.divider, width: g.cardBorderWidth) : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: g.shadowColor ?? Colors.black.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: IconButton(
-        icon: const Icon(Icons.content_paste, color: Colors.blue),
+        icon: Icon(Icons.content_paste, color: theme.primaryColor),
         tooltip: Strings.of(context).paste,
         onPressed: onPaste,
       ),
     );
   }
 
-  Widget _buildFloatingButton(BuildContext context) {
-    return Container(
+  Widget _buildFloatingButton(BuildContext context, AppTheme theme) {
+    final g = theme.geometry;
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        color: theme.surface,
+        borderRadius: BorderRadius.circular(g.cardRadius),
+        border: g.cardBorderWidth > 0 ? Border.all(color: theme.divider, width: g.cardBorderWidth) : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: g.shadowColor ?? Colors.black.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -110,216 +119,147 @@ class SelectionOptionsButton extends StatelessWidget {
         children: [
           // Simple deselect button
           IconButton(
-            icon: const Icon(Icons.close, color: Colors.red),
+            icon: Icon(Icons.close, color: theme.error),
             tooltip: Strings.of(context).deselect,
             onPressed: onClearSelection,
           ),
           // Options menu
           PopupMenuButton<String>(
-            icon: const Icon(Icons.select_all, color: Colors.blue),
+            icon: Icon(Icons.select_all, color: theme.primaryColor),
             tooltip: Strings.of(context).selectionOptions,
+            color: theme.surface,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(g.dialogRadius)),
             onSelected: (value) => _handleMenuSelection(value),
-            itemBuilder: (BuildContext context) => _buildMenuItems(context),
+            itemBuilder: (BuildContext context) => _buildMenuItems(context, theme),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildToolbarButton(BuildContext context) {
+  Widget _buildToolbarButton(BuildContext context, AppTheme theme) {
+    final g = theme.geometry;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         // Simple deselect button
         IconButton(
-          icon: Icon(
-            Icons.close,
-            color: Theme.of(context).colorScheme.error,
-          ),
+          icon: Icon(Icons.close, color: theme.error),
           tooltip: Strings.of(context).deselect,
           onPressed: onClearSelection,
         ),
         // Options menu
         PopupMenuButton<String>(
-          icon: Icon(
-            Icons.select_all,
-            color: Theme.of(context).colorScheme.primary,
-          ),
+          icon: Icon(Icons.select_all, color: theme.primaryColor),
           tooltip: Strings.of(context).selectionOptions,
+          color: theme.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(g.dialogRadius)),
           onSelected: (value) => _handleMenuSelection(value),
-          itemBuilder: (BuildContext context) => _buildMenuItems(context),
+          itemBuilder: (BuildContext context) => _buildMenuItems(context, theme),
         ),
       ],
     );
   }
 
-  List<PopupMenuEntry<String>> _buildMenuItems(BuildContext context) {
+  List<PopupMenuEntry<String>> _buildMenuItems(BuildContext context, AppTheme theme) {
     final s = Strings.of(context);
+
+    Widget item(IconData icon, String label, {Color? color}) {
+      return Row(
+        children: [
+          Icon(icon, size: 20, color: color ?? theme.textPrimary),
+          const SizedBox(width: 8),
+          Text(label, style: TextStyle(color: color ?? theme.textPrimary)),
+        ],
+      );
+    }
 
     return [
       PopupMenuItem<String>(
         value: 'clear',
-        child: Row(
-          children: [
-            const Icon(Icons.clear, size: 20),
-            const SizedBox(width: 8),
-            Text(s.clearSelection),
-          ],
-        ),
+        child: item(Icons.clear, s.clearSelection),
       ),
       if (onInvert != null)
         PopupMenuItem<String>(
           value: 'invert',
-          child: Row(
-            children: [
-              const Icon(Icons.flip_to_back, size: 20),
-              const SizedBox(width: 8),
-              Text(s.invertSelection),
-            ],
-          ),
+          child: item(Icons.flip_to_back, s.invertSelection),
         ),
       if (onGrow != null)
         PopupMenuItem<String>(
           value: 'grow',
-          child: Row(
-            children: [
-              const Icon(Icons.open_in_full, size: 20),
-              const SizedBox(width: 8),
-              Text(s.growSelectionOnePixel),
-            ],
-          ),
+          child: item(Icons.open_in_full, s.growSelectionOnePixel),
         ),
       if (onShrink != null)
         PopupMenuItem<String>(
           value: 'shrink',
-          child: Row(
-            children: [
-              const Icon(Icons.close_fullscreen, size: 20),
-              const SizedBox(width: 8),
-              Text(s.shrinkSelectionOnePixel),
-            ],
-          ),
+          child: item(Icons.close_fullscreen, s.shrinkSelectionOnePixel),
         ),
       if (onRotate90 != null) ...[
-        const PopupMenuDivider(),
+        PopupMenuDivider(color: theme.divider),
         PopupMenuItem<String>(
           value: 'rotate90',
-          child: Row(
-            children: [
-              const Icon(Icons.rotate_90_degrees_ccw, size: 20),
-              const SizedBox(width: 8),
-              Text(s.rotate90),
-            ],
-          ),
+          child: item(Icons.rotate_90_degrees_ccw, s.rotate90),
         ),
       ],
       if (onRotate180 != null) ...[
         PopupMenuItem<String>(
           value: 'rotate180',
-          child: Row(
-            children: [
-              const Icon(Icons.rotate_left, size: 20),
-              const SizedBox(width: 8),
-              Text(s.rotate180),
-            ],
-          ),
+          child: item(Icons.rotate_left, s.rotate180),
         ),
-        const PopupMenuDivider(),
+        PopupMenuDivider(color: theme.divider),
       ],
       if (onFlipHorizontal != null)
         PopupMenuItem<String>(
           value: 'flipH',
-          child: Row(
-            children: [
-              const Icon(Icons.flip, size: 20),
-              const SizedBox(width: 8),
-              Text(s.flipHorizontal),
-            ],
-          ),
+          child: item(Icons.flip, s.flipHorizontal),
         ),
       if (onFlipVertical != null) ...[
         PopupMenuItem<String>(
           value: 'flipV',
           child: Row(
             children: [
-              const RotatedBox(
+              RotatedBox(
                 quarterTurns: 1,
-                child: Icon(Icons.flip, size: 20),
+                child: Icon(Icons.flip, size: 20, color: theme.textPrimary),
               ),
               const SizedBox(width: 8),
-              Text(s.flipVertical),
+              Text(s.flipVertical, style: TextStyle(color: theme.textPrimary)),
             ],
           ),
         ),
-        const PopupMenuDivider(),
+        PopupMenuDivider(color: theme.divider),
       ],
       if (onCutToNewLayer != null)
         PopupMenuItem<String>(
           value: 'cutNewLayer',
-          child: Row(
-            children: [
-              const Icon(Icons.cut, size: 20),
-              const SizedBox(width: 8),
-              Text(s.cutToNewLayer),
-            ],
-          ),
+          child: item(Icons.cut, s.cutToNewLayer),
         ),
       if (onCopyToNewLayer != null) ...[
         PopupMenuItem<String>(
           value: 'copyNewLayer',
-          child: Row(
-            children: [
-              const Icon(Icons.copy, size: 20),
-              const SizedBox(width: 8),
-              Text(s.copyToNewLayer),
-            ],
-          ),
+          child: item(Icons.copy, s.copyToNewLayer),
         ),
-        const PopupMenuDivider(),
+        PopupMenuDivider(color: theme.divider),
       ],
       if (onCut != null)
         PopupMenuItem<String>(
           value: 'cut',
-          child: Row(
-            children: [
-              const Icon(Icons.content_cut, size: 20),
-              const SizedBox(width: 8),
-              Text(s.cut),
-            ],
-          ),
+          child: item(Icons.content_cut, s.cut),
         ),
       if (onCopy != null)
         PopupMenuItem<String>(
           value: 'copy',
-          child: Row(
-            children: [
-              const Icon(Icons.content_copy, size: 20),
-              const SizedBox(width: 8),
-              Text(s.copy),
-            ],
-          ),
+          child: item(Icons.content_copy, s.copy),
         ),
       if (onPaste != null)
         PopupMenuItem<String>(
           value: 'paste',
-          child: Row(
-            children: [
-              const Icon(Icons.content_paste, size: 20),
-              const SizedBox(width: 8),
-              Text(s.paste),
-            ],
-          ),
+          child: item(Icons.content_paste, s.paste),
         ),
       if (onDelete != null)
         PopupMenuItem<String>(
           value: 'delete',
-          child: Row(
-            children: [
-              const Icon(Icons.delete, size: 20, color: Colors.red),
-              const SizedBox(width: 8),
-              Text(s.clearArea, style: const TextStyle(color: Colors.red)),
-            ],
-          ),
+          child: item(Icons.delete, s.clearArea, color: theme.error),
         ),
     ];
   }
